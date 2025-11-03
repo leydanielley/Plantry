@@ -1,0 +1,7 @@
+# ADD THESE LINES TO YOUR .gitignore FILE
+# This prevents accidentally committing sensitive signing keys
+
+# Android Signing Keys
+**/android/key.properties
+**/*.jks
+**/*.keystore

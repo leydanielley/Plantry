@@ -1,0 +1,62 @@
+name: growlog_app
+description: "Private plant growing journal and log tracking app"
+publish_to: 'none'
+
+version: 0.7.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Image Compression & Caching
+  flutter_image_compress: ^2.1.0
+
+  # SQLite Database
+  sqflite: ^2.3.0
+  path_provider: ^2.1.1
+  path: ^1.8.3
+
+  # State Management
+  provider: ^6.1.1
+  get_it: ^7.6.4
+
+  # Settings Persistence
+  shared_preferences: ^2.2.2
+
+  # Image Picker
+  image_picker: ^1.0.7
+
+  # Share
+  share_plus: ^12.0.1
+
+  # Date/Time formatting
+  intl: ^0.20.2
+
+  # File handling
+  archive: ^3.6.1
+  file_picker: ^8.0.0+1
+
+  # UI
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  shimmer: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Testing
+  mockito: ^5.4.4
+  build_runner: ^2.4.6
+  sqflite_common_ffi: ^2.3.0
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
