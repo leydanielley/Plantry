@@ -120,3 +120,4 @@ KEYSTORE_CREDENTIALS.txt
 **/KEYSTORE_CREDENTIALS.txt
 android/app/keystore.jks.OLD_COMPROMISED
 android/create_keystore.sh
+create_keystore.sh
