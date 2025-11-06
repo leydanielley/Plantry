@@ -7,10 +7,12 @@ import '../utils/app_logger.dart';
 import '../models/plant.dart';
 import '../models/room.dart';
 import '../models/grow.dart';
+import '../models/rdwc_system.dart';
 import '../models/enums.dart';
 import '../repositories/plant_repository.dart';
 import '../repositories/room_repository.dart';
 import '../repositories/grow_repository.dart';
+import '../repositories/rdwc_repository.dart';
 import '../utils/app_messages.dart';
 
 class AddPlantScreen extends StatefulWidget {
@@ -27,6 +29,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   final PlantRepository _plantRepo = PlantRepository();
   final RoomRepository _roomRepo = RoomRepository();
   final GrowRepository _growRepo = GrowRepository();
+  final RdwcRepository _rdwcRepo = RdwcRepository();
 
   // Form Controllers
   final _nameController = TextEditingController();
@@ -42,13 +45,18 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   PlantPhase _phase = PlantPhase.seedling;
   int? _selectedRoomId;
   int? _selectedGrowId;
+  int? _selectedRdwcSystemId;
+  int? _selectedBucketNumber;
   DateTime? _seedDate;
 
   List<Room> _rooms = [];
   List<Grow> _grows = [];
+  List<RdwcSystem> _rdwcSystems = [];
+  List<int> _occupiedBuckets = [];
   bool _isLoading = false;
   bool _loadingRooms = true;
   bool _loadingGrows = true;
+  bool _loadingRdwcSystems = true;
 
   @override
   void initState() {
@@ -56,6 +64,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     _selectedGrowId = widget.preselectedGrowId;
     _loadRooms();
     _loadGrows();
+    _loadRdwcSystems();
   }
 
   Future<void> _loadRooms() async {
@@ -92,6 +101,23 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     }
   }
 
+  Future<void> _loadRdwcSystems() async {
+    try {
+      final systems = await _rdwcRepo.getAllSystems();
+      if (mounted) {
+        setState(() {
+          _rdwcSystems = systems;
+          _loadingRdwcSystems = false;
+        });
+      }
+    } catch (e) {
+      AppLogger.error('AddPlantScreen', 'Error loading RDWC systems: $e');
+      if (mounted) {
+        setState(() => _loadingRdwcSystems = false);
+      }
+    }
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -105,6 +131,15 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
 
   bool get _isHydroSystem {
     return _medium == Medium.dwc || _medium == Medium.rdwc || _medium == Medium.hydro;
+  }
+
+  /// Get occupied bucket numbers for an RDWC system
+  Future<List<int>> _getOccupiedBuckets(int systemId) async {
+    final plants = await _plantRepo.findByRdwcSystem(systemId);
+    return plants
+        .where((p) => p.bucketNumber != null)
+        .map((p) => p.bucketNumber!)
+        .toList();
   }
 
   Future<void> _createNewGrow() async {
@@ -208,6 +243,30 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
 
       AppLogger.info('AddPlantScreen', 'Saving $quantity plant(s) with growId: $_selectedGrowId');
 
+      // Bei RDWC: Verfügbare Buckets ermitteln für Auto-Assignment
+      List<int>? availableBuckets;
+      if (_medium == Medium.rdwc && _selectedRdwcSystemId != null && quantity > 1) {
+        final occupiedBuckets = await _getOccupiedBuckets(_selectedRdwcSystemId!);
+        final selectedSystem = _rdwcSystems.firstWhere((s) => s.id == _selectedRdwcSystemId);
+        availableBuckets = [];
+        for (int b = 1; b <= selectedSystem.bucketCount; b++) {
+          if (!occupiedBuckets.contains(b)) {
+            availableBuckets.add(b);
+          }
+        }
+
+        // Prüfen ob genug Buckets frei sind
+        if (availableBuckets.length < quantity) {
+          if (mounted) {
+            AppMessages.showError(
+              context,
+              'Nur ${availableBuckets.length} freie Buckets verfügbar, aber $quantity Plants gewählt!',
+            );
+          }
+          return;
+        }
+      }
+
       for (int i = 1; i <= quantity; i++) {
         final plantName = quantity > 1 ? '$baseName #$i' : baseName;
 
@@ -220,28 +279,45 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           effectiveSeedDate = DateTime(now.year, now.month, now.day);
         }
 
+        // ✅ FIX: Bei Multiple Plants automatisch Buckets verteilen
+        int? assignedBucket;
+        if (_medium == Medium.rdwc && _selectedRdwcSystemId != null) {
+          if (quantity > 1 && availableBuckets != null) {
+            // Automatische Zuweisung: Nimm nächsten freien Bucket
+            assignedBucket = availableBuckets[i - 1];
+            AppLogger.debug('AddPlantScreen', 'Auto-assigning plant #$i to bucket $assignedBucket');
+          } else {
+            // Single plant: Verwende gewählten Bucket
+            assignedBucket = _selectedBucketNumber;
+          }
+        }
+
         final plant = Plant(
           name: plantName,
           strain: _strainController.text.isNotEmpty ? _strainController.text : null,
           breeder: _breederController.text.isNotEmpty ? _breederController.text : null,
-          feminized: _genderType == GenderType.feminized,  // ✅ KORRIGIERT: Verwende GenderType
+          feminized: _genderType == GenderType.feminized,
           seedType: _seedType,
           medium: _medium,
           phase: _phase,
           growId: _selectedGrowId,
-          roomId: _selectedRoomId,
+          roomId: _medium == Medium.rdwc ? null : _selectedRoomId,
+          rdwcSystemId: _medium == Medium.rdwc ? _selectedRdwcSystemId : null,
+          bucketNumber: assignedBucket,
           seedDate: effectiveSeedDate,
           phaseStartDate: effectiveSeedDate,
           createdBy: 'User',
           currentContainerSize: _containerSizeController.text.isNotEmpty
               ? double.tryParse(_containerSizeController.text)
               : null,
-          currentSystemSize: _systemSizeController.text.isNotEmpty
-              ? double.tryParse(_systemSizeController.text)
-              : null,
+          currentSystemSize: _medium == Medium.rdwc ? null : (
+            _systemSizeController.text.isNotEmpty
+                ? double.tryParse(_systemSizeController.text)
+                : null
+          ),
         );
 
-        AppLogger.debug('AddPlantScreen', 'Plant #$i: ${plant.name}, growId: ${plant.growId}');
+        AppLogger.debug('AddPlantScreen', 'Plant #$i: ${plant.name}, bucket: $assignedBucket');
         await _plantRepo.save(plant);
       }
 
@@ -333,6 +409,10 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
             border: const OutlineInputBorder(),
             helperText: 'Wie viele Pflanzen erstellen?',
           ),
+          onChanged: (value) {
+            // Trigger rebuild to update bucket info
+            setState(() {});
+          },
           validator: (value) {
             final count = int.tryParse(value ?? '');
             if (count == null || count < 1 || count > 50) {
@@ -414,7 +494,18 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           label: 'Medium',
           value: _medium,
           items: Medium.values,
-          onChanged: (value) => setState(() => _medium = value!),
+          onChanged: (value) {
+            setState(() {
+              _medium = value!;
+              // Reset RDWC/Room selections when changing medium
+              if (_medium == Medium.rdwc) {
+                _selectedRoomId = null;
+              } else {
+                _selectedRdwcSystemId = null;
+                _selectedBucketNumber = null;
+              }
+            });
+          },
         ),
         const SizedBox(height: 12),
         _buildDropdown<PlantPhase>(
@@ -466,7 +557,127 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
             ],
           ),
         const SizedBox(height: 12),
-        if (_loadingRooms)
+        // RDWC System Selection (nur wenn Medium = RDWC)
+        if (_medium == Medium.rdwc) ...[
+          if (_loadingRdwcSystems)
+            const Center(child: CircularProgressIndicator())
+          else
+            DropdownButtonFormField<int?>(
+              initialValue: _selectedRdwcSystemId,
+              decoration: const InputDecoration(
+                labelText: 'RDWC System *',
+                prefixIcon: Icon(Icons.water),
+                border: OutlineInputBorder(),
+                helperText: 'Wähle das RDWC System für diese Pflanze',
+              ),
+              items: [
+                const DropdownMenuItem(value: null, child: Text('Kein System')),
+                ..._rdwcSystems.map((system) {
+                  return DropdownMenuItem(
+                    value: system.id,
+                    child: Text('${system.name} (${system.bucketCount} Buckets)'),
+                  );
+                }),
+              ],
+              onChanged: (value) async {
+                setState(() {
+                  _selectedRdwcSystemId = value;
+                  _selectedBucketNumber = null; // Reset bucket number
+                  _occupiedBuckets = []; // Reset
+                });
+                // Load occupied buckets for this system
+                if (value != null) {
+                  final occupied = await _getOccupiedBuckets(value);
+                  if (mounted) {
+                    setState(() => _occupiedBuckets = occupied);
+                  }
+                }
+              },
+              validator: (value) {
+                if (_medium == Medium.rdwc && value == null) {
+                  return 'RDWC System erforderlich';
+                }
+                return null;
+              },
+            ),
+          const SizedBox(height: 12),
+          // Bucket Number Selection (nur wenn System gewählt)
+          if (_selectedRdwcSystemId != null)
+            Builder(
+              builder: (context) {
+                final selectedSystem = _rdwcSystems.firstWhere(
+                  (s) => s.id == _selectedRdwcSystemId,
+                  orElse: () => _rdwcSystems.first,
+                );
+
+                // Bei Quantity > 1: Keine manuelle Auswahl, automatische Verteilung
+                final quantity = int.tryParse(_quantityController.text) ?? 1;
+
+                if (quantity > 1) {
+                  // Zeige Info über automatische Verteilung
+                  final freeBuckets = <int>[];
+                  for (int b = 1; b <= selectedSystem.bucketCount; b++) {
+                    if (!_occupiedBuckets.contains(b)) {
+                      freeBuckets.add(b);
+                    }
+                  }
+
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info, color: Colors.blue, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Automatische Verteilung:\nBuckets ${freeBuckets.take(quantity).join(', ')} werden verwendet',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                // Bei Single Plant: Zeige nur freie Buckets
+                return DropdownButtonFormField<int?>(
+                  initialValue: _selectedBucketNumber,
+                  decoration: InputDecoration(
+                    labelText: 'Bucket Nummer *',
+                    prefixIcon: Icon(Icons.filter_list),
+                    border: OutlineInputBorder(),
+                    helperText: '${_occupiedBuckets.length}/${selectedSystem.bucketCount} Buckets belegt',
+                  ),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('Wähle Bucket')),
+                    ...List.generate(selectedSystem.bucketCount, (index) {
+                      final bucketNum = index + 1;
+                      final isOccupied = _occupiedBuckets.contains(bucketNum);
+                      if (isOccupied) return null;
+                      return DropdownMenuItem(
+                        value: bucketNum,
+                        child: Text('Bucket $bucketNum'),
+                      );
+                    }).whereType<DropdownMenuItem<int?>>(),
+                  ],
+                  onChanged: (value) => setState(() => _selectedBucketNumber = value),
+                  validator: (value) {
+                    if (_medium == Medium.rdwc && _selectedRdwcSystemId != null && value == null) {
+                      return 'Bucket Nummer erforderlich';
+                    }
+                    return null;
+                  },
+                );
+              },
+            ),
+        ]
+        // Room Selection (nur wenn NICHT RDWC)
+        else if (_loadingRooms)
           const Center(child: CircularProgressIndicator())
         else
           DropdownButtonFormField<int?>(
@@ -492,6 +703,30 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   }
 
   Widget _buildContainerInfo() {
+    // Bei RDWC: System Size kommt vom RDWC System, nicht von der Plant
+    if (_medium == Medium.rdwc) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'System-Größe wird vom RDWC System übernommen',
+                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -513,7 +748,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
               hintText: 'z.B. 100',
               prefixIcon: Icon(Icons.water, color: Colors.blue[600]),
               border: const OutlineInputBorder(),
-              helperText: 'Gesamtgröße des Hydro-Systems',
+              helperText: 'Gesamtgröße des Hydro-Systems (DWC/Hydro)',
             ),
           )
         else

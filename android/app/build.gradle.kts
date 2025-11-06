@@ -9,7 +9,7 @@ plugins {
 }
 
 // Load signing configuration
-val keystorePropertiesFile = rootProject.file("key.properties")
+val keystorePropertiesFile = file("key.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
@@ -49,13 +49,21 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Debug builds use default debug signing
+            signingConfig = signingConfigs.getByName("debug")
+        }
+
         release {
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
-                // Fallback to debug signing if key.properties doesn't exist
-                println("⚠️  WARNING: key.properties not found! Using debug signing.")
-                println("⚠️  Create key.properties file for production release!")
+                // Only warn when actually building release
+                val taskNames = gradle.startParameter.taskNames
+                if (taskNames.any { it.contains("Release", ignoreCase = true) }) {
+                    println("⚠️  WARNING: key.properties not found! Using debug signing.")
+                    println("⚠️  Create key.properties file for production release!")
+                }
                 signingConfigs.getByName("debug")
             }
 

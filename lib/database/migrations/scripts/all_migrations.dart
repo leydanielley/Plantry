@@ -3,6 +3,7 @@
 // =============================================
 
 import '../migration.dart';
+import 'migration_v8.dart';
 
 /// All migrations in chronological order
 ///
@@ -20,10 +21,8 @@ import '../migration.dart';
 /// 4. Update database version in database_helper.dart
 /// 5. Test the migration thoroughly
 final List<Migration> allMigrations = [
-  // Add your migrations here in chronological order
-  // Example:
-  // migrationV3,
-  // migrationV4,
+  // v8: RDWC Expert Mode - Advanced nutrient tracking & recipes
+  migrationV8,
 ];
 
 /// Get the latest migration version

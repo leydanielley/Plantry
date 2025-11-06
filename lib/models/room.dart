@@ -10,6 +10,7 @@ class Room {
   final String? description;
   final GrowType? growType;
   final WateringSystem? wateringSystem;
+  final int? rdwcSystemId;  // Link to RDWC System
   final double width;
   final double depth;
   final double height;
@@ -22,6 +23,7 @@ class Room {
     this.description,
     this.growType,
     this.wateringSystem,
+    this.rdwcSystemId,
     this.width = 0.0,
     this.depth = 0.0,
     this.height = 0.0,
@@ -61,6 +63,7 @@ class Room {
           ? GrowType.values.byName(map['grow_type'].toString().toLowerCase())
           : null,
       wateringSystem: parseWateringSystem(map['watering_system']?.toString()),
+      rdwcSystemId: map['rdwc_system_id'] as int?,
       width: (map['width'] as num?)?.toDouble() ?? 0.0,
       depth: (map['depth'] as num?)?.toDouble() ?? 0.0,
       height: (map['height'] as num?)?.toDouble() ?? 0.0,
@@ -99,6 +102,7 @@ class Room {
       'description': description,
       'grow_type': growType?.name.toUpperCase(),
       'watering_system': wateringSystemToDb(wateringSystem),
+      'rdwc_system_id': rdwcSystemId,
       'width': width,
       'depth': depth,
       'height': height,
@@ -114,6 +118,7 @@ class Room {
     String? description,
     GrowType? growType,
     WateringSystem? wateringSystem,
+    int? rdwcSystemId,
     double? width,
     double? depth,
     double? height,
@@ -126,6 +131,7 @@ class Room {
       description: description ?? this.description,
       growType: growType ?? this.growType,
       wateringSystem: wateringSystem ?? this.wateringSystem,
+      rdwcSystemId: rdwcSystemId ?? this.rdwcSystemId,
       width: width ?? this.width,
       depth: depth ?? this.depth,
       height: height ?? this.height,

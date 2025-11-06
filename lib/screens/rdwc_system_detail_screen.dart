@@ -1,0 +1,697 @@
+// =============================================
+// GROWLOG - RDWC System Detail Screen
+// =============================================
+
+import 'package:flutter/material.dart';
+import '../repositories/rdwc_repository.dart';
+import '../repositories/settings_repository.dart';
+import '../repositories/plant_repository.dart';
+import '../repositories/fertilizer_repository.dart';
+import '../models/rdwc_system.dart';
+import '../models/rdwc_log.dart';
+import '../models/rdwc_log_fertilizer.dart';
+import '../models/fertilizer.dart';
+import '../models/plant.dart';
+import '../models/app_settings.dart';
+import '../utils/translations.dart';
+import '../utils/unit_converter.dart';
+import '../utils/app_logger.dart';
+import 'rdwc_addback_form_screen.dart';
+import 'rdwc_system_form_screen.dart';
+
+class RdwcSystemDetailScreen extends StatefulWidget {
+  final RdwcSystem system;
+
+  const RdwcSystemDetailScreen({super.key, required this.system});
+
+  @override
+  State<RdwcSystemDetailScreen> createState() => _RdwcSystemDetailScreenState();
+}
+
+class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
+  final RdwcRepository _rdwcRepo = RdwcRepository();
+  final SettingsRepository _settingsRepo = SettingsRepository();
+  final PlantRepository _plantRepo = PlantRepository();
+  final FertilizerRepository _fertilizerRepo = FertilizerRepository();
+
+  late RdwcSystem _system;
+  List<RdwcLog> _logs = [];
+  List<Plant> _linkedPlants = [];
+  double? _avgConsumption;
+  bool _isLoading = true;
+  late AppTranslations _t;
+  late AppSettings _settings;
+
+  @override
+  void initState() {
+    super.initState();
+    _system = widget.system;
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final settings = await _settingsRepo.getSettings();
+      final logs = await _rdwcRepo.getRecentLogsWithFertilizers(_system.id!, limit: 20);
+      final avg = await _rdwcRepo.getAverageDailyConsumption(_system.id!, days: 7);
+      final updatedSystem = await _rdwcRepo.getSystemById(_system.id!);
+      final linkedPlants = await _plantRepo.findByRdwcSystem(_system.id!);
+
+      if (mounted) {
+        setState(() {
+          _settings = settings;
+          _t = AppTranslations(settings.language);
+          _logs = logs;
+          _linkedPlants = linkedPlants;
+          _avgConsumption = avg;
+          if (updatedSystem != null) _system = updatedSystem;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      AppLogger.error('RdwcSystemDetailScreen', 'Error loading data', e);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_system.name),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final result = await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => RdwcSystemFormScreen(system: _system),
+                ),
+              );
+              if (result == true) {
+                _loadData();
+              }
+            },
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSystemOverview(isDark),
+              const SizedBox(height: 24),
+              _buildStatistics(isDark),
+              const SizedBox(height: 24),
+              _buildLinkedPlantsSection(isDark),
+              const SizedBox(height: 24),
+              _buildLogsSection(isDark),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => RdwcAddbackFormScreen(system: _system),
+            ),
+          );
+          if (result == true) {
+            _loadData();
+          }
+        },
+        icon: const Icon(Icons.add),
+        label: Text(_t['add_addback']),
+      ),
+    );
+  }
+
+  Widget _buildSystemOverview(bool isDark) {
+    Color statusColor = _system.isCriticallyLow
+        ? Colors.red
+        : _system.isLowWater
+            ? Colors.orange
+            : _system.isFull
+                ? Colors.blue
+                : Colors.green;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _t['reservoir_status'],
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+
+            // Big level indicator
+            Center(
+              child: SizedBox(
+                width: 120,
+                height: 120,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: _system.fillPercentage / 100,
+                      strokeWidth: 12,
+                      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${_system.fillPercentage.toStringAsFixed(0)}%',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: statusColor,
+                              ),
+                        ),
+                        Text(
+                          _t['fill_percentage'],
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Stats grid
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildOverviewStat(
+                  _t['current_level'],
+                  UnitConverter.formatVolume(_system.currentLevel, _settings.volumeUnit),
+                  Icons.water_drop,
+                  statusColor,
+                  isDark,
+                ),
+                _buildOverviewStat(
+                  _t['max_capacity'],
+                  UnitConverter.formatVolume(_system.maxCapacity, _settings.volumeUnit),
+                  Icons.water,
+                  Colors.blue,
+                  isDark,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverviewStat(String label, String value, IconData icon, Color color, bool isDark) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isDark ? Colors.grey[500] : Colors.grey[600],
+              ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatistics(bool isDark) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _t['statistics'],
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    _t['avg_daily_consumption'],
+                    _avgConsumption != null
+                        ? UnitConverter.formatVolume(_avgConsumption!, _settings.volumeUnit, decimals: 2)
+                        : '-',
+                    Icons.trending_down,
+                    Colors.blue,
+                    isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    _t['remaining_capacity'],
+                    UnitConverter.formatVolume(_system.remainingCapacity, _settings.volumeUnit),
+                    Icons.water_damage_outlined,
+                    Colors.orange,
+                    isDark,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[850] : Colors.grey[200],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: isDark ? Colors.grey[500] : Colors.grey[600],
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogsSection(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _t['addback_log'],
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 12),
+        if (_logs.isEmpty)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.event_note,
+                      size: 48,
+                      color: isDark ? Colors.grey[700] : Colors.grey[400],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _t['no_logs_yet'],
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[600] : Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          ..._logs.map((log) => _buildLogTile(log, isDark)),
+      ],
+    );
+  }
+
+  Widget _buildLogTile(RdwcLog log, bool isDark) {
+    IconData icon;
+    Color color;
+    String typeLabel;
+
+    switch (log.logType) {
+      case RdwcLogType.addback:
+        icon = Icons.add_circle;
+        color = Colors.green;
+        typeLabel = _t['water_addback'];
+        break;
+      case RdwcLogType.fullChange:
+        icon = Icons.sync;
+        color = Colors.blue;
+        typeLabel = _t['full_change'];
+        break;
+      case RdwcLogType.maintenance:
+        icon = Icons.build;
+        color = Colors.orange;
+        typeLabel = _t['maintenance'];
+        break;
+      case RdwcLogType.measurement:
+        icon = Icons.science;
+        color = Colors.purple;
+        typeLabel = _t['measurement'];
+        break;
+    }
+
+    // Check if there are fertilizers to display
+    final hasFertilizers = log.fertilizers != null && log.fertilizers!.isNotEmpty;
+
+    if (!hasFertilizers) {
+      // Simple tile without fertilizers
+      return Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
+          leading: Icon(icon, color: color),
+          title: Text(typeLabel),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(log.formattedDate),
+              if (log.waterAdded != null)
+                Text('${_t['water_added']}: ${UnitConverter.formatVolume(log.waterAdded!, _settings.volumeUnit)}'),
+              if (log.waterConsumed != null)
+                Text('${_t['water_consumed']}: ${UnitConverter.formatVolume(log.waterConsumed!, _settings.volumeUnit)}'),
+            ],
+          ),
+          trailing: log.ecAfter != null
+              ? Text(
+                  UnitConverter.formatNutrient(log.ecAfter!, _settings.nutrientUnit, _settings.ppmScale, decimals: 1),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                )
+              : null,
+        ),
+      );
+    }
+
+    // Expandable tile with fertilizers
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ExpansionTile(
+        leading: Icon(icon, color: color),
+        title: Text(typeLabel),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(log.formattedDate),
+            if (log.waterAdded != null)
+              Text('${_t['water_added']}: ${UnitConverter.formatVolume(log.waterAdded!, _settings.volumeUnit)}'),
+            if (log.waterConsumed != null)
+              Text('${_t['water_consumed']}: ${UnitConverter.formatVolume(log.waterConsumed!, _settings.volumeUnit)}'),
+            Text(
+              '${log.fertilizers!.length} ${_t['nutrients']}',
+              style: TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        trailing: log.ecAfter != null
+            ? Text(
+                UnitConverter.formatNutrient(log.ecAfter!, _settings.nutrientUnit, _settings.ppmScale, decimals: 1),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              )
+            : null,
+        children: [
+          _buildFertilizerDetails(log, isDark),
+        ],
+      ),
+    );
+  }
+
+  /// Build fertilizer details section for a log
+  Widget _buildFertilizerDetails(RdwcLog log, bool isDark) {
+    if (log.fertilizers == null || log.fertilizers!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return FutureBuilder<List<_FertilizerLogDisplay>>(
+      future: _loadFertilizerDisplayData(log),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final fertilizerDisplays = snapshot.data!;
+
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey[900] : Colors.grey[100],
+            border: Border(
+              top: BorderSide(
+                color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+              ),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _t['nutrients'],
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...fertilizerDisplays.map((display) => _buildFertilizerRow(display, log, isDark)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Build a single fertilizer row
+  Widget _buildFertilizerRow(_FertilizerLogDisplay display, RdwcLog log, bool isDark) {
+    final logFert = display.logFertilizer;
+    final fert = display.fertilizer;
+
+    // Calculate amounts
+    final systemVolume = log.levelAfter ?? _system.currentLevel;
+    final totalAmount = logFert.getTotalAmount(systemVolume);
+    final perLiterAmount = logFert.getPerLiterAmount(systemVolume);
+
+    // Format amount display
+    String amountText;
+    if (logFert.amountType == FertilizerAmountType.perLiter) {
+      amountText = '${perLiterAmount.toStringAsFixed(1)}ml/L (${totalAmount.toStringAsFixed(0)}ml ${_t['total_amount']})';
+    } else {
+      amountText = '${totalAmount.toStringAsFixed(0)}ml ${_t['total_amount']} (${perLiterAmount.toStringAsFixed(1)}ml/L)';
+    }
+
+    // Calculate contribution
+    String contributionText = '';
+    if (fert.ecValue != null && fert.ecValue! > 0) {
+      final ecContribution = perLiterAmount * fert.ecValue!;
+      if (_settings.nutrientUnit == NutrientUnit.ec) {
+        contributionText = '→ ${ecContribution.toStringAsFixed(2)} mS/cm';
+      } else {
+        final ppmContribution = UnitConverter.ecToPpm(ecContribution, _settings.ppmScale);
+        contributionText = '→ ${ppmContribution.toStringAsFixed(0)} PPM';
+      }
+    } else if (fert.ppmValue != null && fert.ppmValue! > 0) {
+      final ppmContribution = perLiterAmount * fert.ppmValue!;
+      if (_settings.nutrientUnit == NutrientUnit.ppm) {
+        contributionText = '→ ${ppmContribution.toStringAsFixed(0)} PPM';
+      } else {
+        final ecContribution = UnitConverter.ppmToEc(ppmContribution, _settings.ppmScale);
+        contributionText = '→ ${ecContribution.toStringAsFixed(2)} mS/cm';
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 4,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  fert.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  amountText,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+                if (contributionText.isNotEmpty)
+                  Text(
+                    contributionText,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Load fertilizer data for display
+  Future<List<_FertilizerLogDisplay>> _loadFertilizerDisplayData(RdwcLog log) async {
+    if (log.fertilizers == null || log.fertilizers!.isEmpty) {
+      return [];
+    }
+
+    final displays = <_FertilizerLogDisplay>[];
+    for (final logFert in log.fertilizers!) {
+      final fert = await _fertilizerRepo.findById(logFert.fertilizerId);
+      if (fert != null) {
+        displays.add(_FertilizerLogDisplay(
+          logFertilizer: logFert,
+          fertilizer: fert,
+        ));
+      }
+    }
+    return displays;
+  }
+
+  Widget _buildLinkedPlantsSection(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              _t['plants_in_system'],
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            Text(
+              '${_linkedPlants.length} / ${_system.bucketCount}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_linkedPlants.isEmpty)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.local_florist,
+                      size: 48,
+                      color: isDark ? Colors.grey[700] : Colors.grey[400],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _t['no_plants_in_system'],
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[600] : Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          ..._linkedPlants.map((plant) => Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: Icon(Icons.local_florist, color: Colors.green),
+                  title: Text(plant.name),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${_t['bucket_number']}: ${plant.bucketNumber ?? '-'}'),
+                      Text('${_t['phase']}: ${plant.phase.displayName}'),
+                    ],
+                  ),
+                  trailing: Text(
+                    '${_t['day']} ${plant.totalDays}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              )),
+      ],
+    );
+  }
+}
+
+/// Helper class to display fertilizer log data
+class _FertilizerLogDisplay {
+  final RdwcLogFertilizer logFertilizer;
+  final Fertilizer fertilizer;
+
+  _FertilizerLogDisplay({
+    required this.logFertilizer,
+    required this.fertilizer,
+  });
+}

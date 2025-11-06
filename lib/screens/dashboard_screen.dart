@@ -9,9 +9,12 @@ import 'room_list_screen.dart';
 import 'fertilizer_list_screen.dart';
 import 'harvest_list_screen.dart';
 import 'settings_screen.dart';
+import 'rdwc_systems_screen.dart';
+import 'nutrient_dilution_calculator_screen.dart';
 import '../models/app_settings.dart';
 import '../repositories/settings_repository.dart';
 import '../utils/translations.dart';
+import '../main.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -176,6 +179,34 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 ),
               ),
             ),
+
+            // RDWC Systems (Expert Mode Only)
+            if (GrowLogApp.of(context)?.settings.isExpertMode ?? false) ...[
+              const SizedBox(height: 12),
+              _buildActionCard(
+                'assets/icons/fertilizer_icon.png', // Reusing icon for now
+                _t['rdwc_systems'],
+                'RDWC water tracking',
+                isDark,
+                    () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const RdwcSystemsScreen(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildActionCard(
+                'assets/icons/fertilizer_icon.png', // Reusing icon for now
+                'Nutrient Calculator',
+                'Dilution calculator for nutrients',
+                isDark,
+                    () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const NutrientDilutionCalculatorScreen(),
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 24),
 

@@ -4,7 +4,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:share_plus/share_plus.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import '../main.dart';
@@ -82,6 +81,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
     AppMessages.showSuccess(context,
           value ? _t['dark_mode_enabled'] : _t['light_mode_enabled'],
         );
+  }
+
+  Future<void> _toggleExpertMode(bool value) async {
+    final newSettings = _settings.copyWith(isExpertMode: value);
+    await _settingsRepo.saveSettings(newSettings);
+
+    setState(() => _settings = newSettings);
+
+    if (!mounted) return;
+
+    // Update app settings
+    GrowLogApp.of(context)?.updateSettings(newSettings);
+    widget.onSettingsChanged?.call(newSettings);
+
+    AppMessages.showSuccess(context,
+          value ? _t['expert_mode_enabled'] : _t['expert_mode_disabled'],
+        );
+  }
+
+  Future<void> _changeNutrientUnit(NutrientUnit unit) async {
+    final newSettings = _settings.copyWith(nutrientUnit: unit);
+    await _settingsRepo.saveSettings(newSettings);
+    setState(() => _settings = newSettings);
+    if (!mounted) return;
+    GrowLogApp.of(context)?.updateSettings(newSettings);
+    widget.onSettingsChanged?.call(newSettings);
+  }
+
+  Future<void> _changePpmScale(PpmScale scale) async {
+    final newSettings = _settings.copyWith(ppmScale: scale);
+    await _settingsRepo.saveSettings(newSettings);
+    setState(() => _settings = newSettings);
+    if (!mounted) return;
+    GrowLogApp.of(context)?.updateSettings(newSettings);
+    widget.onSettingsChanged?.call(newSettings);
+  }
+
+  Future<void> _changeTemperatureUnit(TemperatureUnit unit) async {
+    final newSettings = _settings.copyWith(temperatureUnit: unit);
+    await _settingsRepo.saveSettings(newSettings);
+    setState(() => _settings = newSettings);
+    if (!mounted) return;
+    GrowLogApp.of(context)?.updateSettings(newSettings);
+    widget.onSettingsChanged?.call(newSettings);
+  }
+
+  Future<void> _changeLengthUnit(LengthUnit unit) async {
+    final newSettings = _settings.copyWith(lengthUnit: unit);
+    await _settingsRepo.saveSettings(newSettings);
+    setState(() => _settings = newSettings);
+    if (!mounted) return;
+    GrowLogApp.of(context)?.updateSettings(newSettings);
+    widget.onSettingsChanged?.call(newSettings);
+  }
+
+  Future<void> _changeVolumeUnit(VolumeUnit unit) async {
+    final newSettings = _settings.copyWith(volumeUnit: unit);
+    await _settingsRepo.saveSettings(newSettings);
+    setState(() => _settings = newSettings);
+    if (!mounted) return;
+    GrowLogApp.of(context)?.updateSettings(newSettings);
+    widget.onSettingsChanged?.call(newSettings);
   }
 
   @override
@@ -163,6 +224,154 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
+          // Expert Mode Section
+          _buildSectionHeader(_t['expert_mode'], isDark),
+          Card(
+            child: SwitchListTile(
+              title: Text(_t['expert_mode']),
+              subtitle: Text(_t['expert_mode_desc']),
+              value: _settings.isExpertMode,
+              onChanged: _toggleExpertMode,
+              secondary: Icon(
+                _settings.isExpertMode ? Icons.engineering : Icons.person,
+                color: Colors.orange[700],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Measurement Units Section
+          _buildSectionHeader(_t['measurement_units'], isDark),
+          Card(
+            child: Column(
+              children: [
+                // Nutrient Unit (EC/PPM)
+                ListTile(
+                  leading: Icon(Icons.science, color: Colors.blue[700]),
+                  title: Text(_t['nutrient_unit']),
+                  trailing: SegmentedButton<NutrientUnit>(
+                    segments: [
+                      ButtonSegment(
+                        value: NutrientUnit.ec,
+                        label: Text('EC'),
+                      ),
+                      ButtonSegment(
+                        value: NutrientUnit.ppm,
+                        label: Text('PPM'),
+                      ),
+                    ],
+                    selected: {_settings.nutrientUnit},
+                    onSelectionChanged: (Set<NutrientUnit> selected) {
+                      _changeNutrientUnit(selected.first);
+                    },
+                  ),
+                ),
+                const Divider(height: 1),
+
+                // PPM Scale (nur sichtbar wenn PPM gewählt)
+                if (_settings.nutrientUnit == NutrientUnit.ppm) ...[
+                  ListTile(
+                    leading: Icon(Icons.analytics, color: Colors.purple[700]),
+                    title: Text(_t['ppm_scale']),
+                    subtitle: Text(_t['ppm_scale_help']),
+                    trailing: SegmentedButton<PpmScale>(
+                      segments: [
+                        ButtonSegment(
+                          value: PpmScale.scale500,
+                          label: Text('500'),
+                        ),
+                        ButtonSegment(
+                          value: PpmScale.scale700,
+                          label: Text('700'),
+                        ),
+                        ButtonSegment(
+                          value: PpmScale.scale640,
+                          label: Text('640'),
+                        ),
+                      ],
+                      selected: {_settings.ppmScale},
+                      onSelectionChanged: (Set<PpmScale> selected) {
+                        _changePpmScale(selected.first);
+                      },
+                    ),
+                  ),
+                  const Divider(height: 1),
+                ],
+
+                // Temperature Unit (C/F)
+                ListTile(
+                  leading: Icon(Icons.thermostat, color: Colors.orange[700]),
+                  title: Text(_t['temperature_unit']),
+                  trailing: SegmentedButton<TemperatureUnit>(
+                    segments: [
+                      ButtonSegment(
+                        value: TemperatureUnit.celsius,
+                        label: Text('°C'),
+                      ),
+                      ButtonSegment(
+                        value: TemperatureUnit.fahrenheit,
+                        label: Text('°F'),
+                      ),
+                    ],
+                    selected: {_settings.temperatureUnit},
+                    onSelectionChanged: (Set<TemperatureUnit> selected) {
+                      _changeTemperatureUnit(selected.first);
+                    },
+                  ),
+                ),
+                const Divider(height: 1),
+
+                // Length Unit (cm/inch)
+                ListTile(
+                  leading: Icon(Icons.straighten, color: Colors.green[700]),
+                  title: Text(_t['length_unit']),
+                  trailing: SegmentedButton<LengthUnit>(
+                    segments: [
+                      ButtonSegment(
+                        value: LengthUnit.cm,
+                        label: Text('cm'),
+                      ),
+                      ButtonSegment(
+                        value: LengthUnit.inch,
+                        label: Text('inch'),
+                      ),
+                    ],
+                    selected: {_settings.lengthUnit},
+                    onSelectionChanged: (Set<LengthUnit> selected) {
+                      _changeLengthUnit(selected.first);
+                    },
+                  ),
+                ),
+                const Divider(height: 1),
+
+                // Volume Unit (L/Gal)
+                ListTile(
+                  leading: Icon(Icons.water_drop, color: Colors.cyan[700]),
+                  title: Text(_t['volume_unit']),
+                  trailing: SegmentedButton<VolumeUnit>(
+                    segments: [
+                      ButtonSegment(
+                        value: VolumeUnit.liter,
+                        label: Text('L'),
+                      ),
+                      ButtonSegment(
+                        value: VolumeUnit.gallon,
+                        label: Text('gal'),
+                      ),
+                    ],
+                    selected: {_settings.volumeUnit},
+                    onSelectionChanged: (Set<VolumeUnit> selected) {
+                      _changeVolumeUnit(selected.first);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
           // Legal & About Section
           _buildSectionHeader(_t['legal_about'], isDark),
           Card(
@@ -224,7 +433,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ListTile(
               leading: Icon(Icons.bug_report, color: Colors.orange[700]),
               title: const Text('Debug Info'),
-              subtitle: Text('Theme: ${isDark ? "Dark" : "Light"}'),
+              subtitle: Text('Theme: ${isDark ? "Dark" : "Light"}\nExpert Mode: ${_settings.isExpertMode ? "Enabled" : "Disabled"}'),
             ),
           ),
         ],
@@ -293,14 +502,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     try {
-      final zipPath = await _backupService.exportData();
+      await _backupService.exportData();
 
       if (mounted && _showingDialog) {
         Navigator.of(context).pop(); // Close loading dialog
         _showingDialog = false;
 
-        // Show success and share file
-        final result = await showDialog<bool>(
+        // Show success message
+        await showDialog(
           context: context,
           builder: (context) => AlertDialog(
             title: Row(
@@ -312,26 +521,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             content: Text(_t['export_success_desc']),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(_t['close']),
-              ),
               ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[700],
                   foregroundColor: Colors.white,
                 ),
-                child: Text(_t['share']),
+                child: Text(_t['ok']),
               ),
             ],
           ),
         );
-
-        if (result == true) {
-          // ignore: deprecated_member_use
-          await Share.shareXFiles([XFile(zipPath)], text: 'Plantry Backup');
-        }
       }
     } catch (e) {
       AppLogger.error('SettingsScreen', 'Export error: $e');

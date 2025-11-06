@@ -2,7 +2,7 @@ name: growlog_app
 description: "Private plant growing journal and log tracking app"
 publish_to: 'none'
 
-version: 0.7.0+1
+version: 0.8.0+2
 
 environment:
   sdk: ^3.9.2
@@ -21,7 +21,7 @@ dependencies:
 
   # State Management
   provider: ^6.1.1
-  get_it: ^7.6.4
+  get_it: ^9.0.5
 
   # Settings Persistence
   shared_preferences: ^2.2.2
@@ -29,15 +29,12 @@ dependencies:
   # Image Picker
   image_picker: ^1.0.7
 
-  # Share
-  share_plus: ^12.0.1
-
   # Date/Time formatting
   intl: ^0.20.2
 
   # File handling
-  archive: ^3.6.1
-  file_picker: ^8.0.0+1
+  archive: ^4.0.7
+  file_picker: ^10.3.3
 
   # UI
   cupertino_icons: ^1.0.6
@@ -54,9 +51,18 @@ dev_dependencies:
   sqflite_common_ffi: ^2.3.0
 
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/icons/
+
+# App Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icons/app_icon.png"
+  adaptive_icon_background: "#1E1E1E"  # Dark background for cannabis leaf
+  adaptive_icon_foreground: "assets/icons/app_icon.png"

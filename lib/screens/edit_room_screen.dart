@@ -7,7 +7,11 @@ import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import '../models/room.dart';
 import '../models/enums.dart';
+import '../models/rdwc_system.dart';
+import '../models/app_settings.dart';
 import '../repositories/room_repository.dart';
+import '../repositories/rdwc_repository.dart';
+import '../repositories/settings_repository.dart';
 import '../utils/validators.dart';
 
 class EditRoomScreen extends StatefulWidget {
@@ -22,6 +26,8 @@ class EditRoomScreen extends StatefulWidget {
 class _EditRoomScreenState extends State<EditRoomScreen> {
   final _formKey = GlobalKey<FormState>();
   final RoomRepository _roomRepo = RoomRepository();
+  final RdwcRepository _rdwcRepo = RdwcRepository();
+  final SettingsRepository _settingsRepo = SettingsRepository();
 
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
@@ -31,6 +37,9 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
 
   GrowType? _growType;
   WateringSystem? _wateringSystem;
+  int? _selectedRdwcSystemId;
+  List<RdwcSystem> _rdwcSystems = [];
+  AppSettings? _settings;
   bool _isLoading = false;
 
   @override
@@ -52,6 +61,25 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
 
     _growType = widget.room.growType;
     _wateringSystem = widget.room.wateringSystem;
+    _selectedRdwcSystemId = widget.room.rdwcSystemId;
+
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    try {
+      final settings = await _settingsRepo.getSettings();
+      final systems = await _rdwcRepo.getAllSystems();
+
+      if (mounted) {
+        setState(() {
+          _settings = settings;
+          _rdwcSystems = systems;
+        });
+      }
+    } catch (e) {
+      AppLogger.error('EditRoomScreen', 'Error loading initial data', e);
+    }
   }
 
   @override
@@ -80,6 +108,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
             : null,
         growType: _growType,
         wateringSystem: _wateringSystem,
+        rdwcSystemId: _selectedRdwcSystemId,
         width: _widthController.text.trim().isNotEmpty
             ? (double.tryParse(_widthController.text.trim()) ?? 0.0) / 100.0  // ✅ CM → Meter
             : 0.0,
@@ -177,6 +206,8 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
   }
 
   Widget _buildGrowSettings() {
+    final isExpertMode = _settings?.isExpertMode ?? false;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -226,6 +257,29 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
           ],
           onChanged: (value) => setState(() => _wateringSystem = value),
         ),
+        // ✅ Expert Mode: RDWC System Auswahl
+        if (isExpertMode) ...[
+          const SizedBox(height: 12),
+          DropdownButtonFormField<int?>(
+            initialValue: _selectedRdwcSystemId,
+            decoration: InputDecoration(
+              labelText: 'RDWC System (optional)',
+              helperText: 'Verknüpfe diesen Raum mit einem RDWC System',
+              prefixIcon: Icon(Icons.water, color: Colors.blue[700]),
+              border: const OutlineInputBorder(),
+            ),
+            items: [
+              const DropdownMenuItem(value: null, child: Text('Kein RDWC System')),
+              ..._rdwcSystems.map((system) {
+                return DropdownMenuItem(
+                  value: system.id,
+                  child: Text(system.name),
+                );
+              }),
+            ],
+            onChanged: (value) => setState(() => _selectedRdwcSystemId = value),
+          ),
+        ],
       ],
     );
   }

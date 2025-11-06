@@ -7,8 +7,10 @@ import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import 'package:intl/intl.dart';
 import '../models/hardware.dart';
+import '../models/room.dart';
 import '../models/enums.dart';
 import '../repositories/hardware_repository.dart';
+import '../repositories/room_repository.dart';
 
 class EditHardwareScreen extends StatefulWidget {
   final Hardware hardware;
@@ -22,6 +24,9 @@ class EditHardwareScreen extends StatefulWidget {
 class _EditHardwareScreenState extends State<EditHardwareScreen> {
   final _formKey = GlobalKey<FormState>();
   final HardwareRepository _hardwareRepo = HardwareRepository();
+  final RoomRepository _roomRepo = RoomRepository();
+
+  Room? _room;
 
   late final TextEditingController _nameController;
   late final TextEditingController _brandController;
@@ -94,6 +99,17 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> {
     
     _selectedType = widget.hardware.type;
     _purchaseDate = widget.hardware.purchaseDate;
+
+    _loadRoom();
+  }
+
+  Future<void> _loadRoom() async {
+    final room = await _roomRepo.findById(widget.hardware.roomId);
+    if (mounted) {
+      setState(() {
+        _room = room;
+      });
+    }
   }
 
   @override
@@ -191,9 +207,15 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> {
   }
 
   Widget _buildTypeSelector() {
+    // Filter out entire watering category if room has RDWC system
+    final hasRdwcSystem = _room?.rdwcSystemId != null;
+    final availableTypes = hasRdwcSystem
+        ? HardwareType.values.where((type) => type.category != HardwareCategory.watering).toList()
+        : HardwareType.values.toList();
+
     // Gruppiere nach Kategorie
     final grouped = <HardwareCategory, List<HardwareType>>{};
-    for (final type in HardwareType.values) {
+    for (final type in availableTypes) {
       grouped.putIfAbsent(type.category, () => []).add(type);
     }
 

@@ -15,13 +15,15 @@ class Plant {
   final PlantPhase phase;
   final int? growId;  // NEU: Zuordnung zu einem Grow (optional)
   final int? roomId;  // OPTIONAL: Pflanze kann auch ohne Zelt existieren
+  final int? rdwcSystemId;  // RDWC System ID (if medium is RDWC)
+  final int? bucketNumber;  // Position in RDWC system (1, 2, 3, 4...)
   final DateTime? seedDate;
   final DateTime? phaseStartDate;
   final DateTime createdAt;
   final String? createdBy;
   final String logProfileName;
   final bool archived;
-  
+
   // Container Tracking
   final double? currentContainerSize;  // Aktueller Topf in Liter
   final double? currentSystemSize;     // Aktuelles System in Liter (RDWC/DWC)
@@ -37,6 +39,8 @@ class Plant {
     this.phase = PlantPhase.seedling,
     this.growId,  // NEU: growId als optionaler Parameter
     this.roomId,
+    this.rdwcSystemId,
+    this.bucketNumber,
     this.seedDate,
     this.phaseStartDate,
     DateTime? createdAt,
@@ -58,8 +62,10 @@ class Plant {
       seedType: SeedType.values.byName(map['seed_type'].toString().toLowerCase()),
       medium: Medium.values.byName(map['medium'].toString().toLowerCase()),
       phase: PlantPhase.values.byName(map['phase'].toString().toLowerCase()),
-      growId: map['grow_id'] as int?,  // NEU
+      growId: map['grow_id'] as int?,
       roomId: map['room_id'] as int?,
+      rdwcSystemId: map['rdwc_system_id'] as int?,
+      bucketNumber: map['bucket_number'] as int?,
       seedDate: map['seed_date'] != null ? DateTime.parse(map['seed_date'] as String) : null,
       phaseStartDate: map['phase_start_date'] != null ? DateTime.parse(map['phase_start_date'] as String) : null,
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at'] as String) : DateTime.now(),
@@ -82,8 +88,10 @@ class Plant {
       'seed_type': seedType.name.toUpperCase(),
       'medium': medium.name.toUpperCase(),
       'phase': phase.name.toUpperCase(),
-      'grow_id': growId,  // NEU
+      'grow_id': growId,
       'room_id': roomId,
+      'rdwc_system_id': rdwcSystemId,
+      'bucket_number': bucketNumber,
       'seed_date': seedDate?.toIso8601String().split('T')[0],
       'phase_start_date': phaseStartDate?.toIso8601String().split('T')[0],
       'created_at': createdAt.toIso8601String(),
@@ -105,8 +113,10 @@ class Plant {
     SeedType? seedType,
     Medium? medium,
     PlantPhase? phase,
-    int? growId,  // NEU
+    int? growId,
     int? roomId,
+    int? rdwcSystemId,
+    int? bucketNumber,
     DateTime? seedDate,
     DateTime? phaseStartDate,
     DateTime? createdAt,
@@ -125,8 +135,10 @@ class Plant {
       seedType: seedType ?? this.seedType,
       medium: medium ?? this.medium,
       phase: phase ?? this.phase,
-      growId: growId ?? this.growId,  // NEU
+      growId: growId ?? this.growId,
       roomId: roomId ?? this.roomId,
+      rdwcSystemId: rdwcSystemId ?? this.rdwcSystemId,
+      bucketNumber: bucketNumber ?? this.bucketNumber,
       seedDate: seedDate ?? this.seedDate,
       phaseStartDate: phaseStartDate ?? this.phaseStartDate,
       createdAt: createdAt ?? this.createdAt,

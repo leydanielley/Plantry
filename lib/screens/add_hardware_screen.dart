@@ -5,8 +5,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/hardware.dart';
+import '../models/room.dart';
 import '../models/enums.dart';
 import '../repositories/hardware_repository.dart';
+import '../repositories/room_repository.dart';
 import '../utils/app_messages.dart';
 
 class AddHardwareScreen extends StatefulWidget {
@@ -21,6 +23,9 @@ class AddHardwareScreen extends StatefulWidget {
 class _AddHardwareScreenState extends State<AddHardwareScreen> {
   final _formKey = GlobalKey<FormState>();
   final HardwareRepository _hardwareRepo = HardwareRepository();
+  final RoomRepository _roomRepo = RoomRepository();
+
+  Room? _room;
 
   // Basis-Controller
   final _brandController = TextEditingController();
@@ -81,6 +86,16 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
   void initState() {
     super.initState();
     _selectedType = HardwareType.ledPanel;
+    _loadRoom();
+  }
+
+  Future<void> _loadRoom() async {
+    final room = await _roomRepo.findById(widget.roomId);
+    if (mounted) {
+      setState(() {
+        _room = room;
+      });
+    }
   }
 
   @override
@@ -281,8 +296,14 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
   }
 
   Widget _buildTypeSelector() {
+    // Filter out entire watering category if room has RDWC system
+    final hasRdwcSystem = _room?.rdwcSystemId != null;
+    final availableTypes = hasRdwcSystem
+        ? HardwareType.values.where((type) => type.category != HardwareCategory.watering).toList()
+        : HardwareType.values.toList();
+
     final grouped = <HardwareCategory, List<HardwareType>>{};
-    for (final type in HardwareType.values) {
+    for (final type in availableTypes) {
       grouped.putIfAbsent(type.category, () => []).add(type);
     }
 

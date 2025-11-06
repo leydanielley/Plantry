@@ -9,6 +9,8 @@ class Fertilizer {
   final String? npk;
   final String? type;
   final String? description;
+  final double? ecValue;    // v8: EC contribution per ml (for RDWC calculations)
+  final double? ppmValue;   // v8: PPM contribution per ml (for RDWC calculations)
   final DateTime createdAt;
 
   Fertilizer({
@@ -18,6 +20,8 @@ class Fertilizer {
     this.npk,
     this.type,
     this.description,
+    this.ecValue,
+    this.ppmValue,
     DateTime? createdAt,
   }) : assert(name.isNotEmpty, 'Name cannot be empty'),
         createdAt = createdAt ?? DateTime.now();
@@ -31,6 +35,8 @@ class Fertilizer {
       npk: map['npk'] as String?,
       type: map['type'] as String?,
       description: map['description'] as String?,
+      ecValue: (map['ec_value'] as num?)?.toDouble(),
+      ppmValue: (map['ppm_value'] as num?)?.toDouble(),
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'] as String)
           : DateTime.now(),
@@ -46,6 +52,8 @@ class Fertilizer {
       'npk': npk,
       'type': type,
       'description': description,
+      'ec_value': ecValue,
+      'ppm_value': ppmValue,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -58,6 +66,8 @@ class Fertilizer {
     String? npk,
     String? type,
     String? description,
+    double? ecValue,
+    double? ppmValue,
     DateTime? createdAt,
   }) {
     return Fertilizer(
@@ -67,6 +77,8 @@ class Fertilizer {
       npk: npk ?? this.npk,
       type: type ?? this.type,
       description: description ?? this.description,
+      ecValue: ecValue ?? this.ecValue,
+      ppmValue: ppmValue ?? this.ppmValue,
       createdAt: createdAt ?? this.createdAt,
     );
   }

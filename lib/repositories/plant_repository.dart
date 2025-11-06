@@ -240,4 +240,17 @@ class PlantRepository {
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
+
+  /// Get plants by RDWC System ID
+  Future<List<Plant>> findByRdwcSystem(int systemId) async {
+    final db = await _dbHelper.database;
+    final maps = await db.query(
+      'plants',
+      where: 'rdwc_system_id = ? AND archived = ?',
+      whereArgs: [systemId, 0],
+      orderBy: 'bucket_number ASC',
+    );
+
+    return maps.map((map) => Plant.fromMap(map)).toList();
+  }
 }

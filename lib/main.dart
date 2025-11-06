@@ -94,6 +94,9 @@ class GrowLogAppState extends State<GrowLogApp> {
     });
   }
 
+  // Getter to access current settings
+  AppSettings get settings => _settings;
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
