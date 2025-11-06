@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import '../models/fertilizer.dart';
+import '../models/app_settings.dart';
 import '../repositories/fertilizer_repository.dart';
+import '../repositories/settings_repository.dart';
 import '../utils/validators.dart';
 
 class EditFertilizerScreen extends StatefulWidget {
@@ -21,14 +23,18 @@ class EditFertilizerScreen extends StatefulWidget {
 class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
   final _formKey = GlobalKey<FormState>();
   final FertilizerRepository _fertilizerRepo = FertilizerRepository();
+  final SettingsRepository _settingsRepo = SettingsRepository();
 
   late TextEditingController _nameController;
   late TextEditingController _brandController;
   late TextEditingController _npkController;
   late TextEditingController _typeController;
   late TextEditingController _descriptionController;
+  late TextEditingController _ecValueController;
+  late TextEditingController _ppmValueController;
 
-  bool _isLoading = false;
+  bool _isLoading = true;
+  AppSettings? _settings;
 
   @override
   void initState() {
@@ -40,6 +46,23 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
     _descriptionController = TextEditingController(
       text: widget.fertilizer.description ?? '',
     );
+    _ecValueController = TextEditingController(
+      text: widget.fertilizer.ecValue != null ? widget.fertilizer.ecValue.toString() : '',
+    );
+    _ppmValueController = TextEditingController(
+      text: widget.fertilizer.ppmValue != null ? widget.fertilizer.ppmValue.toString() : '',
+    );
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final settings = await _settingsRepo.getSettings();
+    if (mounted) {
+      setState(() {
+        _settings = settings;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -49,6 +72,8 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
     _npkController.dispose();
     _typeController.dispose();
     _descriptionController.dispose();
+    _ecValueController.dispose();
+    _ppmValueController.dispose();
     super.dispose();
   }
 
@@ -58,14 +83,23 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final ecValue = _ecValueController.text.isNotEmpty
+          ? double.tryParse(_ecValueController.text)
+          : null;
+      final ppmValue = _ppmValueController.text.isNotEmpty
+          ? double.tryParse(_ppmValueController.text)
+          : null;
+
       final updatedFertilizer = widget.fertilizer.copyWith(
         name: _nameController.text,
         brand: _brandController.text.isNotEmpty ? _brandController.text : null,
         npk: _npkController.text.isNotEmpty ? _npkController.text : null,
         type: _typeController.text.isNotEmpty ? _typeController.text : null,
-        description: _descriptionController.text.isNotEmpty 
-            ? _descriptionController.text 
+        description: _descriptionController.text.isNotEmpty
+            ? _descriptionController.text
             : null,
+        ecValue: ecValue,
+        ppmValue: ppmValue,
       );
 
       await _fertilizerRepo.save(updatedFertilizer);
@@ -103,6 +137,10 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
                   const SizedBox(height: 24),
                   _buildDetailsInfo(),
                   const SizedBox(height: 24),
+                  if (_settings?.isExpertMode ?? false) ...[
+                    _buildExpertInfo(),
+                    const SizedBox(height: 24),
+                  ],
                   _buildSaveButton(),
                   const SizedBox(height: 16),
                 ],
@@ -197,6 +235,113 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
             border: OutlineInputBorder(),
             alignLabelWithHint: true,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpertInfo() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'RDWC Expert Settings',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.orange[100],
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'EXPERT',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange[900],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.blue[200]!),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Diese Werte werden für EC/PPM-Berechnungen in RDWC-Logs verwendet.',
+                  style: TextStyle(fontSize: 12, color: Colors.blue[900]),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _ecValueController,
+          decoration: const InputDecoration(
+            labelText: 'EC-Wert pro ml (optional)',
+            hintText: 'z.B. 0.5',
+            helperText: 'EC-Beitrag pro ml Dünger',
+            prefixIcon: Icon(Icons.science),
+            suffixText: 'mS/cm/ml',
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          validator: (value) {
+            if (value != null && value.isNotEmpty) {
+              final number = double.tryParse(value);
+              if (number == null) {
+                return 'Bitte gültige Zahl eingeben';
+              }
+              if (number < 0) {
+                return 'Wert muss positiv sein';
+              }
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _ppmValueController,
+          decoration: const InputDecoration(
+            labelText: 'PPM-Wert pro ml (optional)',
+            hintText: 'z.B. 250',
+            helperText: 'PPM-Beitrag pro ml Dünger',
+            prefixIcon: Icon(Icons.science),
+            suffixText: 'PPM/ml',
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          validator: (value) {
+            if (value != null && value.isNotEmpty) {
+              final number = double.tryParse(value);
+              if (number == null) {
+                return 'Bitte gültige Zahl eingeben';
+              }
+              if (number < 0) {
+                return 'Wert muss positiv sein';
+              }
+            }
+            return null;
+          },
         ),
       ],
     );
