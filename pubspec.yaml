@@ -2,7 +2,7 @@ name: growlog_app
 description: "Private plant growing journal and log tracking app"
 publish_to: 'none'
 
-version: 0.8.0+3
+version: 0.9.0+4
 
 environment:
   sdk: ^3.9.2
@@ -31,6 +31,10 @@ dependencies:
 
   # Date/Time formatting
   intl: ^0.20.2
+
+  # Notifications (100% offline)
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
 
   # File handling
   archive: ^4.0.7
