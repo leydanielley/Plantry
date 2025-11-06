@@ -525,6 +525,36 @@ class RdwcRepository {
     }
   }
 
+  /// Create recipe fertilizer entry
+  Future<int> createRecipeFertilizer(RecipeFertilizer recipeFertilizer) async {
+    try {
+      final db = await _dbHelper.database;
+      final id = await db.insert('rdwc_recipe_fertilizers', recipeFertilizer.toMap());
+      AppLogger.info('RdwcRepository', 'Created recipe fertilizer', 'ID: $id');
+      return id;
+    } catch (e) {
+      AppLogger.error('RdwcRepository', 'Error creating recipe fertilizer', e);
+      rethrow;
+    }
+  }
+
+  /// Delete recipe fertilizer entry
+  Future<int> deleteRecipeFertilizer(int id) async {
+    try {
+      final db = await _dbHelper.database;
+      final count = await db.delete(
+        'rdwc_recipe_fertilizers',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      AppLogger.info('RdwcRepository', 'Deleted recipe fertilizer', 'ID: $id');
+      return count;
+    } catch (e) {
+      AppLogger.error('RdwcRepository', 'Error deleting recipe fertilizer', e);
+      rethrow;
+    }
+  }
+
   /// Create new recipe
   Future<int> createRecipe(RdwcRecipe recipe) async {
     try {

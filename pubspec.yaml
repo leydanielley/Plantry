@@ -2,7 +2,7 @@ name: growlog_app
 description: "Private plant growing journal and log tracking app"
 publish_to: 'none'
 
-version: 0.8.0+2
+version: 0.8.0+3
 
 environment:
   sdk: ^3.9.2
@@ -40,6 +40,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   flutter_svg: ^2.0.9
   shimmer: ^3.0.0
+  fl_chart: ^0.69.0
 
 dev_dependencies:
   flutter_test:

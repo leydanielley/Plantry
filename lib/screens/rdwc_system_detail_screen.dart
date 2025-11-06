@@ -18,6 +18,9 @@ import '../utils/unit_converter.dart';
 import '../utils/app_logger.dart';
 import 'rdwc_addback_form_screen.dart';
 import 'rdwc_system_form_screen.dart';
+import 'rdwc_recipes_screen.dart';
+import 'rdwc_analytics_screen.dart';
+import 'rdwc_quick_measurement_screen.dart';
 
 class RdwcSystemDetailScreen extends StatefulWidget {
   final RdwcSystem system;
@@ -118,6 +121,10 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
               const SizedBox(height: 24),
               _buildStatistics(isDark),
               const SizedBox(height: 24),
+              if (_settings.isExpertMode) ...[
+                _buildExpertActions(isDark),
+                const SizedBox(height: 24),
+              ],
               _buildLinkedPlantsSection(isDark),
               const SizedBox(height: 24),
               _buildLogsSection(isDark),
@@ -613,6 +620,137 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       }
     }
     return displays;
+  }
+
+  Widget _buildExpertActions(bool isDark) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[100],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'EXPERT MODE',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange[900],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _t['quick_actions'],
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Row 1: Recipe & Analytics
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RdwcRecipesScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.science, size: 20),
+                    label: Text(_t['recipes'], style: const TextStyle(fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[700],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RdwcAnalyticsScreen(system: _system),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.analytics, size: 20),
+                    label: Text(_t['analytics'], style: const TextStyle(fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[700],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Row 2: Quick Measurement & Water Addback
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RdwcQuickMeasurementScreen(system: _system),
+                        ),
+                      );
+                      if (result == true) _loadData();
+                    },
+                    icon: const Icon(Icons.science, size: 20, color: Colors.purple),
+                    label: Text(_t['quick_measurement'], style: const TextStyle(fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple[50],
+                      foregroundColor: Colors.purple[900],
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RdwcAddbackFormScreen(system: _system),
+                        ),
+                      );
+                      if (result == true) _loadData();
+                    },
+                    icon: const Icon(Icons.add_circle, size: 20, color: Colors.green),
+                    label: Text(_t['add_addback'], style: const TextStyle(fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[50],
+                      foregroundColor: Colors.green[900],
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildLinkedPlantsSection(bool isDark) {

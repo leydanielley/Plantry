@@ -441,22 +441,6 @@ class _PlantsScreenState extends State<PlantsScreen> {
     );
   }
 
-  // ignore: unused_element
-  Color _getPhaseColor(PlantPhase phase) {
-    switch (phase) {
-      case PlantPhase.seedling:
-        return Colors.green[300]!;
-      case PlantPhase.veg:
-        return Colors.green[600]!;
-      case PlantPhase.bloom:
-        return Colors.purple[400]!;
-      case PlantPhase.harvest:
-        return Colors.orange[600]!;
-      case PlantPhase.archived:
-        return Colors.grey[600]!;
-    }
-  }
-
   String _getPhaseName(PlantPhase phase) {
     switch (phase) {
       case PlantPhase.seedling:

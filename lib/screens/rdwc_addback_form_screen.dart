@@ -9,6 +9,7 @@ import '../repositories/fertilizer_repository.dart';
 import '../models/rdwc_system.dart';
 import '../models/rdwc_log.dart';
 import '../models/rdwc_log_fertilizer.dart';
+import '../models/rdwc_recipe.dart';
 import '../models/fertilizer.dart';
 import '../models/app_settings.dart';
 import '../utils/translations.dart';
@@ -63,6 +64,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   // v8: Fertilizer tracking (Expert Mode)
   List<Fertilizer> _availableFertilizers = [];
   final List<_FertilizerEntry> _addedFertilizers = [];
+  RdwcRecipe? _loadedRecipe;
 
   @override
   void initState() {
@@ -401,16 +403,84 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   List<Widget> _buildFertilizerSection() {
     final widgets = <Widget>[];
 
-    // Section header
+    // Section header with recipe loading
     widgets.add(
-      Text(
-        _t['nutrients'],
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+      Row(
+        children: [
+          Text(
+            _t['nutrients'],
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const Spacer(),
+          if (_loadedRecipe == null)
+            TextButton.icon(
+              onPressed: _showRecipePickerDialog,
+              icon: const Icon(Icons.science, size: 18),
+              label: Text(_t['load_recipe']),
+              style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+            )
+          else
+            TextButton.icon(
+              onPressed: _clearRecipe,
+              icon: const Icon(Icons.clear, size: 18),
+              label: Text(_t['clear_recipe']),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+                visualDensity: VisualDensity.compact,
+              ),
             ),
+        ],
       ),
     );
     widgets.add(const SizedBox(height: 8));
+
+    // Show loaded recipe info
+    if (_loadedRecipe != null) {
+      widgets.add(
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.green.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${_t['recipe_loaded']}: ${_loadedRecipe!.name}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                        fontSize: 13,
+                      ),
+                    ),
+                    if (_loadedRecipe!.targetEc != null || _loadedRecipe!.targetPh != null)
+                      Text(
+                        [
+                          if (_loadedRecipe!.targetEc != null)
+                            'EC: ${_loadedRecipe!.targetEc!.toStringAsFixed(1)}',
+                          if (_loadedRecipe!.targetPh != null)
+                            'pH: ${_loadedRecipe!.targetPh!.toStringAsFixed(1)}',
+                        ].join(' | '),
+                        style: const TextStyle(fontSize: 11, color: Colors.green),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      widgets.add(const SizedBox(height: 8));
+    }
 
     // Added fertilizers list
     for (int i = 0; i < _addedFertilizers.length; i++) {
@@ -1170,6 +1240,123 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         ),
       ),
     );
+  }
+
+  // v8: Recipe loading methods
+  Future<void> _showRecipePickerDialog() async {
+    try {
+      final recipes = await _rdwcRepo.getAllRecipes();
+
+      if (recipes.isEmpty) {
+        if (mounted) {
+          AppMessages.showInfo(context, _t['no_recipes_available']);
+        }
+        return;
+      }
+
+      if (!mounted) return;
+
+      final selected = await showDialog<RdwcRecipe>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(_t['select_recipe']),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: recipes.length,
+              itemBuilder: (context, index) {
+                final recipe = recipes[index];
+                return ListTile(
+                  leading: const Icon(Icons.science),
+                  title: Text(recipe.name),
+                  subtitle: [
+                    if (recipe.targetEc != null) 'EC: ${recipe.targetEc!.toStringAsFixed(1)}',
+                    if (recipe.targetPh != null) 'pH: ${recipe.targetPh!.toStringAsFixed(1)}',
+                  ].isNotEmpty
+                      ? Text([
+                          if (recipe.targetEc != null) 'EC: ${recipe.targetEc!.toStringAsFixed(1)}',
+                          if (recipe.targetPh != null) 'pH: ${recipe.targetPh!.toStringAsFixed(1)}',
+                        ].join(' | '))
+                      : null,
+                  onTap: () => Navigator.pop(context, recipe),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(_t['cancel']),
+            ),
+          ],
+        ),
+      );
+
+      if (selected != null) {
+        await _loadRecipe(selected);
+      }
+    } catch (e) {
+      AppLogger.error('RdwcAddbackFormScreen', 'Error loading recipes', e);
+      if (mounted) {
+        AppMessages.showError(context, _t['error_loading_recipes']);
+      }
+    }
+  }
+
+  Future<void> _loadRecipe(RdwcRecipe recipe) async {
+    try {
+      // Load recipe fertilizers
+      if (recipe.id == null) return;
+
+      final recipeFerts = await _rdwcRepo.getRecipeFertilizers(recipe.id!);
+
+      // Clear current fertilizers
+      for (final entry in _addedFertilizers) {
+        entry.amountController.dispose();
+      }
+      _addedFertilizers.clear();
+
+      // Add recipe fertilizers
+      for (final rf in recipeFerts) {
+        final fert = await _fertilizerRepo.findById(rf.fertilizerId);
+        if (fert != null) {
+          _addedFertilizers.add(_FertilizerEntry(
+            fertilizer: fert,
+            amountController: TextEditingController(text: rf.mlPerLiter.toString()),
+            amountType: FertilizerAmountType.perLiter,
+          ));
+        }
+      }
+
+      // Pre-fill target values if available
+      if (recipe.targetEc != null && _ecAfterController.text.isEmpty) {
+        _ecAfterController.text = recipe.targetEc.toString();
+      }
+      if (recipe.targetPh != null && _phAfterController.text.isEmpty) {
+        _phAfterController.text = recipe.targetPh.toString();
+      }
+
+      setState(() {
+        _loadedRecipe = recipe;
+      });
+
+      if (mounted) {
+        AppMessages.showSuccess(context, '${_t['recipe_loaded']}: ${recipe.name}');
+      }
+    } catch (e) {
+      AppLogger.error('RdwcAddbackFormScreen', 'Error applying recipe', e);
+      if (mounted) {
+        AppMessages.showError(context, _t['error_loading_recipe']);
+      }
+    }
+  }
+
+  void _clearRecipe() {
+    setState(() {
+      _loadedRecipe = null;
+    });
+    AppMessages.showSuccess(context, _t['recipe_cleared']);
   }
 }
 
