@@ -13,102 +13,137 @@ class PlantRepository {
 
   /// Alle Pflanzen laden (nicht archiviert) mit Pagination
   Future<List<Plant>> findAll({int? limit, int? offset}) async {
-    final db = await _dbHelper.database;
-    final maps = await db.query(
-      'plants',
-      where: 'archived = ?',
-      whereArgs: [0],
-      orderBy: 'id DESC',
-      limit: limit,
-      offset: offset,
-    );
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'plants',
+        where: 'archived = ?',
+        whereArgs: [0],
+        orderBy: 'id DESC',
+        limit: limit,
+        offset: offset,
+      );
 
-    return maps.map((map) => Plant.fromMap(map)).toList();
+      return maps.map((map) => Plant.fromMap(map)).toList();
+    } catch (e, stackTrace) {
+      AppLogger.error('PlantRepository', 'Failed to load plants', e, stackTrace);
+      return []; // Return empty list on error
+    }
   }
 
   /// Pflanze nach ID laden
   Future<Plant?> findById(int id) async {
-    final db = await _dbHelper.database;
-    final maps = await db.query(
-      'plants',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'plants',
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
 
-    if (maps.isEmpty) return null;
-    return Plant.fromMap(maps.first);
+      if (maps.isEmpty) return null;
+      return Plant.fromMap(maps.first);
+    } catch (e, stackTrace) {
+      AppLogger.error('PlantRepository', 'Failed to load plant by id', e, stackTrace);
+      return null;
+    }
   }
 
   /// Pflanzen nach Room laden
   Future<List<Plant>> findByRoom(int roomId) async {
-    final db = await _dbHelper.database;
-    final maps = await db.query(
-      'plants',
-      where: 'room_id = ? AND archived = ?',
-      whereArgs: [roomId, 0],
-      orderBy: 'id DESC',
-    );
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'plants',
+        where: 'room_id = ? AND archived = ?',
+        whereArgs: [roomId, 0],
+        orderBy: 'id DESC',
+      );
 
-    return maps.map((map) => Plant.fromMap(map)).toList();
+      return maps.map((map) => Plant.fromMap(map)).toList();
+    } catch (e, stackTrace) {
+      AppLogger.error('PlantRepository', 'Failed to load plants by room', e, stackTrace);
+      return [];
+    }
   }
 
   /// Pflanze speichern (INSERT oder UPDATE)
   /// ✅ FIX: Recalculates log day_numbers wenn seed_date ändert
   Future<Plant> save(Plant plant) async {
-    final db = await _dbHelper.database;
+    try {
+      final db = await _dbHelper.database;
 
-    if (plant.id == null) {
-      // INSERT
-      final id = await db.insert('plants', plant.toMap());
-      return plant.copyWith(id: id);
-    } else {
-      // UPDATE - Check if seed date or phase start changed
-      final oldPlant = await findById(plant.id!);
-
-      if (oldPlant != null) {
-        final seedDateChanged = oldPlant.seedDate != plant.seedDate;
-        final phaseStartChanged = oldPlant.phaseStartDate != plant.phaseStartDate;
-
-        // Update plant
-        await db.update(
-          'plants',
-          plant.toMap(),
-          where: 'id = ?',
-          whereArgs: [plant.id],
-        );
-
-        // Recalculate log day_numbers if seed date changed
-        if (seedDateChanged && plant.seedDate != null) {
-          await recalculateLogDayNumbers(plant.id!, plant.seedDate!);
-        }
-
-        // Recalculate phase_day_numbers if phase start changed
-        if (phaseStartChanged && plant.phaseStartDate != null) {
-          await recalculatePhaseDayNumbers(plant.id!, plant.phaseStartDate!);
-        }
+      if (plant.id == null) {
+        // INSERT
+        final id = await db.insert('plants', plant.toMap());
+        return plant.copyWith(id: id);
       } else {
-        // Old plant not found, just update
-        await db.update(
-          'plants',
-          plant.toMap(),
-          where: 'id = ?',
-          whereArgs: [plant.id],
-        );
-      }
+        // UPDATE - Check if seed date or phase start changed
+        final oldPlant = await findById(plant.id!);
 
-      return plant;
+        if (oldPlant != null) {
+          final seedDateChanged = oldPlant.seedDate != plant.seedDate;
+          final phaseStartChanged = oldPlant.phaseStartDate != plant.phaseStartDate;
+
+          // ✅ v10: Check for phase history date changes
+          final vegDateChanged = oldPlant.vegDate != plant.vegDate;
+          final bloomDateChanged = oldPlant.bloomDate != plant.bloomDate;
+          final harvestDateChanged = oldPlant.harvestDate != plant.harvestDate;
+          final anyPhaseDateChanged = vegDateChanged || bloomDateChanged || harvestDateChanged;
+
+          // Update plant
+          await db.update(
+            'plants',
+            plant.toMap(),
+            where: 'id = ?',
+            whereArgs: [plant.id],
+          );
+
+          // Recalculate log day_numbers if seed date changed
+          if (seedDateChanged && plant.seedDate != null) {
+            await recalculateLogDayNumbers(plant.id!, plant.seedDate!);
+          }
+
+          // ✅ v10: Recalculate ALL phase data if any phase date changed
+          if (anyPhaseDateChanged) {
+            await recalculateAllPhaseDayNumbers(plant.id!, plant);
+          }
+          // Fallback to old logic if only phaseStartDate changed (backward compatibility)
+          else if (phaseStartChanged && plant.phaseStartDate != null) {
+            await recalculatePhaseDayNumbers(plant.id!, plant.phaseStartDate!);
+          }
+        } else {
+          // Old plant not found, just update
+          await db.update(
+            'plants',
+            plant.toMap(),
+            where: 'id = ?',
+            whereArgs: [plant.id],
+          );
+        }
+
+        return plant;
+      }
+    } catch (e, stackTrace) {
+      AppLogger.error('PlantRepository', 'Failed to save plant', e, stackTrace);
+      rethrow;
     }
   }
 
   /// Pflanze löschen
   Future<int> delete(int id) async {
-    final db = await _dbHelper.database;
-    return await db.delete(
-      'plants',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    try {
+      final db = await _dbHelper.database;
+      return await db.delete(
+        'plants',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e, stackTrace) {
+      AppLogger.error('PlantRepository', 'Failed to delete plant', e, stackTrace);
+      rethrow;
+    }
   }
 
   /// Pflanze archivieren
@@ -138,9 +173,14 @@ class PlantRepository {
 
   /// Anzahl Pflanzen
   Future<int> count() async {
-    final db = await _dbHelper.database;
-    final result = await db.rawQuery('SELECT COUNT(*) as count FROM plants WHERE archived = 0');
-    return Sqflite.firstIntValue(result) ?? 0;
+    try {
+      final db = await _dbHelper.database;
+      final result = await db.rawQuery('SELECT COUNT(*) as count FROM plants WHERE archived = 0');
+      return Sqflite.firstIntValue(result) ?? 0;
+    } catch (e, stackTrace) {
+      AppLogger.error('PlantRepository', 'Failed to count plants', e, stackTrace);
+      return 0;
+    }
   }
 
   /// ✅ FIX: Recalculate all log day_numbers for a plant
@@ -231,6 +271,97 @@ class PlantRepository {
     AppLogger.info('PlantRepo', '✅ Updated phase_day_numbers', 'count=$updated');
   }
 
+  /// ✅ v10: Recalculate ALL phase and phase_day_number for ALL logs based on phase history
+  /// This is called when vegDate, bloomDate, or harvestDate changes
+  Future<void> recalculateAllPhaseDayNumbers(int plantId, Plant plant) async {
+    final db = await _dbHelper.database;
+    AppLogger.debug('PlantRepo', 'Recalculating ALL phase data for plant', 'plantId=$plantId');
+
+    // Get all logs for this plant
+    final logs = await db.query(
+      'plant_logs',
+      where: 'plant_id = ?',
+      whereArgs: [plantId],
+      orderBy: 'log_date ASC',
+    );
+
+    int updated = 0;
+
+    for (final log in logs) {
+      final logDateStr = log['log_date'] as String;
+      final logDate = DateTime.parse(logDateStr);
+      final logDay = DateTime(logDate.year, logDate.month, logDate.day);
+
+      // Determine which phase this log belongs to based on phase dates
+      String? newPhase;
+      int? newPhaseDayNumber;
+
+      // Check phases in reverse order (harvest → bloom → veg → seedling)
+      if (plant.harvestDate != null) {
+        final harvestDay = DateTime(
+          plant.harvestDate!.year,
+          plant.harvestDate!.month,
+          plant.harvestDate!.day,
+        );
+        if (!logDay.isBefore(harvestDay)) {
+          newPhase = 'HARVEST';
+          newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.harvestDate!);
+        }
+      }
+
+      if (newPhase == null && plant.bloomDate != null) {
+        final bloomDay = DateTime(
+          plant.bloomDate!.year,
+          plant.bloomDate!.month,
+          plant.bloomDate!.day,
+        );
+        if (!logDay.isBefore(bloomDay)) {
+          newPhase = 'BLOOM';
+          newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.bloomDate!);
+        }
+      }
+
+      if (newPhase == null && plant.vegDate != null) {
+        final vegDay = DateTime(
+          plant.vegDate!.year,
+          plant.vegDate!.month,
+          plant.vegDate!.day,
+        );
+        if (!logDay.isBefore(vegDay)) {
+          newPhase = 'VEG';
+          newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.vegDate!);
+        }
+      }
+
+      // If no specific phase date is set, default to SEEDLING
+      if (newPhase == null && plant.seedDate != null) {
+        newPhase = 'SEEDLING';
+        newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.seedDate!);
+      }
+
+      // Update log with new phase and phase_day_number
+      if (newPhase != null) {
+        await db.update(
+          'plant_logs',
+          {
+            'phase': newPhase,
+            'phase_day_number': newPhaseDayNumber,
+          },
+          where: 'id = ?',
+          whereArgs: [log['id']],
+        );
+        updated++;
+
+        AppLogger.debug(
+          'PlantRepo',
+          'Updated log ${log['id']}: $logDate → $newPhase (Day $newPhaseDayNumber)',
+        );
+      }
+    }
+
+    AppLogger.info('PlantRepo', '✅ Recalculated ALL phase data', 'updated=$updated logs');
+  }
+
   /// Get count of logs for a plant (used to show warning before seed date change)
   Future<int> getLogCount(int plantId) async {
     final db = await _dbHelper.database;
@@ -243,14 +374,19 @@ class PlantRepository {
 
   /// Get plants by RDWC System ID
   Future<List<Plant>> findByRdwcSystem(int systemId) async {
-    final db = await _dbHelper.database;
-    final maps = await db.query(
-      'plants',
-      where: 'rdwc_system_id = ? AND archived = ?',
-      whereArgs: [systemId, 0],
-      orderBy: 'bucket_number ASC',
-    );
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'plants',
+        where: 'rdwc_system_id = ? AND archived = ?',
+        whereArgs: [systemId, 0],
+        orderBy: 'bucket_number ASC',
+      );
 
-    return maps.map((map) => Plant.fromMap(map)).toList();
+      return maps.map((map) => Plant.fromMap(map)).toList();
+    } catch (e, stackTrace) {
+      AppLogger.error('PlantRepository', 'Failed to load plants by RDWC system', e, stackTrace);
+      return [];
+    }
   }
 }

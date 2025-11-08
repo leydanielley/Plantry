@@ -25,9 +25,9 @@ class AppTheme {
   static const Color darkTextTertiary = Color(0xFFADB5BD);     // Tertiärtext (dezent)
   
   // ✅ Grün nur als Akzentfarbe (WCAG AA konform)
-  static final Color primaryGreen = Colors.green[700]!;        // #388E3C - Header & wichtige CTAs
-  static final Color primaryGreenLight = Colors.green[400]!;   // Dark Mode Akzent
-  static final Color primaryGreenDark = Colors.green[800]!;    // Hover/Active States
+  static final Color primaryGreen = Colors.green[700] ?? const Color(0xFF388E3C);        // #388E3C - Header & wichtige CTAs
+  static final Color primaryGreenLight = Colors.green[400] ?? const Color(0xFF66BB6A);   // Dark Mode Akzent
+  static final Color primaryGreenDark = Colors.green[800] ?? const Color(0xFF2E7D32);    // Hover/Active States
 
   // 🎨 Custom Color Palette - Additional Colors
   static const Color successColor = Color(0xFF28A745);

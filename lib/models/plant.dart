@@ -18,7 +18,13 @@ class Plant {
   final int? rdwcSystemId;  // RDWC System ID (if medium is RDWC)
   final int? bucketNumber;  // Position in RDWC system (1, 2, 3, 4...)
   final DateTime? seedDate;
-  final DateTime? phaseStartDate;
+  final DateTime? phaseStartDate;  // Deprecated - use vegDate/bloomDate/harvestDate
+
+  // ✅ v10: Phase History
+  final DateTime? vegDate;       // When veg phase started
+  final DateTime? bloomDate;     // When bloom phase started
+  final DateTime? harvestDate;   // When harvest phase started
+
   final DateTime createdAt;
   final String? createdBy;
   final String logProfileName;
@@ -43,6 +49,9 @@ class Plant {
     this.bucketNumber,
     this.seedDate,
     this.phaseStartDate,
+    this.vegDate,
+    this.bloomDate,
+    this.harvestDate,
     DateTime? createdAt,
     this.createdBy,
     this.logProfileName = 'standard',
@@ -68,6 +77,9 @@ class Plant {
       bucketNumber: map['bucket_number'] as int?,
       seedDate: map['seed_date'] != null ? DateTime.parse(map['seed_date'] as String) : null,
       phaseStartDate: map['phase_start_date'] != null ? DateTime.parse(map['phase_start_date'] as String) : null,
+      vegDate: map['veg_date'] != null ? DateTime.parse(map['veg_date'] as String) : null,
+      bloomDate: map['bloom_date'] != null ? DateTime.parse(map['bloom_date'] as String) : null,
+      harvestDate: map['harvest_date'] != null ? DateTime.parse(map['harvest_date'] as String) : null,
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at'] as String) : DateTime.now(),
       createdBy: map['created_by'] as String?,
       logProfileName: map['log_profile_name'] as String? ?? 'standard',
@@ -94,6 +106,9 @@ class Plant {
       'bucket_number': bucketNumber,
       'seed_date': seedDate?.toIso8601String().split('T')[0],
       'phase_start_date': phaseStartDate?.toIso8601String().split('T')[0],
+      'veg_date': vegDate?.toIso8601String().split('T')[0],
+      'bloom_date': bloomDate?.toIso8601String().split('T')[0],
+      'harvest_date': harvestDate?.toIso8601String().split('T')[0],
       'created_at': createdAt.toIso8601String(),
       'created_by': createdBy,
       'log_profile_name': logProfileName,
@@ -119,6 +134,9 @@ class Plant {
     int? bucketNumber,
     DateTime? seedDate,
     DateTime? phaseStartDate,
+    DateTime? vegDate,
+    DateTime? bloomDate,
+    DateTime? harvestDate,
     DateTime? createdAt,
     String? createdBy,
     String? logProfileName,
@@ -141,6 +159,9 @@ class Plant {
       bucketNumber: bucketNumber ?? this.bucketNumber,
       seedDate: seedDate ?? this.seedDate,
       phaseStartDate: phaseStartDate ?? this.phaseStartDate,
+      vegDate: vegDate ?? this.vegDate,
+      bloomDate: bloomDate ?? this.bloomDate,
+      harvestDate: harvestDate ?? this.harvestDate,
       createdAt: createdAt ?? this.createdAt,
       createdBy: createdBy ?? this.createdBy,
       logProfileName: logProfileName ?? this.logProfileName,

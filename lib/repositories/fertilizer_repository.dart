@@ -50,6 +50,63 @@ class FertilizerRepository {
     }
   }
 
+  /// Prüft ob Dünger in Verwendung ist (Rezepte, Logs, etc.)
+  Future<bool> isInUse(int id) async {
+    final db = await _dbHelper.database;
+
+    // Check RDWC recipes
+    final recipeCount = Sqflite.firstIntValue(
+      await db.rawQuery(
+        'SELECT COUNT(*) FROM rdwc_recipe_fertilizers WHERE fertilizer_id = ?',
+        [id],
+      ),
+    ) ?? 0;
+
+    // Check RDWC logs
+    final rdwcLogCount = Sqflite.firstIntValue(
+      await db.rawQuery(
+        'SELECT COUNT(*) FROM rdwc_log_fertilizers WHERE fertilizer_id = ?',
+        [id],
+      ),
+    ) ?? 0;
+
+    // Check plant logs
+    final plantLogCount = Sqflite.firstIntValue(
+      await db.rawQuery(
+        'SELECT COUNT(*) FROM log_fertilizers WHERE fertilizer_id = ?',
+        [id],
+      ),
+    ) ?? 0;
+
+    return (recipeCount + rdwcLogCount + plantLogCount) > 0;
+  }
+
+  /// Gibt detaillierte Nutzungs-Statistik zurück
+  Future<Map<String, int>> getUsageDetails(int id) async {
+    final db = await _dbHelper.database;
+
+    return {
+      'recipes': Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(*) FROM rdwc_recipe_fertilizers WHERE fertilizer_id = ?',
+          [id],
+        ),
+      ) ?? 0,
+      'rdwc_logs': Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(*) FROM rdwc_log_fertilizers WHERE fertilizer_id = ?',
+          [id],
+        ),
+      ) ?? 0,
+      'plant_logs': Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(*) FROM log_fertilizers WHERE fertilizer_id = ?',
+          [id],
+        ),
+      ) ?? 0,
+    };
+  }
+
   /// Dünger löschen
   Future<int> delete(int id) async {
     final db = await _dbHelper.database;

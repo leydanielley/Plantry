@@ -118,22 +118,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
       final harvest = await _harvestService.getHarvestForPlant(updatedPlant);
 
-      final logFertilizersMap = <int, List<LogFertilizer>>{};
-      final logPhotosMap = <int, List<Photo>>{};
-
-      for (final log in logs) {
-        if (log.id != null) {
-          final logFerts = await _logFertilizerRepo.findByLog(log.id!);
-          if (logFerts.isNotEmpty) {
-            logFertilizersMap[log.id!] = logFerts;
-          }
-
-          final photos = await _photoRepo.getPhotosByLogId(log.id!);
-          if (photos.isNotEmpty) {
-            logPhotosMap[log.id!] = photos;
-          }
-        }
-      }
+      // ✅ PERFORMANCE FIX: Batch-Query statt N+1
+      final logIds = logs.where((log) => log.id != null).map((log) => log.id!).toList();
+      final logFertilizersMap = await _logFertilizerRepo.findByLogs(logIds);
+      final logPhotosMap = await _photoRepo.getPhotosByLogIds(logIds);
 
       if (!mounted) return;
 
@@ -168,20 +156,14 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         offset: _currentPage * _pageSize,
       );
 
-      // Lade Fertilizers & Photos für neue Logs
-      for (final log in newLogs) {
-        if (log.id != null) {
-          final logFerts = await _logFertilizerRepo.findByLog(log.id!);
-          if (logFerts.isNotEmpty) {
-            _logFertilizers[log.id!] = logFerts;
-          }
+      // ✅ PERFORMANCE FIX: Batch-Query statt N+1
+      final newLogIds = newLogs.where((log) => log.id != null).map((log) => log.id!).toList();
+      final newLogFertilizers = await _logFertilizerRepo.findByLogs(newLogIds);
+      final newLogPhotos = await _photoRepo.getPhotosByLogIds(newLogIds);
 
-          final photos = await _photoRepo.getPhotosByLogId(log.id!);
-          if (photos.isNotEmpty) {
-            _logPhotos[log.id!] = photos;
-          }
-        }
-      }
+      // Merge in existing maps
+      _logFertilizers.addAll(newLogFertilizers);
+      _logPhotos.addAll(newLogPhotos);
 
       if (!mounted) return;
 
@@ -790,7 +772,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     return ListView.builder(
       controller: _scrollController,  // ✅ FIX: ScrollController attached
       itemCount: _logs.length + (_hasMoreLogs || _isLoadingMore ? 1 : 0),  // ✅ FIX: +1 für Loading
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 80),
       itemBuilder: (context, index) {
         // ✅ FIX: Loading Indicator am Ende
         if (index == _logs.length) {

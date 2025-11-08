@@ -19,12 +19,19 @@ import '../utils/app_logger.dart';
 
 class RdwcAddbackFormScreen extends StatefulWidget {
   final RdwcSystem system;
+  final RdwcLog? existingLog; // ✅ Optional: For editing existing logs
 
-  const RdwcAddbackFormScreen({super.key, required this.system});
+  const RdwcAddbackFormScreen({
+    super.key,
+    required this.system,
+    this.existingLog,
+  });
 
   @override
   State<RdwcAddbackFormScreen> createState() => _RdwcAddbackFormScreenState();
 }
+
+
 
 class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   final _formKey = GlobalKey<FormState>();
@@ -94,8 +101,69 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         _isLoading = false;
       });
 
-      // Pre-fill current level as "level before"
-      _levelBeforeController.text = widget.system.currentLevel.toStringAsFixed(1);
+      // ✅ Load existing log data if editing
+      if (widget.existingLog != null) {
+        _loadExistingLogData();
+      } else {
+        // Pre-fill current level as "level before"
+        _levelBeforeController.text = widget.system.currentLevel.toStringAsFixed(1);
+      }
+    }
+  }
+
+  /// ✅ Load existing log data into form fields
+  void _loadExistingLogData() {
+    final log = widget.existingLog!;
+
+    _logType = log.logType;
+    _noteController.text = log.note ?? '';
+
+    switch (log.logType) {
+      case RdwcLogType.addback:
+        _levelBeforeController.text = log.levelBefore?.toString() ?? '';
+        _waterAddedController.text = log.waterAdded?.toString() ?? '';
+        _levelAfterController.text = log.levelAfter?.toString() ?? '';
+        _phBeforeController.text = log.phBefore?.toString() ?? '';
+        _ecBeforeController.text = log.ecBefore?.toString() ?? '';
+        _phAfterController.text = log.phAfter?.toString() ?? '';
+        _ecAfterController.text = log.ecAfter?.toString() ?? '';
+        break;
+      case RdwcLogType.fullChange:
+        _phAfterController.text = log.phAfter?.toString() ?? '';
+        _ecAfterController.text = log.ecAfter?.toString() ?? '';
+        // Note: Reservoir cleaned flag is stored in note field, user can edit note
+        break;
+      case RdwcLogType.measurement:
+        _currentLevelController.text = log.levelAfter?.toString() ?? '';
+        _currentPhController.text = log.phAfter?.toString() ?? '';
+        _currentEcController.text = log.ecAfter?.toString() ?? '';
+        break;
+      case RdwcLogType.maintenance:
+        // Note: Maintenance tasks are stored in note field, user can edit note
+        break;
+    }
+
+    // Load fertilizers
+    if (log.fertilizers != null) {
+      for (final logFert in log.fertilizers!) {
+        final fertilizer = _availableFertilizers.firstWhere(
+          (f) => f.id == logFert.fertilizerId,
+          orElse: () => Fertilizer(
+            id: logFert.fertilizerId,
+            name: 'Unknown',
+            brand: null,
+            npk: null,
+          ),
+        );
+        final amountController = TextEditingController(
+          text: logFert.amount.toString(),
+        );
+        _addedFertilizers.add(_FertilizerEntry(
+          fertilizer: fertilizer,
+          amountController: amountController,
+          amountType: logFert.amountType,
+        ));
+      }
     }
   }
 
@@ -112,6 +180,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
     _currentLevelController.dispose();
     _currentPhController.dispose();
     _currentEcController.dispose();
+    // Dispose fertilizer controllers
+    for (final entry in _addedFertilizers) {
+      entry.amountController.dispose();
+    }
     super.dispose();
   }
 
@@ -209,30 +281,31 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
 
     try {
       String successMessage;
+      final isEditing = widget.existingLog != null;
 
       switch (_logType) {
         case RdwcLogType.measurement:
           // Simple measurement: just current values
           await _saveMeasurement();
-          successMessage = 'Measurement logged successfully!';
+          successMessage = isEditing ? 'Measurement updated!' : 'Measurement logged successfully!';
           break;
 
         case RdwcLogType.fullChange:
           // Full reservoir change with new fertilizers
           await _saveFullChange();
-          successMessage = 'Full change logged successfully!';
+          successMessage = isEditing ? 'Full change updated!' : 'Full change logged successfully!';
           break;
 
         case RdwcLogType.maintenance:
           // Maintenance with checklist
           await _saveMaintenance();
-          successMessage = 'Maintenance logged successfully!';
+          successMessage = isEditing ? 'Maintenance updated!' : 'Maintenance logged successfully!';
           break;
 
         case RdwcLogType.addback:
           // Water addback with fertilizers
           await _saveAddback();
-          successMessage = 'Addback logged successfully!';
+          successMessage = isEditing ? 'Addback updated!' : 'Addback logged successfully!';
           break;
       }
 
@@ -246,6 +319,19 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         setState(() => _isSaving = false);
         AppMessages.showError(context, 'Error saving log: $e');
       }
+    }
+  }
+
+  /// ✅ Helper: Save or update log based on whether we're editing
+  Future<int> _saveOrUpdateLog(RdwcLog log) async {
+    if (widget.existingLog != null) {
+      // Update existing log
+      final updatedLog = log.copyWith(id: widget.existingLog!.id);
+      await _rdwcRepo.updateLog(updatedLog);
+      return widget.existingLog!.id!;
+    } else {
+      // Create new log
+      return await _rdwcRepo.createLog(log);
     }
   }
 
@@ -265,7 +351,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       note: note.isNotEmpty ? note : null,
     );
 
-    await _rdwcRepo.createLog(log);
+    await _saveOrUpdateLog(log);
     return log;
   }
 
@@ -300,7 +386,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       note: note.isNotEmpty ? note : null,
     );
 
-    final logId = await _rdwcRepo.createLog(log);
+    final logId = await _saveOrUpdateLog(log);
 
     // Save fertilizers if any were added
     await _saveFertilizers(logId);
@@ -338,7 +424,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       note: noteBuilder.toString().trim().isNotEmpty ? noteBuilder.toString().trim() : null,
     );
 
-    final logId = await _rdwcRepo.createLog(log);
+    final logId = await _saveOrUpdateLog(log);
 
     // Save fertilizers for the new water
     await _saveFertilizers(logId);
@@ -377,7 +463,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       note: noteBuilder.toString().trim(),
     );
 
-    await _rdwcRepo.createLog(log);
+    await _saveOrUpdateLog(log);
     return log;
   }
 

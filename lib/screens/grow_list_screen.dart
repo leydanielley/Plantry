@@ -256,6 +256,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
+      key: ValueKey(grow.id), // ✅ PERFORMANCE: Key for efficient updates
       margin: AppConstants.cardMarginVertical,
       child: ListTile(
         leading: CircleAvatar(

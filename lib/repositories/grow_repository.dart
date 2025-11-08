@@ -14,71 +14,96 @@ class GrowRepository {
 
   /// Alle Grows abrufen (nicht archiviert)
   Future<List<Grow>> getAll({bool includeArchived = false}) async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps;
+    try {
+      final db = await _dbHelper.database;
+      final List<Map<String, dynamic>> maps;
 
-    if (includeArchived) {
-      maps = await db.query('grows', orderBy: 'start_date DESC');
-    } else {
-      maps = await db.query(
-        'grows',
-        where: 'archived = ?',
-        whereArgs: [0],
-        orderBy: 'start_date DESC',
-      );
+      if (includeArchived) {
+        maps = await db.query('grows', orderBy: 'start_date DESC');
+      } else {
+        maps = await db.query(
+          'grows',
+          where: 'archived = ?',
+          whereArgs: [0],
+          orderBy: 'start_date DESC',
+        );
+      }
+
+      return List.generate(maps.length, (i) => Grow.fromMap(maps[i]));
+    } catch (e, stackTrace) {
+      AppLogger.error('GrowRepository', 'Failed to load grows', e, stackTrace);
+      return [];
     }
-
-    return List.generate(maps.length, (i) => Grow.fromMap(maps[i]));
   }
 
   /// Grow nach ID abrufen
   Future<Grow?> getById(int id) async {
-    final db = await _dbHelper.database;
-    final maps = await db.query(
-      'grows',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'grows',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
 
-    if (maps.isEmpty) return null;
-    return Grow.fromMap(maps.first);
+      if (maps.isEmpty) return null;
+      return Grow.fromMap(maps.first);
+    } catch (e, stackTrace) {
+      AppLogger.error('GrowRepository', 'Failed to load grow by id', e, stackTrace);
+      return null;
+    }
   }
 
   /// Neuen Grow erstellen
   Future<int> create(Grow grow) async {
-    final db = await _dbHelper.database;
-    return await db.insert('grows', grow.toMap());
+    try {
+      final db = await _dbHelper.database;
+      return await db.insert('grows', grow.toMap());
+    } catch (e, stackTrace) {
+      AppLogger.error('GrowRepository', 'Failed to create grow', e, stackTrace);
+      rethrow;
+    }
   }
 
   /// Grow aktualisieren
   Future<int> update(Grow grow) async {
-    final db = await _dbHelper.database;
-    return await db.update(
-      'grows',
-      grow.toMap(),
-      where: 'id = ?',
-      whereArgs: [grow.id],
-    );
+    try {
+      final db = await _dbHelper.database;
+      return await db.update(
+        'grows',
+        grow.toMap(),
+        where: 'id = ?',
+        whereArgs: [grow.id],
+      );
+    } catch (e, stackTrace) {
+      AppLogger.error('GrowRepository', 'Failed to update grow', e, stackTrace);
+      rethrow;
+    }
   }
 
   /// Grow löschen
   Future<int> delete(int id) async {
-    final db = await _dbHelper.database;
-    
-    // Erst Pflanzen von diesem Grow trennen
-    await db.update(
-      'plants',
-      {'grow_id': null},
-      where: 'grow_id = ?',
-      whereArgs: [id],
-    );
-    
-    // Dann Grow löschen
-    return await db.delete(
-      'grows',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    try {
+      final db = await _dbHelper.database;
+
+      // Erst Pflanzen von diesem Grow trennen
+      await db.update(
+        'plants',
+        {'grow_id': null},
+        where: 'grow_id = ?',
+        whereArgs: [id],
+      );
+
+      // Dann Grow löschen
+      return await db.delete(
+        'grows',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e, stackTrace) {
+      AppLogger.error('GrowRepository', 'Failed to delete grow', e, stackTrace);
+      rethrow;
+    }
   }
 
   /// Grow archivieren
@@ -105,37 +130,47 @@ class GrowRepository {
 
   /// Anzahl Pflanzen in einem Grow
   Future<int> getPlantCount(int growId) async {
-    final db = await _dbHelper.database;
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM plants WHERE grow_id = ?',
-      [growId],
-    );
-    return Sqflite.firstIntValue(result) ?? 0;
+    try {
+      final db = await _dbHelper.database;
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM plants WHERE grow_id = ?',
+        [growId],
+      );
+      return Sqflite.firstIntValue(result) ?? 0;
+    } catch (e, stackTrace) {
+      AppLogger.error('GrowRepository', 'Failed to get plant count', e, stackTrace);
+      return 0;
+    }
   }
 
   /// ✅ FIX BUG #1: Batch-Query für Plant Counts (verhindert N+1 Problem!)
   /// Gibt Map zurück: {growId: plantCount}
   Future<Map<int, int>> getPlantCountsForGrows(List<int> growIds) async {
-    final db = await _dbHelper.database;
-    
-    if (growIds.isEmpty) return {};
-    
-    // Prepared Statement mit Platzhaltern
-    final placeholders = List.filled(growIds.length, '?').join(',');
-    final result = await db.rawQuery('''
-      SELECT grow_id, COUNT(*) as count 
-      FROM plants 
-      WHERE grow_id IN ($placeholders)
-      GROUP BY grow_id
-    ''', growIds);
-    
-    // Map erstellen: growId → count
-    final counts = <int, int>{};
-    for (var row in result) {
-      counts[row['grow_id'] as int] = row['count'] as int;
+    try {
+      final db = await _dbHelper.database;
+
+      if (growIds.isEmpty) return {};
+
+      // Prepared Statement mit Platzhaltern
+      final placeholders = List.filled(growIds.length, '?').join(',');
+      final result = await db.rawQuery('''
+        SELECT grow_id, COUNT(*) as count
+        FROM plants
+        WHERE grow_id IN ($placeholders)
+        GROUP BY grow_id
+      ''', growIds);
+
+      // Map erstellen: growId → count
+      final counts = <int, int>{};
+      for (var row in result) {
+        counts[row['grow_id'] as int] = row['count'] as int;
+      }
+
+      return counts;
+    } catch (e, stackTrace) {
+      AppLogger.error('GrowRepository', 'Failed to get plant counts', e, stackTrace);
+      return {};
     }
-    
-    return counts;
   }
 
   /// Phase für alle Pflanzen in einem Grow ändern

@@ -49,7 +49,7 @@ class AppMessages {
     _showSnackBar(
       context,
       message: message,
-      backgroundColor: Colors.green[700]!,
+      backgroundColor: Colors.green[700] ?? const Color(0xFF388E3C),
       icon: Icons.check_circle,
     );
   }
@@ -141,7 +141,7 @@ class AppMessages {
     _showSnackBar(
       context,
       message: message,
-      backgroundColor: Colors.red[700]!,
+      backgroundColor: Colors.red[700] ?? const Color(0xFFD32F2F),
       icon: Icons.error,
     );
   }
@@ -165,7 +165,7 @@ class AppMessages {
     _showSnackBar(
       context,
       message: 'Error loading $itemName',
-      backgroundColor: Colors.red[700]!,
+      backgroundColor: Colors.red[700] ?? const Color(0xFFD32F2F),
       icon: Icons.error,
       onRetry: onRetry,
     );
@@ -180,7 +180,7 @@ class AppMessages {
     _showSnackBar(
       context,
       message: message,
-      backgroundColor: Colors.blue[700]!,
+      backgroundColor: Colors.blue[700] ?? const Color(0xFF1976D2),
       icon: Icons.info,
     );
   }
@@ -190,7 +190,7 @@ class AppMessages {
     _showSnackBar(
       context,
       message: message,
-      backgroundColor: Colors.orange[700]!,
+      backgroundColor: Colors.orange[700] ?? const Color(0xFFF57C00),
       icon: Icons.warning,
     );
   }

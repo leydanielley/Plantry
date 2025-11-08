@@ -49,13 +49,17 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
       final growPlants = allPlants.where((p) => p.growId == widget.grow.id).toList();
       AppLogger.info('GrowDetailScreen', 'Found ${growPlants.length} plants for this grow');
 
-      setState(() {
-        _plants = growPlants;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _plants = growPlants;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       AppLogger.error('GrowDetailScreen', 'Error loading plants: $e');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

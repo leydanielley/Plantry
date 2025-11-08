@@ -12,6 +12,7 @@ import '../repositories/settings_repository.dart';
 import '../utils/translations.dart';
 import '../database/database_helper.dart';
 import '../services/backup_service.dart';
+import '../utils/app_version.dart';
 import 'privacy_policy_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -42,22 +43,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final settings = await _settingsRepo.getSettings();
-    setState(() {
-      _settings = settings;
-      _t = AppTranslations(_settings.language);
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _settings = settings;
+        _t = AppTranslations(_settings.language);
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _changeLanguage(String newLanguage) async {
     final newSettings = _settings.copyWith(language: newLanguage);
     await _settingsRepo.saveSettings(newSettings);
+
+    if (!mounted) return;
+
     setState(() {
       _settings = newSettings;
       _t = AppTranslations(newLanguage);
     });
-
-    if (!mounted) return;
 
     // Update app theme
     GrowLogApp.of(context)?.updateSettings(newSettings);
@@ -70,9 +74,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final newSettings = _settings.copyWith(isDarkMode: value);
     await _settingsRepo.saveSettings(newSettings);
 
-    setState(() => _settings = newSettings);
-
     if (!mounted) return;
+
+    setState(() => _settings = newSettings);
 
     // Update app theme immediately
     GrowLogApp.of(context)?.updateSettings(newSettings);
@@ -84,12 +88,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _toggleExpertMode(bool value) async {
+    // Show warning when enabling Expert Mode
+    if (value == true) {
+      if (!mounted) return;
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+              const SizedBox(width: 12),
+              const Text('Expert-Modus'),
+            ],
+          ),
+          content: const Text(
+            'Der Expert-Modus ist experimentell und kann noch Fehler enthalten.\n\n'
+            'Er bietet erweiterte Funktionen wie:\n'
+            '• RDWC System Management\n'
+            '• Detaillierte Nährstoff-Tracking\n'
+            '• EC/pH Drift-Analyse\n\n'
+            'Möchten Sie den Expert-Modus aktivieren?\n\n'
+            'Falls Sie unsicher sind, bleiben Sie im Normal-Modus.',
+            style: TextStyle(fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Normal-Modus behalten'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Expert-Modus aktivieren'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) return; // User cancelled or chose to stay in normal mode
+    }
+
     final newSettings = _settings.copyWith(isExpertMode: value);
     await _settingsRepo.saveSettings(newSettings);
 
-    setState(() => _settings = newSettings);
-
     if (!mounted) return;
+
+    setState(() => _settings = newSettings);
 
     // Update app settings
     GrowLogApp.of(context)?.updateSettings(newSettings);
@@ -103,8 +147,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _changeNutrientUnit(NutrientUnit unit) async {
     final newSettings = _settings.copyWith(nutrientUnit: unit);
     await _settingsRepo.saveSettings(newSettings);
-    setState(() => _settings = newSettings);
     if (!mounted) return;
+    setState(() => _settings = newSettings);
     GrowLogApp.of(context)?.updateSettings(newSettings);
     widget.onSettingsChanged?.call(newSettings);
   }
@@ -112,8 +156,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _changePpmScale(PpmScale scale) async {
     final newSettings = _settings.copyWith(ppmScale: scale);
     await _settingsRepo.saveSettings(newSettings);
-    setState(() => _settings = newSettings);
     if (!mounted) return;
+    setState(() => _settings = newSettings);
     GrowLogApp.of(context)?.updateSettings(newSettings);
     widget.onSettingsChanged?.call(newSettings);
   }
@@ -121,8 +165,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _changeTemperatureUnit(TemperatureUnit unit) async {
     final newSettings = _settings.copyWith(temperatureUnit: unit);
     await _settingsRepo.saveSettings(newSettings);
-    setState(() => _settings = newSettings);
     if (!mounted) return;
+    setState(() => _settings = newSettings);
     GrowLogApp.of(context)?.updateSettings(newSettings);
     widget.onSettingsChanged?.call(newSettings);
   }
@@ -130,8 +174,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _changeLengthUnit(LengthUnit unit) async {
     final newSettings = _settings.copyWith(lengthUnit: unit);
     await _settingsRepo.saveSettings(newSettings);
-    setState(() => _settings = newSettings);
     if (!mounted) return;
+    setState(() => _settings = newSettings);
     GrowLogApp.of(context)?.updateSettings(newSettings);
     widget.onSettingsChanged?.call(newSettings);
   }
@@ -139,8 +183,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _changeVolumeUnit(VolumeUnit unit) async {
     final newSettings = _settings.copyWith(volumeUnit: unit);
     await _settingsRepo.saveSettings(newSettings);
-    setState(() => _settings = newSettings);
     if (!mounted) return;
+    setState(() => _settings = newSettings);
     GrowLogApp.of(context)?.updateSettings(newSettings);
     widget.onSettingsChanged?.call(newSettings);
   }
@@ -394,7 +438,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ListTile(
                   leading: Icon(Icons.info_outline, color: Colors.green[700]),
                   title: Text(_t['app_name']),
-                  subtitle: const Text('Version 0.7.0'),
+                  subtitle: Text('Version ${AppVersion.versionWithoutBuild}'),
                 ),
                 const Divider(height: 1),
                 ListTile(

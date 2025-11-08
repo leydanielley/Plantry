@@ -7,12 +7,15 @@ import '../utils/app_logger.dart';
 import '../models/room.dart';
 import '../models/plant.dart';
 import '../models/hardware.dart';
+import '../models/rdwc_system.dart';
 import '../models/enums.dart';
 import '../repositories/plant_repository.dart';
 import '../repositories/hardware_repository.dart';
+import '../repositories/rdwc_repository.dart';
 import 'edit_room_screen.dart';
 import 'plant_detail_screen.dart';
 import 'hardware_list_screen.dart';
+import 'rdwc_system_detail_screen.dart';
 
 class RoomDetailScreen extends StatefulWidget {
   final Room room;
@@ -26,9 +29,11 @@ class RoomDetailScreen extends StatefulWidget {
 class _RoomDetailScreenState extends State<RoomDetailScreen> {
   final PlantRepository _plantRepo = PlantRepository();
   final HardwareRepository _hardwareRepo = HardwareRepository();
+  final RdwcRepository _rdwcRepo = RdwcRepository();
 
   List<Plant> _plants = [];
   List<Hardware> _hardware = [];
+  RdwcSystem? _rdwcSystem;
   int _totalWattage = 0;
   bool _isLoading = true;
 
@@ -48,10 +53,17 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
       final hardware = await _hardwareRepo.findActiveByRoom(widget.room.id!);
       final wattage = await _hardwareRepo.getTotalWattageByRoom(widget.room.id!);
 
+      // ✅ Load RDWC System if linked
+      RdwcSystem? rdwcSystem;
+      if (widget.room.rdwcSystemId != null) {
+        rdwcSystem = await _rdwcRepo.getSystemById(widget.room.rdwcSystemId!);
+      }
+
       if (mounted) {
         setState(() {
           _plants = plants;
           _hardware = hardware;
+          _rdwcSystem = rdwcSystem;
           _totalWattage = wattage;
           _isLoading = false;
         });
@@ -94,11 +106,175 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
           : RefreshIndicator(
         onRefresh: _loadData,
         child: ListView(
+          padding: const EdgeInsets.only(bottom: 80),
           children: [
             _buildRoomInfoCard(),
+            if (_rdwcSystem != null) _buildRdwcSystemCard(),
             _buildHardwareSection(),
             _buildPlantsSection(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRdwcSystemCard() {
+    if (_rdwcSystem == null) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final system = _rdwcSystem!;
+
+    // Calculate status color
+    Color statusColor;
+    if (system.isCriticallyLow) {
+      statusColor = Colors.red;
+    } else if (system.isLowWater) {
+      statusColor = Colors.orange;
+    } else if (system.isFull) {
+      statusColor = Colors.blue;
+    } else {
+      statusColor = Colors.green;
+    }
+
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: InkWell(
+        onTap: () async {
+          final result = await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => RdwcSystemDetailScreen(system: system),
+            ),
+          );
+          if (result == true) {
+            _loadData();
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.water_damage,
+                    color: statusColor,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'RDWC System',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          system.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: isDark ? Colors.grey[600] : Colors.grey[400],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Füllstand',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.grey[500] : Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${system.fillPercentage.toStringAsFixed(0)}%',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Aktuell',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.grey[500] : Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${system.currentLevel.toStringAsFixed(1)}L',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Kapazität',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.grey[500] : Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${system.maxCapacity.toStringAsFixed(0)}L',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (system.description != null && system.description!.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  system.description!,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.grey[400] : Colors.grey[700],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );

@@ -61,6 +61,42 @@ class PhotoRepository {
     return List.generate(maps.length, (i) => Photo.fromMap(maps[i]));
   }
 
+  /// ✅ PERFORMANCE FIX: Batch-Query für mehrere Logs (verhindert N+1 Problem!)
+  /// Nutzen: Lädt alle Photos für eine Liste von Logs in EINER Query
+  Future<Map<int, List<Photo>>> getPhotosByLogIds(List<int> logIds) async {
+    if (logIds.isEmpty) return {};
+
+    try {
+      final db = await _dbHelper.database;
+
+      // SQL IN clause für batch lookup
+      final placeholders = List.filled(logIds.length, '?').join(',');
+      final maps = await db.query(
+        'photos',
+        where: 'log_id IN ($placeholders)',
+        whereArgs: logIds,
+        orderBy: 'log_id, created_at DESC',
+      );
+
+      // Gruppieren nach log_id
+      final result = <int, List<Photo>>{};
+      for (final map in maps) {
+        final logId = map['log_id'] as int;
+        final photo = Photo.fromMap(map);
+
+        if (result[logId] == null) {
+          result[logId] = [];
+        }
+        result[logId]!.add(photo);
+      }
+
+      return result;
+    } catch (e, stackTrace) {
+      AppLogger.error('PhotoRepository', 'Failed to load photos by log ids', e, stackTrace);
+      return {};
+    }
+  }
+
   /// Foto nach ID abrufen
   Future<Photo?> getById(int id) async {
     final db = await _dbHelper.database;

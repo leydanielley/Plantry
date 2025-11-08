@@ -8,6 +8,7 @@ import '../models/enums.dart';
 import '../repositories/plant_log_repository.dart';
 import '../repositories/photo_repository.dart';
 import '../repositories/notification_repository.dart';
+import '../repositories/log_fertilizer_repository.dart';
 import '../services/notification_service.dart';
 import '../utils/app_logger.dart';
 
@@ -16,6 +17,7 @@ class NotificationHelper {
   static final NotificationRepository _notificationRepo = NotificationRepository();
   static final PlantLogRepository _logRepo = PlantLogRepository();
   static final PhotoRepository _photoRepo = PhotoRepository();
+  static final LogFertilizerRepository _logFertilizerRepo = LogFertilizerRepository();
 
   /// Schedule all reminders for a plant based on last activities
   static Future<void> scheduleRemindersForPlant(Plant plant) async {
@@ -166,13 +168,30 @@ class NotificationHelper {
   static Future<DateTime?> _getLastFertilizingDate(int plantId) async {
     try {
       final logs = await _logRepo.findByPlant(plantId);
-      // TODO: Check log_fertilizers table for actual fertilizing
-      // For now, just check if any nutrients were logged
       if (logs.isEmpty) return null;
 
+      // Check log_fertilizers table for actual fertilizing
+      // Use batch query to avoid N+1 problem
+      final logIds = logs.where((l) => l.id != null).map((l) => l.id!).toList();
+      if (logIds.isEmpty) return null;
+
+      final fertilizersMap = await _logFertilizerRepo.findByLogs(logIds);
+
+      // Find the most recent log that has fertilizers
       logs.sort((a, b) => b.logDate.compareTo(a.logDate));
-      return logs.first.logDate;
+
+      for (final log in logs) {
+        if (log.id == null) continue;
+
+        final fertilizers = fertilizersMap[log.id];
+        if (fertilizers != null && fertilizers.isNotEmpty) {
+          return log.logDate;
+        }
+      }
+
+      return null;
     } catch (e) {
+      AppLogger.error('NotificationHelper', 'Error getting last fertilizing date', e);
       return null;
     }
   }

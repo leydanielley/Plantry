@@ -274,9 +274,16 @@ class AppTranslations {
 
       // Messages
       'delete_confirm': 'Wirklich löschen?',
-      'delete_plant_confirm': 'Pflanze wirklich löschen? Alle Einträge gehen verloren!',
+      'delete_plant_confirm': 'Pflanze wirklich löschen! Alle Einträge gehen verloren!',
       'deleted_success': 'Gelöscht!',
       'saved_success': 'Gespeichert!',
+      'unexpected_error': 'Unerwarteter Fehler',
+
+      // Fertilizer Delete Messages
+      'cannot_delete': 'Kann nicht gelöscht werden',
+      'fertilizer_in_use_message': 'Dieser Dünger wird verwendet in:',
+      'fertilizer_remove_first': 'Entferne ihn zuerst aus allen Rezepten und Logs.',
+      'plant_logs': 'Pflanzen-Logs',
       
       // Empty States - Plants
       'no_plants_available': 'Keine Pflanzen vorhanden',
@@ -631,6 +638,13 @@ class AppTranslations {
       'delete_plant_confirm': 'Do you really want to delete this plant? All logs will be deleted too!',
       'deleted_success': 'Successfully deleted!',
       'saved_success': 'Successfully saved!',
+      'unexpected_error': 'Unexpected error',
+
+      // Fertilizer Delete Messages
+      'cannot_delete': 'Cannot be deleted',
+      'fertilizer_in_use_message': 'This fertilizer is used in:',
+      'fertilizer_remove_first': 'Remove it from all recipes and logs first.',
+      'plant_logs': 'Plant Logs',
       
       // Empty States - Plants
       'no_plants_available': 'No plants available',

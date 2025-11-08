@@ -227,6 +227,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
     final plantCount = _plantCounts[room.id] ?? 0;
 
     return Card(
+      key: ValueKey(room.id), // ✅ PERFORMANCE: Key for efficient updates
       margin: AppConstants.cardMarginVertical,
       child: ListTile(
         leading: Container(

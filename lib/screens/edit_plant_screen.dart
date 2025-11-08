@@ -42,6 +42,11 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   int? _selectedGrowId;
   DateTime? _seedDate;
 
+  // ✅ v10: Phase History Dates
+  DateTime? _vegDate;
+  DateTime? _bloomDate;
+  DateTime? _harvestDate;
+
   List<Room> _rooms = [];
   List<Grow> _grows = [];
   bool _isLoading = false;
@@ -73,6 +78,11 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     _selectedRoomId = widget.plant.roomId;
     _selectedGrowId = widget.plant.growId;
     _seedDate = widget.plant.seedDate;
+
+    // ✅ v10: Load phase history dates
+    _vegDate = widget.plant.vegDate;
+    _bloomDate = widget.plant.bloomDate;
+    _harvestDate = widget.plant.harvestDate;
 
     _loadRooms();
     _loadGrows();
@@ -146,8 +156,11 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     }
 
     try {
-      // Phase-Wechsel prüfen
+      // ✅ v10: Phase-Wechsel prüfen und Phase-Dates setzen
       DateTime? newPhaseStartDate = widget.plant.phaseStartDate;
+      DateTime? newVegDate = _vegDate;
+      DateTime? newBloomDate = _bloomDate;
+      DateTime? newHarvestDate = _harvestDate;
 
       if (_phase != widget.plant.phase) {
         bool proceedWithChange = true;
@@ -175,8 +188,22 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           return;
         }
 
-        // Phase-Start-Datum aktualisieren
+        // ✅ v10: Set phase-specific date wenn nicht schon manuell gesetzt
         newPhaseStartDate = DateTime.now();
+
+        switch (_phase) {
+          case PlantPhase.veg:
+            newVegDate ??= DateTime.now();
+            break;
+          case PlantPhase.bloom:
+            newBloomDate ??= DateTime.now();
+            break;
+          case PlantPhase.harvest:
+            newHarvestDate ??= DateTime.now();
+            break;
+          default:
+            break;
+        }
       }
 
       // ✅ BUG FIX #7: Seed-Datum ohne Uhrzeit
@@ -199,6 +226,9 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         medium: _medium,
         phase: _phase,
         phaseStartDate: newPhaseStartDate,
+        vegDate: newVegDate,
+        bloomDate: newBloomDate,
+        harvestDate: newHarvestDate,
         roomId: _selectedRoomId,
         growId: _selectedGrowId,
         seedDate: effectiveSeedDate,
@@ -385,6 +415,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
             _buildContainerInfo(),
             const SizedBox(height: 24),
             _buildDatePicker(),
+            const SizedBox(height: 24),
+            _buildPhaseDatePickers(),
             const SizedBox(height: 24),
             _buildSaveButton(),
             const SizedBox(height: 16),
@@ -647,6 +679,137 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         );
         if (date != null && mounted) {
           setState(() => _seedDate = date);
+        }
+      },
+    );
+  }
+
+  // ✅ v10: Phase History Date Pickers
+  Widget _buildPhaseDatePickers() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Phasen-Daten (optional)',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[700],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Setze die Startdaten für jede Phase manuell. Dies ermöglicht retroaktive Korrekturen.',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _buildVegDatePicker(),
+        _buildBloomDatePicker(),
+        _buildHarvestDatePicker(),
+      ],
+    );
+  }
+
+  Widget _buildVegDatePicker() {
+    return ListTile(
+      leading: Icon(Icons.eco, color: Colors.green[700]),
+      title: const Text('Veg-Start'),
+      subtitle: Text(
+        _vegDate != null
+            ? '${_vegDate!.day}.${_vegDate!.month}.${_vegDate!.year}'
+            : 'Nicht gesetzt',
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_vegDate != null)
+            IconButton(
+              icon: const Icon(Icons.clear, color: Colors.red),
+              onPressed: () => setState(() => _vegDate = null),
+            ),
+          const Icon(Icons.edit),
+        ],
+      ),
+      onTap: () async {
+        final date = await showDatePicker(
+          context: context,
+          initialDate: _vegDate ?? _seedDate ?? DateTime.now(),
+          firstDate: _seedDate ?? DateTime(2020),
+          lastDate: DateTime.now(),
+        );
+        if (date != null && mounted) {
+          setState(() => _vegDate = date);
+        }
+      },
+    );
+  }
+
+  Widget _buildBloomDatePicker() {
+    return ListTile(
+      leading: Icon(Icons.local_florist, color: Colors.purple[700]),
+      title: const Text('Bloom-Start'),
+      subtitle: Text(
+        _bloomDate != null
+            ? '${_bloomDate!.day}.${_bloomDate!.month}.${_bloomDate!.year}'
+            : 'Nicht gesetzt',
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_bloomDate != null)
+            IconButton(
+              icon: const Icon(Icons.clear, color: Colors.red),
+              onPressed: () => setState(() => _bloomDate = null),
+            ),
+          const Icon(Icons.edit),
+        ],
+      ),
+      onTap: () async {
+        final date = await showDatePicker(
+          context: context,
+          initialDate: _bloomDate ?? _vegDate ?? _seedDate ?? DateTime.now(),
+          firstDate: _seedDate ?? DateTime(2020),
+          lastDate: DateTime.now(),
+        );
+        if (date != null && mounted) {
+          setState(() => _bloomDate = date);
+        }
+      },
+    );
+  }
+
+  Widget _buildHarvestDatePicker() {
+    return ListTile(
+      leading: Icon(Icons.agriculture, color: Colors.brown[700]),
+      title: const Text('Harvest-Start'),
+      subtitle: Text(
+        _harvestDate != null
+            ? '${_harvestDate!.day}.${_harvestDate!.month}.${_harvestDate!.year}'
+            : 'Nicht gesetzt',
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_harvestDate != null)
+            IconButton(
+              icon: const Icon(Icons.clear, color: Colors.red),
+              onPressed: () => setState(() => _harvestDate = null),
+            ),
+          const Icon(Icons.edit),
+        ],
+      ),
+      onTap: () async {
+        final date = await showDatePicker(
+          context: context,
+          initialDate: _harvestDate ?? _bloomDate ?? _vegDate ?? _seedDate ?? DateTime.now(),
+          firstDate: _seedDate ?? DateTime(2020),
+          lastDate: DateTime.now(),
+        );
+        if (date != null && mounted) {
+          setState(() => _harvestDate = date);
         }
       },
     );

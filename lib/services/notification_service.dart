@@ -44,8 +44,60 @@ class NotificationService {
 
   /// Handle notification tap
   void _onNotificationTapped(NotificationResponse response) {
-    AppLogger.debug('NotificationService', 'Notification tapped: ${response.payload}');
-    // TODO: Navigate to relevant screen based on payload
+    final payload = response.payload;
+    AppLogger.debug('NotificationService', 'Notification tapped: $payload');
+
+    if (payload == null || payload.isEmpty) {
+      AppLogger.debug('NotificationService', 'No payload, skipping navigation');
+      return;
+    }
+
+    // Parse payload format: "type:plantId"
+    try {
+      final parts = payload.split(':');
+      if (parts.length != 2) {
+        AppLogger.warning('NotificationService', 'Invalid payload format: $payload');
+        return;
+      }
+
+      final type = parts[0];
+      final plantId = int.tryParse(parts[1]);
+
+      if (plantId == null && type != 'test') {
+        AppLogger.warning('NotificationService', 'Invalid plant ID in payload: $payload');
+        return;
+      }
+
+      AppLogger.info('NotificationService', 'Parsed notification: type=$type, plantId=$plantId');
+
+      // Note: Navigation requires a NavigatorKey setup in the main app.
+      // The app should register a callback via a future NavigationService
+      // or use a GlobalKey<NavigatorState> to handle navigation.
+      // For now, we log the navigation intent.
+
+      switch (type) {
+        case 'watering':
+          AppLogger.info('NotificationService', 'Navigate to plant $plantId (watering reminder)');
+          // Future: navigatorKey.currentState?.push(MaterialPageRoute(...))
+          break;
+        case 'fertilizing':
+          AppLogger.info('NotificationService', 'Navigate to plant $plantId (fertilizing reminder)');
+          break;
+        case 'photo':
+          AppLogger.info('NotificationService', 'Navigate to plant $plantId (photo reminder)');
+          break;
+        case 'harvest':
+          AppLogger.info('NotificationService', 'Navigate to plant $plantId (harvest reminder)');
+          break;
+        case 'test':
+          AppLogger.info('NotificationService', 'Test notification tapped');
+          break;
+        default:
+          AppLogger.warning('NotificationService', 'Unknown notification type: $type');
+      }
+    } catch (e) {
+      AppLogger.error('NotificationService', 'Error handling notification tap', e);
+    }
   }
 
   /// Request notification permissions (Android 13+)

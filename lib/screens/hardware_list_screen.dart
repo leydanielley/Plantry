@@ -64,14 +64,18 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
 
       final wattage = await _hardwareRepo.getTotalWattageByRoom(widget.roomId);
 
-      setState(() {
-        _hardware = hardware;
-        _totalWattage = wattage;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _hardware = hardware;
+          _totalWattage = wattage;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       AppLogger.error('HardwareListScreen', 'Error loading hardware: $e');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -121,6 +125,9 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
       _loadHardware();
     } catch (e) {
       AppLogger.error('HardwareListScreen', 'Error toggling active: $e');
+      if (mounted) {
+        AppMessages.showError(context, 'Fehler beim Aktivieren/Deaktivieren');
+      }
     }
   }
 

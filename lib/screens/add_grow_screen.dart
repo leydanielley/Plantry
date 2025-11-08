@@ -51,15 +51,16 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
   Future<void> _loadRooms() async {
     try {
       final rooms = await _roomRepo.findAll();
-      setState(() {
-        _rooms = rooms;
-        _loadingRooms = false;
-      });
+      if (mounted) {
+        setState(() {
+          _rooms = rooms;
+          _loadingRooms = false;
+        });
+      }
     } catch (e) {
       // Error loading rooms: $e
-      setState(() => _loadingRooms = false);
-      
       if (mounted) {
+        setState(() => _loadingRooms = false);
         AppMessages.loadingError(context, 'Räume', onRetry: _loadRooms);
       }
     }

@@ -4,6 +4,8 @@
 
 import '../migration.dart';
 import 'migration_v8.dart';
+import 'migration_v9.dart';
+import 'migration_v10.dart';
 
 /// All migrations in chronological order
 ///
@@ -23,6 +25,12 @@ import 'migration_v8.dart';
 final List<Migration> allMigrations = [
   // v8: RDWC Expert Mode - Advanced nutrient tracking & recipes
   migrationV8,
+
+  // v9: CRITICAL FIX - Change fertilizer CASCADE → RESTRICT constraints
+  migrationV9,
+
+  // v10: Phase History System - veg_date, bloom_date, harvest_date
+  migrationV10,
 ];
 
 /// Get the latest migration version

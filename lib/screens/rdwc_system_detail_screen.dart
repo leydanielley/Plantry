@@ -107,13 +107,47 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
               }
             },
           ),
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'archive') {
+                await _archiveSystem();
+              } else if (value == 'delete') {
+                await _deleteSystem();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'archive',
+                child: Row(
+                  children: [
+                    Icon(
+                      _system.archived ? Icons.unarchive : Icons.archive,
+                      color: Colors.orange[700],
+                    ),
+                    const SizedBox(width: 12),
+                    Text(_system.archived ? 'Wiederherstellen' : 'Archivieren'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, color: Colors.red[700]),
+                    const SizedBox(width: 12),
+                    const Text('Löschen'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -132,21 +166,130 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => RdwcAddbackFormScreen(system: _system),
-            ),
+      // ✅ FloatingActionButton entfernt - redundant, da bereits "Add Addback" Button in Expert Actions vorhanden
+    );
+  }
+
+  Future<void> _archiveSystem() async {
+    try {
+      if (_system.archived) {
+        await _rdwcRepo.archiveSystem(_system.id!, false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('System wiederhergestellt')),
           );
-          if (result == true) {
-            _loadData();
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: Text(_t['add_addback']),
+          Navigator.of(context).pop(true);
+        }
+      } else {
+        await _rdwcRepo.archiveSystem(_system.id!, true);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('System archiviert')),
+          );
+          Navigator.of(context).pop(true);
+        }
+      }
+    } catch (e) {
+      AppLogger.error('RdwcSystemDetailScreen', 'Error archiving system', e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteSystem() async {
+    // Check if system has logs
+    if (_logs.isNotEmpty) {
+      if (!mounted) return;
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange),
+              SizedBox(width: 12),
+              Text('System hat Logs'),
+            ],
+          ),
+          content: Text(
+            'Dieses RDWC System hat ${_logs.length} Log-Einträge. '
+            'Beim Löschen werden ALLE Logs und Daten unwiderruflich gelöscht!\n\n'
+            'Möchten Sie stattdessen archivieren?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Abbrechen'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(false);
+                await _archiveSystem();
+              },
+              child: const Text('Archivieren'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Trotzdem löschen'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) return;
+    }
+
+    // Final confirmation
+    if (!mounted) return;
+    final finalConfirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.delete_forever, color: Colors.red),
+            SizedBox(width: 12),
+            Text('Wirklich löschen?'),
+          ],
+        ),
+        content: Text(
+          'RDWC System "${_system.name}" wird unwiderruflich gelöscht.\n\n'
+          'Diese Aktion kann nicht rückgängig gemacht werden!',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Abbrechen'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Löschen'),
+          ),
+        ],
       ),
     );
+
+    if (finalConfirm != true) return;
+
+    try {
+      await _rdwcRepo.deleteSystem(_system.id!);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ System gelöscht')),
+        );
+        Navigator.of(context).pop(true); // Return to list
+      }
+    } catch (e) {
+      AppLogger.error('RdwcSystemDetailScreen', 'Error deleting system', e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('❌ Fehler: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   Widget _buildSystemOverview(bool isDark) {
@@ -175,30 +318,37 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
             // Big level indicator
             Center(
               child: SizedBox(
-                width: 120,
-                height: 120,
+                width: 180,
+                height: 180,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      value: _system.fillPercentage / 100,
-                      strokeWidth: 12,
-                      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[300],
-                      valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                    SizedBox(
+                      width: 180,
+                      height: 180,
+                      child: CircularProgressIndicator(
+                        value: _system.fillPercentage / 100,
+                        strokeWidth: 14,
+                        backgroundColor: isDark ? Colors.grey[800] : Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                      ),
                     ),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           '${_system.fillPercentage.toStringAsFixed(0)}%',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: statusColor,
                               ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
                           _t['fill_percentage'],
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: isDark ? Colors.grey[500] : Colors.grey[600],
+                              ),
                         ),
                       ],
                     ),
@@ -424,6 +574,8 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 )
               : null,
+          onTap: () => _editLog(log),
+          onLongPress: () => _deleteLog(log),
         ),
       );
     }
@@ -433,23 +585,31 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       child: ExpansionTile(
         leading: Icon(icon, color: color),
-        title: Text(typeLabel),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(log.formattedDate),
-            if (log.waterAdded != null)
-              Text('${_t['water_added']}: ${UnitConverter.formatVolume(log.waterAdded!, _settings.volumeUnit)}'),
-            if (log.waterConsumed != null)
-              Text('${_t['water_consumed']}: ${UnitConverter.formatVolume(log.waterConsumed!, _settings.volumeUnit)}'),
-            Text(
-              '${log.fertilizers!.length} ${_t['nutrients']}',
-              style: TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.w500,
+        title: GestureDetector(
+          onTap: () => _editLog(log),
+          onLongPress: () => _deleteLog(log),
+          child: Text(typeLabel),
+        ),
+        subtitle: GestureDetector(
+          onTap: () => _editLog(log),
+          onLongPress: () => _deleteLog(log),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(log.formattedDate),
+              if (log.waterAdded != null)
+                Text('${_t['water_added']}: ${UnitConverter.formatVolume(log.waterAdded!, _settings.volumeUnit)}'),
+              if (log.waterConsumed != null)
+                Text('${_t['water_consumed']}: ${UnitConverter.formatVolume(log.waterConsumed!, _settings.volumeUnit)}'),
+              Text(
+                '${log.fertilizers!.length} ${_t['nutrients']}',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         trailing: log.ecAfter != null
             ? Text(
@@ -820,6 +980,73 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
               )),
       ],
     );
+  }
+
+  /// ✅ Edit RDWC log
+  Future<void> _editLog(RdwcLog log) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => RdwcAddbackFormScreen(
+          system: _system,
+          existingLog: log,
+        ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      _loadData(); // Reload data
+    }
+  }
+
+  /// ✅ Delete RDWC log
+  Future<void> _deleteLog(RdwcLog log) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Log?'),
+        content: Text(
+          'Are you sure you want to delete this ${log.logType.name} log from ${log.formattedDate}?\n\n'
+          'This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _rdwcRepo.deleteLog(log.id!);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Log deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadData(); // Reload data
+      }
+    } catch (e) {
+      AppLogger.error('RdwcSystemDetailScreen', 'Error deleting log', e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting log: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 

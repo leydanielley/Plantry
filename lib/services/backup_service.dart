@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 import '../database/database_helper.dart';
 import '../utils/app_logger.dart';
+import '../utils/app_version.dart';
 import '../utils/storage_helper.dart';
 
 class BackupService {
@@ -47,7 +48,7 @@ class BackupService {
       final Map<String, dynamic> backup = {
         'version': _backupVersion,
         'exportDate': DateTime.now().toIso8601String(),
-        'appVersion': '1.0.0',
+        'appVersion': AppVersion.version,
         'data': {},
       };
 

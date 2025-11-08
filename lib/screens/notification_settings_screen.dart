@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import '../models/notification_settings.dart';
 import '../repositories/notification_repository.dart';
+import '../repositories/settings_repository.dart';
 import '../services/notification_service.dart';
 import '../utils/translations.dart';
 import '../utils/app_messages.dart';
@@ -20,15 +21,26 @@ class NotificationSettingsScreen extends StatefulWidget {
 class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
   final NotificationRepository _repo = NotificationRepository();
   final NotificationService _notificationService = NotificationService();
+  final SettingsRepository _settingsRepo = SettingsRepository();
 
-  late AppTranslations _t;
+  late AppTranslations _t = AppTranslations('de');
   NotificationSettings? _settings;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _initTranslations();
     _loadSettings();
+  }
+
+  Future<void> _initTranslations() async {
+    final settings = await _settingsRepo.getSettings();
+    if (mounted) {
+      setState(() {
+        _t = AppTranslations(settings.language);
+      });
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -96,8 +108,6 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
   @override
   Widget build(BuildContext context) {
-    _t = AppTranslations('de'); // TODO: Get from settings
-
     if (_isLoading || _settings == null) {
       return Scaffold(
         appBar: AppBar(

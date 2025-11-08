@@ -55,7 +55,7 @@ class DatabaseHelper {
     try {
       return await openDatabase(
         path,
-        version: 8,  // ✅ v8: RDWC Expert Mode - Advanced nutrient tracking & recipes
+        version: 10,  // ✅ v10: Phase History System (veg_date, bloom_date, harvest_date)
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onConfigure: _onConfigure,
@@ -72,7 +72,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 8,
+          version: 10,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onConfigure: _onConfigure,
@@ -312,6 +312,7 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX IF NOT EXISTS idx_grows_room ON grows(room_id)');
 
     // Plants Table - ✅ BUG FIX #4: SeedType CHECK korrigiert (ohne 'REGULAR')
+    // ✅ v10: Phase History (veg_date, bloom_date, harvest_date)
     await db.execute('''
       CREATE TABLE IF NOT EXISTS plants (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -328,6 +329,9 @@ class DatabaseHelper {
         bucket_number INTEGER,
         seed_date TEXT,
         phase_start_date TEXT,
+        veg_date TEXT,
+        bloom_date TEXT,
+        harvest_date TEXT,
         created_at TEXT DEFAULT (datetime('now')),
         created_by TEXT,
         log_profile_name TEXT DEFAULT 'standard',
@@ -344,6 +348,9 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_rdwc_system ON plants(rdwc_system_id)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_phase ON plants(phase)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_archived ON plants(archived)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_veg_date ON plants(veg_date)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_bloom_date ON plants(bloom_date)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_harvest_date ON plants(harvest_date)');
 
     // Plant Logs Table
     await db.execute('''
@@ -407,7 +414,7 @@ class DatabaseHelper {
         amount REAL,
         unit TEXT DEFAULT 'ml',
         FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE CASCADE,
-        FOREIGN KEY (fertilizer_id) REFERENCES fertilizers(id) ON DELETE CASCADE
+        FOREIGN KEY (fertilizer_id) REFERENCES fertilizers(id) ON DELETE RESTRICT
       )
     ''');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_log_fertilizers_lookup ON log_fertilizers(log_id, fertilizer_id)');
@@ -512,7 +519,7 @@ class DatabaseHelper {
         amount REAL NOT NULL,
         unit TEXT DEFAULT 'ml',
         FOREIGN KEY (template_id) REFERENCES log_templates(id) ON DELETE CASCADE,
-        FOREIGN KEY (fertilizer_id) REFERENCES fertilizers(id) ON DELETE CASCADE
+        FOREIGN KEY (fertilizer_id) REFERENCES fertilizers(id) ON DELETE RESTRICT
       )
     ''');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_template_fertilizers_template ON template_fertilizers(template_id)');

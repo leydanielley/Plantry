@@ -60,6 +60,91 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
   }
 
   Future<void> _deleteFertilizer(Fertilizer fertilizer) async {
+    // 1. Prüfe zuerst ob Dünger in Verwendung ist
+    final isInUse = await _fertilizerRepo.isInUse(fertilizer.id!);
+
+    if (isInUse) {
+      // Zeige benutzerfreundliche Warnung
+      final usage = await _fertilizerRepo.getUsageDetails(fertilizer.id!);
+
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+              const SizedBox(width: 12),
+              Expanded(child: Text(_t['cannot_delete'])),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _t['fertilizer_in_use_message'],
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              if (usage['recipes']! > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.restaurant, size: 20, color: Colors.blue[700]),
+                      const SizedBox(width: 8),
+                      Text('${usage['recipes']} ${_t['recipes']}'),
+                    ],
+                  ),
+                ),
+              if (usage['rdwc_logs']! > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.water_drop, size: 20, color: Colors.cyan[700]),
+                      const SizedBox(width: 8),
+                      Text('${usage['rdwc_logs']} RDWC Logs'),
+                    ],
+                  ),
+                ),
+              if (usage['plant_logs']! > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.eco, size: 20, color: Colors.green[700]),
+                      const SizedBox(width: 8),
+                      Text('${usage['plant_logs']} ${_t['plant_logs']}'),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 16),
+              Text(
+                _t['fertilizer_remove_first'],
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(_t['ok']),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // 2. Dünger ist NICHT in Verwendung - zeige normale Lösch-Bestätigung
+    if (!mounted) return;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -87,9 +172,10 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
           AppMessages.deletedSuccessfully(context, _t['fertilizers']);
         }
       } catch (e) {
-        AppLogger.error('FertilizerListScreen', 'Error deleting: $e');
+        // Sollte nicht passieren, da wir vorher geprüft haben
+        AppLogger.error('FertilizerListScreen', 'Unexpected delete error: $e');
         if (mounted) {
-          AppMessages.deletingError(context, e.toString());
+          AppMessages.deletingError(context, _t['unexpected_error']);
         }
       }
     }
@@ -168,6 +254,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
 
   Widget _buildFertilizerCard(Fertilizer fertilizer) {
     return Card(
+      key: ValueKey(fertilizer.id), // ✅ PERFORMANCE: Key for efficient updates
       margin: AppConstants.cardMarginVertical,
       child: ListTile(
         leading: CircleAvatar(
