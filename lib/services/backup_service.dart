@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 import '../database/database_helper.dart';
 import '../utils/app_logger.dart';
+import '../utils/storage_helper.dart';
 
 class BackupService {
   static const int _backupVersion = 1;
@@ -18,6 +19,16 @@ class BackupService {
   Future<String> exportData() async {
     try {
       AppLogger.info('BackupService', 'Starting export...');
+
+      // ✅ P0 FIX: Check storage BEFORE starting export
+      final hasSpace = await StorageHelper.hasEnoughStorage(
+        bytesNeeded: 200 * 1024 * 1024, // 200MB for safe backup
+      );
+
+      if (!hasSpace) {
+        final storageInfo = await StorageHelper.getStorageInfo();
+        throw Exception('Nicht genügend Speicherplatz für Backup. $storageInfo');
+      }
 
       final db = await DatabaseHelper.instance.database;
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
@@ -54,12 +65,23 @@ class BackupService {
         'template_fertilizers',
         'harvests',
         'app_settings',
+        'rdwc_systems',
+        'rdwc_logs',
+        'rdwc_log_fertilizers',
+        'rdwc_recipes',
+        'rdwc_recipe_fertilizers',
       ];
 
       for (final table in tables) {
-        final data = await db.query(table);
-        backup['data'][table] = data;
-        AppLogger.debug('BackupService', 'Exported table', '$table: ${data.length} rows');
+        try {
+          final data = await db.query(table);
+          backup['data'][table] = data;
+          AppLogger.debug('BackupService', 'Exported table', '$table: ${data.length} rows');
+        } catch (e) {
+          // Table might not exist yet (e.g., during migration)
+          AppLogger.debug('BackupService', 'Skipped table', '$table (table does not exist or is not accessible)');
+          backup['data'][table] = [];
+        }
       }
 
       // Save JSON to file
@@ -216,6 +238,10 @@ class BackupService {
     await db.execute('PRAGMA foreign_keys = OFF');
 
     final tables = [
+      'rdwc_recipe_fertilizers',
+      'rdwc_log_fertilizers',
+      'rdwc_logs',
+      'rdwc_recipes',
       'log_fertilizers',
       'template_fertilizers',
       'photos',
@@ -225,13 +251,19 @@ class BackupService {
       'hardware',
       'fertilizers',
       'plants',
+      'rdwc_systems',
       'grows',
       'rooms',
       'app_settings',
     ];
 
     for (final table in tables) {
-      await db.delete(table);
+      try {
+        await db.delete(table);
+      } catch (e) {
+        // Table might not exist yet
+        AppLogger.debug('BackupService', 'Skipped deleting table', '$table (table does not exist)');
+      }
     }
 
     AppLogger.info('BackupService', 'Existing data cleared');
@@ -239,10 +271,15 @@ class BackupService {
     // Import data in correct order (respecting foreign keys)
     await _importTable(db, 'rooms', data['rooms'] as List<dynamic>?);
     await _importTable(db, 'grows', data['grows'] as List<dynamic>?);
+    await _importTable(db, 'rdwc_systems', data['rdwc_systems'] as List<dynamic>?);
     await _importTable(db, 'plants', data['plants'] as List<dynamic>?);
     await _importTable(db, 'fertilizers', data['fertilizers'] as List<dynamic>?);
     await _importTable(db, 'plant_logs', data['plant_logs'] as List<dynamic>?);
     await _importTable(db, 'log_fertilizers', data['log_fertilizers'] as List<dynamic>?);
+    await _importTable(db, 'rdwc_logs', data['rdwc_logs'] as List<dynamic>?);
+    await _importTable(db, 'rdwc_log_fertilizers', data['rdwc_log_fertilizers'] as List<dynamic>?);
+    await _importTable(db, 'rdwc_recipes', data['rdwc_recipes'] as List<dynamic>?);
+    await _importTable(db, 'rdwc_recipe_fertilizers', data['rdwc_recipe_fertilizers'] as List<dynamic>?);
     await _importTable(db, 'hardware', data['hardware'] as List<dynamic>?);
     await _importTable(db, 'log_templates', data['log_templates'] as List<dynamic>?);
     await _importTable(db, 'template_fertilizers', data['template_fertilizers'] as List<dynamic>?);

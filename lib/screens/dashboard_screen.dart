@@ -14,6 +14,8 @@ import 'nutrient_dilution_calculator_screen.dart';
 import '../models/app_settings.dart';
 import '../repositories/settings_repository.dart';
 import '../utils/translations.dart';
+import '../utils/app_state_recovery.dart';
+import '../widgets/battery_optimization_dialog.dart';
 import '../main.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -59,6 +61,12 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         _isLoading = false;
       });
       _fadeController.forward();
+
+      // ✅ P0 FIX: Check for battery optimization issues
+      final crashCount = await AppStateRecovery.getCrashCount();
+      if (mounted) {
+        await BatteryOptimizationDialog.showIfNeeded(context, crashCount);
+      }
     }
   }
 

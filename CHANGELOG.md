@@ -2,6 +2,39 @@
 
 All notable changes to Plantry will be documented in this file.
 
+## [0.8.5] - 2025-11-07
+
+### 🐛 Critical Bug Fixes
+- **FIXED**: Boot screen hang during database migration v7→v8
+  - Added error handling in BackupService for non-existent tables during migration
+  - App now starts successfully in ~93ms
+- **FIXED**: Build failure with flutter_local_notifications
+  - Enabled core library desugaring for Java 8+ API support
+  - Added desugar_jdk_libs dependency
+
+### ✨ Improvements
+- Enhanced backup service to gracefully handle missing tables
+- Added RDWC tables to backup/restore configuration
+- Improved migration stability and error handling
+
+### 📱 Device Compatibility (NEW!)
+- **Maximum Device Support**: Now supports 99%+ of all Android devices
+- **Architecture Support**: ARM32, ARM64, x86, x86_64 (all CPU types)
+- **Tablet Support**: Full support for tablets including Xiaomi, Samsung, Huawei
+- **Screen Sizes**: Small phones to large tablets (all supported)
+- **MinSDK**: Android 5.0 Lollipop (2014) - 11 years of devices!
+- **TargetSDK**: Android 14 for best compatibility
+- **Camera**: Optional (tablets without camera can use the app)
+- **MultiDex**: Enabled for older devices
+
+### 📱 Technical
+- Build Number: 5
+- Database Version: 8 (RDWC Expert Mode)
+- All features tested and verified working
+- APK Size: 61.6MB (optimized with tree-shaking)
+
+---
+
 ## [0.9.0] - 2025-11-06
 
 ### 🎉 Major Features

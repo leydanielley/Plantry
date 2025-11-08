@@ -23,6 +23,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -31,15 +32,18 @@ android {
 
     defaultConfig {
         applicationId = "com.plantry.growlog"
-        minSdk = flutter.minSdkVersion  // Android 5.0 - covers 99%+ devices
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        minSdk = flutter.minSdkVersion  // Android 5.0 Lollipop (2014) - Maximum device compatibility
+        targetSdk = 35  // Android 15 - Required by Google Play Store (Nov 2024+)
+        versionCode = 13
+        versionName = "0.8.7"
 
-        // Support for all major Android architectures
+        // Support for ALL Android architectures (maximum device support)
         ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
+
+        // Enable multi-dex for older devices
+        multiDexEnabled = true
     }
 
     signingConfigs {
@@ -85,4 +89,12 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation("androidx.multidex:multidex:2.0.1")
+
+    // ✅ Android 15 Edge-to-Edge Support
+    implementation("androidx.core:core-ktx:1.13.1")
 }

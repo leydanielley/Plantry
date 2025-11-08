@@ -323,7 +323,7 @@ plant journal, grow diary, cannabis growing, indoor gardening, plant tracker, gr
 
 ---
 
-**Zeichenzahl:**
+**Zeichenzahl:**2
 - Deutsch: ~2800 Zeichen (von 4000 möglich)
 - Englisch: ~2800 Zeichen (von 4000 möglich)
 - Kurzbeschreibung: 73-79 Zeichen (von 80 möglich)

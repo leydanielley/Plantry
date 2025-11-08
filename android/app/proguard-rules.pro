@@ -27,3 +27,57 @@
 
 # Keep all model classes
 -keep class com.plantry.growlog.** { *; }
+
+# =============================================
+# ANDROID COMPATIBILITY RULES
+# =============================================
+
+# AndroidX Core
+-keep class androidx.core.** { *; }
+-dontwarn androidx.core.**
+
+# FileProvider
+-keep class androidx.core.content.FileProvider { *; }
+
+# Notifications
+-keep class androidx.core.app.NotificationCompat { *; }
+-keep class androidx.core.app.NotificationManagerCompat { *; }
+
+# SharedPreferences
+-keep class android.content.SharedPreferences { *; }
+-keep class android.content.SharedPreferences$Editor { *; }
+
+# Reflection for Flutter plugins
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+-keepattributes Signature
+-keepattributes Exceptions
+
+# Android 15 Edge-to-Edge
+-keep class androidx.core.view.WindowCompat { *; }
+-keep class androidx.core.view.WindowInsetsCompat { *; }
+
+# Prevent obfuscation of database models
+-keepclassmembers class * {
+    @android.annotation.SuppressLint *;
+}
+
+# Keep serialization
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
+
+# Crashlytics (if ever added)
+-keepattributes SourceFile,LineNumberTable
+
+# =============================================
+# SUPPRESS WARNINGS FOR OPTIONAL DEPENDENCIES
+# =============================================
+
+# Apache Tika (used by some dependencies, not needed at runtime)
+-dontwarn javax.xml.stream.XMLStreamException

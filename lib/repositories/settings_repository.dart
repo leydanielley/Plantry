@@ -15,29 +15,85 @@ class SettingsRepository {
   static const String _keyLengthUnit = 'length_unit';
   static const String _keyVolumeUnit = 'volume_unit';
 
-  /// Einstellungen laden
+  /// Einstellungen laden (mit Fehlerbehandlung für korrupte Daten)
   Future<AppSettings> getSettings() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Safe enum parsing mit Fallback auf Defaults
+    NutrientUnit nutrientUnit = NutrientUnit.ec;
+    try {
+      final value = prefs.getString(_keyNutrientUnit);
+      if (value != null) {
+        nutrientUnit = NutrientUnit.values.firstWhere(
+          (e) => e.name == value,
+          orElse: () => NutrientUnit.ec,
+        );
+      }
+    } catch (e) {
+      // Fallback zu Default bei Fehler
+    }
+
+    PpmScale ppmScale = PpmScale.scale700;
+    try {
+      final value = prefs.getString(_keyPpmScale);
+      if (value != null) {
+        ppmScale = PpmScale.values.firstWhere(
+          (e) => e.name == value,
+          orElse: () => PpmScale.scale700,
+        );
+      }
+    } catch (e) {
+      // Fallback zu Default bei Fehler
+    }
+
+    TemperatureUnit temperatureUnit = TemperatureUnit.celsius;
+    try {
+      final value = prefs.getString(_keyTemperatureUnit);
+      if (value != null) {
+        temperatureUnit = TemperatureUnit.values.firstWhere(
+          (e) => e.name == value,
+          orElse: () => TemperatureUnit.celsius,
+        );
+      }
+    } catch (e) {
+      // Fallback zu Default bei Fehler
+    }
+
+    LengthUnit lengthUnit = LengthUnit.cm;
+    try {
+      final value = prefs.getString(_keyLengthUnit);
+      if (value != null) {
+        lengthUnit = LengthUnit.values.firstWhere(
+          (e) => e.name == value,
+          orElse: () => LengthUnit.cm,
+        );
+      }
+    } catch (e) {
+      // Fallback zu Default bei Fehler
+    }
+
+    VolumeUnit volumeUnit = VolumeUnit.liter;
+    try {
+      final value = prefs.getString(_keyVolumeUnit);
+      if (value != null) {
+        volumeUnit = VolumeUnit.values.firstWhere(
+          (e) => e.name == value,
+          orElse: () => VolumeUnit.liter,
+        );
+      }
+    } catch (e) {
+      // Fallback zu Default bei Fehler
+    }
 
     return AppSettings(
       language: prefs.getString(_keyLanguage) ?? 'de',
       isDarkMode: prefs.getBool(_keyDarkMode) ?? false,
       isExpertMode: prefs.getBool(_keyExpertMode) ?? false,
-      nutrientUnit: NutrientUnit.values.byName(
-        prefs.getString(_keyNutrientUnit) ?? 'ec'
-      ),
-      ppmScale: PpmScale.values.byName(
-        prefs.getString(_keyPpmScale) ?? 'scale700'
-      ),
-      temperatureUnit: TemperatureUnit.values.byName(
-        prefs.getString(_keyTemperatureUnit) ?? 'celsius'
-      ),
-      lengthUnit: LengthUnit.values.byName(
-        prefs.getString(_keyLengthUnit) ?? 'cm'
-      ),
-      volumeUnit: VolumeUnit.values.byName(
-        prefs.getString(_keyVolumeUnit) ?? 'liter'
-      ),
+      nutrientUnit: nutrientUnit,
+      ppmScale: ppmScale,
+      temperatureUnit: temperatureUnit,
+      lengthUnit: lengthUnit,
+      volumeUnit: volumeUnit,
     );
   }
 

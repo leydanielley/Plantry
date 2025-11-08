@@ -176,6 +176,34 @@ Neue Dateien:
   lib/widgets/calendar_widget.dart
 ```
 
+**⚠️ WICHTIG - Privacy-First Implementation:**
+```
+🔒 DSGVO-KONFORME UMSETZUNG:
+
+Option A (EMPFOHLEN):
+  ✅ In-App Kalender nur (table_calendar widget)
+  ✅ Alle Events aus lokaler SQLite DB
+  ✅ Benachrichtigungen für Erinnerungen (bereits implementiert)
+  ❌ KEIN ICS Export
+  ❌ KEINE Kalender-Berechtigungen (READ_CALENDAR/WRITE_CALENDAR)
+  → 100% offline, 0 Permissions, maximale Privacy
+
+Option B (Falls ICS gewünscht):
+  ✅ In-App Kalender (wie Option A)
+  ✅ Optional: ICS Export als LOKALE Datei (wie Backup-Feature)
+  ✅ User entscheidet manuell über Teilen/Import
+  ❌ KEINE automatische Kalender-Synchronisation
+  ❌ KEINE Kalender-Berechtigungen
+  → User behält volle Kontrolle, ähnlich wie backup_service.dart
+
+WICHTIG:
+  - Keine Verbindung zu System-Kalender
+  - Keine Online-Kalender-Dienste
+  - ICS-Export funktioniert wie Backup (lokale Datei)
+  - User teilt Datei manuell (via file_picker) wenn gewünscht
+  - Benachrichtigungs-System übernimmt Erinnerungen
+```
+
 ---
 
 ### Feature 5: Routine-Checklisten ✅

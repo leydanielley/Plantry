@@ -9,6 +9,9 @@ import 'dashboard_screen.dart';
 import '../database/database_helper.dart';
 import '../widgets/widgets.dart';
 import '../utils/app_logger.dart';
+import '../utils/app_state_recovery.dart';
+import '../utils/version_manager.dart';
+import '../utils/update_cleanup.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -29,27 +32,91 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
+      // ✅ P0 FIX: Version tracking & update detection
+      if (kDebugMode) {
+        await VersionManager.logVersionInfo();
+      }
+
+      final updateInfo = await VersionManager.getUpdateInfo();
+      if (updateInfo.isUpdate) {
+        AppLogger.info('SplashScreen', '🆕 ${updateInfo.changeDescription}');
+        setState(() {
+          _status = 'Update wird vorbereitet...';
+        });
+      }
+
+      // Check if migration is stuck
+      final migrationStuck = await VersionManager.isMigrationInProgress();
+      if (migrationStuck) {
+        AppLogger.error('SplashScreen', '⚠️ Previous migration appears stuck');
+        await VersionManager.clearFailedMigrations();
+      }
+
+      // ✅ P0 FIX: Check for crash recovery
+      final recoveryInfo = await AppStateRecovery.checkRecovery();
+
+      if (recoveryInfo.inCrashLoop) {
+        AppLogger.error('SplashScreen', '❌ App in crash loop! Count: ${recoveryInfo.crashCount}');
+        setState(() {
+          _hasError = true;
+          _status = 'App-Wiederherstellung läuft...';
+        });
+
+        // Give user feedback and reset
+        await Future.delayed(const Duration(seconds: 2));
+        await AppStateRecovery.resetCrashCount();
+      } else if (recoveryInfo.wasKilled && kDebugMode) {
+        AppLogger.warning('SplashScreen', '⚠️ App was killed unexpectedly');
+        if (recoveryInfo.lastScreen != null) {
+          AppLogger.info('SplashScreen', 'Last screen: ${recoveryInfo.lastScreen}');
+        }
+      }
+
       // WICHTIG: sqflite MUSS im Main Thread laufen!
       // Isolates (compute) funktionieren NICHT mit sqflite
       if (kDebugMode) {
         AppLogger.info('SplashScreen', '🚀 Starting database initialization...');
       }
 
-      final db = await DatabaseHelper.instance.database;
+      if (updateInfo.isUpdate) {
+        setState(() {
+          _status = 'Datenbank wird migriert...';
+        });
+      }
+
+      // Timeout nach 30 Sekunden - verhindert unendliches Hängen
+      final db = await DatabaseHelper.instance.database.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          AppLogger.error('SplashScreen', '⏱️ Database initialization timeout!');
+          throw TimeoutException('Database initialization took too long');
+        },
+      );
       final dbPath = db.path;
 
       if (kDebugMode) {
         AppLogger.info('SplashScreen', '✅ Database initialized: $dbPath');
         AppLogger.info('SplashScreen', '⏱️  Initialization took: ${stopwatch.elapsedMilliseconds}ms');
       }
-      
+
+      // Mark successful initialization
+      await AppStateRecovery.resetCrashCount();
+
+      // ✅ Post-Update Cleanup (run in background)
+      if (updateInfo.isUpdate) {
+        setState(() {
+          _status = 'Aufräumen...';
+        });
+        await UpdateCleanup.performPostUpdateCleanup();
+      }
+
       // Fix 2 Sekunden Splash
       if (stopwatch.elapsedMilliseconds < 2000) {
         await Future.delayed(Duration(milliseconds: 2000 - stopwatch.elapsedMilliseconds));
       }
-      
+
       if (mounted) {
         // OPTIMIERUNG 3: Direkt navigieren ohne weitere Delays
         Navigator.of(context).pushReplacement(
@@ -68,15 +135,15 @@ class _SplashScreenState extends State<SplashScreen> {
         AppLogger.error('SplashScreen', '❌ Error initializing: $e');
         AppLogger.error('SplashScreen', 'StackTrace: $stackTrace');
       }
-      
+
       setState(() {
         _hasError = true;
-        _status = 'Fehler beim Laden';
+        _status = 'Fehler beim Laden - App wird neu gestartet...';
       });
-      
+
       // Bei Fehler: kurz warten, dann trotzdem weiter
-      await Future.delayed(const Duration(seconds: 1));
-      
+      await Future.delayed(const Duration(seconds: 2));
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const DashboardScreen()),

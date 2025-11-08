@@ -69,23 +69,119 @@ class GrowLogApp extends StatefulWidget {
   State<GrowLogApp> createState() => GrowLogAppState();
 }
 
-class GrowLogAppState extends State<GrowLogApp> {
+class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
   final SettingsRepository _settingsRepo = getIt<SettingsRepository>();
-  late AppSettings _settings;
+  // ✅ FIX: Initialize with defaults to prevent LateInitializationError
+  late AppSettings _settings = AppSettings(
+    language: 'de',
+    isDarkMode: false,
+    isExpertMode: false,
+    nutrientUnit: NutrientUnit.ec,
+    ppmScale: PpmScale.scale700,
+    temperatureUnit: TemperatureUnit.celsius,
+    lengthUnit: LengthUnit.cm,
+    volumeUnit: VolumeUnit.liter,
+  );
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadSettings();
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    AppLogger.info('AppLifecycle', 'State changed: ${state.name}');
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        AppLogger.info('AppLifecycle', '✅ App resumed');
+        break;
+      case AppLifecycleState.inactive:
+        // Foldable is folding or app switching
+        AppLogger.info('AppLifecycle', '⚠️ App inactive (possibly folding)');
+        break;
+      case AppLifecycleState.paused:
+        AppLogger.info('AppLifecycle', '⏸️ App paused');
+        _handleAppPause();
+        break;
+      case AppLifecycleState.detached:
+        AppLogger.info('AppLifecycle', '🔌 App detached');
+        break;
+      case AppLifecycleState.hidden:
+        AppLogger.info('AppLifecycle', '👁️ App hidden');
+        break;
+    }
+  }
+
+  /// Handle app pause - save critical state
+  Future<void> _handleAppPause() async {
+    try {
+      // Save current settings to prevent loss
+      await _settingsRepo.saveSettings(_settings);
+      AppLogger.info('AppLifecycle', 'Settings saved on pause');
+    } catch (e) {
+      AppLogger.error('AppLifecycle', 'Failed to save settings on pause', e);
+    }
+  }
+
   Future<void> _loadSettings() async {
-    final settings = await _settingsRepo.getSettings();
-    setState(() {
-      _settings = settings;
-      _isLoading = false;
-    });
+    try {
+      // Timeout nach 10 Sekunden - verhindert unendliches Hängen
+      final settings = await _settingsRepo.getSettings().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          AppLogger.warning('Main', 'Settings loading timeout - using defaults');
+          // Fallback auf Default-Settings
+          return AppSettings(
+            language: 'de',
+            isDarkMode: false,
+            isExpertMode: false,
+            nutrientUnit: NutrientUnit.ec,
+            ppmScale: PpmScale.scale700,
+            temperatureUnit: TemperatureUnit.celsius,
+            lengthUnit: LengthUnit.cm,
+            volumeUnit: VolumeUnit.liter,
+          );
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _settings = settings;
+          _isLoading = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      AppLogger.error('Main', 'Error loading settings', e, stackTrace);
+
+      // Fallback auf Default-Settings bei Fehler
+      if (mounted) {
+        setState(() {
+          _settings = AppSettings(
+            language: 'de',
+            isDarkMode: false,
+            isExpertMode: false,
+            nutrientUnit: NutrientUnit.ec,
+            ppmScale: PpmScale.scale700,
+            temperatureUnit: TemperatureUnit.celsius,
+            lengthUnit: LengthUnit.cm,
+            volumeUnit: VolumeUnit.liter,
+          );
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void updateSettings(AppSettings newSettings) {

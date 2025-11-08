@@ -19,6 +19,7 @@ import '../services/log_service.dart';
 import '../utils/validators.dart';
 import '../utils/error_handling_mixin.dart';
 import '../utils/app_messages.dart';
+import '../utils/storage_helper.dart';
 
 class AddLogScreen extends StatefulWidget {
   final Plant plant;
@@ -220,12 +221,36 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
     }
   }
 
-  // ✅ BUG #6 FIX: Foto-Speicherung Error Handling
+  // ✅ BUG #6 FIX: Foto-Speicherung Error Handling + Storage Check
   Future<List<String>> _savePhotos() async {
     final List<String> savedPaths = [];
     final List<String> failedPhotos = [];
 
     try {
+      // ✅ P0 FIX: Check storage BEFORE attempting to save
+      final totalSizeNeeded = _selectedPhotos.fold<int>(
+        0,
+        (sum, photo) => sum + (File(photo.path).lengthSync()),
+      );
+
+      final hasSpace = await StorageHelper.hasEnoughStorage(
+        bytesNeeded: totalSizeNeeded + (50 * 1024 * 1024), // Photos + 50MB buffer
+      );
+
+      if (!hasSpace) {
+        AppLogger.error('AddLogScreen', '❌ Insufficient storage for photos');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Nicht genügend Speicherplatz verfügbar'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return savedPaths;
+      }
+
       final directory = await getApplicationDocumentsDirectory();
       final photosDir = Directory('${directory.path}/photos');
 
@@ -237,7 +262,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       for (var photo in _selectedPhotos) {
         try {
           final file = File(photo.path);
-          
+
           // ✅ SAFETY: Check file size (max 10MB)
           final size = await file.length();
           if (size > 10 * 1024 * 1024) {

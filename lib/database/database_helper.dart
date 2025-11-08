@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../utils/app_logger.dart';
 import 'migrations/migration_manager.dart';
+import 'database_recovery.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -18,16 +19,28 @@ class DatabaseHelper {
     if (_database != null) return _database!;
 
     if (_isInitializing) {
-      while (_isInitializing) {
+      // Warte maximal 15 Sekunden auf Initialisierung
+      final timeout = DateTime.now().add(const Duration(seconds: 15));
+      while (_isInitializing && DateTime.now().isBefore(timeout)) {
         await Future.delayed(const Duration(milliseconds: 50));
       }
+
       if (_database != null) return _database!;
+
+      // Timeout erreicht - Force-Reset
+      if (_isInitializing) {
+        AppLogger.error('DatabaseHelper', 'Database initialization deadlock detected - forcing reset');
+        _isInitializing = false;
+      }
     }
 
     _isInitializing = true;
     try {
       _database = await _initDB('growlog.db');
       return _database!;
+    } catch (e, stackTrace) {
+      AppLogger.error('DatabaseHelper', 'Database initialization failed', e, stackTrace);
+      rethrow;
     } finally {
       _isInitializing = false;
     }
@@ -39,13 +52,36 @@ class DatabaseHelper {
 
     AppLogger.info('DatabaseHelper', 'Opening database at: $path');
 
-    return await openDatabase(
-      path,
-      version: 8,  // ✅ v8: RDWC Expert Mode - Advanced nutrient tracking & recipes
-      onCreate: _createDB,
-      onUpgrade: _upgradeDB,
-      onConfigure: _onConfigure,
-    );
+    try {
+      return await openDatabase(
+        path,
+        version: 8,  // ✅ v8: RDWC Expert Mode - Advanced nutrient tracking & recipes
+        onCreate: _createDB,
+        onUpgrade: _upgradeDB,
+        onConfigure: _onConfigure,
+      );
+    } catch (e) {
+      AppLogger.error('DatabaseHelper', 'Database open failed, attempting recovery...', e);
+
+      // Attempt database recovery
+      final recoveryResult = await DatabaseRecovery.performRecovery(path);
+
+      if (recoveryResult.isSuccess || recoveryResult.wasRecreated) {
+        AppLogger.info('DatabaseHelper', 'Recovery successful, reopening database...');
+
+        // Try opening again
+        return await openDatabase(
+          path,
+          version: 8,
+          onCreate: _createDB,
+          onUpgrade: _upgradeDB,
+          onConfigure: _onConfigure,
+        );
+      } else {
+        AppLogger.error('DatabaseHelper', 'Database recovery failed completely');
+        rethrow;
+      }
+    }
   }
 
   Future<void> _onConfigure(Database db) async {

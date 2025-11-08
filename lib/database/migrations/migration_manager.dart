@@ -2,8 +2,10 @@
 // GROWLOG - Database Migration Manager
 // =============================================
 
+import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import '../../utils/app_logger.dart';
+import '../../utils/version_manager.dart';
 import '../../services/backup_service.dart';
 import '../../di/service_locator.dart';
 import 'migration.dart';
@@ -44,20 +46,30 @@ class MigrationManager {
   /// [db] The database to migrate
   /// [oldVersion] Current database version
   /// [newVersion] Target database version
-  Future<void> migrate(Database db, int oldVersion, int newVersion) async {
+  /// [timeout] Maximum time to wait for migration (default: 5 minutes)
+  Future<void> migrate(
+    Database db,
+    int oldVersion,
+    int newVersion, {
+    Duration timeout = const Duration(minutes: 5),
+  }) async {
     if (oldVersion == newVersion) {
       AppLogger.info(
         'MigrationManager',
         'Database already at version $newVersion',
       );
+      await VersionManager.markMigrationCompleted(dbVersion: newVersion);
       return;
     }
 
     AppLogger.info(
       'MigrationManager',
       '🔄 Starting database migration',
-      'from v$oldVersion to v$newVersion',
+      'from v$oldVersion to v$newVersion (timeout: ${timeout.inMinutes}min)',
     );
+
+    // Mark migration as in progress
+    await VersionManager.markMigrationInProgress();
 
     // Step 1: Create automatic backup before migration
     String? backupPath;
@@ -98,26 +110,46 @@ class MigrationManager {
       migrationsToRun.map((m) => 'v${m.version}').join(', '),
     );
 
-    // Step 3: Run migrations sequentially inside a transaction
+    // Step 3: Run migrations sequentially inside a transaction (with timeout)
     try {
       await db.transaction((txn) async {
+        int currentStep = 0;
+        final totalSteps = migrationsToRun.length;
+
         for (final migration in migrationsToRun) {
+          currentStep++;
+          final progress = '[$currentStep/$totalSteps]';
+
           AppLogger.info(
             'MigrationManager',
-            '⏳ Running migration v${migration.version}',
+            '⏳ $progress Running migration v${migration.version}',
             migration.description,
           );
 
           try {
-            await migration.up(txn);
+            // Run migration with timeout
+            await migration.up(txn).timeout(
+              timeout,
+              onTimeout: () {
+                AppLogger.error(
+                  'MigrationManager',
+                  '⏱️ Migration v${migration.version} timeout after ${timeout.inMinutes}min',
+                );
+                throw TimeoutException(
+                  'Migration v${migration.version} took too long',
+                  timeout,
+                );
+              },
+            );
+
             AppLogger.info(
               'MigrationManager',
-              '✅ Migration v${migration.version} completed',
+              '✅ $progress Migration v${migration.version} completed',
             );
           } catch (e, stack) {
             AppLogger.error(
               'MigrationManager',
-              '❌ Migration v${migration.version} failed',
+              '❌ $progress Migration v${migration.version} failed',
               e,
               stack,
             );
@@ -125,19 +157,35 @@ class MigrationManager {
             rethrow;
           }
         }
-      });
+      }).timeout(
+        timeout * migrationsToRun.length, // Total timeout = per-migration timeout * count
+        onTimeout: () {
+          AppLogger.error('MigrationManager', '⏱️ Total migration timeout');
+          throw TimeoutException('Overall migration timeout');
+        },
+      );
 
       AppLogger.info(
         'MigrationManager',
         '🎉 All migrations completed successfully',
         'Database now at v$newVersion',
       );
+
+      // Mark migration as completed
+      await VersionManager.markMigrationCompleted(dbVersion: newVersion);
     } catch (e, stack) {
       AppLogger.error(
         'MigrationManager',
         '💥 Migration failed - database rolled back to v$oldVersion',
         e,
         stack,
+      );
+
+      // Mark migration as failed
+      await VersionManager.markMigrationFailed(
+        fromVersion: oldVersion,
+        toVersion: newVersion,
+        error: e.toString(),
       );
 
       // Show user-friendly error

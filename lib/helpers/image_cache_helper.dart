@@ -17,7 +17,10 @@ class ImageCacheHelper {
 
   // Cache für bereits geladene Thumbnails
   final Map<String, Uint8List> _memoryCache = {};
-  static const int maxCacheSize = 50; // Max 50 Thumbnails im Memory
+
+  // ✅ FIX: Byte-based limit statt count-based (verhindert OOM auf Low-End Devices)
+  static const int maxCacheSizeBytes = 50 * 1024 * 1024; // 50 MB max
+  int _currentCacheSizeBytes = 0;
 
   // Thumbnail-Verzeichnis
   Future<Directory> get _thumbnailDir async {
@@ -107,16 +110,33 @@ class ImageCacheHelper {
 
   /// Zum Memory Cache hinzufügen (mit LRU-Logik)
   void _addToCache(String key, Uint8List data) {
-    if (_memoryCache.length >= maxCacheSize) {
-      // Ältesten Eintrag entfernen
-      _memoryCache.remove(_memoryCache.keys.first);
+    final dataSize = data.length;
+
+    // ✅ FIX: Evict based on byte size, not count
+    // Remove oldest entries until enough space available
+    while (_currentCacheSizeBytes + dataSize > maxCacheSizeBytes &&
+        _memoryCache.isNotEmpty) {
+      final oldestKey = _memoryCache.keys.first;
+      final oldestData = _memoryCache.remove(oldestKey);
+      if (oldestData != null) {
+        _currentCacheSizeBytes -= oldestData.length;
+      }
     }
+
+    // Add new entry
     _memoryCache[key] = data;
+    _currentCacheSizeBytes += dataSize;
+
+    AppLogger.info(
+      'ImageCacheHelper',
+      'Cache: ${_memoryCache.length} items, ${(_currentCacheSizeBytes / 1024 / 1024).toStringAsFixed(1)} MB',
+    );
   }
 
   /// Cache leeren
   void clearMemoryCache() {
     _memoryCache.clear();
+    _currentCacheSizeBytes = 0; // Reset byte counter
   }
 
   /// Alle Thumbnails löschen
