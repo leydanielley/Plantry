@@ -114,9 +114,9 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
             Text(message),
             if (details != null) ...[
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Details:',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               Text(

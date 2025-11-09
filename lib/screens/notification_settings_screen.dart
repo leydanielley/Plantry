@@ -4,12 +4,13 @@
 
 import 'package:flutter/material.dart';
 import '../models/notification_settings.dart';
-import '../repositories/notification_repository.dart';
-import '../repositories/settings_repository.dart';
-import '../services/notification_service.dart';
+import '../repositories/interfaces/i_notification_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
+import '../services/interfaces/i_notification_service.dart';
 import '../utils/translations.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../di/service_locator.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -19,9 +20,9 @@ class NotificationSettingsScreen extends StatefulWidget {
 }
 
 class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
-  final NotificationRepository _repo = NotificationRepository();
-  final NotificationService _notificationService = NotificationService();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final INotificationRepository _repo = getIt<INotificationRepository>();
+  final INotificationService _notificationService = getIt<INotificationService>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
   late AppTranslations _t = AppTranslations('de');
   NotificationSettings? _settings;

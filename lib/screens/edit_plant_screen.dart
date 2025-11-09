@@ -9,9 +9,10 @@ import '../models/plant.dart';
 import '../models/room.dart';
 import '../models/grow.dart';
 import '../models/enums.dart';
-import '../repositories/plant_repository.dart';
-import '../repositories/room_repository.dart';
-import '../repositories/grow_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
+import '../repositories/interfaces/i_room_repository.dart';
+import '../repositories/interfaces/i_grow_repository.dart';
+import '../di/service_locator.dart';
 
 class EditPlantScreen extends StatefulWidget {
   final Plant plant;
@@ -24,9 +25,9 @@ class EditPlantScreen extends StatefulWidget {
 
 class _EditPlantScreenState extends State<EditPlantScreen> {
   final _formKey = GlobalKey<FormState>();
-  final PlantRepository _plantRepo = PlantRepository();
-  final RoomRepository _roomRepo = RoomRepository();
-  final GrowRepository _growRepo = GrowRepository();
+  final IPlantRepository _plantRepo = getIt<IPlantRepository>();
+  final IRoomRepository _roomRepo = getIt<IRoomRepository>();
+  final IGrowRepository _growRepo = getIt<IGrowRepository>();
 
   late TextEditingController _nameController;
   late TextEditingController _strainController;

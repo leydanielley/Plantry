@@ -5,10 +5,11 @@
 import 'package:flutter/material.dart';
 import '../models/grow.dart';
 import '../models/room.dart';
-import '../repositories/grow_repository.dart';
-import '../repositories/room_repository.dart';
+import '../repositories/interfaces/i_grow_repository.dart';
+import '../repositories/interfaces/i_room_repository.dart';
 import '../utils/validators.dart';
 import '../utils/app_messages.dart';
+import '../di/service_locator.dart';
 
 class EditGrowScreen extends StatefulWidget {
   final Grow grow;
@@ -21,8 +22,8 @@ class EditGrowScreen extends StatefulWidget {
 
 class _EditGrowScreenState extends State<EditGrowScreen> {
   final _formKey = GlobalKey<FormState>();
-  final GrowRepository _growRepo = GrowRepository();
-  final RoomRepository _roomRepo = RoomRepository();
+  final IGrowRepository _growRepo = getIt<IGrowRepository>();
+  final IRoomRepository _roomRepo = getIt<IRoomRepository>();
 
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;

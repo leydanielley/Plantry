@@ -8,15 +8,16 @@ import '../models/plant.dart';
 import '../models/grow.dart';
 import '../models/room.dart';
 import '../models/enums.dart';
-import '../repositories/plant_repository.dart';
-import '../repositories/grow_repository.dart';
-import '../repositories/room_repository.dart';
 import 'plant_detail_screen.dart';
 import 'add_plant_screen.dart';
 import '../widgets/widgets.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
+import '../repositories/interfaces/i_grow_repository.dart';
+import '../repositories/interfaces/i_room_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
+import '../di/service_locator.dart';
 
 class PlantsScreen extends StatefulWidget {
   const PlantsScreen({super.key});
@@ -26,10 +27,10 @@ class PlantsScreen extends StatefulWidget {
 }
 
 class _PlantsScreenState extends State<PlantsScreen> {
-  final PlantRepository _plantRepo = PlantRepository();
-  final GrowRepository _growRepo = GrowRepository();
-  final RoomRepository _roomRepo = RoomRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IPlantRepository _plantRepo = getIt<IPlantRepository>();
+  final IGrowRepository _growRepo = getIt<IGrowRepository>();
+  final IRoomRepository _roomRepo = getIt<IRoomRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   
   List<Plant> _allPlants = [];
   List<Grow> _allGrows = [];
@@ -174,14 +175,14 @@ class _PlantsScreenState extends State<PlantsScreen> {
       final plants = _plantsByGrow[growId]!;
       
       widgets.add(_buildGrowHeader(growId, plants.length));
-      widgets.add(SizedBox(height: AppConstants.borderRadiusMedium));
+      widgets.add(const SizedBox(height: AppConstants.borderRadiusMedium));
       
       for (var plant in plants) {
         widgets.add(_buildPlantCard(plant));
-        widgets.add(SizedBox(height: AppConstants.spacingSmall));
+        widgets.add(const SizedBox(height: AppConstants.spacingSmall));
       }
       
-      widgets.add(SizedBox(height: AppConstants.spacingLarge));
+      widgets.add(const SizedBox(height: AppConstants.spacingLarge));
     }
 
     return widgets;
@@ -230,7 +231,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
     }
     
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppConstants.growHeaderPaddingHorizontal,
         vertical: AppConstants.growHeaderPaddingVertical,
       ),
@@ -247,7 +248,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
             color: iconColor,
           ),
           
-          SizedBox(width: AppConstants.growHeaderSpacing),
+          const SizedBox(width: AppConstants.growHeaderSpacing),
           
           // Grow Name
           Expanded(
@@ -272,7 +273,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
           
           // Arrow
           Container(
-            padding: EdgeInsets.all(AppConstants.plantCardArrowPadding),
+            padding: const EdgeInsets.all(AppConstants.plantCardArrowPadding),
             decoration: BoxDecoration(
               color: isDark ? AppConstants.darkModeSecondary : AppConstants.lightModeSecondary,
               shape: BoxShape.circle,
@@ -290,13 +291,15 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
   Widget _buildPlantCard(Plant plant) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppConstants.darkModePrimary : AppConstants.lightModePrimary,
-        borderRadius: BorderRadius.circular(AppConstants.plantCardBorderRadius),
-      ),
-      child: Material(
+
+    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
+    return RepaintBoundary(
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppConstants.darkModePrimary : AppConstants.lightModePrimary,
+          borderRadius: BorderRadius.circular(AppConstants.plantCardBorderRadius),
+        ),
+        child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(AppConstants.plantCardBorderRadius),
@@ -311,23 +314,23 @@ class _PlantsScreenState extends State<PlantsScreen> {
             }
           },
           child: Padding(
-            padding: EdgeInsets.all(AppConstants.plantCardPadding),
+            padding: const EdgeInsets.all(AppConstants.plantCardPadding),
             child: Row(
               children: [
                 // Phase Emoji Container
                 Container(
-                  padding: EdgeInsets.all(AppConstants.plantCardEmojiBgPadding),
+                  padding: const EdgeInsets.all(AppConstants.plantCardEmojiBgPadding),
                   decoration: BoxDecoration(
                     color: isDark ? AppConstants.darkModeSecondary : AppConstants.lightModeSecondary,
                     borderRadius: BorderRadius.circular(AppConstants.plantCardEmojiBgRadius),
                   ),
                   child: Text(
                     _getPhaseEmoji(plant.phase),
-                    style: TextStyle(fontSize: AppConstants.plantCardEmojiSize),
+                    style: const TextStyle(fontSize: AppConstants.plantCardEmojiSize),
                   ),
                 ),
                 
-                SizedBox(width: AppConstants.spacingMedium),
+                const SizedBox(width: AppConstants.spacingMedium),
                 
                 // Plant Info
                 Expanded(
@@ -340,14 +343,14 @@ class _PlantsScreenState extends State<PlantsScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      SizedBox(height: AppConstants.spacingXs),
+                      const SizedBox(height: AppConstants.spacingXs),
                       Text(
                         plant.strain ?? _t['unknown_strain'],
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: isDark ? Colors.grey[500] : Colors.grey[600],
                         ),
                       ),
-                      SizedBox(height: AppConstants.spacingSmall),
+                      const SizedBox(height: AppConstants.spacingSmall),
                       Row(
                         children: [
                           Icon(
@@ -355,7 +358,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
                             size: AppConstants.listItemIconSize,
                             color: isDark ? Colors.grey[500] : Colors.grey[500],
                           ),
-                          SizedBox(width: AppConstants.listItemIconSpacing),
+                          const SizedBox(width: AppConstants.listItemIconSpacing),
                           Text(
                             '${_t['day']} ${plant.totalDays}',
                             style: TextStyle(
@@ -364,13 +367,13 @@ class _PlantsScreenState extends State<PlantsScreen> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(width: AppConstants.spacingMedium),
+                          const SizedBox(width: AppConstants.spacingMedium),
                           Icon(
                             Icons.label,
                             size: AppConstants.listItemIconSize,
                             color: isDark ? Colors.grey[500] : Colors.grey[500],
                           ),
-                          SizedBox(width: AppConstants.listItemIconSpacing),
+                          const SizedBox(width: AppConstants.listItemIconSpacing),
                           Text(
                             _getPhaseName(plant.phase),
                             style: TextStyle(
@@ -387,7 +390,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
                 
                 // Arrow
                 Container(
-                  padding: EdgeInsets.all(AppConstants.plantCardArrowPadding),
+                  padding: const EdgeInsets.all(AppConstants.plantCardArrowPadding),
                   decoration: BoxDecoration(
                     color: isDark ? AppConstants.darkModeSecondary : AppConstants.lightModeSecondary,
                     shape: BoxShape.circle,
@@ -402,6 +405,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -419,7 +423,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
             stemColor: Colors.grey[500],
             potColor: Colors.grey[400],
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingTop),
+          const SizedBox(height: AppConstants.emptyStateSpacingTop),
           Text(
             _t['no_plants_available'],
             style: TextStyle(
@@ -428,7 +432,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingMiddle),
+          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
           Text(
             _t['create_first_plant'],
             style: TextStyle(

@@ -1,0 +1,21 @@
+// =============================================
+// GROWLOG - PlantRepository Interface
+// =============================================
+
+import '../../models/plant.dart';
+
+abstract class IPlantRepository {
+  Future<List<Plant>> findAll({int? limit, int? offset});
+  Future<Plant?> findById(int id);
+  Future<List<Plant>> findByRoom(int roomId);
+  Future<Plant> save(Plant plant);
+  Future<int> delete(int id);
+  Future<int> archive(int id);
+  Future<int> update(Plant plant);
+  Future<int> count();
+  Future<void> recalculateLogDayNumbers(int plantId, DateTime seedDate);
+  Future<void> recalculatePhaseDayNumbers(int plantId, DateTime phaseStartDate);
+  Future<void> recalculateAllPhaseDayNumbers(int plantId, Plant plant);
+  Future<int> getLogCount(int plantId);
+  Future<List<Plant>> findByRdwcSystem(int systemId);
+}

@@ -5,12 +5,13 @@
 import 'package:flutter/material.dart';
 import '../models/rdwc_recipe.dart';
 import '../models/fertilizer.dart';
-import '../repositories/rdwc_repository.dart';
-import '../repositories/settings_repository.dart';
-import '../repositories/fertilizer_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
+import '../repositories/interfaces/i_fertilizer_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../di/service_locator.dart';
 
 class RdwcRecipeFormScreen extends StatefulWidget {
   final RdwcRecipe? recipe;
@@ -23,9 +24,9 @@ class RdwcRecipeFormScreen extends StatefulWidget {
 
 class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final RdwcRepository _rdwcRepo = RdwcRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
-  final FertilizerRepository _fertilizerRepo = FertilizerRepository();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
+  final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
 
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;

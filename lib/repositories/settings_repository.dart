@@ -4,8 +4,9 @@
 
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
+import 'interfaces/i_settings_repository.dart';
 
-class SettingsRepository {
+class SettingsRepository implements ISettingsRepository {
   static const String _keyLanguage = 'language';
   static const String _keyDarkMode = 'dark_mode';
   static const String _keyExpertMode = 'expert_mode';
@@ -16,6 +17,7 @@ class SettingsRepository {
   static const String _keyVolumeUnit = 'volume_unit';
 
   /// Einstellungen laden (mit Fehlerbehandlung für korrupte Daten)
+  @override
   Future<AppSettings> getSettings() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -98,54 +100,63 @@ class SettingsRepository {
   }
 
   /// Sprache speichern
+  @override
   Future<void> setLanguage(String language) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyLanguage, language);
   }
 
   /// Dark Mode speichern
+  @override
   Future<void> setDarkMode(bool isDarkMode) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyDarkMode, isDarkMode);
   }
 
   /// Expert Mode speichern
+  @override
   Future<void> setExpertMode(bool isExpertMode) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyExpertMode, isExpertMode);
   }
 
   /// Nutrient Unit speichern
+  @override
   Future<void> setNutrientUnit(NutrientUnit unit) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyNutrientUnit, unit.name);
   }
 
   /// PPM Scale speichern
+  @override
   Future<void> setPpmScale(PpmScale scale) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyPpmScale, scale.name);
   }
 
   /// Temperature Unit speichern
+  @override
   Future<void> setTemperatureUnit(TemperatureUnit unit) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyTemperatureUnit, unit.name);
   }
 
   /// Length Unit speichern
+  @override
   Future<void> setLengthUnit(LengthUnit unit) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyLengthUnit, unit.name);
   }
 
   /// Volume Unit speichern
+  @override
   Future<void> setVolumeUnit(VolumeUnit unit) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyVolumeUnit, unit.name);
   }
 
   /// Alle Einstellungen speichern
+  @override
   Future<void> saveSettings(AppSettings settings) async {
     await setLanguage(settings.language);
     await setDarkMode(settings.isDarkMode);

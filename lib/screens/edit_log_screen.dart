@@ -15,12 +15,13 @@ import '../models/fertilizer.dart';
 import '../models/log_fertilizer.dart';
 import '../models/photo.dart';
 import '../models/enums.dart';
-import '../repositories/plant_log_repository.dart';
-import '../repositories/plant_repository.dart';
-import '../repositories/fertilizer_repository.dart';
-import '../repositories/log_fertilizer_repository.dart';
-import '../repositories/photo_repository.dart';
+import '../repositories/interfaces/i_plant_log_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
+import '../repositories/interfaces/i_fertilizer_repository.dart';
+import '../repositories/interfaces/i_log_fertilizer_repository.dart';
+import '../repositories/interfaces/i_photo_repository.dart';
 import '../utils/validators.dart';
+import '../di/service_locator.dart';
 
 class EditLogScreen extends StatefulWidget {
   final Plant plant;
@@ -38,11 +39,11 @@ class EditLogScreen extends StatefulWidget {
 
 class _EditLogScreenState extends State<EditLogScreen> {
   final _formKey = GlobalKey<FormState>();
-  final PlantLogRepository _logRepo = PlantLogRepository();
-  final PlantRepository _plantRepo = PlantRepository();
-  final FertilizerRepository _fertilizerRepo = FertilizerRepository();
-  final LogFertilizerRepository _logFertilizerRepo = LogFertilizerRepository();
-  final PhotoRepository _photoRepo = PhotoRepository();
+  final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
+  final IPlantRepository _plantRepo = getIt<IPlantRepository>();
+  final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
+  final ILogFertilizerRepository _logFertilizerRepo = getIt<ILogFertilizerRepository>();
+  final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
   final ImagePicker _imagePicker = ImagePicker();
 
   // Form Controllers

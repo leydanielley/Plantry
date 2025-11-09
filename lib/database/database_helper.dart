@@ -1,6 +1,7 @@
 // =============================================
 // GROWLOG - Database Helper (✅ BUG FIX #4: SeedType CHECK korrigiert)
 // =============================================
+import 'package:flutter/foundation.dart';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -14,6 +15,13 @@ class DatabaseHelper {
   static bool _isInitializing = false;
 
   DatabaseHelper._init();
+
+  /// Allows test database injection (only for testing!)
+  /// This method should only be called from test code
+  @visibleForTesting
+  static void setTestDatabase(Database? db) {
+    _database = db;
+  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;

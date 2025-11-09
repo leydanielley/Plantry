@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'models/app_settings.dart';
-import 'repositories/settings_repository.dart';
+import 'repositories/interfaces/i_settings_repository.dart';
 import 'screens/splash_screen.dart';
 import 'screens/privacy_policy_screen.dart';
 import 'utils/app_theme.dart';
@@ -70,7 +70,7 @@ class GrowLogApp extends StatefulWidget {
 }
 
 class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
-  final SettingsRepository _settingsRepo = getIt<SettingsRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   // ✅ FIX: Initialize with defaults to prevent LateInitializationError
   late AppSettings _settings = AppSettings(
     language: 'de',

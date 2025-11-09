@@ -3,9 +3,9 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../repositories/rdwc_repository.dart';
-import '../repositories/settings_repository.dart';
-import '../repositories/fertilizer_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
+import '../repositories/interfaces/i_fertilizer_repository.dart';
 import '../models/rdwc_system.dart';
 import '../models/rdwc_log.dart';
 import '../models/rdwc_log_fertilizer.dart';
@@ -16,6 +16,7 @@ import '../utils/translations.dart';
 import '../utils/unit_converter.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../di/service_locator.dart';
 
 class RdwcAddbackFormScreen extends StatefulWidget {
   final RdwcSystem system;
@@ -35,9 +36,9 @@ class RdwcAddbackFormScreen extends StatefulWidget {
 
 class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final RdwcRepository _rdwcRepo = RdwcRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
-  final FertilizerRepository _fertilizerRepo = FertilizerRepository();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
+  final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
 
   late TextEditingController _levelBeforeController;
   late TextEditingController _waterAddedController;
@@ -1185,7 +1186,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                 padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
-                    Icon(Icons.water_damage, color: Colors.blue),
+                    const Icon(Icons.water_damage, color: Colors.blue),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(

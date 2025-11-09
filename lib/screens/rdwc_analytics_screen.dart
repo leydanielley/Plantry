@@ -6,14 +6,15 @@ import 'package:flutter/material.dart';
 import '../models/rdwc_system.dart';
 import '../models/rdwc_log.dart';
 import '../models/app_settings.dart';
-import '../repositories/rdwc_repository.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/unit_converter.dart';
 import '../utils/app_logger.dart';
 import '../widgets/rdwc/stats_card.dart';
 import '../widgets/rdwc/consumption_chart.dart';
 import '../widgets/rdwc/drift_chart.dart';
+import '../di/service_locator.dart';
 
 class RdwcAnalyticsScreen extends StatefulWidget {
   final RdwcSystem system;
@@ -25,8 +26,8 @@ class RdwcAnalyticsScreen extends StatefulWidget {
 }
 
 class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTickerProviderStateMixin {
-  final RdwcRepository _rdwcRepo = RdwcRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
   late TabController _tabController;
   late AppTranslations _t;

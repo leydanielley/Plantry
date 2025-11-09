@@ -140,7 +140,7 @@ class ConsumptionChart extends StatelessWidget {
                 label: HorizontalLineLabel(
                   show: true,
                   labelResolver: (line) => 'Avg: ${UnitConverter.formatVolume(averageConsumption, settings.volumeUnit)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.orange,
                     fontWeight: FontWeight.bold,
                     fontSize: 10,

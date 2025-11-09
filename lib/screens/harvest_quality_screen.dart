@@ -5,8 +5,9 @@
 import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import '../models/harvest.dart';
-import '../repositories/harvest_repository.dart';
+import '../repositories/interfaces/i_harvest_repository.dart';
 import 'edit_harvest_quality_screen.dart';
+import '../di/service_locator.dart';
 
 class HarvestQualityScreen extends StatefulWidget {
   final int harvestId;
@@ -18,7 +19,7 @@ class HarvestQualityScreen extends StatefulWidget {
 }
 
 class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
-  final HarvestRepository _harvestRepo = HarvestRepository();
+  final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   Harvest? _harvest;
   bool _isLoading = true;
 

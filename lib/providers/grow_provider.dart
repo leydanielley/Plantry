@@ -4,7 +4,7 @@
 
 import 'package:flutter/foundation.dart';
 import '../models/grow.dart';
-import '../repositories/grow_repository.dart';
+import '../repositories/interfaces/i_grow_repository.dart';
 import '../utils/app_logger.dart';
 import '../utils/async_value.dart';
 
@@ -34,7 +34,7 @@ import '../utils/async_value.dart';
 /// )
 /// ```
 class GrowProvider with ChangeNotifier {
-  final GrowRepository _repository;
+  final IGrowRepository _repository;
 
   GrowProvider(this._repository);
 

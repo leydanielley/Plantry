@@ -6,11 +6,13 @@ import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/room.dart';
 import '../utils/app_logger.dart';
+import 'interfaces/i_room_repository.dart';
 
-class RoomRepository {
+class RoomRepository implements IRoomRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   /// Alle Räume laden
+  @override
   Future<List<Room>> findAll() async {
     try {
       final db = await _dbHelper.database;
@@ -23,6 +25,7 @@ class RoomRepository {
   }
 
   /// Raum nach ID laden
+  @override
   Future<Room?> findById(int id) async {
     try {
       final db = await _dbHelper.database;
@@ -42,6 +45,7 @@ class RoomRepository {
   }
 
   /// Raum speichern (INSERT oder UPDATE)
+  @override
   Future<Room> save(Room room) async {
     try {
       final db = await _dbHelper.database;
@@ -67,6 +71,7 @@ class RoomRepository {
   }
 
   /// Raum löschen
+  @override
   Future<int> delete(int id) async {
     try {
       final db = await _dbHelper.database;
@@ -82,6 +87,7 @@ class RoomRepository {
   }
 
   /// Anzahl Räume
+  @override
   Future<int> count() async {
     try {
       final db = await _dbHelper.database;

@@ -7,9 +7,10 @@ import 'package:intl/intl.dart';
 import '../models/hardware.dart';
 import '../models/room.dart';
 import '../models/enums.dart';
-import '../repositories/hardware_repository.dart';
-import '../repositories/room_repository.dart';
+import '../repositories/interfaces/i_hardware_repository.dart';
+import '../repositories/interfaces/i_room_repository.dart';
 import '../utils/app_messages.dart';
+import '../di/service_locator.dart';
 
 class AddHardwareScreen extends StatefulWidget {
   final int roomId;
@@ -22,8 +23,8 @@ class AddHardwareScreen extends StatefulWidget {
 
 class _AddHardwareScreenState extends State<AddHardwareScreen> {
   final _formKey = GlobalKey<FormState>();
-  final HardwareRepository _hardwareRepo = HardwareRepository();
-  final RoomRepository _roomRepo = RoomRepository();
+  final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
+  final IRoomRepository _roomRepo = getIt<IRoomRepository>();
 
   Room? _room;
 

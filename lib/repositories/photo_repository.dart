@@ -6,11 +6,13 @@ import 'dart:io';
 import '../models/photo.dart';
 import '../database/database_helper.dart';
 import '../utils/app_logger.dart';
+import 'interfaces/i_photo_repository.dart';
 
-class PhotoRepository {
+class PhotoRepository implements IPhotoRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   /// Foto speichern mit Validierung
+  @override
   Future<int> save(Photo photo) async {
     // Photo-Validierung
     _validatePhoto(photo);
@@ -49,6 +51,7 @@ class PhotoRepository {
   }
 
   /// Alle Fotos für einen Log abrufen
+  @override
   Future<List<Photo>> getPhotosByLogId(int logId) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -63,6 +66,7 @@ class PhotoRepository {
 
   /// ✅ PERFORMANCE FIX: Batch-Query für mehrere Logs (verhindert N+1 Problem!)
   /// Nutzen: Lädt alle Photos für eine Liste von Logs in EINER Query
+  @override
   Future<Map<int, List<Photo>>> getPhotosByLogIds(List<int> logIds) async {
     if (logIds.isEmpty) return {};
 
@@ -98,6 +102,7 @@ class PhotoRepository {
   }
 
   /// Foto nach ID abrufen
+  @override
   Future<Photo?> getById(int id) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -112,6 +117,7 @@ class PhotoRepository {
 
   /// Foto löschen (für Legacy-Code)
   /// ✅ FIX BUG #1: Deletes file from disk AND database
+  @override
   Future<int> delete(int id) async {
     final db = await _dbHelper.database;
 
@@ -143,11 +149,13 @@ class PhotoRepository {
   }
 
   /// Foto löschen (mit klarerem Namen)
+  @override
   Future<int> deletePhoto(int id) async {
     return await delete(id);
   }
 
   /// Alle Fotos für eine Pflanze abrufen (über Logs) mit Pagination
+  @override
   Future<List<Photo>> getPhotosByPlantId(int plantId, {int? limit, int? offset}) async {
     final db = await _dbHelper.database;
     
@@ -178,6 +186,7 @@ class PhotoRepository {
 
   /// Alle Fotos löschen die zu einem Log gehören
   /// ✅ FIX BUG #1: Deletes files from disk AND database
+  @override
   Future<void> deleteByLogId(int logId) async {
     final db = await _dbHelper.database;
 

@@ -7,17 +7,23 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
+import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../utils/app_logger.dart';
 import '../utils/app_version.dart';
 import '../utils/storage_helper.dart';
+import 'interfaces/i_backup_service.dart';
 
-class BackupService {
+class BackupService implements IBackupService {
   static const int _backupVersion = 1;
 
   /// Export all app data to a ZIP file
   /// Returns the path to the created backup file
-  Future<String> exportData() async {
+  ///
+  /// [db] Optional database instance. If not provided, will get instance from DatabaseHelper.
+  /// This is useful during migrations to avoid circular dependency.
+  @override
+  Future<String> exportData({Database? db}) async {
     try {
       AppLogger.info('BackupService', 'Starting export...');
 
@@ -31,7 +37,8 @@ class BackupService {
         throw Exception('Nicht genügend Speicherplatz für Backup. $storageInfo');
       }
 
-      final db = await DatabaseHelper.instance.database;
+      // Use provided database or get instance (avoid deadlock during migration)
+      final database = db ?? await DatabaseHelper.instance.database;
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
       final tempDir = await getTemporaryDirectory();
       final exportDir = Directory('${tempDir.path}/plantry_export_$timestamp');
@@ -75,7 +82,7 @@ class BackupService {
 
       for (final table in tables) {
         try {
-          final data = await db.query(table);
+          final data = await database.query(table);
           backup['data'][table] = data;
           AppLogger.debug('BackupService', 'Exported table', '$table: ${data.length} rows');
         } catch (e) {
@@ -146,6 +153,7 @@ class BackupService {
 
   /// Import data from a backup ZIP file
   /// Validates data before importing
+  @override
   Future<void> importData(String zipFilePath) async {
     Directory? importDir;
 
@@ -360,6 +368,7 @@ class BackupService {
   }
 
   /// Get backup info without importing
+  @override
   Future<Map<String, dynamic>> getBackupInfo(String zipFilePath) async {
     try {
       final zipFile = File(zipFilePath);

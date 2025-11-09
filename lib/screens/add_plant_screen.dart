@@ -9,11 +9,12 @@ import '../models/room.dart';
 import '../models/grow.dart';
 import '../models/rdwc_system.dart';
 import '../models/enums.dart';
-import '../repositories/plant_repository.dart';
-import '../repositories/room_repository.dart';
-import '../repositories/grow_repository.dart';
-import '../repositories/rdwc_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
+import '../repositories/interfaces/i_room_repository.dart';
+import '../repositories/interfaces/i_grow_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
 import '../utils/app_messages.dart';
+import '../di/service_locator.dart';
 
 class AddPlantScreen extends StatefulWidget {
   final int? preselectedGrowId;
@@ -26,10 +27,10 @@ class AddPlantScreen extends StatefulWidget {
 
 class _AddPlantScreenState extends State<AddPlantScreen> {
   final _formKey = GlobalKey<FormState>();
-  final PlantRepository _plantRepo = PlantRepository();
-  final RoomRepository _roomRepo = RoomRepository();
-  final GrowRepository _growRepo = GrowRepository();
-  final RdwcRepository _rdwcRepo = RdwcRepository();
+  final IPlantRepository _plantRepo = getIt<IPlantRepository>();
+  final IRoomRepository _roomRepo = getIt<IRoomRepository>();
+  final IGrowRepository _growRepo = getIt<IGrowRepository>();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
 
   // Form Controllers
   final _nameController = TextEditingController();
@@ -402,11 +403,11 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         TextFormField(
           controller: _quantityController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             labelText: 'Anzahl',
             hintText: '1-50',
-            prefixIcon: Icon(Icons.filter_list, color: const Color(0xFF004225)),
-            border: const OutlineInputBorder(),
+            prefixIcon: Icon(Icons.filter_list, color: Color(0xFF004225)),
+            border: OutlineInputBorder(),
             helperText: 'Wie viele Pflanzen erstellen?',
           ),
           onChanged: (value) {
@@ -524,7 +525,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 initialValue: _selectedGrowId,
                 decoration: InputDecoration(
                   labelText: widget.preselectedGrowId != null ? 'Grow (vorgegeben)' : 'Grow (optional)',
-                  prefixIcon: Icon(Icons.eco, color: const Color(0xFF004225)),
+                  prefixIcon: const Icon(Icons.eco, color: Color(0xFF004225)),
                   border: const OutlineInputBorder(),
                   helperText: widget.preselectedGrowId != null
                       ? 'Diese Pflanze wird diesem Grow zugeordnet'
@@ -631,12 +632,12 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info, color: Colors.blue, size: 20),
+                        const Icon(Icons.info, color: Colors.blue, size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Automatische Verteilung:\nBuckets ${freeBuckets.take(quantity).join(', ')} werden verwendet',
-                            style: TextStyle(fontSize: 13),
+                            style: const TextStyle(fontSize: 13),
                           ),
                         ),
                       ],
@@ -649,8 +650,8 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                   initialValue: _selectedBucketNumber,
                   decoration: InputDecoration(
                     labelText: 'Bucket Nummer *',
-                    prefixIcon: Icon(Icons.filter_list),
-                    border: OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.filter_list),
+                    border: const OutlineInputBorder(),
                     helperText: '${_occupiedBuckets.length}/${selectedSystem.bucketCount} Buckets belegt',
                   ),
                   items: [

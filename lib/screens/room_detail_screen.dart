@@ -9,13 +9,14 @@ import '../models/plant.dart';
 import '../models/hardware.dart';
 import '../models/rdwc_system.dart';
 import '../models/enums.dart';
-import '../repositories/plant_repository.dart';
-import '../repositories/hardware_repository.dart';
-import '../repositories/rdwc_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
+import '../repositories/interfaces/i_hardware_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
 import 'edit_room_screen.dart';
 import 'plant_detail_screen.dart';
 import 'hardware_list_screen.dart';
 import 'rdwc_system_detail_screen.dart';
+import '../di/service_locator.dart';
 
 class RoomDetailScreen extends StatefulWidget {
   final Room room;
@@ -27,9 +28,9 @@ class RoomDetailScreen extends StatefulWidget {
 }
 
 class _RoomDetailScreenState extends State<RoomDetailScreen> {
-  final PlantRepository _plantRepo = PlantRepository();
-  final HardwareRepository _hardwareRepo = HardwareRepository();
-  final RdwcRepository _rdwcRepo = RdwcRepository();
+  final IPlantRepository _plantRepo = getIt<IPlantRepository>();
+  final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
 
   List<Plant> _plants = [];
   List<Hardware> _hardware = [];
@@ -49,15 +50,23 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
     }
 
     try {
-      final plants = await _plantRepo.findByRoom(widget.room.id!);
-      final hardware = await _hardwareRepo.findActiveByRoom(widget.room.id!);
-      final wattage = await _hardwareRepo.getTotalWattageByRoom(widget.room.id!);
+      // ✅ PERFORMANCE: Parallel laden für schnellere Ladezeit
+      final futures = <Future>[
+        _plantRepo.findByRoom(widget.room.id!),
+        _hardwareRepo.findActiveByRoom(widget.room.id!),
+        _hardwareRepo.getTotalWattageByRoom(widget.room.id!),
+        if (widget.room.rdwcSystemId != null)
+          _rdwcRepo.getSystemById(widget.room.rdwcSystemId!)
+        else
+          Future.value(null),
+      ];
 
-      // ✅ Load RDWC System if linked
-      RdwcSystem? rdwcSystem;
-      if (widget.room.rdwcSystemId != null) {
-        rdwcSystem = await _rdwcRepo.getSystemById(widget.room.rdwcSystemId!);
-      }
+      final results = await Future.wait(futures);
+
+      final plants = results[0] as List<Plant>;
+      final hardware = results[1] as List<Hardware>;
+      final wattage = results[2] as int;
+      final rdwcSystem = results[3] as RdwcSystem?;
 
       if (mounted) {
         setState(() {

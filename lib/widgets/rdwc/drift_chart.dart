@@ -160,7 +160,7 @@ class DriftChart extends StatelessWidget {
 
                   return LineTooltipItem(
                     '$label: $value\n${_formatDate(point.date)}',
-                    TextStyle(
+                    const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,

@@ -4,15 +4,19 @@
 
 import '../models/plant.dart';
 import '../models/health_score.dart';
-import '../repositories/plant_log_repository.dart';
-import '../repositories/photo_repository.dart';
+import '../repositories/interfaces/i_plant_log_repository.dart';
+import '../repositories/interfaces/i_photo_repository.dart';
 import '../utils/app_logger.dart';
+import 'interfaces/i_health_score_service.dart';
 
-class HealthScoreService {
-  final PlantLogRepository _logRepo = PlantLogRepository();
-  final PhotoRepository _photoRepo = PhotoRepository();
+class HealthScoreService implements IHealthScoreService {
+  final IPlantLogRepository _logRepo;
+  final IPhotoRepository _photoRepo;
+
+  HealthScoreService(this._logRepo, this._photoRepo);
 
   /// Calculate health score for a plant
+  @override
   Future<HealthScore> calculateHealthScore(Plant plant) async {
     if (plant.id == null) {
       return _getDefaultScore();

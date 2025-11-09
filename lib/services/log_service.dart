@@ -10,8 +10,9 @@ import '../models/plant_log.dart';
 import '../models/log_fertilizer.dart';
 import '../models/photo.dart';
 import '../models/enums.dart';
-import '../repositories/plant_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
 import '../utils/validators.dart';
+import 'interfaces/i_log_service.dart';
 
 // Service-Layer für alle Log-Operationen
 // Vorteile:
@@ -20,9 +21,11 @@ import '../utils/validators.dart';
 // - Zentrale Business-Logic statt Code-Duplizierung
 // - Input-Validierung & besseres Error Handling
 // - Bessere Testbarkeit
-class LogService {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  final PlantRepository _plantRepo = PlantRepository();
+class LogService implements ILogService {
+  final DatabaseHelper _dbHelper;
+  final IPlantRepository _plantRepo;
+
+  LogService(this._dbHelper, this._plantRepo);
 
   /// Validiert Log-Daten vor dem Speichern
   void _validateLog(PlantLog log, Plant plant) {
@@ -123,6 +126,7 @@ class LogService {
   /// Single Log speichern mit allen Relationen (Fertilizers + Photos)
   /// VORHER: Viele einzelne Calls in add_log_screen
   /// NACHHER: Eine Transaction für alles!
+  @override
   Future<PlantLog> saveSingleLog({
     required Plant plant,
     required PlantLog log,
@@ -250,6 +254,7 @@ class LogService {
   /// Bulk Log speichern für mehrere Pflanzen
   /// Performance: Nutzt Batch + Transaction!
   /// WICHTIG: Berechnet dayNumber individuell pro Pflanze basierend auf seedDate!
+  @override
   Future<List<int>> saveBulkLog({
     required List<int> plantIds,
     required DateTime logDate,
@@ -450,12 +455,13 @@ class LogService {
 
   /// Log mit allen Details laden (inkl. Fertilizers + Photos)
   /// Nutzt JOIN Query für maximale Performance!
+  @override
   Future<Map<String, dynamic>?> getLogWithDetails(int logId) async {
     try {
       final db = await _dbHelper.database;
       
       // JOIN Query für Log + Fertilizers + Photos
-      final query = '''
+      const query = '''
         SELECT 
           pl.*,
           lf.id as lf_id,
@@ -534,6 +540,7 @@ class LogService {
 
   /// Log kopieren (mit allen Relationen)
   /// Nutzen: "Letzten Log kopieren" Feature
+  @override
   Future<PlantLog?> copyLog({
     required int sourceLogId,
     required int targetPlantId,
@@ -612,6 +619,7 @@ class LogService {
 
   /// Log löschen (mit allen Relationen)
   /// CASCADE DELETE funktioniert durch Foreign Keys!
+  @override
   Future<void> deleteLog(int logId) async {
     try {
       final db = await _dbHelper.database;
@@ -628,6 +636,7 @@ class LogService {
   }
 
   /// Mehrere Logs löschen (Batch)
+  @override
   Future<void> deleteLogs(List<int> logIds) async {
     if (logIds.isEmpty) return;
     

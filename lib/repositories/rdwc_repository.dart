@@ -8,8 +8,9 @@ import '../models/rdwc_log.dart';
 import '../models/rdwc_log_fertilizer.dart';
 import '../models/rdwc_recipe.dart';
 import '../utils/app_logger.dart';
+import 'interfaces/i_rdwc_repository.dart';
 
-class RdwcRepository {
+class RdwcRepository implements IRdwcRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   // ==========================================
@@ -17,6 +18,7 @@ class RdwcRepository {
   // ==========================================
 
   /// Get all RDWC systems
+  @override
   Future<List<RdwcSystem>> getAllSystems({bool includeArchived = false}) async {
     try {
       final db = await _dbHelper.database;
@@ -38,6 +40,7 @@ class RdwcRepository {
   }
 
   /// Get systems by room
+  @override
   Future<List<RdwcSystem>> getSystemsByRoom(int roomId, {bool includeArchived = false}) async {
     try {
       final db = await _dbHelper.database;
@@ -63,6 +66,7 @@ class RdwcRepository {
   }
 
   /// Get systems by grow
+  @override
   Future<List<RdwcSystem>> getSystemsByGrow(int growId, {bool includeArchived = false}) async {
     try {
       final db = await _dbHelper.database;
@@ -88,6 +92,7 @@ class RdwcRepository {
   }
 
   /// Get system by ID
+  @override
   Future<RdwcSystem?> getSystemById(int id) async {
     try {
       final db = await _dbHelper.database;
@@ -107,6 +112,7 @@ class RdwcRepository {
   }
 
   /// Create new RDWC system
+  @override
   Future<int> createSystem(RdwcSystem system) async {
     try {
       final db = await _dbHelper.database;
@@ -120,6 +126,7 @@ class RdwcRepository {
   }
 
   /// Update RDWC system
+  @override
   Future<int> updateSystem(RdwcSystem system) async {
     try {
       final db = await _dbHelper.database;
@@ -138,6 +145,7 @@ class RdwcRepository {
   }
 
   /// Update system water level
+  @override
   Future<void> updateSystemLevel(int systemId, double newLevel) async {
     try {
       final db = await _dbHelper.database;
@@ -155,6 +163,7 @@ class RdwcRepository {
   }
 
   /// Archive/unarchive system
+  @override
   Future<void> archiveSystem(int systemId, bool archived) async {
     try {
       final db = await _dbHelper.database;
@@ -172,6 +181,7 @@ class RdwcRepository {
   }
 
   /// Delete RDWC system (and all its logs via CASCADE)
+  @override
   Future<int> deleteSystem(int systemId) async {
     try {
       final db = await _dbHelper.database;
@@ -193,6 +203,7 @@ class RdwcRepository {
   // ==========================================
 
   /// Get all logs for a system
+  @override
   Future<List<RdwcLog>> getLogsBySystem(int systemId) async {
     try {
       final db = await _dbHelper.database;
@@ -211,6 +222,7 @@ class RdwcRepository {
   }
 
   /// Get recent logs for a system (last N logs)
+  @override
   Future<List<RdwcLog>> getRecentLogs(int systemId, {int limit = 10}) async {
     try {
       final db = await _dbHelper.database;
@@ -230,6 +242,7 @@ class RdwcRepository {
   }
 
   /// Get latest log for a system
+  @override
   Future<RdwcLog?> getLatestLog(int systemId) async {
     try {
       final logs = await getRecentLogs(systemId, limit: 1);
@@ -241,6 +254,7 @@ class RdwcRepository {
   }
 
   /// Create new RDWC log and update system level
+  @override
   Future<int> createLog(RdwcLog log) async {
     try {
       final db = await _dbHelper.database;
@@ -262,6 +276,7 @@ class RdwcRepository {
   }
 
   /// Update RDWC log
+  @override
   Future<int> updateLog(RdwcLog log) async {
     try {
       final db = await _dbHelper.database;
@@ -286,6 +301,7 @@ class RdwcRepository {
   }
 
   /// Delete RDWC log
+  @override
   Future<int> deleteLog(int logId) async {
     try {
       final db = await _dbHelper.database;
@@ -303,6 +319,7 @@ class RdwcRepository {
   }
 
   /// Calculate average daily water consumption for a system
+  @override
   Future<double?> getAverageDailyConsumption(int systemId, {int days = 7}) async {
     try {
       final db = await _dbHelper.database;
@@ -329,6 +346,7 @@ class RdwcRepository {
   }
 
   /// Get total water added in a time period
+  @override
   Future<double> getTotalWaterAdded(int systemId, {DateTime? startDate, DateTime? endDate}) async {
     try {
       final db = await _dbHelper.database;
@@ -360,6 +378,7 @@ class RdwcRepository {
   // ==========================================
 
   /// Add fertilizer to an RDWC log
+  @override
   Future<int> addFertilizerToLog(RdwcLogFertilizer fertilizer) async {
     try {
       final db = await _dbHelper.database;
@@ -373,6 +392,7 @@ class RdwcRepository {
   }
 
   /// Remove fertilizer from an RDWC log
+  @override
   Future<int> removeFertilizerFromLog(int fertilizerId) async {
     try {
       final db = await _dbHelper.database;
@@ -390,6 +410,7 @@ class RdwcRepository {
   }
 
   /// Get all fertilizers for an RDWC log
+  @override
   Future<List<RdwcLogFertilizer>> getLogFertilizers(int rdwcLogId) async {
     try {
       final db = await _dbHelper.database;
@@ -408,6 +429,7 @@ class RdwcRepository {
   }
 
   /// Get RDWC log with fertilizers loaded
+  @override
   Future<RdwcLog?> getLogWithFertilizers(int logId) async {
     try {
       final db = await _dbHelper.database;
@@ -436,6 +458,7 @@ class RdwcRepository {
   }
 
   /// Get recent logs with fertilizers loaded
+  @override
   Future<List<RdwcLog>> getRecentLogsWithFertilizers(int systemId, {int limit = 10}) async {
     try {
       final logs = await getRecentLogs(systemId, limit: limit);
@@ -462,6 +485,7 @@ class RdwcRepository {
   // ==========================================
 
   /// Get all RDWC recipes
+  @override
   Future<List<RdwcRecipe>> getAllRecipes() async {
     try {
       final db = await _dbHelper.database;
@@ -485,6 +509,7 @@ class RdwcRepository {
   }
 
   /// Get recipe by ID
+  @override
   Future<RdwcRecipe?> getRecipeById(int id) async {
     try {
       final db = await _dbHelper.database;
@@ -508,6 +533,7 @@ class RdwcRepository {
   }
 
   /// Get fertilizers for a recipe
+  @override
   Future<List<RecipeFertilizer>> getRecipeFertilizers(int recipeId) async {
     try {
       final db = await _dbHelper.database;
@@ -526,6 +552,7 @@ class RdwcRepository {
   }
 
   /// Create recipe fertilizer entry
+  @override
   Future<int> createRecipeFertilizer(RecipeFertilizer recipeFertilizer) async {
     try {
       final db = await _dbHelper.database;
@@ -539,6 +566,7 @@ class RdwcRepository {
   }
 
   /// Delete recipe fertilizer entry
+  @override
   Future<int> deleteRecipeFertilizer(int id) async {
     try {
       final db = await _dbHelper.database;
@@ -556,6 +584,7 @@ class RdwcRepository {
   }
 
   /// Create new recipe
+  @override
   Future<int> createRecipe(RdwcRecipe recipe) async {
     try {
       final db = await _dbHelper.database;
@@ -582,6 +611,7 @@ class RdwcRepository {
   }
 
   /// Update recipe
+  @override
   Future<int> updateRecipe(RdwcRecipe recipe) async {
     try {
       final db = await _dbHelper.database;
@@ -615,6 +645,7 @@ class RdwcRepository {
   }
 
   /// Delete recipe
+  @override
   Future<int> deleteRecipe(int recipeId) async {
     try {
       final db = await _dbHelper.database;
@@ -639,6 +670,7 @@ class RdwcRepository {
   // ==========================================
 
   /// Get daily water consumption for the last N days
+  @override
   Future<Map<String, double>> getDailyConsumption(int systemId, {int days = 7}) async {
     try {
       final db = await _dbHelper.database;
@@ -672,6 +704,7 @@ class RdwcRepository {
   }
 
   /// Get consumption statistics
+  @override
   Future<Map<String, dynamic>> getConsumptionStats(int systemId, {int days = 7}) async {
     try {
       final dailyConsumption = await getDailyConsumption(systemId, days: days);
@@ -717,6 +750,7 @@ class RdwcRepository {
   // ==========================================
 
   /// Get EC drift analysis
+  @override
   Future<Map<String, dynamic>> getEcDriftAnalysis(int systemId, {int days = 7}) async {
     try {
       final logs = await getRecentLogs(systemId, limit: days * 5); // ~5 logs per day estimate
@@ -771,6 +805,7 @@ class RdwcRepository {
   }
 
   /// Get pH drift analysis
+  @override
   Future<Map<String, dynamic>> getPhDriftAnalysis(int systemId, {int days = 7}) async {
     try {
       final logs = await getRecentLogs(systemId, limit: days * 5); // ~5 logs per day estimate

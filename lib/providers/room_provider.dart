@@ -4,7 +4,7 @@
 
 import 'package:flutter/foundation.dart';
 import '../models/room.dart';
-import '../repositories/room_repository.dart';
+import '../repositories/interfaces/i_room_repository.dart';
 import '../utils/app_logger.dart';
 import '../utils/async_value.dart';
 
@@ -34,7 +34,7 @@ import '../utils/async_value.dart';
 /// )
 /// ```
 class RoomProvider with ChangeNotifier {
-  final RoomRepository _repository;
+  final IRoomRepository _repository;
 
   RoomProvider(this._repository);
 

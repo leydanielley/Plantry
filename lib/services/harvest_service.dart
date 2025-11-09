@@ -4,12 +4,16 @@
 
 import '../models/plant.dart';
 import '../models/harvest.dart';
-import '../repositories/harvest_repository.dart';
+import '../repositories/interfaces/i_harvest_repository.dart';
+import 'interfaces/i_harvest_service.dart';
 
-class HarvestService {
-  final HarvestRepository _harvestRepo = HarvestRepository();
+class HarvestService implements IHarvestService {
+  final IHarvestRepository _harvestRepo;
+
+  HarvestService(this._harvestRepo);
 
   /// Lädt die Ernte für eine Pflanze
+  @override
   Future<Harvest?> getHarvestForPlant(Plant plant) async {
     if (plant.id == null) return null;
 

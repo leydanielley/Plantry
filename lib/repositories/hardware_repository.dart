@@ -5,11 +5,13 @@
 import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/hardware.dart';
+import 'interfaces/i_hardware_repository.dart';
 
-class HardwareRepository {
+class HardwareRepository implements IHardwareRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   /// Alle Hardware-Items für einen Raum laden
+  @override
   Future<List<Hardware>> findByRoom(int roomId) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -23,6 +25,7 @@ class HardwareRepository {
   }
 
   /// Alle aktiven Hardware-Items für einen Raum laden
+  @override
   Future<List<Hardware>> findActiveByRoom(int roomId) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -36,6 +39,7 @@ class HardwareRepository {
   }
 
   /// Hardware nach ID laden
+  @override
   Future<Hardware?> findById(int id) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -50,6 +54,7 @@ class HardwareRepository {
   }
 
   /// Alle Hardware-Items laden (über alle Räume)
+  @override
   Future<List<Hardware>> findAll() async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -61,6 +66,7 @@ class HardwareRepository {
   }
 
   /// Hardware speichern (INSERT oder UPDATE)
+  @override
   Future<Hardware> save(Hardware hardware) async {
     try {
       final db = await _dbHelper.database;
@@ -90,6 +96,7 @@ class HardwareRepository {
   }
 
   /// Hardware löschen
+  @override
   Future<int> delete(int id) async {
    final db = await _dbHelper.database;
     return await db.delete(
@@ -100,6 +107,7 @@ class HardwareRepository {
   }
 
   /// Hardware deaktivieren (statt löschen)
+  @override
   Future<int> deactivate(int id) async {
     final db = await _dbHelper.database;
     return await db.update(
@@ -111,6 +119,7 @@ class HardwareRepository {
   }
 
   /// Hardware aktivieren
+  @override
   Future<int> activate(int id) async {
     final db = await _dbHelper.database;
     return await db.update(
@@ -122,6 +131,7 @@ class HardwareRepository {
   }
 
   /// Anzahl Hardware-Items für einen Raum
+  @override
   Future<int> countByRoom(int roomId) async {
     final db = await _dbHelper.database;
     final result = await db.rawQuery(
@@ -132,6 +142,7 @@ class HardwareRepository {
   }
 
   /// Gesamte Wattzahl für einen Raum berechnen
+  @override
   Future<int> getTotalWattageByRoom(int roomId) async {
     final db = await _dbHelper.database;
     final result = await db.rawQuery(

@@ -6,9 +6,10 @@ import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import 'package:intl/intl.dart';
 import '../models/harvest.dart';
-import '../repositories/harvest_repository.dart';
+import '../repositories/interfaces/i_harvest_repository.dart';
 import 'edit_harvest_drying_screen.dart';
 import 'harvest_curing_screen.dart';
+import '../di/service_locator.dart';
 
 class HarvestDryingScreen extends StatefulWidget {
   final int harvestId;
@@ -20,7 +21,7 @@ class HarvestDryingScreen extends StatefulWidget {
 }
 
 class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
-  final HarvestRepository _harvestRepo = HarvestRepository();
+  final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   Harvest? _harvest;
   bool _isLoading = true;
 

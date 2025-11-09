@@ -4,11 +4,13 @@
 
 import '../database/database_helper.dart';
 import '../models/log_fertilizer.dart';
+import 'interfaces/i_log_fertilizer_repository.dart';
 
-class LogFertilizerRepository {
+class LogFertilizerRepository implements ILogFertilizerRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   /// Speichern (Insert/Update)
+  @override
   Future<int> save(LogFertilizer logFertilizer) async {
     final db = await _dbHelper.database;
     
@@ -28,6 +30,7 @@ class LogFertilizerRepository {
   /// ✅ OPTIMIZED: Batch save - mehrere Dünger für einen Log
   /// VORHER: Loop mit einzelnen INSERT
   /// NACHHER: Transaction + Batch für maximale Performance
+  @override
   Future<void> saveForLog(int logId, List<LogFertilizer> fertilizers) async {
     if (fertilizers.isEmpty) return;
     
@@ -48,6 +51,7 @@ class LogFertilizerRepository {
 
   /// ✅ NEU: Batch-Methode für mehrere Logs auf einmal
   /// Nutzen: Beim Bulk-Log-Speichern oder beim Kopieren von Logs
+  @override
   Future<void> saveForLogs(List<int> logIds, Map<int, List<LogFertilizer>> fertilizersPerLog) async {
     if (logIds.isEmpty) return;
     
@@ -76,6 +80,7 @@ class LogFertilizerRepository {
   }
 
   /// Finde alle für einen Log
+  @override
   Future<List<LogFertilizer>> findByLog(int logId) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -89,6 +94,7 @@ class LogFertilizerRepository {
   /// ✅ NEU: Finde LogFertilizers für mehrere Logs auf einmal
   /// Performance: Nutzt den idx_log_fertilizers_lookup Index!
   /// Nutzen: Lädt alle Dünger für eine Liste von Logs in EINER Query
+  @override
   Future<Map<int, List<LogFertilizer>>> findByLogs(List<int> logIds) async {
     if (logIds.isEmpty) return {};
     
@@ -119,18 +125,21 @@ class LogFertilizerRepository {
   }
 
   /// Löschen
+  @override
   Future<void> delete(int id) async {
     final db = await _dbHelper.database;
     await db.delete('log_fertilizers', where: 'id = ?', whereArgs: [id]);
   }
 
   /// Lösche alle für einen Log
+  @override
   Future<void> deleteByLog(int logId) async {
     final db = await _dbHelper.database;
     await db.delete('log_fertilizers', where: 'log_id = ?', whereArgs: [logId]);
   }
   
   /// ✅ NEU: Lösche für mehrere Logs (Batch)
+  @override
   Future<void> deleteByLogs(List<int> logIds) async {
     if (logIds.isEmpty) return;
     

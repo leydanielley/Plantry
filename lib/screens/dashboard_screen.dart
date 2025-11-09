@@ -12,11 +12,12 @@ import 'settings_screen.dart';
 import 'rdwc_systems_screen.dart';
 import 'nutrient_dilution_calculator_screen.dart';
 import '../models/app_settings.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_state_recovery.dart';
 import '../widgets/battery_optimization_dialog.dart';
 import '../main.dart';
+import '../di/service_locator.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -26,7 +27,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   AppTranslations _t = AppTranslations('de');
   bool _isLoading = true;
 

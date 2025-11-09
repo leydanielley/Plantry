@@ -5,9 +5,10 @@
 import 'package:flutter/material.dart';
 import '../models/fertilizer.dart';
 import '../models/app_settings.dart';
-import '../repositories/fertilizer_repository.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_fertilizer_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/app_messages.dart';
+import '../di/service_locator.dart';
 
 class AddFertilizerScreen extends StatefulWidget {
   const AddFertilizerScreen({super.key});
@@ -18,8 +19,8 @@ class AddFertilizerScreen extends StatefulWidget {
 
 class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
   final _formKey = GlobalKey<FormState>();
-  final FertilizerRepository _fertilizerRepo = FertilizerRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
   final _nameController = TextEditingController();
   final _brandController = TextEditingController();

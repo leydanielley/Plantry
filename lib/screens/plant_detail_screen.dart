@@ -13,12 +13,6 @@ import '../models/fertilizer.dart';
 import '../models/log_fertilizer.dart';
 import '../models/photo.dart';
 import '../models/enums.dart';
-import '../repositories/plant_log_repository.dart';
-import '../repositories/plant_repository.dart';
-import '../repositories/grow_repository.dart';
-import '../repositories/fertilizer_repository.dart';
-import '../repositories/log_fertilizer_repository.dart';
-import '../repositories/photo_repository.dart';
 import 'add_log_screen.dart';
 import 'edit_plant_screen.dart';
 import 'edit_log_screen.dart';
@@ -26,8 +20,15 @@ import 'plant_photo_gallery_screen.dart';
 import 'add_harvest_screen.dart';
 import 'harvest_detail_screen.dart';
 import '../models/harvest.dart';
-import '../services/harvest_service.dart';
+import '../repositories/interfaces/i_plant_log_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
+import '../repositories/interfaces/i_grow_repository.dart';
+import '../repositories/interfaces/i_fertilizer_repository.dart';
+import '../repositories/interfaces/i_log_fertilizer_repository.dart';
+import '../repositories/interfaces/i_photo_repository.dart';
+import '../services/interfaces/i_harvest_service.dart';
 import '../utils/app_messages.dart';
+import '../di/service_locator.dart';
 
 class PlantDetailScreen extends StatefulWidget {
   final Plant plant;
@@ -39,13 +40,13 @@ class PlantDetailScreen extends StatefulWidget {
 }
 
 class _PlantDetailScreenState extends State<PlantDetailScreen> {
-  final PlantLogRepository _logRepo = PlantLogRepository();
-  final PlantRepository _plantRepo = PlantRepository();
-  final GrowRepository _growRepo = GrowRepository();
-  final FertilizerRepository _fertilizerRepo = FertilizerRepository();
-  final LogFertilizerRepository _logFertilizerRepo = LogFertilizerRepository();
-  final PhotoRepository _photoRepo = PhotoRepository();
-  final HarvestService _harvestService = HarvestService();
+  final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
+  final IPlantRepository _plantRepo = getIt<IPlantRepository>();
+  final IGrowRepository _growRepo = getIt<IGrowRepository>();
+  final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
+  final ILogFertilizerRepository _logFertilizerRepo = getIt<ILogFertilizerRepository>();
+  final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
+  final IHarvestService _harvestService = getIt<IHarvestService>();
 
   final ScrollController _scrollController = ScrollController();
 
@@ -98,6 +99,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     });
 
     try {
+      // Step 1: Plant laden (muss zuerst, weil wir die ID brauchen)
       final updatedPlant = await _plantRepo.findById(widget.plant.id!);
       if (updatedPlant == null) {
         if (mounted) {
@@ -106,22 +108,27 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         return;
       }
 
-      // ✅ FIX: Logs mit Pagination laden
-      final logs = await _logRepo.findByPlant(
-        widget.plant.id!,
-        limit: _pageSize,
-        offset: 0,
-      );
+      // ✅ PERFORMANCE: Step 2 - Logs, Fertilizers & Harvest parallel laden
+      final results = await Future.wait([
+        _logRepo.findByPlant(widget.plant.id!, limit: _pageSize, offset: 0),
+        _fertilizerRepo.findAll(),
+        _harvestService.getHarvestForPlant(updatedPlant),
+      ]);
 
-      final fertilizers = await _fertilizerRepo.findAll();
+      final logs = results[0] as List<PlantLog>;
+      final fertilizers = results[1] as List<Fertilizer>;
       final fertilizerMap = {for (var f in fertilizers) f.id!: f};
+      final harvest = results[2] as Harvest?;
 
-      final harvest = await _harvestService.getHarvestForPlant(updatedPlant);
-
-      // ✅ PERFORMANCE FIX: Batch-Query statt N+1
+      // ✅ PERFORMANCE: Step 3 - Log Details parallel laden
       final logIds = logs.where((log) => log.id != null).map((log) => log.id!).toList();
-      final logFertilizersMap = await _logFertilizerRepo.findByLogs(logIds);
-      final logPhotosMap = await _photoRepo.getPhotosByLogIds(logIds);
+      final detailResults = await Future.wait([
+        _logFertilizerRepo.findByLogs(logIds),
+        _photoRepo.getPhotosByLogIds(logIds),
+      ]);
+
+      final logFertilizersMap = detailResults[0] as Map<int, List<LogFertilizer>>;
+      final logPhotosMap = detailResults[1] as Map<int, List<Photo>>;
 
       if (!mounted) return;
 
@@ -796,13 +803,15 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     final photos = log.id != null ? _logPhotos[log.id!] : null;
     final textColor = isDark ? Colors.grey[300] : Colors.grey[700];
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
+    return RepaintBoundary(
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Row(
               children: [
                 // ✅ v13: Phase-Tag PROMINENT
@@ -1099,6 +1108,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             ],
           ],
         ),
+      ),
       ),
     );
   }

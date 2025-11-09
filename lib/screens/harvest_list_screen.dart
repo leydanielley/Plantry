@@ -6,11 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../utils/app_logger.dart';
 import '../models/harvest.dart';
-import '../repositories/harvest_repository.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_harvest_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
 import 'harvest_detail_screen.dart';
+import '../di/service_locator.dart';
 
 class HarvestListScreen extends StatefulWidget {
   const HarvestListScreen({super.key});
@@ -20,8 +21,8 @@ class HarvestListScreen extends StatefulWidget {
 }
 
 class _HarvestListScreenState extends State<HarvestListScreen> {
-  final HarvestRepository _harvestRepo = HarvestRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   
   List<Map<String, dynamic>> _harvests = [];
   bool _isLoading = true;
@@ -103,11 +104,11 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
               child: Row(
                 children: [
                   _buildFilterChip(_t['all'], 'all'),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   _buildFilterChip(_t['in_drying'], 'drying'),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   _buildFilterChip(_t['in_curing'], 'curing'),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   _buildFilterChip(_t['completed'], 'completed'),
                 ],
               ),
@@ -150,7 +151,7 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
             size: AppConstants.emptyStateIconSize, 
             color: Colors.grey[400]
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingTop),
+          const SizedBox(height: AppConstants.emptyStateSpacingTop),
           Text(
             _filter == 'all' ? _t['no_harvests_yet'] : _t['no_harvests_found'],
             style: TextStyle(
@@ -158,7 +159,7 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
               color: Colors.grey[600]
             ),
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingMiddle),
+          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
           Text(
             _filter == 'all' 
                 ? _t['record_first_harvest'] 
@@ -197,7 +198,7 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
               children: [
                 if (harvestData['plant_strain'] != null)
                   Text(harvestData['plant_strain'] as String),
-                SizedBox(height: AppConstants.spacingXs),
+                const SizedBox(height: AppConstants.spacingXs),
                 Row(
                   children: [
                     Icon(
@@ -205,7 +206,7 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
                       size: AppConstants.fontSizeSmall, 
                       color: Colors.grey[600]
                     ),
-                    SizedBox(width: AppConstants.listItemIconSpacing),
+                    const SizedBox(width: AppConstants.listItemIconSpacing),
                     Text(
                       DateFormat('dd.MM.yyyy').format(harvest.harvestDate),
                       style: TextStyle(
@@ -214,13 +215,13 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
                       ),
                     ),
                     if (harvest.dryWeight != null) ...[
-                      SizedBox(width: AppConstants.listItemSpacingMedium),
+                      const SizedBox(width: AppConstants.listItemSpacingMedium),
                       Icon(
                         Icons.scale, 
                         size: AppConstants.fontSizeSmall, 
                         color: Colors.grey[600]
                       ),
-                      SizedBox(width: AppConstants.listItemIconSpacing),
+                      const SizedBox(width: AppConstants.listItemIconSpacing),
                       Text(
                         '${harvest.dryWeight!.toStringAsFixed(1)}g',
                         style: TextStyle(
@@ -232,7 +233,7 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
                     ],
                   ],
                 ),
-                SizedBox(height: AppConstants.spacingXs),
+                const SizedBox(height: AppConstants.spacingXs),
                 Text(
                   '${harvest.dryingStatus} • ${harvest.curingStatus}',
                   style: TextStyle(
@@ -242,7 +243,7 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
                 ),
               ],
             ),
-            trailing: Icon(
+            trailing: const Icon(
               Icons.arrow_forward_ios, 
               size: AppConstants.spacingMedium
             ),

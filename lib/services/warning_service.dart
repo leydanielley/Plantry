@@ -3,9 +3,10 @@
 // =============================================
 
 import '../models/plant.dart';
-import '../repositories/plant_log_repository.dart';
-import '../repositories/photo_repository.dart';
+import '../repositories/interfaces/i_plant_log_repository.dart';
+import '../repositories/interfaces/i_photo_repository.dart';
 import '../utils/app_logger.dart';
+import 'interfaces/i_warning_service.dart';
 
 enum WarningLevel {
   info,
@@ -38,11 +39,14 @@ class PlantWarning {
   }
 }
 
-class WarningService {
-  final PlantLogRepository _logRepo = PlantLogRepository();
-  final PhotoRepository _photoRepo = PhotoRepository();
+class WarningService implements IWarningService {
+  final IPlantLogRepository _logRepo;
+  final IPhotoRepository _photoRepo;
+
+  WarningService(this._logRepo, this._photoRepo);
 
   /// Check for all warnings for a plant
+  @override
   Future<List<PlantWarning>> checkWarnings(Plant plant) async {
     if (plant.id == null) return [];
 

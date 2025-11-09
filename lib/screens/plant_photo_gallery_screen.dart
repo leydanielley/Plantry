@@ -12,9 +12,10 @@ import 'package:intl/intl.dart';
 import '../models/plant.dart';
 import '../models/photo.dart';
 import '../models/plant_log.dart';
-import '../repositories/photo_repository.dart';
-import '../repositories/plant_log_repository.dart';
+import '../repositories/interfaces/i_photo_repository.dart';
+import '../repositories/interfaces/i_plant_log_repository.dart';
 import '../helpers/image_cache_helper.dart';
+import '../di/service_locator.dart';
 
 class PlantPhotoGalleryScreen extends StatefulWidget {
   final Plant plant;
@@ -26,8 +27,8 @@ class PlantPhotoGalleryScreen extends StatefulWidget {
 }
 
 class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
-  final PhotoRepository _photoRepo = PhotoRepository();
-  final PlantLogRepository _logRepo = PlantLogRepository();
+  final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
+  final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
   final ImageCacheHelper _imageCache = ImageCacheHelper();
   
   final List<Photo> _photos = [];

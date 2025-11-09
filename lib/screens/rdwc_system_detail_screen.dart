@@ -3,10 +3,10 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../repositories/rdwc_repository.dart';
-import '../repositories/settings_repository.dart';
-import '../repositories/plant_repository.dart';
-import '../repositories/fertilizer_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
+import '../repositories/interfaces/i_fertilizer_repository.dart';
 import '../models/rdwc_system.dart';
 import '../models/rdwc_log.dart';
 import '../models/rdwc_log_fertilizer.dart';
@@ -21,6 +21,7 @@ import 'rdwc_system_form_screen.dart';
 import 'rdwc_recipes_screen.dart';
 import 'rdwc_analytics_screen.dart';
 import 'rdwc_quick_measurement_screen.dart';
+import '../di/service_locator.dart';
 
 class RdwcSystemDetailScreen extends StatefulWidget {
   final RdwcSystem system;
@@ -32,10 +33,10 @@ class RdwcSystemDetailScreen extends StatefulWidget {
 }
 
 class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
-  final RdwcRepository _rdwcRepo = RdwcRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
-  final PlantRepository _plantRepo = PlantRepository();
-  final FertilizerRepository _fertilizerRepo = FertilizerRepository();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
+  final IPlantRepository _plantRepo = getIt<IPlantRepository>();
+  final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
 
   late RdwcSystem _system;
   List<RdwcLog> _logs = [];
@@ -54,11 +55,20 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
 
   Future<void> _loadData() async {
     try {
-      final settings = await _settingsRepo.getSettings();
-      final logs = await _rdwcRepo.getRecentLogsWithFertilizers(_system.id!, limit: 20);
-      final avg = await _rdwcRepo.getAverageDailyConsumption(_system.id!, days: 7);
-      final updatedSystem = await _rdwcRepo.getSystemById(_system.id!);
-      final linkedPlants = await _plantRepo.findByRdwcSystem(_system.id!);
+      // ✅ PERFORMANCE: Parallel laden für schnellere Ladezeit
+      final results = await Future.wait([
+        _settingsRepo.getSettings(),
+        _rdwcRepo.getRecentLogsWithFertilizers(_system.id!, limit: 20),
+        _rdwcRepo.getAverageDailyConsumption(_system.id!, days: 7),
+        _rdwcRepo.getSystemById(_system.id!),
+        _plantRepo.findByRdwcSystem(_system.id!),
+      ]);
+
+      final settings = results[0] as AppSettings;
+      final logs = results[1] as List<RdwcLog>;
+      final avg = results[2] as double?;
+      final updatedSystem = results[3] as RdwcSystem?;
+      final linkedPlants = results[4] as List<Plant>;
 
       if (mounted) {
         setState(() {
@@ -603,7 +613,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                 Text('${_t['water_consumed']}: ${UnitConverter.formatVolume(log.waterConsumed!, _settings.volumeUnit)}'),
               Text(
                 '${log.fertilizers!.length} ${_t['nutrients']}',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.green,
                   fontWeight: FontWeight.w500,
                 ),
@@ -749,7 +759,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                 if (contributionText.isNotEmpty)
                   Text(
                     contributionText,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: Colors.blue,
@@ -963,7 +973,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           ..._linkedPlants.map((plant) => Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
-                  leading: Icon(Icons.local_florist, color: Colors.green),
+                  leading: const Icon(Icons.local_florist, color: Colors.green),
                   title: Text(plant.name),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

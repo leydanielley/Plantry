@@ -7,11 +7,13 @@ import '../database/database_helper.dart';
 import '../models/plant.dart';
 import '../utils/validators.dart';
 import '../utils/app_logger.dart';
+import 'interfaces/i_plant_repository.dart';
 
-class PlantRepository {
+class PlantRepository implements IPlantRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   /// Alle Pflanzen laden (nicht archiviert) mit Pagination
+  @override
   Future<List<Plant>> findAll({int? limit, int? offset}) async {
     try {
       final db = await _dbHelper.database;
@@ -32,6 +34,7 @@ class PlantRepository {
   }
 
   /// Pflanze nach ID laden
+  @override
   Future<Plant?> findById(int id) async {
     try {
       final db = await _dbHelper.database;
@@ -51,6 +54,7 @@ class PlantRepository {
   }
 
   /// Pflanzen nach Room laden
+  @override
   Future<List<Plant>> findByRoom(int roomId) async {
     try {
       final db = await _dbHelper.database;
@@ -70,6 +74,7 @@ class PlantRepository {
 
   /// Pflanze speichern (INSERT oder UPDATE)
   /// ✅ FIX: Recalculates log day_numbers wenn seed_date ändert
+  @override
   Future<Plant> save(Plant plant) async {
     try {
       final db = await _dbHelper.database;
@@ -132,6 +137,7 @@ class PlantRepository {
   }
 
   /// Pflanze löschen
+  @override
   Future<int> delete(int id) async {
     try {
       final db = await _dbHelper.database;
@@ -147,6 +153,7 @@ class PlantRepository {
   }
 
   /// Pflanze archivieren
+  @override
   Future<int> archive(int id) async {
     final db = await _dbHelper.database;
     return await db.update(
@@ -158,6 +165,7 @@ class PlantRepository {
   }
 
   /// Pflanze aktualisieren (UPDATE only)
+  @override
   Future<int> update(Plant plant) async {
     if (plant.id == null) {
       throw Exception('Plant ID cannot be null for update');
@@ -172,6 +180,7 @@ class PlantRepository {
   }
 
   /// Anzahl Pflanzen
+  @override
   Future<int> count() async {
     try {
       final db = await _dbHelper.database;
@@ -185,6 +194,7 @@ class PlantRepository {
 
   /// ✅ FIX: Recalculate all log day_numbers for a plant
   /// Called when seed date changes
+  @override
   Future<void> recalculateLogDayNumbers(int plantId, DateTime seedDate) async {
     final db = await _dbHelper.database;
     AppLogger.debug('PlantRepo', 'Recalculating day_numbers for plant', 'plantId=$plantId');
@@ -232,6 +242,7 @@ class PlantRepository {
 
   /// ✅ FIX: Recalculate all phase_day_numbers for a plant
   /// Called when phase start date changes
+  @override
   Future<void> recalculatePhaseDayNumbers(int plantId, DateTime phaseStartDate) async {
     final db = await _dbHelper.database;
     AppLogger.debug('PlantRepo', 'Recalculating phase_day_numbers for plant', 'plantId=$plantId');
@@ -273,6 +284,7 @@ class PlantRepository {
 
   /// ✅ v10: Recalculate ALL phase and phase_day_number for ALL logs based on phase history
   /// This is called when vegDate, bloomDate, or harvestDate changes
+  @override
   Future<void> recalculateAllPhaseDayNumbers(int plantId, Plant plant) async {
     final db = await _dbHelper.database;
     AppLogger.debug('PlantRepo', 'Recalculating ALL phase data for plant', 'plantId=$plantId');
@@ -363,6 +375,7 @@ class PlantRepository {
   }
 
   /// Get count of logs for a plant (used to show warning before seed date change)
+  @override
   Future<int> getLogCount(int plantId) async {
     final db = await _dbHelper.database;
     final result = await db.rawQuery(
@@ -373,6 +386,7 @@ class PlantRepository {
   }
 
   /// Get plants by RDWC System ID
+  @override
   Future<List<Plant>> findByRdwcSystem(int systemId) async {
     try {
       final db = await _dbHelper.database;

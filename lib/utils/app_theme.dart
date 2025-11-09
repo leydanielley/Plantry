@@ -151,7 +151,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: lightTextPrimary,
-          side: BorderSide(color: lightBorder, width: 1.5),
+          side: const BorderSide(color: lightBorder, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
@@ -209,7 +209,7 @@ class AppTheme {
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? primaryGreen : Colors.transparent),
         checkColor: WidgetStateProperty.all(Colors.white),
-        side: BorderSide(color: lightBorder, width: 2),
+        side: const BorderSide(color: lightBorder, width: 2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
       
@@ -307,7 +307,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: darkTextPrimary,
-          side: BorderSide(color: darkBorder, width: 1.5),
+          side: const BorderSide(color: darkBorder, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
@@ -324,7 +324,7 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: darkSurfaceVariant.withValues(alpha: 0.98),
         elevation: 12,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: darkBorder)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: darkBorder)),
         titleTextStyle: textTheme.headlineSmall?.copyWith(color: darkTextPrimary),
         contentTextStyle: textTheme.bodyLarge?.copyWith(color: darkTextSecondary),
       ),
@@ -365,7 +365,7 @@ class AppTheme {
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? primaryGreenLight : Colors.transparent),
         checkColor: WidgetStateProperty.all(Colors.black),
-        side: BorderSide(color: darkBorder, width: 2),
+        side: const BorderSide(color: darkBorder, width: 2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
       

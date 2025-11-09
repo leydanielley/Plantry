@@ -8,11 +8,12 @@ import '../utils/app_logger.dart';
 import '../models/plant.dart';
 import '../models/harvest.dart';
 import '../models/enums.dart';
-import '../repositories/harvest_repository.dart';
-import '../repositories/plant_repository.dart';
+import '../repositories/interfaces/i_harvest_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
 import '../utils/validators.dart';
 import '../utils/app_messages.dart';
 import 'harvest_detail_screen.dart';
+import '../di/service_locator.dart';
 
 class AddHarvestScreen extends StatefulWidget {
   final Plant plant;
@@ -24,7 +25,7 @@ class AddHarvestScreen extends StatefulWidget {
 }
 
 class _AddHarvestScreenState extends State<AddHarvestScreen> {
-  final HarvestRepository _harvestRepo = HarvestRepository();
+  final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
   
   int _currentStep = 0;
@@ -81,7 +82,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
 
       final harvestId = await _harvestRepo.createHarvest(harvest);
 
-      final plantRepo = PlantRepository();
+      final plantRepo = getIt<IPlantRepository>();
       final updatedPlant = widget.plant.copyWith(
         phase: PlantPhase.harvest,
         phaseStartDate: DateTime.now(),

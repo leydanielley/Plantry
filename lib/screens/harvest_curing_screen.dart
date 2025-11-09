@@ -6,9 +6,10 @@ import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import 'package:intl/intl.dart';
 import '../models/harvest.dart';
-import '../repositories/harvest_repository.dart';
+import '../repositories/interfaces/i_harvest_repository.dart';
 import 'edit_harvest_curing_screen.dart';
 import 'harvest_quality_screen.dart';
+import '../di/service_locator.dart';
 
 class HarvestCuringScreen extends StatefulWidget {
   final int harvestId;
@@ -20,7 +21,7 @@ class HarvestCuringScreen extends StatefulWidget {
 }
 
 class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
-  final HarvestRepository _harvestRepo = HarvestRepository();
+  final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   Harvest? _harvest;
   bool _isLoading = true;
 
@@ -119,7 +120,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                     child: InputDecorator(
                       decoration: InputDecoration(
                         labelText: 'Curing-Start',
-                        prefixIcon: Icon(Icons.calendar_today, color: Colors.purple),
+                        prefixIcon: const Icon(Icons.calendar_today, color: Colors.purple),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -138,7 +139,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                     decoration: InputDecoration(
                       labelText: 'Curing-Methode',
                       hintText: 'z.B. Glass Jars, Grove Bags',
-                      prefixIcon: Icon(Icons.dashboard, color: Colors.purple),
+                      prefixIcon: const Icon(Icons.dashboard, color: Colors.purple),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -170,7 +171,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                     decoration: InputDecoration(
                       labelText: 'Notizen (optional)',
                       hintText: 'Burping Schedule, Besonderheiten...',
-                      prefixIcon: Icon(Icons.note, color: Colors.purple),
+                      prefixIcon: const Icon(Icons.note, color: Colors.purple),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

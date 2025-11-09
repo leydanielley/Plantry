@@ -5,7 +5,8 @@
 import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import '../models/harvest.dart';
-import '../repositories/harvest_repository.dart';
+import '../repositories/interfaces/i_harvest_repository.dart';
+import '../di/service_locator.dart';
 
 class EditHarvestQualityScreen extends StatefulWidget {
   final Harvest harvest;
@@ -17,7 +18,7 @@ class EditHarvestQualityScreen extends StatefulWidget {
 }
 
 class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> with SingleTickerProviderStateMixin {
-  final HarvestRepository _harvestRepo = HarvestRepository();
+  final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
   late TabController _tabController;
   

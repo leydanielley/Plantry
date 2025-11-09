@@ -5,11 +5,13 @@
 import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/fertilizer.dart';
+import 'interfaces/i_fertilizer_repository.dart';
 
-class FertilizerRepository {
+class FertilizerRepository implements IFertilizerRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   /// Alle Dünger laden
+  @override
   Future<List<Fertilizer>> findAll() async {
     final db = await _dbHelper.database;
     final maps = await db.query('fertilizers', orderBy: 'name ASC');
@@ -17,6 +19,7 @@ class FertilizerRepository {
   }
 
   /// Dünger nach ID laden
+  @override
   Future<Fertilizer?> findById(int id) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -31,6 +34,7 @@ class FertilizerRepository {
   }
 
   /// Dünger speichern (INSERT oder UPDATE)
+  @override
   Future<Fertilizer> save(Fertilizer fertilizer) async {
     final db = await _dbHelper.database;
 
@@ -51,6 +55,7 @@ class FertilizerRepository {
   }
 
   /// Prüft ob Dünger in Verwendung ist (Rezepte, Logs, etc.)
+  @override
   Future<bool> isInUse(int id) async {
     final db = await _dbHelper.database;
 
@@ -82,6 +87,7 @@ class FertilizerRepository {
   }
 
   /// Gibt detaillierte Nutzungs-Statistik zurück
+  @override
   Future<Map<String, int>> getUsageDetails(int id) async {
     final db = await _dbHelper.database;
 
@@ -108,6 +114,7 @@ class FertilizerRepository {
   }
 
   /// Dünger löschen
+  @override
   Future<int> delete(int id) async {
     final db = await _dbHelper.database;
     return await db.delete(
@@ -118,6 +125,7 @@ class FertilizerRepository {
   }
 
   /// Anzahl Dünger
+  @override
   Future<int> count() async {
     final db = await _dbHelper.database;
     final result = await db.rawQuery('SELECT COUNT(*) as count FROM fertilizers');

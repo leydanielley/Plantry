@@ -7,14 +7,15 @@ import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import '../models/room.dart';
 import '../models/enums.dart';
-import '../repositories/room_repository.dart';
-import '../repositories/plant_repository.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_room_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
 import 'add_room_screen.dart';
 import 'edit_room_screen.dart';
 import 'room_detail_screen.dart';
+import '../di/service_locator.dart';
 
 class RoomListScreen extends StatefulWidget {
   const RoomListScreen({super.key});
@@ -24,9 +25,9 @@ class RoomListScreen extends StatefulWidget {
 }
 
 class _RoomListScreenState extends State<RoomListScreen> {
-  final RoomRepository _roomRepo = RoomRepository();
-  final PlantRepository _plantRepo = PlantRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IRoomRepository _roomRepo = getIt<IRoomRepository>();
+  final IPlantRepository _plantRepo = getIt<IPlantRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
   List<Room> _rooms = [];
   Map<int, int> _plantCounts = {};
@@ -188,7 +189,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
             size: AppConstants.emptyStateIconSize,
             color: Colors.grey[400],
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingTop),
+          const SizedBox(height: AppConstants.emptyStateSpacingTop),
           Text(
             _t['no_rooms'],
             style: TextStyle(
@@ -196,7 +197,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingMiddle),
+          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
           Text(
             _t['add_first_room'],
             style: TextStyle(
@@ -226,10 +227,12 @@ class _RoomListScreenState extends State<RoomListScreen> {
   Widget _buildRoomCard(Room room) {
     final plantCount = _plantCounts[room.id] ?? 0;
 
-    return Card(
-      key: ValueKey(room.id), // ✅ PERFORMANCE: Key for efficient updates
-      margin: AppConstants.cardMarginVertical,
-      child: ListTile(
+    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
+    return RepaintBoundary(
+      child: Card(
+        key: ValueKey(room.id), // ✅ PERFORMANCE: Key for efficient updates
+        margin: AppConstants.cardMarginVertical,
+        child: ListTile(
         leading: Container(
           width: 60,
           height: 60,
@@ -248,7 +251,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
           children: [
             if (room.description != null)
               Text(room.description!),
-            SizedBox(height: AppConstants.spacingXs),
+            const SizedBox(height: AppConstants.spacingXs),
             Row(
               children: [
                 Icon(
@@ -256,7 +259,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
                     size: AppConstants.listItemIconSize,
                     color: Colors.grey[600]
                 ),
-                SizedBox(width: AppConstants.listItemIconSpacing),
+                const SizedBox(width: AppConstants.listItemIconSpacing),
                 Text(
                   '$plantCount ${_t['plants_short']}',
                   style: TextStyle(
@@ -264,14 +267,14 @@ class _RoomListScreenState extends State<RoomListScreen> {
                       fontSize: AppConstants.fontSizeSmall
                   ),
                 ),
-                SizedBox(width: AppConstants.listItemSpacingMedium),
+                const SizedBox(width: AppConstants.listItemSpacingMedium),
                 if (room.growType != null) ...[
                   Icon(
                       Icons.category,
                       size: AppConstants.listItemIconSize,
                       color: Colors.grey[600]
                   ),
-                  SizedBox(width: AppConstants.listItemIconSpacing),
+                  const SizedBox(width: AppConstants.listItemIconSpacing),
                   Text(
                     room.growType!.displayName,
                     style: TextStyle(
@@ -283,7 +286,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
               ],
             ),
             if (room.width > 0 && room.depth > 0) ...[
-              SizedBox(height: AppConstants.spacingXs / 2),
+              const SizedBox(height: AppConstants.spacingXs / 2),
               Text(
                 '${(room.width * 100).toStringAsFixed(0)}cm × ${(room.depth * 100).toStringAsFixed(0)}cm × ${(room.height * 100).toStringAsFixed(0)}cm',
                 style: TextStyle(
@@ -302,7 +305,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
               child: Row(
                 children: [
                   const Icon(Icons.edit, color: Colors.blue),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   Text(_t['edit']),
                 ],
               ),
@@ -312,7 +315,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
               child: Row(
                 children: [
                   const Icon(Icons.delete, color: Colors.red),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   Text(_t['delete'], style: const TextStyle(color: Colors.red)),
                 ],
               ),
@@ -339,6 +342,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
           );
           if (result == true) _loadRooms();
         },
+      ),
       ),
     );
   }

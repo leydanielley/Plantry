@@ -1,0 +1,23 @@
+--- a/lib/database/database_helper.dart
++++ b/lib/database/database_helper.dart
+@@ -1,6 +1,7 @@
+ // =============================================
+ // GROWLOG - Database Helper
+ // =============================================
++import 'package:flutter/foundation.dart';
+
+ import 'package:sqflite/sqflite.dart';
+ import 'package:path/path.dart';
+@@ -15,6 +16,13 @@
+
+   DatabaseHelper._init();
+
++  /// Allows test database injection (only for testing!)
++  /// This method should only be called from test code
++  @visibleForTesting
++  static void setTestDatabase(Database? db) {
++    _database = db;
++  }
++
+   Future<Database> get database async {
+     if (_database != null) return _database!;

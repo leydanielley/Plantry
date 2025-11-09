@@ -4,6 +4,22 @@
 
 import 'package:get_it/get_it.dart';
 import '../database/database_helper.dart';
+
+// Repository Interfaces
+import '../repositories/interfaces/i_plant_repository.dart';
+import '../repositories/interfaces/i_grow_repository.dart';
+import '../repositories/interfaces/i_room_repository.dart';
+import '../repositories/interfaces/i_plant_log_repository.dart';
+import '../repositories/interfaces/i_fertilizer_repository.dart';
+import '../repositories/interfaces/i_log_fertilizer_repository.dart';
+import '../repositories/interfaces/i_photo_repository.dart';
+import '../repositories/interfaces/i_hardware_repository.dart';
+import '../repositories/interfaces/i_harvest_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
+import '../repositories/interfaces/i_notification_repository.dart';
+
+// Repository Implementations
 import '../repositories/plant_repository.dart';
 import '../repositories/grow_repository.dart';
 import '../repositories/room_repository.dart';
@@ -14,8 +30,25 @@ import '../repositories/photo_repository.dart';
 import '../repositories/hardware_repository.dart';
 import '../repositories/harvest_repository.dart';
 import '../repositories/settings_repository.dart';
+import '../repositories/rdwc_repository.dart';
+import '../repositories/notification_repository.dart';
+
+// Service Interfaces
+import '../services/interfaces/i_log_service.dart';
+import '../services/interfaces/i_backup_service.dart';
+import '../services/interfaces/i_health_score_service.dart';
+import '../services/interfaces/i_warning_service.dart';
+import '../services/interfaces/i_harvest_service.dart';
+import '../services/interfaces/i_notification_service.dart';
+
+// Service Implementations
 import '../services/log_service.dart';
 import '../services/backup_service.dart';
+import '../services/health_score_service.dart';
+import '../services/warning_service.dart';
+import '../services/harvest_service.dart';
+import '../services/notification_service.dart';
+
 import '../utils/app_logger.dart';
 
 /// Global service locator instance
@@ -42,64 +75,88 @@ Future<void> setupServiceLocator() async {
   );
 
   // ═══════════════════════════════════════════
-  // REPOSITORIES (Singletons)
+  // REPOSITORIES (Interface-based Singletons)
   // ═══════════════════════════════════════════
-  getIt.registerLazySingleton<PlantRepository>(
+  getIt.registerLazySingleton<IPlantRepository>(
     () => PlantRepository(),
   );
 
-  getIt.registerLazySingleton<GrowRepository>(
+  getIt.registerLazySingleton<IGrowRepository>(
     () => GrowRepository(),
   );
 
-  getIt.registerLazySingleton<RoomRepository>(
+  getIt.registerLazySingleton<IRoomRepository>(
     () => RoomRepository(),
   );
 
-  getIt.registerLazySingleton<PlantLogRepository>(
+  getIt.registerLazySingleton<IPlantLogRepository>(
     () => PlantLogRepository(),
   );
 
-  getIt.registerLazySingleton<FertilizerRepository>(
+  getIt.registerLazySingleton<IFertilizerRepository>(
     () => FertilizerRepository(),
   );
 
-  getIt.registerLazySingleton<LogFertilizerRepository>(
+  getIt.registerLazySingleton<ILogFertilizerRepository>(
     () => LogFertilizerRepository(),
   );
 
-  getIt.registerLazySingleton<PhotoRepository>(
+  getIt.registerLazySingleton<IPhotoRepository>(
     () => PhotoRepository(),
   );
 
-  getIt.registerLazySingleton<HardwareRepository>(
+  getIt.registerLazySingleton<IHardwareRepository>(
     () => HardwareRepository(),
   );
 
-  getIt.registerLazySingleton<HarvestRepository>(
+  getIt.registerLazySingleton<IHarvestRepository>(
     () => HarvestRepository(),
   );
 
-  getIt.registerLazySingleton<SettingsRepository>(
+  getIt.registerLazySingleton<ISettingsRepository>(
     () => SettingsRepository(),
   );
 
-  // ═══════════════════════════════════════════
-  // SERVICES (Singletons)
-  // ═══════════════════════════════════════════
-  getIt.registerLazySingleton<LogService>(
-    () => LogService(),
+  getIt.registerLazySingleton<IRdwcRepository>(
+    () => RdwcRepository(),
   );
 
-  getIt.registerLazySingleton<BackupService>(
+  getIt.registerLazySingleton<INotificationRepository>(
+    () => NotificationRepository(),
+  );
+
+  // ═══════════════════════════════════════════
+  // SERVICES (Interface-based Singletons)
+  // ═══════════════════════════════════════════
+  getIt.registerLazySingleton<ILogService>(
+    () => LogService(getIt<DatabaseHelper>(), getIt<IPlantRepository>()),
+  );
+
+  getIt.registerLazySingleton<IBackupService>(
     () => BackupService(),
+  );
+
+  getIt.registerLazySingleton<IHealthScoreService>(
+    () => HealthScoreService(getIt<IPlantLogRepository>(), getIt<IPhotoRepository>()),
+  );
+
+  getIt.registerLazySingleton<IWarningService>(
+    () => WarningService(getIt<IPlantLogRepository>(), getIt<IPhotoRepository>()),
+  );
+
+  getIt.registerLazySingleton<IHarvestService>(
+    () => HarvestService(getIt<IHarvestRepository>()),
+  );
+
+  getIt.registerLazySingleton<INotificationService>(
+    () => NotificationService(),
   );
 
   AppLogger.info('ServiceLocator', '✅ Dependency injection setup complete');
   AppLogger.debug(
     'ServiceLocator',
     'Registered services',
-    'Repositories: 10, Services: 2',
+    'Repositories: 12, Services: 6',
   );
 }
 

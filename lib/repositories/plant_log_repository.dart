@@ -5,11 +5,13 @@
 import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/plant_log.dart';
+import 'interfaces/i_plant_log_repository.dart';
 
-class PlantLogRepository {
+class PlantLogRepository implements IPlantLogRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   /// Alle Logs einer Pflanze laden mit Pagination
+  @override
   Future<List<PlantLog>> findByPlant(int plantId, {int? limit, int? offset}) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -25,6 +27,7 @@ class PlantLogRepository {
   }
 
   /// Log nach ID laden
+  @override
   Future<PlantLog?> findById(int id) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -40,6 +43,7 @@ class PlantLogRepository {
 
   /// ✅ FIX: Batch-Query für mehrere Logs (verhindert N+1 Problem!)
   /// Nutzen: Photo Gallery lädt alle Logs auf einmal statt einzeln
+  @override
   Future<List<PlantLog>> findByIds(List<int> ids) async {
     if (ids.isEmpty) return [];
     
@@ -56,6 +60,7 @@ class PlantLogRepository {
   }
 
   /// Log speichern (INSERT oder UPDATE)
+  @override
   Future<PlantLog> save(PlantLog log) async {
     final db = await _dbHelper.database;
 
@@ -76,6 +81,7 @@ class PlantLogRepository {
   }
 
   /// Log löschen
+  @override
   Future<int> delete(int id) async {
     final db = await _dbHelper.database;
     return await db.delete(
@@ -86,6 +92,7 @@ class PlantLogRepository {
   }
 
   /// Letzten Log einer Pflanze laden
+  @override
   Future<PlantLog?> findLastLog(int plantId) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -101,6 +108,7 @@ class PlantLogRepository {
   }
 
   /// Letzten Log einer Pflanze laden
+  @override
   Future<PlantLog?> getLastLogForPlant(int plantId) async {
     return await findLastLog(plantId);
   }
@@ -108,6 +116,7 @@ class PlantLogRepository {
   /// Tag-Nummer für Pflanze basierend auf Datum
   /// WICHTIG: Berechnet echte Tage seit seedDate!
   /// [forDate] - Optional: Für welches Datum (default: heute)
+  @override
   Future<int> getNextDayNumber(int plantId, {DateTime? forDate}) async {
     final db = await _dbHelper.database;
     
@@ -138,6 +147,7 @@ class PlantLogRepository {
   }
 
   /// Anzahl Logs einer Pflanze
+  @override
   Future<int> countByPlant(int plantId) async {
     final db = await _dbHelper.database;
     final result = await db.rawQuery(
@@ -148,6 +158,7 @@ class PlantLogRepository {
   }
 
   /// Recent Activity Feed - Letzte Logs über alle Pflanzen
+  @override
   Future<List<PlantLog>> getRecentActivity({int limit = 20}) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -160,6 +171,7 @@ class PlantLogRepository {
   }
 
   /// Recent Activity für bestimmte Aktionen
+  @override
   Future<List<PlantLog>> getRecentActivityByAction({
     required List<String> actionTypes,
     int limit = 20,
@@ -182,12 +194,13 @@ class PlantLogRepository {
   /// Performance: Lädt Logs + Fertilizers + Photos in EINER Query!
   /// VORHER: 1 Query für Logs + N Queries für Fertilizers = N+1 Problem
   /// NACHHER: 1 JOIN Query = massiv schneller!
+  @override
   Future<List<Map<String, dynamic>>> getLogsWithDetails(int plantId) async {
     final db = await _dbHelper.database;
     
     // JOIN Query für Logs + LogFertilizers + Fertilizers
     // Nutzt den idx_log_fertilizers_lookup Index!
-    final query = '''
+    const query = '''
       SELECT 
         pl.*,
         lf.id as lf_id,
@@ -239,6 +252,7 @@ class PlantLogRepository {
   
   /// Batch Insert für Bulk-Logs
   /// Nutzen: Beim Anlegen mehrerer Logs gleichzeitig (z.B. Bulk-Log)
+  @override
   Future<List<int>> saveBatch(List<PlantLog> logs) async {
     if (logs.isEmpty) return [];
     
@@ -278,6 +292,7 @@ class PlantLogRepository {
   
   /// Batch Delete
   /// Nutzen: Beim Löschen mehrerer Logs auf einmal
+  @override
   Future<void> deleteBatch(List<int> logIds) async {
     if (logIds.isEmpty) return;
     

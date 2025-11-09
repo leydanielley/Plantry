@@ -7,7 +7,8 @@ import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import 'package:intl/intl.dart';
 import '../models/harvest.dart';
-import '../repositories/harvest_repository.dart';
+import '../repositories/interfaces/i_harvest_repository.dart';
+import '../di/service_locator.dart';
 
 class EditHarvestScreen extends StatefulWidget {
   final Harvest harvest;
@@ -19,7 +20,7 @@ class EditHarvestScreen extends StatefulWidget {
 }
 
 class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTickerProviderStateMixin {
-  final HarvestRepository _harvestRepo = HarvestRepository();
+  final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
   late TabController _tabController;
   
@@ -223,7 +224,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             controller: _tabController,
             isScrollable: true,
             indicatorColor: Colors.white,
-            tabs: [
+            tabs: const [
               Tab(
                 icon: Icon(Icons.grass, color: Colors.white),
                 child: Text('Basic', style: TextStyle(color: Colors.white)),
@@ -440,10 +441,10 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                 child: const Icon(Icons.trending_down, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       'Gewichtsverlust',
                       style: TextStyle(

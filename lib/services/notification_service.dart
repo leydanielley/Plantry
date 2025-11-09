@@ -7,8 +7,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import '../utils/app_logger.dart';
+import 'interfaces/i_notification_service.dart';
 
-class NotificationService {
+class NotificationService implements INotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
@@ -17,6 +18,7 @@ class NotificationService {
   bool _initialized = false;
 
   /// Initialize notification service
+  @override
   Future<void> initialize() async {
     if (_initialized) return;
 
@@ -101,6 +103,7 @@ class NotificationService {
   }
 
   /// Request notification permissions (Android 13+)
+  @override
   Future<bool> requestPermissions() async {
     try {
       final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
@@ -119,6 +122,7 @@ class NotificationService {
   }
 
   /// Schedule watering reminder for a plant
+  @override
   Future<void> scheduleWateringReminder({
     required int plantId,
     required String plantName,
@@ -168,6 +172,7 @@ class NotificationService {
   }
 
   /// Schedule fertilizing reminder for a plant
+  @override
   Future<void> scheduleFertilizingReminder({
     required int plantId,
     required String plantName,
@@ -215,6 +220,7 @@ class NotificationService {
   }
 
   /// Schedule photo reminder for a plant
+  @override
   Future<void> schedulePhotoReminder({
     required int plantId,
     required String plantName,
@@ -262,6 +268,7 @@ class NotificationService {
   }
 
   /// Schedule harvest reminder
+  @override
   Future<void> scheduleHarvestReminder({
     required int plantId,
     required String plantName,
@@ -310,6 +317,7 @@ class NotificationService {
   }
 
   /// Cancel all reminders for a plant
+  @override
   Future<void> cancelPlantReminders(int plantId) async {
     try {
       await _notifications.cancel(_getWateringNotificationId(plantId));
@@ -324,6 +332,7 @@ class NotificationService {
   }
 
   /// Cancel all notifications
+  @override
   Future<void> cancelAllNotifications() async {
     try {
       await _notifications.cancelAll();
@@ -334,6 +343,7 @@ class NotificationService {
   }
 
   /// Get pending notifications (for debugging)
+  @override
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     try {
       return await _notifications.pendingNotificationRequests();
@@ -344,6 +354,7 @@ class NotificationService {
   }
 
   /// Show immediate notification (for testing)
+  @override
   Future<void> showTestNotification() async {
     if (!_initialized) await initialize();
 

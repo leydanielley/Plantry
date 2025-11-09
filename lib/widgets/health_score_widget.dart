@@ -5,8 +5,10 @@
 import 'package:flutter/material.dart';
 import '../models/health_score.dart';
 import '../models/plant.dart';
-import '../services/health_score_service.dart';
+import '../services/interfaces/i_health_score_service.dart';
+import '../services/interfaces/i_warning_service.dart';
 import '../services/warning_service.dart';
+import '../../di/service_locator.dart';
 
 class HealthScoreWidget extends StatefulWidget {
   final Plant plant;
@@ -18,8 +20,8 @@ class HealthScoreWidget extends StatefulWidget {
 }
 
 class _HealthScoreWidgetState extends State<HealthScoreWidget> {
-  final HealthScoreService _healthScoreService = HealthScoreService();
-  final WarningService _warningService = WarningService();
+  final IHealthScoreService _healthScoreService = getIt<IHealthScoreService>();
+  final IWarningService _warningService = getIt<IWarningService>();
 
   HealthScore? _healthScore;
   List<PlantWarning> _warnings = [];

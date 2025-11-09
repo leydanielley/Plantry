@@ -5,15 +5,17 @@
 import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/harvest.dart';
+import 'interfaces/i_harvest_repository.dart';
 
-class HarvestRepository {
+class HarvestRepository implements IHarvestRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   /// Harvest erstellen
+  @override
   Future<int> createHarvest(Harvest harvest) async {
     final db = await _dbHelper.database;
     final harvestMap = harvest.toMap();
-    
+
     try {
       final id = await db.insert('harvests', harvestMap);
       return id;
@@ -23,6 +25,7 @@ class HarvestRepository {
   }
 
   /// Harvest aktualisieren
+  @override
   Future<int> updateHarvest(Harvest harvest) async {
     final db = await _dbHelper.database;
     return await db.update(
@@ -34,6 +37,7 @@ class HarvestRepository {
   }
 
   /// Harvest löschen
+  @override
   Future<int> deleteHarvest(int id) async {
     final db = await _dbHelper.database;
     return await db.delete(
@@ -44,6 +48,7 @@ class HarvestRepository {
   }
 
   /// Harvest nach ID abrufen
+  @override
   Future<Harvest?> getHarvestById(int id) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -57,6 +62,7 @@ class HarvestRepository {
   }
 
   /// Harvest für eine Pflanze abrufen
+  @override
   Future<Harvest?> getHarvestByPlantId(int plantId) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -72,6 +78,7 @@ class HarvestRepository {
   }
 
   /// Alle Harvests abrufen
+  @override
   Future<List<Harvest>> getAllHarvests() async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -83,9 +90,10 @@ class HarvestRepository {
   }
 
   /// Harvests nach Grow-ID abrufen (via Plants)
+  @override
   Future<List<Harvest>> getHarvestsByGrowId(int growId) async {
     final db = await _dbHelper.database;
-    
+
     final maps = await db.rawQuery('''
       SELECT h.* FROM harvests h
       INNER JOIN plants p ON h.plant_id = p.id
@@ -97,6 +105,7 @@ class HarvestRepository {
   }
 
   /// In Trocknung befindliche Harvests
+  @override
   Future<List<Harvest>> getDryingHarvests() async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -109,6 +118,7 @@ class HarvestRepository {
   }
 
   /// In Curing befindliche Harvests
+  @override
   Future<List<Harvest>> getCuringHarvests() async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -121,6 +131,7 @@ class HarvestRepository {
   }
 
   /// Abgeschlossene Harvests
+  @override
   Future<List<Harvest>> getCompletedHarvests() async {
     final db = await _dbHelper.database;
     final maps = await db.query(
@@ -133,6 +144,7 @@ class HarvestRepository {
   }
 
   /// Gesamt-Ertrag berechnen (Trockengewicht)
+  @override
   Future<double> getTotalYield() async {
     final db = await _dbHelper.database;
     final result = await db.rawQuery(
@@ -144,6 +156,7 @@ class HarvestRepository {
   }
 
   /// Durchschnittlicher Ertrag pro Pflanze
+  @override
   Future<double> getAverageYield() async {
     final db = await _dbHelper.database;
     final result = await db.rawQuery(
@@ -155,6 +168,7 @@ class HarvestRepository {
   }
 
   /// Anzahl Ernten
+  @override
   Future<int> getHarvestCount() async {
     final db = await _dbHelper.database;
     final result = await db.rawQuery('SELECT COUNT(*) as count FROM harvests');
@@ -162,11 +176,12 @@ class HarvestRepository {
   }
 
   /// Harvest mit Plant-Daten (JOIN)
+  @override
   Future<Map<String, dynamic>?> getHarvestWithPlant(int harvestId) async {
     final db = await _dbHelper.database;
-    
+
     final maps = await db.rawQuery('''
-      SELECT 
+      SELECT
         h.*,
         p.name as plant_name,
         p.strain as plant_strain,
@@ -181,6 +196,7 @@ class HarvestRepository {
   }
 
   /// Alle Harvests mit Plant-Daten
+  @override
   Future<List<Map<String, dynamic>>> getAllHarvestsWithPlants() async {
     final db = await _dbHelper.database;
     

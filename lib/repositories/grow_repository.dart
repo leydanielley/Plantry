@@ -7,12 +7,14 @@ import '../models/grow.dart';
 import '../database/database_helper.dart';
 import '../utils/validators.dart';
 import '../utils/app_logger.dart';
+import 'interfaces/i_grow_repository.dart';
 
-class GrowRepository {
+class GrowRepository implements IGrowRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
 
   /// Alle Grows abrufen (nicht archiviert)
+  @override
   Future<List<Grow>> getAll({bool includeArchived = false}) async {
     try {
       final db = await _dbHelper.database;
@@ -37,6 +39,7 @@ class GrowRepository {
   }
 
   /// Grow nach ID abrufen
+  @override
   Future<Grow?> getById(int id) async {
     try {
       final db = await _dbHelper.database;
@@ -55,6 +58,7 @@ class GrowRepository {
   }
 
   /// Neuen Grow erstellen
+  @override
   Future<int> create(Grow grow) async {
     try {
       final db = await _dbHelper.database;
@@ -66,6 +70,7 @@ class GrowRepository {
   }
 
   /// Grow aktualisieren
+  @override
   Future<int> update(Grow grow) async {
     try {
       final db = await _dbHelper.database;
@@ -82,6 +87,7 @@ class GrowRepository {
   }
 
   /// Grow löschen
+  @override
   Future<int> delete(int id) async {
     try {
       final db = await _dbHelper.database;
@@ -107,6 +113,7 @@ class GrowRepository {
   }
 
   /// Grow archivieren
+  @override
   Future<int> archive(int id) async {
     final db = await _dbHelper.database;
     return await db.update(
@@ -118,6 +125,7 @@ class GrowRepository {
   }
 
   /// Grow wiederherstellen
+  @override
   Future<int> unarchive(int id) async {
     final db = await _dbHelper.database;
     return await db.update(
@@ -129,6 +137,7 @@ class GrowRepository {
   }
 
   /// Anzahl Pflanzen in einem Grow
+  @override
   Future<int> getPlantCount(int growId) async {
     try {
       final db = await _dbHelper.database;
@@ -145,6 +154,7 @@ class GrowRepository {
 
   /// ✅ FIX BUG #1: Batch-Query für Plant Counts (verhindert N+1 Problem!)
   /// Gibt Map zurück: {growId: plantCount}
+  @override
   Future<Map<int, int>> getPlantCountsForGrows(List<int> growIds) async {
     try {
       final db = await _dbHelper.database;
@@ -175,6 +185,7 @@ class GrowRepository {
 
   /// Phase für alle Pflanzen in einem Grow ändern
   /// ✅ FIX BUG #2: Now recalculates phase_day_numbers for existing logs
+  @override
   Future<void> updatePhaseForAllPlants(int growId, String newPhase) async {
     final db = await _dbHelper.database;
     final newPhaseStartDate = DateTime.now().toIso8601String().split('T')[0];

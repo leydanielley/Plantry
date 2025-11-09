@@ -3,9 +3,9 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../repositories/rdwc_repository.dart';
-import '../repositories/settings_repository.dart';
-import '../repositories/room_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
+import '../repositories/interfaces/i_room_repository.dart';
 import '../models/rdwc_system.dart';
 import '../models/room.dart';
 import '../models/app_settings.dart';
@@ -13,6 +13,7 @@ import '../utils/translations.dart';
 import '../utils/unit_converter.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../di/service_locator.dart';
 
 class RdwcSystemFormScreen extends StatefulWidget {
   final RdwcSystem? system; // null = create, not null = edit
@@ -25,9 +26,9 @@ class RdwcSystemFormScreen extends StatefulWidget {
 
 class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final RdwcRepository _rdwcRepo = RdwcRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
-  final RoomRepository _roomRepo = RoomRepository();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
+  final IRoomRepository _roomRepo = getIt<IRoomRepository>();
 
   late TextEditingController _nameController;
   late TextEditingController _maxCapacityController;

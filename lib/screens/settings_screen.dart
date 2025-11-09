@@ -8,12 +8,13 @@ import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import '../main.dart';
 import '../models/app_settings.dart';
-import '../repositories/settings_repository.dart';
 import '../utils/translations.dart';
 import '../database/database_helper.dart';
-import '../services/backup_service.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
+import '../services/interfaces/i_backup_service.dart';
 import '../utils/app_version.dart';
 import 'privacy_policy_screen.dart';
+import '../di/service_locator.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(AppSettings)? onSettingsChanged;
@@ -28,8 +29,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final SettingsRepository _settingsRepo = SettingsRepository();
-  final BackupService _backupService = BackupService();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
+  final IBackupService _backupService = getIt<IBackupService>();
   late AppSettings _settings;
   late AppTranslations _t;
   bool _isLoading = true;
@@ -295,7 +296,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   leading: Icon(Icons.science, color: Colors.blue[700]),
                   title: Text(_t['nutrient_unit']),
                   trailing: SegmentedButton<NutrientUnit>(
-                    segments: [
+                    segments: const [
                       ButtonSegment(
                         value: NutrientUnit.ec,
                         label: Text('EC'),
@@ -320,7 +321,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: Text(_t['ppm_scale']),
                     subtitle: Text(_t['ppm_scale_help']),
                     trailing: SegmentedButton<PpmScale>(
-                      segments: [
+                      segments: const [
                         ButtonSegment(
                           value: PpmScale.scale500,
                           label: Text('500'),
@@ -348,7 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   leading: Icon(Icons.thermostat, color: Colors.orange[700]),
                   title: Text(_t['temperature_unit']),
                   trailing: SegmentedButton<TemperatureUnit>(
-                    segments: [
+                    segments: const [
                       ButtonSegment(
                         value: TemperatureUnit.celsius,
                         label: Text('°C'),
@@ -371,7 +372,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   leading: Icon(Icons.straighten, color: Colors.green[700]),
                   title: Text(_t['length_unit']),
                   trailing: SegmentedButton<LengthUnit>(
-                    segments: [
+                    segments: const [
                       ButtonSegment(
                         value: LengthUnit.cm,
                         label: Text('cm'),
@@ -394,7 +395,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   leading: Icon(Icons.water_drop, color: Colors.cyan[700]),
                   title: Text(_t['volume_unit']),
                   trailing: SegmentedButton<VolumeUnit>(
-                    segments: [
+                    segments: const [
                       ButtonSegment(
                         value: VolumeUnit.liter,
                         label: Text('L'),

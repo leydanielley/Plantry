@@ -7,12 +7,13 @@ import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import '../models/hardware.dart';
 import '../models/enums.dart';
-import '../repositories/hardware_repository.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_hardware_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
 import 'add_hardware_screen.dart';
 import 'edit_hardware_screen.dart';
+import '../di/service_locator.dart';
 
 class HardwareListScreen extends StatefulWidget {
   final int roomId;
@@ -29,8 +30,8 @@ class HardwareListScreen extends StatefulWidget {
 }
 
 class _HardwareListScreenState extends State<HardwareListScreen> {
-  final HardwareRepository _hardwareRepo = HardwareRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   
   List<Hardware> _hardware = [];
   bool _isLoading = true;
@@ -206,7 +207,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
     return Column(
       children: [
         Icon(icon, color: Colors.orange[700], size: AppConstants.statsIconSize),
-        SizedBox(height: AppConstants.spacingSmall),
+        const SizedBox(height: AppConstants.spacingSmall),
         Text(
           value,
           style: TextStyle(
@@ -236,7 +237,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
             size: AppConstants.emptyStateIconSize,
             color: Colors.grey[400],
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingTop),
+          const SizedBox(height: AppConstants.emptyStateSpacingTop),
           Text(
             _t['no_hardware'],
             style: TextStyle(
@@ -244,7 +245,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingMiddle),
+          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
           Text(
             _t['add_first_hardware'],
             style: TextStyle(
@@ -286,7 +287,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
               ),
             ),
             ...items.map((hw) => _buildHardwareCard(hw)),
-            SizedBox(height: AppConstants.spacingSmall),
+            const SizedBox(height: AppConstants.spacingSmall),
           ],
         );
       },
@@ -294,9 +295,11 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
   }
 
   Widget _buildHardwareCard(Hardware hardware) {
-    return Card(
-      margin: EdgeInsets.only(bottom: AppConstants.spacingSmall),
-      child: ListTile(
+    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
+    return RepaintBoundary(
+      child: Card(
+        margin: const EdgeInsets.only(bottom: AppConstants.spacingSmall),
+        child: ListTile(
         leading: CircleAvatar(
           backgroundColor: hardware.active ? Colors.orange[700] : Colors.grey[400],
           child: Icon(
@@ -357,7 +360,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
                     size: AppConstants.popupMenuIconSize, 
                     color: Colors.blue[700]
                   ),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   Text(_t['edit'], style: TextStyle(color: Colors.blue[700])),
                 ],
               ),
@@ -371,7 +374,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
                     size: AppConstants.popupMenuIconSize,
                     color: Colors.orange[700],
                   ),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   Text(
                     hardware.active ? _t['deactivate'] : _t['activate'],
                     style: TextStyle(color: Colors.orange[700]),
@@ -383,12 +386,12 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.delete, 
                     size: AppConstants.popupMenuIconSize, 
                     color: Colors.red
                   ),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   Text(_t['delete'], style: const TextStyle(color: Colors.red)),
                 ],
               ),
@@ -419,6 +422,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
             if (result == true) _loadHardware();
           });
         },
+      ),
       ),
     );
   }

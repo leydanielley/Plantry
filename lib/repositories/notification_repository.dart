@@ -5,8 +5,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/notification_settings.dart';
 import '../utils/app_logger.dart';
+import 'interfaces/i_notification_repository.dart';
 
-class NotificationRepository {
+class NotificationRepository implements INotificationRepository {
   static const String _keyEnabled = 'notifications_enabled';
   static const String _keyWateringReminders = 'notifications_watering';
   static const String _keyFertilizingReminders = 'notifications_fertilizing';
@@ -18,6 +19,7 @@ class NotificationRepository {
   static const String _keyNotificationTime = 'notifications_time';
 
   /// Get notification settings
+  @override
   Future<NotificationSettings> getSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -40,6 +42,7 @@ class NotificationRepository {
   }
 
   /// Save notification settings
+  @override
   Future<void> saveSettings(NotificationSettings settings) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -62,46 +65,55 @@ class NotificationRepository {
   }
 
   /// Update specific setting
+  @override
   Future<void> setEnabled(bool enabled) async {
     final settings = await getSettings();
     await saveSettings(settings.copyWith(enabled: enabled));
   }
 
+  @override
   Future<void> setWateringReminders(bool enabled) async {
     final settings = await getSettings();
     await saveSettings(settings.copyWith(wateringReminders: enabled));
   }
 
+  @override
   Future<void> setFertilizingReminders(bool enabled) async {
     final settings = await getSettings();
     await saveSettings(settings.copyWith(fertilizingReminders: enabled));
   }
 
+  @override
   Future<void> setPhotoReminders(bool enabled) async {
     final settings = await getSettings();
     await saveSettings(settings.copyWith(photoReminders: enabled));
   }
 
+  @override
   Future<void> setHarvestReminders(bool enabled) async {
     final settings = await getSettings();
     await saveSettings(settings.copyWith(harvestReminders: enabled));
   }
 
+  @override
   Future<void> setWateringInterval(int days) async {
     final settings = await getSettings();
     await saveSettings(settings.copyWith(wateringIntervalDays: days));
   }
 
+  @override
   Future<void> setFertilizingInterval(int days) async {
     final settings = await getSettings();
     await saveSettings(settings.copyWith(fertilizingIntervalDays: days));
   }
 
+  @override
   Future<void> setPhotoInterval(int days) async {
     final settings = await getSettings();
     await saveSettings(settings.copyWith(photoIntervalDays: days));
   }
 
+  @override
   Future<void> setNotificationTime(String time) async {
     final settings = await getSettings();
     await saveSettings(settings.copyWith(notificationTime: time));

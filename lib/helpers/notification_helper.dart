@@ -5,19 +5,20 @@
 import '../models/plant.dart';
 import '../models/plant_log.dart';
 import '../models/enums.dart';
-import '../repositories/plant_log_repository.dart';
-import '../repositories/photo_repository.dart';
-import '../repositories/notification_repository.dart';
-import '../repositories/log_fertilizer_repository.dart';
-import '../services/notification_service.dart';
+import '../repositories/interfaces/i_plant_log_repository.dart';
+import '../repositories/interfaces/i_photo_repository.dart';
+import '../repositories/interfaces/i_notification_repository.dart';
+import '../repositories/interfaces/i_log_fertilizer_repository.dart';
+import '../services/interfaces/i_notification_service.dart';
 import '../utils/app_logger.dart';
+import '../../di/service_locator.dart';
 
 class NotificationHelper {
-  static final NotificationService _notificationService = NotificationService();
-  static final NotificationRepository _notificationRepo = NotificationRepository();
-  static final PlantLogRepository _logRepo = PlantLogRepository();
-  static final PhotoRepository _photoRepo = PhotoRepository();
-  static final LogFertilizerRepository _logFertilizerRepo = LogFertilizerRepository();
+  static final INotificationService _notificationService = getIt<INotificationService>();
+  static final INotificationRepository _notificationRepo = getIt<INotificationRepository>();
+  static final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
+  static final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
+  static final ILogFertilizerRepository _logFertilizerRepo = getIt<ILogFertilizerRepository>();
 
   /// Schedule all reminders for a plant based on last activities
   static Future<void> scheduleRemindersForPlant(Plant plant) async {

@@ -4,7 +4,7 @@
 
 import 'package:flutter/foundation.dart';
 import '../models/plant.dart';
-import '../repositories/plant_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
 import '../utils/app_logger.dart';
 import '../utils/async_value.dart';
 
@@ -34,7 +34,7 @@ import '../utils/async_value.dart';
 /// )
 /// ```
 class PlantProvider with ChangeNotifier {
-  final PlantRepository _repository;
+  final IPlantRepository _repository;
 
   PlantProvider(this._repository);
 

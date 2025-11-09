@@ -38,18 +38,10 @@ Die App läuft jetzt deutlich stabiler und flüssiger!
    - Problem: Fehler wurden nur geloggt, User sah nichts
    - Fix: Error-Dialog hinzugefügt
 
-4. ❌ RDWC Logs nicht editierbar
-   - Problem: Logs waren nur ansehbar, nicht änderbar
-   - Fix: Edit-Funktion mit Klick, Delete mit Long-Press
+flutter runclaud
 
 
-✨ NEUE FEATURES:
-
-• RDWC Log Editing:
-  - Klick auf Log → Bearbeiten
-  - Long-Press → Löschen (mit Bestätigung)
-  - Alle Log-Typen unterstützt
-  - Fertilizer-Daten werden korrekt geladen
+ und .0
 
 • Besseres Error-Handling:
   - User bekommt jetzt Feedback bei Fehlern

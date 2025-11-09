@@ -3,8 +3,8 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../repositories/rdwc_repository.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../models/rdwc_system.dart';
 import '../models/app_settings.dart';
 import '../utils/translations.dart';
@@ -12,6 +12,7 @@ import '../utils/unit_converter.dart';
 import '../utils/app_logger.dart';
 import 'rdwc_system_detail_screen.dart';
 import 'rdwc_system_form_screen.dart';
+import '../di/service_locator.dart';
 
 class RdwcSystemsScreen extends StatefulWidget {
   const RdwcSystemsScreen({super.key});
@@ -21,8 +22,8 @@ class RdwcSystemsScreen extends StatefulWidget {
 }
 
 class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
-  final RdwcRepository _rdwcRepo = RdwcRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
   List<RdwcSystem> _systems = [];
   bool _isLoading = true;
@@ -157,9 +158,11 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
       statusColor = Colors.green;
     }
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
+    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
+    return RepaintBoundary(
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: InkWell(
         onTap: () async {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(
@@ -282,11 +285,11 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.warning, color: Colors.red, size: 16),
+                        const Icon(Icons.warning, color: Colors.red, size: 16),
                         const SizedBox(width: 8),
                         Text(
                           _t['system_critical'],
-                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -304,11 +307,11 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info, color: Colors.orange, size: 16),
+                        const Icon(Icons.info, color: Colors.orange, size: 16),
                         const SizedBox(width: 8),
                         Text(
                           _t['system_low_water'],
-                          style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                          style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -317,6 +320,7 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

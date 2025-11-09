@@ -9,10 +9,11 @@ import '../models/room.dart';
 import '../models/enums.dart';
 import '../models/rdwc_system.dart';
 import '../models/app_settings.dart';
-import '../repositories/room_repository.dart';
-import '../repositories/rdwc_repository.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_room_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/validators.dart';
+import '../di/service_locator.dart';
 
 class EditRoomScreen extends StatefulWidget {
   final Room room;
@@ -25,9 +26,9 @@ class EditRoomScreen extends StatefulWidget {
 
 class _EditRoomScreenState extends State<EditRoomScreen> {
   final _formKey = GlobalKey<FormState>();
-  final RoomRepository _roomRepo = RoomRepository();
-  final RdwcRepository _rdwcRepo = RdwcRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IRoomRepository _roomRepo = getIt<IRoomRepository>();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;

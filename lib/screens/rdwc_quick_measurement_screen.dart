@@ -6,11 +6,12 @@ import 'package:flutter/material.dart';
 import '../models/rdwc_system.dart';
 import '../models/rdwc_log.dart';
 import '../models/app_settings.dart';
-import '../repositories/rdwc_repository.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_rdwc_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../di/service_locator.dart';
 
 class RdwcQuickMeasurementScreen extends StatefulWidget {
   final RdwcSystem system;
@@ -23,8 +24,8 @@ class RdwcQuickMeasurementScreen extends StatefulWidget {
 
 class _RdwcQuickMeasurementScreenState extends State<RdwcQuickMeasurementScreen> {
   final _formKey = GlobalKey<FormState>();
-  final RdwcRepository _rdwcRepo = RdwcRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
   late TextEditingController _levelController;
   late TextEditingController _phController;

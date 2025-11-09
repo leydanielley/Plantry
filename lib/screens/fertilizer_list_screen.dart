@@ -6,12 +6,13 @@ import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import '../models/fertilizer.dart';
-import '../repositories/fertilizer_repository.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_fertilizer_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
 import 'add_fertilizer_screen.dart';
 import 'edit_fertilizer_screen.dart';
+import '../di/service_locator.dart';
 
 class FertilizerListScreen extends StatefulWidget {
   const FertilizerListScreen({super.key});
@@ -21,8 +22,8 @@ class FertilizerListScreen extends StatefulWidget {
 }
 
 class _FertilizerListScreenState extends State<FertilizerListScreen> {
-  final FertilizerRepository _fertilizerRepo = FertilizerRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   
   List<Fertilizer> _fertilizers = [];
   bool _isLoading = true;
@@ -220,7 +221,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
             size: AppConstants.emptyStateIconSize,
             color: Colors.grey[400],
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingTop),
+          const SizedBox(height: AppConstants.emptyStateSpacingTop),
           Text(
             _t['no_fertilizers'],
             style: TextStyle(
@@ -228,7 +229,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingMiddle),
+          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
           Text(
             _t['add_first_fertilizer'],
             style: TextStyle(
@@ -253,13 +254,15 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
   }
 
   Widget _buildFertilizerCard(Fertilizer fertilizer) {
-    return Card(
-      key: ValueKey(fertilizer.id), // ✅ PERFORMANCE: Key for efficient updates
-      margin: AppConstants.cardMarginVertical,
-      child: ListTile(
+    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
+    return RepaintBoundary(
+      child: Card(
+        key: ValueKey(fertilizer.id), // ✅ PERFORMANCE: Key for efficient updates
+        margin: AppConstants.cardMarginVertical,
+        child: ListTile(
         leading: CircleAvatar(
           backgroundColor: _getTypeColor(fertilizer.type),
-          child: Icon(
+          child: const Icon(
             Icons.science,
             color: Colors.white,
             size: AppConstants.iconSizeLarge,
@@ -267,7 +270,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
         ),
         title: Text(
           fertilizer.name,
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: AppConstants.fontSizeBody,
           ),
@@ -276,18 +279,18 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (fertilizer.brand != null) ...[
-              SizedBox(height: AppConstants.spacingXs),
+              const SizedBox(height: AppConstants.spacingXs),
               Text(
                 fertilizer.brand!,
                 style: TextStyle(color: Colors.grey[600]),
               ),
             ],
             if (fertilizer.npk != null) ...[
-              SizedBox(height: AppConstants.spacingXs),
+              const SizedBox(height: AppConstants.spacingXs),
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: AppConstants.chipPaddingHorizontal,
                       vertical: AppConstants.chipPaddingVertical,
                     ),
@@ -305,9 +308,9 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
                     ),
                   ),
                   if (fertilizer.type != null) ...[
-                    SizedBox(width: AppConstants.spacingSmall),
+                    const SizedBox(width: AppConstants.spacingSmall),
                     Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: AppConstants.chipPaddingHorizontal,
                         vertical: AppConstants.chipPaddingVertical,
                       ),
@@ -337,8 +340,8 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
               value: 'edit',
               child: Row(
                 children: [
-                  Icon(Icons.edit, size: AppConstants.popupMenuIconSize),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const Icon(Icons.edit, size: AppConstants.popupMenuIconSize),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   Text(_t['edit']),
                 ],
               ),
@@ -347,12 +350,12 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.delete, 
                     color: Colors.red, 
                     size: AppConstants.popupMenuIconSize
                   ),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   Text(_t['delete'], style: const TextStyle(color: Colors.red)),
                 ],
               ),
@@ -383,6 +386,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
           );
           if (result == true) _loadFertilizers();
         },
+      ),
       ),
     );
   }

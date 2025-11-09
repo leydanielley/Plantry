@@ -9,10 +9,11 @@ import '../utils/app_logger.dart';
 import '../models/grow.dart';
 import '../models/plant.dart';
 import '../models/enums.dart';
-import '../repositories/plant_repository.dart';
+import '../repositories/interfaces/i_plant_repository.dart';
 import 'plant_detail_screen.dart';
 import 'add_log_screen.dart';
 import 'add_plant_screen.dart';
+import '../di/service_locator.dart';
 
 class GrowDetailScreen extends StatefulWidget {
   final Grow grow;
@@ -24,7 +25,7 @@ class GrowDetailScreen extends StatefulWidget {
 }
 
 class _GrowDetailScreenState extends State<GrowDetailScreen> {
-  final PlantRepository _plantRepo = PlantRepository();
+  final IPlantRepository _plantRepo = getIt<IPlantRepository>();
   List<Plant> _plants = [];
   bool _isLoading = true;
 
@@ -384,9 +385,11 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
 
   Widget _buildPlantCard(Plant plant) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
+    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
+    return RepaintBoundary(
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -415,6 +418,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
           );
           if (result == true) _loadPlants();
         },
+      ),
       ),
     );
   }

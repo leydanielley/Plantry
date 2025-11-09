@@ -13,13 +13,14 @@ import '../models/plant.dart';
 import '../models/fertilizer.dart';
 import '../models/enums.dart';
 import '../models/plant_log.dart';
-import '../repositories/plant_log_repository.dart';
-import '../repositories/fertilizer_repository.dart';
-import '../services/log_service.dart';
+import '../repositories/interfaces/i_plant_log_repository.dart';
+import '../repositories/interfaces/i_fertilizer_repository.dart';
+import '../services/interfaces/i_log_service.dart';
 import '../utils/validators.dart';
 import '../utils/error_handling_mixin.dart';
 import '../utils/app_messages.dart';
 import '../utils/storage_helper.dart';
+import '../di/service_locator.dart';
 
 class AddLogScreen extends StatefulWidget {
   final Plant plant;
@@ -40,9 +41,9 @@ class AddLogScreen extends StatefulWidget {
 class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   final _formKey = GlobalKey<FormState>();
 
-  final LogService _logService = LogService();
-  final PlantLogRepository _logRepo = PlantLogRepository();
-  final FertilizerRepository _fertilizerRepo = FertilizerRepository();
+  final ILogService _logService = getIt<ILogService>();
+  final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
+  final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
   final ImagePicker _imagePicker = ImagePicker();
 
   final _waterAmountController = TextEditingController();

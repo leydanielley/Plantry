@@ -6,7 +6,7 @@ import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import '../../utils/app_logger.dart';
 import '../../utils/version_manager.dart';
-import '../../services/backup_service.dart';
+import '../../services/interfaces/i_backup_service.dart';
 import '../../di/service_locator.dart';
 import 'migration.dart';
 import 'scripts/all_migrations.dart';
@@ -27,11 +27,11 @@ import 'scripts/all_migrations.dart';
 /// await migrationManager.migrate(db, oldVersion, newVersion);
 /// ```
 class MigrationManager {
-  BackupService? _backupService;
+  IBackupService? _backupService;
 
   /// Get BackupService instance (lazy initialization)
-  BackupService get backupService {
-    _backupService ??= getIt<BackupService>();
+  IBackupService get backupService {
+    _backupService ??= getIt<IBackupService>();
     return _backupService!;
   }
 
@@ -74,7 +74,7 @@ class MigrationManager {
     // Step 1: Create automatic backup before migration
     String? backupPath;
     try {
-      backupPath = await _createPreMigrationBackup();
+      backupPath = await _createPreMigrationBackup(db);
       AppLogger.info(
         'MigrationManager',
         '✅ Pre-migration backup created',
@@ -201,10 +201,12 @@ class MigrationManager {
   }
 
   /// Create automatic backup before migration
-  Future<String> _createPreMigrationBackup() async {
+  ///
+  /// [db] Database instance to backup (passed to avoid circular dependency during migration)
+  Future<String> _createPreMigrationBackup(Database db) async {
     // Use the existing BackupService.exportData() method
-    // This creates a timestamped backup automatically
-    return await backupService.exportData();
+    // Pass the database instance to avoid deadlock during migration
+    return await backupService.exportData(db: db);
   }
 
   /// Verify database integrity after migration

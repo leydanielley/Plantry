@@ -5,14 +5,15 @@
 import 'package:flutter/material.dart';
 import '../utils/app_logger.dart';
 import '../models/grow.dart';
-import '../repositories/grow_repository.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_grow_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
 import 'add_grow_screen.dart';
 import 'edit_grow_screen.dart';
 import 'grow_detail_screen.dart';
 import '../utils/app_messages.dart';
+import '../di/service_locator.dart';
 
 class GrowListScreen extends StatefulWidget {
   const GrowListScreen({super.key});
@@ -22,8 +23,8 @@ class GrowListScreen extends StatefulWidget {
 }
 
 class _GrowListScreenState extends State<GrowListScreen> {
-  final GrowRepository _growRepo = GrowRepository();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final IGrowRepository _growRepo = getIt<IGrowRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
   List<Grow> _grows = [];
   Map<int, int> _plantCounts = {};
@@ -216,7 +217,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
             size: AppConstants.emptyStateIconSize,
             color: Colors.grey[400],
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingTop),
+          const SizedBox(height: AppConstants.emptyStateSpacingTop),
           Text(
             _showArchived ? _t['no_archived_grows'] : _t['no_grows'],
             style: TextStyle(
@@ -224,7 +225,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: AppConstants.emptyStateSpacingMiddle),
+          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
           Text(
             _showArchived ? _t['archive_grow_to_see'] : _t['create_first_grow'],
             style: TextStyle(
@@ -255,16 +256,18 @@ class _GrowListScreenState extends State<GrowListScreen> {
     final plantCount = _plantCounts[grow.id] ?? 0;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Card(
-      key: ValueKey(grow.id), // ✅ PERFORMANCE: Key for efficient updates
-      margin: AppConstants.cardMarginVertical,
-      child: ListTile(
+    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
+    return RepaintBoundary(
+      child: Card(
+        key: ValueKey(grow.id), // ✅ PERFORMANCE: Key for efficient updates
+        margin: AppConstants.cardMarginVertical,
+        child: ListTile(
         leading: CircleAvatar(
           radius: 24,
           backgroundColor: grow.archived 
               ? (isDark ? Colors.grey[700] : Colors.grey[400])
               : Colors.green[700],
-          child: Icon(
+          child: const Icon(
             Icons.eco,
             color: Colors.white,
             size: 28,
@@ -309,14 +312,14 @@ class _GrowListScreenState extends State<GrowListScreen> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: grow.archived ? Colors.grey[500] : null),
               ),
-            SizedBox(height: AppConstants.spacingXs),
+            const SizedBox(height: AppConstants.spacingXs),
             Row(
               children: [
                 Icon(Icons.calendar_today,
                     size: AppConstants.listItemIconSize,
                     color: Colors.grey[600]
                 ),
-                SizedBox(width: AppConstants.listItemIconSpacing),
+                const SizedBox(width: AppConstants.listItemIconSpacing),
                 Text(
                   '${_t['day_short']} ${grow.totalDays} • ${grow.status}',
                   style: TextStyle(
@@ -329,7 +332,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
                     size: AppConstants.listItemIconSize,
                     color: Colors.grey[600]
                 ),
-                SizedBox(width: AppConstants.listItemIconSpacing),
+                const SizedBox(width: AppConstants.listItemIconSpacing),
                 Text(
                   '$plantCount ${_t['plants_short']}',
                   style: TextStyle(
@@ -350,7 +353,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
               child: Row(
                 children: [
                   Icon(Icons.edit, color: Colors.blue[700]),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   Text(
                     _t['edit'],
                     style: TextStyle(color: Colors.blue[700]),
@@ -366,7 +369,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
                     grow.archived ? Icons.unarchive : Icons.archive,
                     color: Colors.orange,
                   ),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   Text(
                     grow.archived ? _t['unarchive'] : _t['archive'],
                     style: const TextStyle(color: Colors.orange),
@@ -379,7 +382,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
               child: Row(
                 children: [
                   const Icon(Icons.delete, color: Colors.red),
-                  SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.spacingSmall),
                   Text(_t['delete'], style: const TextStyle(color: Colors.red)),
                 ],
               ),
@@ -403,6 +406,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
           );
           if (result == true) _loadGrows();
         },
+      ),
       ),
     );
   }

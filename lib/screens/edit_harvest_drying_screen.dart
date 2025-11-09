@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import 'package:intl/intl.dart';
 import '../models/harvest.dart';
-import '../repositories/harvest_repository.dart';
+import '../repositories/interfaces/i_harvest_repository.dart';
+import '../di/service_locator.dart';
 
 class EditHarvestDryingScreen extends StatefulWidget {
   final Harvest harvest;
@@ -18,7 +19,7 @@ class EditHarvestDryingScreen extends StatefulWidget {
 }
 
 class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
-  final HarvestRepository _harvestRepo = HarvestRepository();
+  final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
   
   DateTime? _dryingStartDate;

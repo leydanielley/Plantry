@@ -4,8 +4,9 @@
 
 import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
-import '../repositories/settings_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/unit_converter.dart';
+import '../di/service_locator.dart';
 
 class NutrientDilutionCalculatorScreen extends StatefulWidget {
   const NutrientDilutionCalculatorScreen({super.key});
@@ -18,7 +19,7 @@ class NutrientDilutionCalculatorScreen extends StatefulWidget {
 class _NutrientDilutionCalculatorScreenState
     extends State<NutrientDilutionCalculatorScreen> {
   final _formKey = GlobalKey<FormState>();
-  final SettingsRepository _settingsRepo = SettingsRepository();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
   final _currentVolumeController = TextEditingController();
   final _currentStrengthController = TextEditingController();
