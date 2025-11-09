@@ -59,11 +59,31 @@ class RdwcLog {
 
   /// Factory: Create from database map
   factory RdwcLog.fromMap(Map<String, dynamic> map) {
+    // Parse logType from database format
+    RdwcLogType logType;
+    final dbLogType = map['log_type'].toString();
+    switch (dbLogType) {
+      case 'ADDBACK':
+        logType = RdwcLogType.addback;
+        break;
+      case 'FULLCHANGE':
+        logType = RdwcLogType.fullChange;
+        break;
+      case 'MAINTENANCE':
+        logType = RdwcLogType.maintenance;
+        break;
+      case 'MEASUREMENT':
+        logType = RdwcLogType.measurement;
+        break;
+      default:
+        throw ArgumentError('Unknown log_type: $dbLogType');
+    }
+
     return RdwcLog(
       id: map['id'] as int?,
       systemId: map['system_id'] as int,
       logDate: DateTime.parse(map['log_date'] as String),
-      logType: RdwcLogType.values.byName(map['log_type'].toString().toLowerCase()),
+      logType: logType,
       levelBefore: (map['level_before'] as num?)?.toDouble(),
       waterAdded: (map['water_added'] as num?)?.toDouble(),
       levelAfter: (map['level_after'] as num?)?.toDouble(),
@@ -82,11 +102,28 @@ class RdwcLog {
 
   /// Convert to database map
   Map<String, dynamic> toMap() {
+    // Convert enum to database format
+    String dbLogType;
+    switch (logType) {
+      case RdwcLogType.addback:
+        dbLogType = 'ADDBACK';
+        break;
+      case RdwcLogType.fullChange:
+        dbLogType = 'FULLCHANGE';
+        break;
+      case RdwcLogType.maintenance:
+        dbLogType = 'MAINTENANCE';
+        break;
+      case RdwcLogType.measurement:
+        dbLogType = 'MEASUREMENT';
+        break;
+    }
+
     return {
       'id': id,
       'system_id': systemId,
       'log_date': logDate.toIso8601String(),
-      'log_type': logType.name.toUpperCase(),
+      'log_type': dbLogType,
       'level_before': levelBefore,
       'water_added': waterAdded,
       'level_after': levelAfter,

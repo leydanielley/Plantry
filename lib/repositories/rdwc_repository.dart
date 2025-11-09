@@ -288,6 +288,17 @@ class RdwcRepository implements IRdwcRepository {
       );
       AppLogger.info('RdwcRepository', 'Updated RDWC log', 'ID: ${log.id}');
 
+      // Delete old fertilizers for this log (will be re-added by caller if needed)
+      // This prevents duplicate fertilizers when updating a log
+      if (log.id != null) {
+        await db.delete(
+          'rdwc_log_fertilizers',
+          where: 'rdwc_log_id = ?',
+          whereArgs: [log.id],
+        );
+        AppLogger.info('RdwcRepository', 'Cleared old fertilizers for log', 'ID: ${log.id}');
+      }
+
       // Update system level if levelAfter changed
       if (log.levelAfter != null) {
         await updateSystemLevel(log.systemId, log.levelAfter!);

@@ -124,6 +124,24 @@ class FertilizerRepository implements IFertilizerRepository {
     );
   }
 
+  /// Alle Dünger löschen
+  @override
+  Future<int> deleteAll() async {
+    final db = await _dbHelper.database;
+    return await db.delete('fertilizers');
+  }
+
+  /// Alle Dünger einer bestimmten Marke löschen (z.B. 'HydroBuddy')
+  @override
+  Future<int> deleteByBrand(String brand) async {
+    final db = await _dbHelper.database;
+    return await db.delete(
+      'fertilizers',
+      where: 'brand = ?',
+      whereArgs: [brand],
+    );
+  }
+
   /// Anzahl Dünger
   @override
   Future<int> count() async {

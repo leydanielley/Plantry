@@ -10,7 +10,7 @@ import 'fertilizer_list_screen.dart';
 import 'harvest_list_screen.dart';
 import 'settings_screen.dart';
 import 'rdwc_systems_screen.dart';
-import 'nutrient_dilution_calculator_screen.dart';
+import 'nutrient_calculator_screen.dart';
 import '../models/app_settings.dart';
 import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
@@ -207,11 +207,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               _buildActionCard(
                 'assets/icons/fertilizer_icon.png', // Reusing icon for now
                 'Nutrient Calculator',
-                'Dilution calculator for nutrients',
+                'Universal calculator for nutrient mixing',
                 isDark,
                     () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => const NutrientDilutionCalculatorScreen(),
+                    builder: (context) => const NutrientCalculatorScreen(),
                   ),
                 ),
               ),

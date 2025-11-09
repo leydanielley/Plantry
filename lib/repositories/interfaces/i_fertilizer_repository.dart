@@ -11,5 +11,7 @@ abstract class IFertilizerRepository {
   Future<bool> isInUse(int id);
   Future<Map<String, int>> getUsageDetails(int id);
   Future<int> delete(int id);
+  Future<int> deleteAll();
+  Future<int> deleteByBrand(String brand);
   Future<int> count();
 }

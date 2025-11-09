@@ -58,14 +58,26 @@ class RdwcLogFertilizer {
 
   /// Factory: Create from database map
   factory RdwcLogFertilizer.fromMap(Map<String, dynamic> map) {
+    // Parse amountType from database format
+    FertilizerAmountType amountType;
+    final dbAmountType = map['amount_type'] as String;
+    switch (dbAmountType) {
+      case 'PER_LITER':
+        amountType = FertilizerAmountType.perLiter;
+        break;
+      case 'TOTAL':
+        amountType = FertilizerAmountType.total;
+        break;
+      default:
+        throw ArgumentError('Unknown amount_type: $dbAmountType');
+    }
+
     return RdwcLogFertilizer(
       id: map['id'] as int?,
       rdwcLogId: map['rdwc_log_id'] as int,
       fertilizerId: map['fertilizer_id'] as int,
       amount: (map['amount'] as num).toDouble(),
-      amountType: FertilizerAmountType.values.byName(
-        (map['amount_type'] as String).toLowerCase().replaceAll('_', ''),
-      ),
+      amountType: amountType,
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'] as String)
           : DateTime.now(),
@@ -74,12 +86,23 @@ class RdwcLogFertilizer {
 
   /// Convert to database map
   Map<String, dynamic> toMap() {
+    // Convert enum to database format: perLiter -> PER_LITER, total -> TOTAL
+    String dbAmountType;
+    switch (amountType) {
+      case FertilizerAmountType.perLiter:
+        dbAmountType = 'PER_LITER';
+        break;
+      case FertilizerAmountType.total:
+        dbAmountType = 'TOTAL';
+        break;
+    }
+
     return {
       'id': id,
       'rdwc_log_id': rdwcLogId,
       'fertilizer_id': fertilizerId,
       'amount': amount,
-      'amount_type': amountType.name.toUpperCase().replaceAll('PERLITER', 'PER_LITER'),
+      'amount_type': dbAmountType,
       'created_at': createdAt.toIso8601String(),
     };
   }

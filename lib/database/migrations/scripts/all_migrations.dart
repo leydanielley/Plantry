@@ -6,6 +6,7 @@ import '../migration.dart';
 import 'migration_v8.dart';
 import 'migration_v9.dart';
 import 'migration_v10.dart';
+import 'migration_v11.dart';
 
 /// All migrations in chronological order
 ///
@@ -31,6 +32,9 @@ final List<Migration> allMigrations = [
 
   // v10: Phase History System - veg_date, bloom_date, harvest_date
   migrationV10,
+
+  // v11: Fertilizer Extension - HydroBuddy import support
+  migrationV11,
 ];
 
 /// Get the latest migration version

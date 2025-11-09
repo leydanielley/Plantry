@@ -135,13 +135,45 @@ class PlantLog {
 
   /// Zu Map konvertieren (für Datenbank)
   Map<String, dynamic> toMap() {
+    // Convert ActionType enum to database format
+    String dbActionType;
+    switch (actionType) {
+      case ActionType.water:
+        dbActionType = 'WATER';
+        break;
+      case ActionType.feed:
+        dbActionType = 'FEED';
+        break;
+      case ActionType.trim:
+        dbActionType = 'TRIM';
+        break;
+      case ActionType.transplant:
+        dbActionType = 'TRANSPLANT';
+        break;
+      case ActionType.training:
+        dbActionType = 'TRAINING';
+        break;
+      case ActionType.note:
+        dbActionType = 'NOTE';
+        break;
+      case ActionType.phaseChange:
+        dbActionType = 'PHASE_CHANGE';
+        break;
+      case ActionType.harvest:
+        dbActionType = 'HARVEST';
+        break;
+      case ActionType.other:
+        dbActionType = 'OTHER';
+        break;
+    }
+
     return {
       'id': id,
       'plant_id': plantId,
       'day_number': dayNumber,
       'log_date': logDate.toIso8601String(),
       'logged_by': loggedBy,
-      'action_type': actionType.name.toUpperCase().replaceAll('CHANGE', '_CHANGE'),
+      'action_type': dbActionType,
       'phase': phase?.name.toUpperCase(),
       'phase_day_number': phaseDayNumber,
       'water_amount': waterAmount,

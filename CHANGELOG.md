@@ -2,6 +2,48 @@
 
 All notable changes to Plantry will be documented in this file.
 
+## [0.9.1] - 2025-11-09
+
+### 🐛 Critical Data Loss Bugs Fixed
+- **FIXED**: RDWC Full Change logs could not be saved (database constraint violation)
+  - Root cause: `RdwcLogType.fullChange` incorrectly converted to database format
+  - Fixed: Explicit enum-to-database conversion with switch-case for all log types
+
+- **FIXED**: All RDWC logs disappeared when updating an existing log with fertilizers
+  - Root cause: Old fertilizers not deleted before inserting new ones in updateLog()
+  - Fixed: `rdwc_repository.dart:293-300` now properly clears old fertilizer entries
+
+- **FIXED**: RDWC logs could not be loaded from database (deserialization error)
+  - Root cause: `RdwcLog.fromMap()` used incorrect enum parsing
+  - Fixed: Explicit database-to-enum conversion for all log types
+
+- **FIXED**: Fertilizer amount types not saved correctly
+  - Root cause: `FertilizerAmountType` enum conversion logic was incomplete
+  - Fixed: Both `toMap()` and `fromMap()` now use explicit switch-case conversion
+
+- **FIXED**: PlantLog phase change actions incorrectly saved
+  - Root cause: `ActionType.phaseChange` conversion used fragile string replacement
+  - Fixed: Explicit switch-case conversion for all action types
+
+### 🔧 Technical Improvements
+- **Added 13 unit tests** verifying all enum serialization fixes
+- **Tested roundtrip serialization** (save → load) for all affected models
+- **Fixed syntax error** in `i_fertilizer_repository.dart` (prevented compilation)
+
+### 📊 Testing
+- All tests passed: 13/13 ✅
+- Flutter analyze: No errors
+- Production build: Successful
+- App tested on Android emulator: All RDWC features working
+
+### 📱 Technical Details
+- Build Number: 16 (Google Play)
+- Database Version: 11
+- Fixed Models: RdwcLog, RdwcLogFertilizer, PlantLog
+- All RDWC log types now fully functional: addback, fullChange, maintenance, measurement
+
+---
+
 ## [0.9.0] - 2025-11-08
 
 ### 🐛 Critical Bug Fixes

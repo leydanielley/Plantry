@@ -63,7 +63,7 @@ class DatabaseHelper {
     try {
       return await openDatabase(
         path,
-        version: 10,  // ✅ v10: Phase History System (veg_date, bloom_date, harvest_date)
+        version: 11,  // ✅ v11: Fertilizer Extension (HydroBuddy import support)
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onConfigure: _onConfigure,
@@ -80,7 +80,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 10,
+          version: 11,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onConfigure: _onConfigure,

@@ -3,6 +3,8 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import '../models/fertilizer.dart';
@@ -12,6 +14,7 @@ import '../utils/translations.dart';
 import '../utils/app_constants.dart';
 import 'add_fertilizer_screen.dart';
 import 'edit_fertilizer_screen.dart';
+import 'fertilizer_dbf_import_screen.dart';
 import '../di/service_locator.dart';
 
 class FertilizerListScreen extends StatefulWidget {
@@ -182,6 +185,228 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
     }
   }
 
+  Future<void> _pickAndImportDbf() async {
+    try {
+      // Show instructions dialog first
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue[700]),
+              const SizedBox(width: 12),
+              const Text('HydroBuddy Import'),
+            ],
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select the HydroBuddy database file:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 12),
+              Text('File name: substances_win.dbf'),
+              SizedBox(height: 8),
+              Text('Default location: HydroBuddy installation folder'),
+              SizedBox(height: 12),
+              Text(
+                'Note: The file picker may show all files. Make sure to select the .dbf file!',
+                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Select File'),
+            ),
+          ],
+        ),
+      );
+
+      if (proceed != true) return;
+
+      // Pick file (Android can't filter .dbf, so we show all files)
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.any, // Changed from custom to any, since Android doesn't support .dbf filtering
+        dialogTitle: 'Select substances_win.dbf',
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return; // User canceled
+      }
+
+      final filePath = result.files.first.path;
+      if (filePath == null) {
+        if (mounted) {
+          AppMessages.showError(context, 'Could not access file');
+        }
+        return;
+      }
+
+      // Validate file extension
+      if (!filePath.toLowerCase().endsWith('.dbf')) {
+        if (mounted) {
+          AppMessages.showError(
+            context,
+            'Invalid file: Please select a .dbf file (e.g., substances_win.dbf)',
+          );
+        }
+        return;
+      }
+
+      final file = File(filePath);
+
+      // Validate file exists and is readable
+      if (!await file.exists()) {
+        if (mounted) {
+          AppMessages.showError(context, 'File does not exist');
+        }
+        return;
+      }
+
+      // Navigate to import screen
+      if (mounted) {
+        final importResult = await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => FertilizerDbfImportScreen(dbfFile: file),
+          ),
+        );
+
+        if (importResult == true) {
+          _loadFertilizers(); // Refresh list
+        }
+      }
+    } catch (e) {
+      AppLogger.error('FertilizerListScreen', 'Error picking DBF file', e);
+      if (mounted) {
+        AppMessages.showError(context, 'Error selecting file: ${e.toString()}');
+      }
+    }
+  }
+
+  Future<void> _deleteAllFertilizers() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red[700]),
+            const SizedBox(width: 12),
+            const Text('Delete All Fertilizers?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This will delete ALL ${_fertilizers.length} fertilizers!',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            const Text('This action cannot be undone.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(_t['cancel']),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete All'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        final count = await _fertilizerRepo.deleteAll();
+        _loadFertilizers();
+        if (mounted) {
+          AppMessages.showSuccess(context, 'Deleted $count fertilizers');
+        }
+      } catch (e) {
+        AppLogger.error('FertilizerListScreen', 'Error deleting all: $e');
+        if (mounted) {
+          AppMessages.showError(context, 'Error deleting fertilizers');
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteImportedFertilizers() async {
+    // Count imported fertilizers
+    final importedCount = _fertilizers.where((f) => f.brand == 'HydroBuddy').length;
+
+    if (importedCount == 0) {
+      if (mounted) {
+        AppMessages.showInfo(context, 'No imported HydroBuddy fertilizers found');
+      }
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.undo, color: Colors.orange[700]),
+            const SizedBox(width: 12),
+            const Text('Undo Import?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Delete all $importedCount imported HydroBuddy fertilizers?',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            const Text('This will remove all fertilizers with brand "HydroBuddy".'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(_t['cancel']),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            child: const Text('Undo Import'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        final count = await _fertilizerRepo.deleteByBrand('HydroBuddy');
+        _loadFertilizers();
+        if (mounted) {
+          AppMessages.showSuccess(context, 'Deleted $count imported fertilizers');
+        }
+      } catch (e) {
+        AppLogger.error('FertilizerListScreen', 'Error deleting imported: $e');
+        if (mounted) {
+          AppMessages.showError(context, 'Error deleting fertilizers');
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,6 +414,45 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
         title: Text(_t['fertilizers']),
         backgroundColor: AppConstants.primaryGreen,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            onPressed: _pickAndImportDbf,
+            icon: const Icon(Icons.upload_file),
+            tooltip: 'Import from DBF',
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'delete_all') {
+                _deleteAllFertilizers();
+              } else if (value == 'delete_imported') {
+                _deleteImportedFertilizers();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'delete_imported',
+                child: Row(
+                  children: [
+                    Icon(Icons.undo, color: Colors.orange[700], size: 20),
+                    const SizedBox(width: 12),
+                    const Text('Undo Import (HydroBuddy)'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete_all',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete_sweep, color: Colors.red, size: 20),
+                    const SizedBox(width: 12),
+                    const Text('Delete All Fertilizers', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

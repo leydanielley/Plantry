@@ -21,6 +21,7 @@ import 'rdwc_system_form_screen.dart';
 import 'rdwc_recipes_screen.dart';
 import 'rdwc_analytics_screen.dart';
 import 'rdwc_quick_measurement_screen.dart';
+import 'nutrient_calculator_screen.dart';
 import '../di/service_locator.dart';
 
 class RdwcSystemDetailScreen extends StatefulWidget {
@@ -916,6 +917,26 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            // Row 3: Top-Up Calculator (full width)
+            ElevatedButton.icon(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NutrientCalculatorScreen(system: _system),
+                  ),
+                );
+                if (result == true) _loadData();
+              },
+              icon: const Icon(Icons.calculate, size: 20),
+              label: Text(_t['topup_calculator'], style: const TextStyle(fontSize: 13)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[600],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
           ],
         ),
