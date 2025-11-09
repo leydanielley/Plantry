@@ -87,25 +87,28 @@ class GrowRepository implements IGrowRepository {
   }
 
   /// Grow löschen
+  /// ✅ FIX v11: Use transaction to prevent race condition
   @override
   Future<int> delete(int id) async {
     try {
       final db = await _dbHelper.database;
 
-      // Erst Pflanzen von diesem Grow trennen
-      await db.update(
-        'plants',
-        {'grow_id': null},
-        where: 'grow_id = ?',
-        whereArgs: [id],
-      );
+      return await db.transaction((txn) async {
+        // 1. First, detach all plants from this grow
+        await txn.update(
+          'plants',
+          {'grow_id': null},
+          where: 'grow_id = ?',
+          whereArgs: [id],
+        );
 
-      // Dann Grow löschen
-      return await db.delete(
-        'grows',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+        // 2. Then delete the grow itself
+        return await txn.delete(
+          'grows',
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      });
     } catch (e, stackTrace) {
       AppLogger.error('GrowRepository', 'Failed to delete grow', e, stackTrace);
       rethrow;
@@ -184,7 +187,7 @@ class GrowRepository implements IGrowRepository {
   }
 
   /// Phase für alle Pflanzen in einem Grow ändern
-  /// ✅ FIX BUG #2: Now recalculates phase_day_numbers for existing logs
+  /// ✅ FIX v11: Use transaction to prevent race condition and improve performance
   @override
   Future<void> updatePhaseForAllPlants(int growId, String newPhase) async {
     final db = await _dbHelper.database;
@@ -193,51 +196,55 @@ class GrowRepository implements IGrowRepository {
 
     AppLogger.debug('GrowRepo', 'Updating phase for all plants', 'growId=$growId, newPhase=$newPhase');
 
-    // 1. Get all plant IDs in this grow
-    final plantMaps = await db.query(
-      'plants',
-      columns: ['id', 'name'],
-      where: 'grow_id = ?',
-      whereArgs: [growId],
-    );
+    await db.transaction((txn) async {
+      // 1. Get all plant IDs in this grow
+      final plantMaps = await txn.query(
+        'plants',
+        columns: ['id', 'name'],
+        where: 'grow_id = ?',
+        whereArgs: [growId],
+      );
 
-    final plantIds = plantMaps.map((m) => m['id'] as int).toList();
+      final plantIds = plantMaps.map((m) => m['id'] as int).toList();
 
-    if (plantIds.isEmpty) {
-      AppLogger.info('GrowRepo', 'No plants found in grow', 'growId=$growId');
-      return;
-    }
+      if (plantIds.isEmpty) {
+        AppLogger.info('GrowRepo', 'No plants found in grow', 'growId=$growId');
+        return;
+      }
 
-    // 2. Update all plants' phase and phase_start_date
-    await db.update(
-      'plants',
-      {
-        'phase': newPhase.toUpperCase(),
-        'phase_start_date': newPhaseStartDate,
-      },
-      where: 'grow_id = ?',
-      whereArgs: [growId],
-    );
+      // 2. Update all plants' phase and phase_start_date (single batch update)
+      await txn.update(
+        'plants',
+        {
+          'phase': newPhase.toUpperCase(),
+          'phase_start_date': newPhaseStartDate,
+        },
+        where: 'grow_id = ?',
+        whereArgs: [growId],
+      );
 
-    AppLogger.info('GrowRepo', 'Updated plants to new phase', 'count=${plantIds.length}, phase=$newPhase');
+      AppLogger.info('GrowRepo', 'Updated plants to new phase', 'count=${plantIds.length}, phase=$newPhase');
 
-    // 3. ✅ FIX: Recalculate phase_day_numbers for ALL plants
-    int totalLogsUpdated = 0;
-    for (final plantId in plantIds) {
-      final logsUpdated = await _recalculatePhaseDayNumbers(plantId, phaseStartDate);
-      totalLogsUpdated += logsUpdated;
-    }
+      // 3. ✅ FIX: Recalculate phase_day_numbers for ALL plants (in transaction)
+      int totalLogsUpdated = 0;
+      for (final plantId in plantIds) {
+        final logsUpdated = await _recalculatePhaseDayNumbersInTransaction(txn, plantId, phaseStartDate);
+        totalLogsUpdated += logsUpdated;
+      }
 
-    AppLogger.info('GrowRepo', '✅ Updated phase for plants and recalculated logs', 'plants=${plantIds.length}, logs=$totalLogsUpdated');
+      AppLogger.info('GrowRepo', '✅ Updated phase for plants and recalculated logs', 'plants=${plantIds.length}, logs=$totalLogsUpdated');
+    });
   }
 
-  /// ✅ FIX BUG #2: Helper method to recalculate phase day numbers
+  /// ✅ FIX v11: Helper method to recalculate phase day numbers within a transaction
   /// Called when phase changes for plants in a grow
-  Future<int> _recalculatePhaseDayNumbers(int plantId, DateTime phaseStartDate) async {
-    final db = await _dbHelper.database;
-
+  Future<int> _recalculatePhaseDayNumbersInTransaction(
+    DatabaseExecutor txn,
+    int plantId,
+    DateTime phaseStartDate,
+  ) async {
     // Get all logs for this plant
-    final logs = await db.query(
+    final logs = await txn.query(
       'plant_logs',
       where: 'plant_id = ?',
       whereArgs: [plantId],
@@ -258,7 +265,7 @@ class GrowRepository implements IGrowRepository {
         // Recalculate phase_day_number
         final newPhaseDayNumber = Validators.calculateDayNumber(logDate, phaseStartDate);
 
-        await db.update(
+        await txn.update(
           'plant_logs',
           {'phase_day_number': newPhaseDayNumber},
           where: 'id = ?',

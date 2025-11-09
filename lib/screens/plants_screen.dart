@@ -146,22 +146,26 @@ class _PlantsScreenState extends State<PlantsScreen> {
     }
 
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    
-    return ListView(
+    final items = _buildFlatItemList();
+
+    // ✅ PERFORMANCE FIX: ListView.builder statt ListView
+    // Rendert nur sichtbare Items → bessere Performance bei vielen Pflanzen
+    return ListView.builder(
       padding: EdgeInsets.only(
         left: AppConstants.spacingMedium,
         right: AppConstants.spacingMedium,
         top: AppConstants.spacingMedium,
-        bottom: bottomPadding > 0 
-            ? bottomPadding + AppConstants.fabBottomPaddingSmall 
+        bottom: bottomPadding > 0
+            ? bottomPadding + AppConstants.fabBottomPaddingSmall
             : AppConstants.fabBottomPaddingLarge,
       ),
-      children: _buildGroupedPlants(),
+      itemCount: items.length,
+      itemBuilder: (context, index) => items[index],
     );
   }
 
-  List<Widget> _buildGroupedPlants() {
-    final List<Widget> widgets = [];
+  List<Widget> _buildFlatItemList() {
+    final List<Widget> items = [];
 
     // Sort grows: first with grow, then without grow
     final sortedGrowIds = _plantsByGrow.keys.toList()
@@ -173,19 +177,19 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
     for (var growId in sortedGrowIds) {
       final plants = _plantsByGrow[growId]!;
-      
-      widgets.add(_buildGrowHeader(growId, plants.length));
-      widgets.add(const SizedBox(height: AppConstants.borderRadiusMedium));
-      
+
+      items.add(_buildGrowHeader(growId, plants.length));
+      items.add(const SizedBox(height: AppConstants.borderRadiusMedium));
+
       for (var plant in plants) {
-        widgets.add(_buildPlantCard(plant));
-        widgets.add(const SizedBox(height: AppConstants.spacingSmall));
+        items.add(_buildPlantCard(plant));
+        items.add(const SizedBox(height: AppConstants.spacingSmall));
       }
-      
-      widgets.add(const SizedBox(height: AppConstants.spacingLarge));
+
+      items.add(const SizedBox(height: AppConstants.spacingLarge));
     }
 
-    return widgets;
+    return items;
   }
 
   Widget _buildGrowHeader(int? growId, int plantCount) {

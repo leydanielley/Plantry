@@ -102,6 +102,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
 
     try {
       // ✅ BUG FIX #3: CM → Meter umrechnen beim Speichern (dividieren durch 100)
+      // ✅ FIX: Clear rdwcSystemId wenn wateringSystem nicht RDWC ist
       final updatedRoom = widget.room.copyWith(
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim().isNotEmpty
@@ -109,7 +110,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
             : null,
         growType: _growType,
         wateringSystem: _wateringSystem,
-        rdwcSystemId: _selectedRdwcSystemId,
+        rdwcSystemId: _wateringSystem == WateringSystem.rdwc ? _selectedRdwcSystemId : null,
         width: _widthController.text.trim().isNotEmpty
             ? (double.tryParse(_widthController.text.trim()) ?? 0.0) / 100.0  // ✅ CM → Meter
             : 0.0,

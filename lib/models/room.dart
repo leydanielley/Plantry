@@ -4,6 +4,9 @@
 
 import 'enums.dart';
 
+/// Sentinel object for copyWith to distinguish between null and undefined
+const Object _undefined = Object();
+
 class Room {
   final int? id;
   final String name;
@@ -112,13 +115,14 @@ class Room {
   }
 
   /// Copy mit Änderungen
+  /// ✅ FIX: Nullable Felder können jetzt auf null gesetzt werden
   Room copyWith({
     int? id,
     String? name,
-    String? description,
-    GrowType? growType,
-    WateringSystem? wateringSystem,
-    int? rdwcSystemId,
+    Object? description = _undefined,
+    Object? growType = _undefined,
+    Object? wateringSystem = _undefined,
+    Object? rdwcSystemId = _undefined,
     double? width,
     double? depth,
     double? height,
@@ -128,10 +132,10 @@ class Room {
     return Room(
       id: id ?? this.id,
       name: name ?? this.name,
-      description: description ?? this.description,
-      growType: growType ?? this.growType,
-      wateringSystem: wateringSystem ?? this.wateringSystem,
-      rdwcSystemId: rdwcSystemId ?? this.rdwcSystemId,
+      description: description == _undefined ? this.description : description as String?,
+      growType: growType == _undefined ? this.growType : growType as GrowType?,
+      wateringSystem: wateringSystem == _undefined ? this.wateringSystem : wateringSystem as WateringSystem?,
+      rdwcSystemId: rdwcSystemId == _undefined ? this.rdwcSystemId : rdwcSystemId as int?,
       width: width ?? this.width,
       depth: depth ?? this.depth,
       height: height ?? this.height,

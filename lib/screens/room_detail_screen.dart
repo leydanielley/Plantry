@@ -465,13 +465,31 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
               ),
           ] else
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Keine Hardware erfasst',
-                style: TextStyle(
-                  color: Colors.grey[500],
-                  fontStyle: FontStyle.italic,
-                ),
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.devices_other,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Keine Hardware erfasst',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Füge Hardware über den Pfeil oben hinzu',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
               ),
             ),
         ],
@@ -524,13 +542,31 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             )),
           ] else
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Keine Pflanzen in diesem Raum',
-                style: TextStyle(
-                  color: Colors.grey[500],
-                  fontStyle: FontStyle.italic,
-                ),
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.spa,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Keine Pflanzen in diesem Raum',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Weise einer Pflanze diesen Raum zu',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
               ),
             ),
         ],

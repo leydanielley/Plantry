@@ -6,9 +6,11 @@ import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/plant_log.dart';
 import 'interfaces/i_plant_log_repository.dart';
+import 'photo_repository.dart';
 
 class PlantLogRepository implements IPlantLogRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final PhotoRepository _photoRepository = PhotoRepository();
 
   /// Alle Logs einer Pflanze laden mit Pagination
   @override
@@ -80,15 +82,28 @@ class PlantLogRepository implements IPlantLogRepository {
     }
   }
 
-  /// Log löschen
+  /// Log löschen (mit Cascading Delete für Fotos)
+  /// ✅ FIX: Deletes photos (filesystem + DB) before deleting log
   @override
   Future<int> delete(int id) async {
     final db = await _dbHelper.database;
-    return await db.delete(
-      'plant_logs',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+
+    // Use transaction to ensure atomicity
+    return await db.transaction((txn) async {
+      // 1. Delete all photos for this log (filesystem + DB)
+      //    This must be done BEFORE deleting the log, otherwise
+      //    we can't query which photos belong to this log
+      await _photoRepository.deleteByLogId(id);
+
+      // 2. Delete log_fertilizers (handled by DB CASCADE)
+
+      // 3. Delete the log itself
+      return await txn.delete(
+        'plant_logs',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
   }
 
   /// Letzten Log einer Pflanze laden

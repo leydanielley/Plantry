@@ -2,6 +2,9 @@
 // GROWLOG - RDWC System Model
 // =============================================
 
+/// Sentinel object for copyWith to distinguish between null and undefined
+const Object _undefined = Object();
+
 class RdwcSystem {
   final int? id;
   final String name;
@@ -122,53 +125,54 @@ class RdwcSystem {
   }
 
   /// Copy with changes
+  /// ✅ FIX: Nullable Felder können jetzt auf null gesetzt werden
   RdwcSystem copyWith({
     int? id,
     String? name,
-    int? roomId,
-    int? growId,
+    Object? roomId = _undefined,
+    Object? growId = _undefined,
     double? maxCapacity,
     double? currentLevel,
     int? bucketCount,
-    String? description,
-    String? pumpBrand,
-    String? pumpModel,
-    int? pumpWattage,
-    double? pumpFlowRate,
-    String? airPumpBrand,
-    String? airPumpModel,
-    int? airPumpWattage,
-    double? airPumpFlowRate,
-    String? chillerBrand,
-    String? chillerModel,
-    int? chillerWattage,
-    int? chillerCoolingPower,
-    String? accessories,
+    Object? description = _undefined,
+    Object? pumpBrand = _undefined,
+    Object? pumpModel = _undefined,
+    Object? pumpWattage = _undefined,
+    Object? pumpFlowRate = _undefined,
+    Object? airPumpBrand = _undefined,
+    Object? airPumpModel = _undefined,
+    Object? airPumpWattage = _undefined,
+    Object? airPumpFlowRate = _undefined,
+    Object? chillerBrand = _undefined,
+    Object? chillerModel = _undefined,
+    Object? chillerWattage = _undefined,
+    Object? chillerCoolingPower = _undefined,
+    Object? accessories = _undefined,
     DateTime? createdAt,
     bool? archived,
   }) {
     return RdwcSystem(
       id: id ?? this.id,
       name: name ?? this.name,
-      roomId: roomId ?? this.roomId,
-      growId: growId ?? this.growId,
+      roomId: roomId == _undefined ? this.roomId : roomId as int?,
+      growId: growId == _undefined ? this.growId : growId as int?,
       maxCapacity: maxCapacity ?? this.maxCapacity,
       currentLevel: currentLevel ?? this.currentLevel,
       bucketCount: bucketCount ?? this.bucketCount,
-      description: description ?? this.description,
-      pumpBrand: pumpBrand ?? this.pumpBrand,
-      pumpModel: pumpModel ?? this.pumpModel,
-      pumpWattage: pumpWattage ?? this.pumpWattage,
-      pumpFlowRate: pumpFlowRate ?? this.pumpFlowRate,
-      airPumpBrand: airPumpBrand ?? this.airPumpBrand,
-      airPumpModel: airPumpModel ?? this.airPumpModel,
-      airPumpWattage: airPumpWattage ?? this.airPumpWattage,
-      airPumpFlowRate: airPumpFlowRate ?? this.airPumpFlowRate,
-      chillerBrand: chillerBrand ?? this.chillerBrand,
-      chillerModel: chillerModel ?? this.chillerModel,
-      chillerWattage: chillerWattage ?? this.chillerWattage,
-      chillerCoolingPower: chillerCoolingPower ?? this.chillerCoolingPower,
-      accessories: accessories ?? this.accessories,
+      description: description == _undefined ? this.description : description as String?,
+      pumpBrand: pumpBrand == _undefined ? this.pumpBrand : pumpBrand as String?,
+      pumpModel: pumpModel == _undefined ? this.pumpModel : pumpModel as String?,
+      pumpWattage: pumpWattage == _undefined ? this.pumpWattage : pumpWattage as int?,
+      pumpFlowRate: pumpFlowRate == _undefined ? this.pumpFlowRate : pumpFlowRate as double?,
+      airPumpBrand: airPumpBrand == _undefined ? this.airPumpBrand : airPumpBrand as String?,
+      airPumpModel: airPumpModel == _undefined ? this.airPumpModel : airPumpModel as String?,
+      airPumpWattage: airPumpWattage == _undefined ? this.airPumpWattage : airPumpWattage as int?,
+      airPumpFlowRate: airPumpFlowRate == _undefined ? this.airPumpFlowRate : airPumpFlowRate as double?,
+      chillerBrand: chillerBrand == _undefined ? this.chillerBrand : chillerBrand as String?,
+      chillerModel: chillerModel == _undefined ? this.chillerModel : chillerModel as String?,
+      chillerWattage: chillerWattage == _undefined ? this.chillerWattage : chillerWattage as int?,
+      chillerCoolingPower: chillerCoolingPower == _undefined ? this.chillerCoolingPower : chillerCoolingPower as int?,
+      accessories: accessories == _undefined ? this.accessories : accessories as String?,
       createdAt: createdAt ?? this.createdAt,
       archived: archived ?? this.archived,
     );

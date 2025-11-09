@@ -254,21 +254,30 @@ class RdwcRepository implements IRdwcRepository {
   }
 
   /// Create new RDWC log and update system level
+  /// ✅ FIX v11: Use transaction for atomic operation
   @override
   Future<int> createLog(RdwcLog log) async {
     try {
       final db = await _dbHelper.database;
 
-      // Insert log
-      final logId = await db.insert('rdwc_logs', log.toMap());
-      AppLogger.info('RdwcRepository', 'Created RDWC log', 'ID: $logId');
+      return await db.transaction((txn) async {
+        // 1. Insert log
+        final logId = await txn.insert('rdwc_logs', log.toMap());
+        AppLogger.info('RdwcRepository', 'Created RDWC log', 'ID: $logId');
 
-      // Update system level if levelAfter is provided
-      if (log.levelAfter != null) {
-        await updateSystemLevel(log.systemId, log.levelAfter!);
-      }
+        // 2. Update system level if levelAfter is provided
+        if (log.levelAfter != null) {
+          await txn.update(
+            'rdwc_systems',
+            {'current_level': log.levelAfter},
+            where: 'id = ?',
+            whereArgs: [log.systemId],
+          );
+          AppLogger.info('RdwcRepository', 'Updated system level', 'ID: ${log.systemId}, Level: ${log.levelAfter} L');
+        }
 
-      return logId;
+        return logId;
+      });
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error creating RDWC log', e);
       rethrow;
@@ -276,35 +285,46 @@ class RdwcRepository implements IRdwcRepository {
   }
 
   /// Update RDWC log
+  /// ✅ FIX v11: Use transaction for atomic operation
   @override
   Future<int> updateLog(RdwcLog log) async {
     try {
       final db = await _dbHelper.database;
-      final count = await db.update(
-        'rdwc_logs',
-        log.toMap(),
-        where: 'id = ?',
-        whereArgs: [log.id],
-      );
-      AppLogger.info('RdwcRepository', 'Updated RDWC log', 'ID: ${log.id}');
 
-      // Delete old fertilizers for this log (will be re-added by caller if needed)
-      // This prevents duplicate fertilizers when updating a log
-      if (log.id != null) {
-        await db.delete(
-          'rdwc_log_fertilizers',
-          where: 'rdwc_log_id = ?',
+      return await db.transaction((txn) async {
+        // 1. Update log
+        final count = await txn.update(
+          'rdwc_logs',
+          log.toMap(),
+          where: 'id = ?',
           whereArgs: [log.id],
         );
-        AppLogger.info('RdwcRepository', 'Cleared old fertilizers for log', 'ID: ${log.id}');
-      }
+        AppLogger.info('RdwcRepository', 'Updated RDWC log', 'ID: ${log.id}');
 
-      // Update system level if levelAfter changed
-      if (log.levelAfter != null) {
-        await updateSystemLevel(log.systemId, log.levelAfter!);
-      }
+        // 2. Delete old fertilizers for this log (will be re-added by caller if needed)
+        // This prevents duplicate fertilizers when updating a log
+        if (log.id != null) {
+          await txn.delete(
+            'rdwc_log_fertilizers',
+            where: 'rdwc_log_id = ?',
+            whereArgs: [log.id],
+          );
+          AppLogger.info('RdwcRepository', 'Cleared old fertilizers for log', 'ID: ${log.id}');
+        }
 
-      return count;
+        // 3. Update system level if levelAfter changed
+        if (log.levelAfter != null) {
+          await txn.update(
+            'rdwc_systems',
+            {'current_level': log.levelAfter},
+            where: 'id = ?',
+            whereArgs: [log.systemId],
+          );
+          AppLogger.info('RdwcRepository', 'Updated system level', 'ID: ${log.systemId}, Level: ${log.levelAfter} L');
+        }
+
+        return count;
+      });
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error updating RDWC log', e);
       rethrow;
@@ -595,26 +615,29 @@ class RdwcRepository implements IRdwcRepository {
   }
 
   /// Create new recipe
+  /// ✅ FIX v11: Use transaction for atomic operation
   @override
   Future<int> createRecipe(RdwcRecipe recipe) async {
     try {
       final db = await _dbHelper.database;
 
-      // Insert recipe
-      final recipeId = await db.insert('rdwc_recipes', recipe.toMap());
-      AppLogger.info('RdwcRepository', 'Created recipe', 'ID: $recipeId');
+      return await db.transaction((txn) async {
+        // 1. Insert recipe
+        final recipeId = await txn.insert('rdwc_recipes', recipe.toMap());
+        AppLogger.info('RdwcRepository', 'Created recipe', 'ID: $recipeId');
 
-      // Insert fertilizers
-      for (final fert in recipe.fertilizers) {
-        final fertWithRecipeId = RecipeFertilizer(
-          recipeId: recipeId,
-          fertilizerId: fert.fertilizerId,
-          mlPerLiter: fert.mlPerLiter,
-        );
-        await db.insert('rdwc_recipe_fertilizers', fertWithRecipeId.toMap());
-      }
+        // 2. Insert all fertilizers
+        for (final fert in recipe.fertilizers) {
+          final fertWithRecipeId = RecipeFertilizer(
+            recipeId: recipeId,
+            fertilizerId: fert.fertilizerId,
+            mlPerLiter: fert.mlPerLiter,
+          );
+          await txn.insert('rdwc_recipe_fertilizers', fertWithRecipeId.toMap());
+        }
 
-      return recipeId;
+        return recipeId;
+      });
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error creating recipe', e);
       rethrow;
@@ -622,33 +645,36 @@ class RdwcRepository implements IRdwcRepository {
   }
 
   /// Update recipe
+  /// ✅ FIX v11: Use transaction for atomic operation
   @override
   Future<int> updateRecipe(RdwcRecipe recipe) async {
     try {
       final db = await _dbHelper.database;
 
-      // Update recipe
-      final count = await db.update(
-        'rdwc_recipes',
-        recipe.toMap(),
-        where: 'id = ?',
-        whereArgs: [recipe.id],
-      );
+      return await db.transaction((txn) async {
+        // 1. Update recipe
+        final count = await txn.update(
+          'rdwc_recipes',
+          recipe.toMap(),
+          where: 'id = ?',
+          whereArgs: [recipe.id],
+        );
 
-      // Delete old fertilizers
-      await db.delete(
-        'rdwc_recipe_fertilizers',
-        where: 'recipe_id = ?',
-        whereArgs: [recipe.id],
-      );
+        // 2. Delete old fertilizers
+        await txn.delete(
+          'rdwc_recipe_fertilizers',
+          where: 'recipe_id = ?',
+          whereArgs: [recipe.id],
+        );
 
-      // Insert new fertilizers
-      for (final fert in recipe.fertilizers) {
-        await db.insert('rdwc_recipe_fertilizers', fert.toMap());
-      }
+        // 3. Insert new fertilizers
+        for (final fert in recipe.fertilizers) {
+          await txn.insert('rdwc_recipe_fertilizers', fert.toMap());
+        }
 
-      AppLogger.info('RdwcRepository', 'Updated recipe', 'ID: ${recipe.id}');
-      return count;
+        AppLogger.info('RdwcRepository', 'Updated recipe', 'ID: ${recipe.id}');
+        return count;
+      });
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error updating recipe', e);
       rethrow;

@@ -11,6 +11,9 @@ enum RdwcLogType {
   measurement,    // Just measurement, no action
 }
 
+/// Sentinel object for copyWith to distinguish between null and undefined
+const Object _undefined = Object();
+
 class RdwcLog {
   final int? id;
   final int systemId;
@@ -139,41 +142,42 @@ class RdwcLog {
   }
 
   /// Copy with changes
+  /// ✅ FIX: Nullable Felder können jetzt auf null gesetzt werden
   RdwcLog copyWith({
     int? id,
     int? systemId,
     DateTime? logDate,
     RdwcLogType? logType,
-    double? levelBefore,
-    double? waterAdded,
-    double? levelAfter,
-    double? waterConsumed,
-    double? phBefore,
-    double? phAfter,
-    double? ecBefore,
-    double? ecAfter,
-    String? note,
-    String? loggedBy,
+    Object? levelBefore = _undefined,
+    Object? waterAdded = _undefined,
+    Object? levelAfter = _undefined,
+    Object? waterConsumed = _undefined,
+    Object? phBefore = _undefined,
+    Object? phAfter = _undefined,
+    Object? ecBefore = _undefined,
+    Object? ecAfter = _undefined,
+    Object? note = _undefined,
+    Object? loggedBy = _undefined,
     DateTime? createdAt,
-    List<RdwcLogFertilizer>? fertilizers,
+    Object? fertilizers = _undefined,
   }) {
     return RdwcLog(
       id: id ?? this.id,
       systemId: systemId ?? this.systemId,
       logDate: logDate ?? this.logDate,
       logType: logType ?? this.logType,
-      levelBefore: levelBefore ?? this.levelBefore,
-      waterAdded: waterAdded ?? this.waterAdded,
-      levelAfter: levelAfter ?? this.levelAfter,
-      waterConsumed: waterConsumed ?? this.waterConsumed,
-      phBefore: phBefore ?? this.phBefore,
-      phAfter: phAfter ?? this.phAfter,
-      ecBefore: ecBefore ?? this.ecBefore,
-      ecAfter: ecAfter ?? this.ecAfter,
-      note: note ?? this.note,
-      loggedBy: loggedBy ?? this.loggedBy,
+      levelBefore: levelBefore == _undefined ? this.levelBefore : levelBefore as double?,
+      waterAdded: waterAdded == _undefined ? this.waterAdded : waterAdded as double?,
+      levelAfter: levelAfter == _undefined ? this.levelAfter : levelAfter as double?,
+      waterConsumed: waterConsumed == _undefined ? this.waterConsumed : waterConsumed as double?,
+      phBefore: phBefore == _undefined ? this.phBefore : phBefore as double?,
+      phAfter: phAfter == _undefined ? this.phAfter : phAfter as double?,
+      ecBefore: ecBefore == _undefined ? this.ecBefore : ecBefore as double?,
+      ecAfter: ecAfter == _undefined ? this.ecAfter : ecAfter as double?,
+      note: note == _undefined ? this.note : note as String?,
+      loggedBy: loggedBy == _undefined ? this.loggedBy : loggedBy as String?,
       createdAt: createdAt ?? this.createdAt,
-      fertilizers: fertilizers ?? this.fertilizers,
+      fertilizers: fertilizers == _undefined ? this.fertilizers : fertilizers as List<RdwcLogFertilizer>?,
     );
   }
 

@@ -55,6 +55,10 @@ class RecipeFertilizer {
 /// - Flora Bloom: 2ml/L
 /// - Target EC: 1.8 mS/cm
 /// - Target pH: 5.8
+
+/// Sentinel object for copyWith to distinguish between null and undefined
+const Object _undefined = Object();
+
 class RdwcRecipe {
   final int? id;
   final String name;                       // e.g., "Bloom Week 3"
@@ -131,22 +135,23 @@ class RdwcRecipe {
   }
 
   /// Copy with changes
+  /// ✅ FIX: Nullable Felder können jetzt auf null gesetzt werden
   RdwcRecipe copyWith({
     int? id,
     String? name,
-    String? description,
+    Object? description = _undefined,
     List<RecipeFertilizer>? fertilizers,
-    double? targetEc,
-    double? targetPh,
+    Object? targetEc = _undefined,
+    Object? targetPh = _undefined,
     DateTime? createdAt,
   }) {
     return RdwcRecipe(
       id: id ?? this.id,
       name: name ?? this.name,
-      description: description ?? this.description,
+      description: description == _undefined ? this.description : description as String?,
       fertilizers: fertilizers ?? this.fertilizers,
-      targetEc: targetEc ?? this.targetEc,
-      targetPh: targetPh ?? this.targetPh,
+      targetEc: targetEc == _undefined ? this.targetEc : targetEc as double?,
+      targetPh: targetPh == _undefined ? this.targetPh : targetPh as double?,
       createdAt: createdAt ?? this.createdAt,
     );
   }

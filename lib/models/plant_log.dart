@@ -5,6 +5,9 @@
 import 'enums.dart';
 import '../utils/app_logger.dart';
 
+/// Sentinel object for copyWith to distinguish between null and undefined
+const Object _undefined = Object();
+
 class PlantLog {
   final int? id;
   final int plantId;
@@ -198,32 +201,33 @@ class PlantLog {
   }
 
   /// Copy mit Änderungen
+  /// ✅ FIX: Nullable Felder können jetzt auf null gesetzt werden
   PlantLog copyWith({
     int? id,
     int? plantId,
     int? dayNumber,
     DateTime? logDate,
-    String? loggedBy,
+    Object? loggedBy = _undefined,
     ActionType? actionType,
-    PlantPhase? phase,
-    int? phaseDayNumber,
-    double? waterAmount,
-    double? phIn,
-    double? ecIn,
-    double? phOut,
-    double? ecOut,
-    double? temperature,
-    double? humidity,
+    Object? phase = _undefined,
+    Object? phaseDayNumber = _undefined,
+    Object? waterAmount = _undefined,
+    Object? phIn = _undefined,
+    Object? ecIn = _undefined,
+    Object? phOut = _undefined,
+    Object? ecOut = _undefined,
+    Object? temperature = _undefined,
+    Object? humidity = _undefined,
     bool? runoff,
     bool? cleanse,
-    double? containerSize,
-    double? containerMediumAmount,
+    Object? containerSize = _undefined,
+    Object? containerMediumAmount = _undefined,
     bool? containerDrainage,
-    String? containerDrainageMaterial,
-    double? systemReservoirSize,
-    int? systemBucketCount,
-    double? systemBucketSize,
-    String? note,
+    Object? containerDrainageMaterial = _undefined,
+    Object? systemReservoirSize = _undefined,
+    Object? systemBucketCount = _undefined,
+    Object? systemBucketSize = _undefined,
+    Object? note = _undefined,
     DateTime? createdAt,
   }) {
     return PlantLog(
@@ -231,27 +235,27 @@ class PlantLog {
       plantId: plantId ?? this.plantId,
       dayNumber: dayNumber ?? this.dayNumber,
       logDate: logDate ?? this.logDate,
-      loggedBy: loggedBy ?? this.loggedBy,
+      loggedBy: loggedBy == _undefined ? this.loggedBy : loggedBy as String?,
       actionType: actionType ?? this.actionType,
-      phase: phase ?? this.phase,
-      phaseDayNumber: phaseDayNumber ?? this.phaseDayNumber,
-      waterAmount: waterAmount ?? this.waterAmount,
-      phIn: phIn ?? this.phIn,
-      ecIn: ecIn ?? this.ecIn,
-      phOut: phOut ?? this.phOut,
-      ecOut: ecOut ?? this.ecOut,
-      temperature: temperature ?? this.temperature,
-      humidity: humidity ?? this.humidity,
+      phase: phase == _undefined ? this.phase : phase as PlantPhase?,
+      phaseDayNumber: phaseDayNumber == _undefined ? this.phaseDayNumber : phaseDayNumber as int?,
+      waterAmount: waterAmount == _undefined ? this.waterAmount : waterAmount as double?,
+      phIn: phIn == _undefined ? this.phIn : phIn as double?,
+      ecIn: ecIn == _undefined ? this.ecIn : ecIn as double?,
+      phOut: phOut == _undefined ? this.phOut : phOut as double?,
+      ecOut: ecOut == _undefined ? this.ecOut : ecOut as double?,
+      temperature: temperature == _undefined ? this.temperature : temperature as double?,
+      humidity: humidity == _undefined ? this.humidity : humidity as double?,
       runoff: runoff ?? this.runoff,
       cleanse: cleanse ?? this.cleanse,
-      containerSize: containerSize ?? this.containerSize,
-      containerMediumAmount: containerMediumAmount ?? this.containerMediumAmount,
+      containerSize: containerSize == _undefined ? this.containerSize : containerSize as double?,
+      containerMediumAmount: containerMediumAmount == _undefined ? this.containerMediumAmount : containerMediumAmount as double?,
       containerDrainage: containerDrainage ?? this.containerDrainage,
-      containerDrainageMaterial: containerDrainageMaterial ?? this.containerDrainageMaterial,
-      systemReservoirSize: systemReservoirSize ?? this.systemReservoirSize,
-      systemBucketCount: systemBucketCount ?? this.systemBucketCount,
-      systemBucketSize: systemBucketSize ?? this.systemBucketSize,
-      note: note ?? this.note,
+      containerDrainageMaterial: containerDrainageMaterial == _undefined ? this.containerDrainageMaterial : containerDrainageMaterial as String?,
+      systemReservoirSize: systemReservoirSize == _undefined ? this.systemReservoirSize : systemReservoirSize as double?,
+      systemBucketCount: systemBucketCount == _undefined ? this.systemBucketCount : systemBucketCount as int?,
+      systemBucketSize: systemBucketSize == _undefined ? this.systemBucketSize : systemBucketSize as double?,
+      note: note == _undefined ? this.note : note as String?,
       createdAt: createdAt ?? this.createdAt,
     );
   }

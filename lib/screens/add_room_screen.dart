@@ -81,6 +81,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
 
     try {
       // ✅ KORRIGIERT: CM in Meter umrechnen (dividieren durch 100)
+      // ✅ FIX: Nur rdwcSystemId setzen wenn wateringSystem RDWC ist
       final room = Room(
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim().isNotEmpty
@@ -88,7 +89,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
             : null,
         growType: _growType,
         wateringSystem: _wateringSystem,
-        rdwcSystemId: _selectedRdwcSystemId,
+        rdwcSystemId: _wateringSystem == WateringSystem.rdwc ? _selectedRdwcSystemId : null,
         width: _widthController.text.trim().isNotEmpty
             ? (double.tryParse(_widthController.text.trim()) ?? 0.0) / 100.0  // ✅ CM → Meter
             : 0.0,

@@ -114,9 +114,37 @@ class FertilizerRepository implements IFertilizerRepository {
   }
 
   /// Dünger löschen
+  /// ✅ FIX v11: Check if fertilizer is in use before deleting
+  /// Throws an exception with helpful message if fertilizer is still referenced
   @override
   Future<int> delete(int id) async {
     final db = await _dbHelper.database;
+
+    // Check if fertilizer is in use
+    final usageDetails = await getUsageDetails(id);
+    final totalUsage = usageDetails.values.reduce((a, b) => a + b);
+
+    if (totalUsage > 0) {
+      // Build helpful error message
+      final parts = <String>[];
+      if (usageDetails['recipes']! > 0) {
+        parts.add('${usageDetails['recipes']} Rezept${usageDetails['recipes']! > 1 ? 'en' : ''}');
+      }
+      if (usageDetails['rdwc_logs']! > 0) {
+        parts.add('${usageDetails['rdwc_logs']} RDWC-Log${usageDetails['rdwc_logs']! > 1 ? 's' : ''}');
+      }
+      if (usageDetails['plant_logs']! > 0) {
+        parts.add('${usageDetails['plant_logs']} Pflanzen-Log${usageDetails['plant_logs']! > 1 ? 's' : ''}');
+      }
+
+      throw Exception(
+        'Dünger kann nicht gelöscht werden. '
+        'Er wird noch in ${parts.join(', ')} verwendet. '
+        'Bitte entfernen Sie zuerst alle Verwendungen.',
+      );
+    }
+
+    // Safe to delete
     return await db.delete(
       'fertilizers',
       where: 'id = ?',

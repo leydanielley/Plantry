@@ -142,6 +142,68 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   Future<void> _savePlant() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // =============================================
+    // ✅ FIX v11: UI-Level Cross-Validation for chronological date consistency
+    // Prevents saving logically impossible plant phase dates
+    // =============================================
+    final seedDate = _seedDate;
+    final vegDate = _vegDate;
+    final bloomDate = _bloomDate;
+    final harvestDate = _harvestDate;
+
+    // Validate: vegDate must not be before seedDate
+    if (vegDate != null && seedDate != null) {
+      final vegDay = DateTime(vegDate.year, vegDate.month, vegDate.day);
+      final seedDay = DateTime(seedDate.year, seedDate.month, seedDate.day);
+      if (vegDay.isBefore(seedDay)) {
+        AppMessages.showError(context, 'Wachstumsdatum kann nicht vor dem Keimdatum liegen!');
+        return; // Abort save
+      }
+    }
+
+    // Validate: bloomDate must not be before vegDate
+    if (bloomDate != null && vegDate != null) {
+      final bloomDay = DateTime(bloomDate.year, bloomDate.month, bloomDate.day);
+      final vegDay = DateTime(vegDate.year, vegDate.month, vegDate.day);
+      if (bloomDay.isBefore(vegDay)) {
+        AppMessages.showError(context, 'Blütedatum kann nicht vor dem Wachstumsdatum liegen!');
+        return; // Abort save
+      }
+    }
+
+    // Validate: harvestDate must not be before bloomDate
+    if (harvestDate != null && bloomDate != null) {
+      final harvestDay = DateTime(harvestDate.year, harvestDate.month, harvestDate.day);
+      final bloomDay = DateTime(bloomDate.year, bloomDate.month, bloomDate.day);
+      if (harvestDay.isBefore(bloomDay)) {
+        AppMessages.showError(context, 'Erntedatum kann nicht vor dem Blütedatum liegen!');
+        return; // Abort save
+      }
+    }
+
+    // Additional validation: bloomDate without vegDate
+    if (bloomDate != null && vegDate == null && seedDate != null) {
+      final bloomDay = DateTime(bloomDate.year, bloomDate.month, bloomDate.day);
+      final seedDay = DateTime(seedDate.year, seedDate.month, seedDate.day);
+      if (bloomDay.isBefore(seedDay)) {
+        AppMessages.showError(context, 'Blütedatum kann nicht vor dem Keimdatum liegen!');
+        return; // Abort save
+      }
+    }
+
+    // Additional validation: harvestDate without bloomDate but with vegDate
+    if (harvestDate != null && bloomDate == null && vegDate != null) {
+      final harvestDay = DateTime(harvestDate.year, harvestDate.month, harvestDate.day);
+      final vegDay = DateTime(vegDate.year, vegDate.month, vegDate.day);
+      if (harvestDay.isBefore(vegDay)) {
+        AppMessages.showError(context, 'Erntedatum kann nicht vor dem Wachstumsdatum liegen!');
+        return; // Abort save
+      }
+    }
+    // =============================================
+    // End of chronological validation
+    // =============================================
+
     // ✅ FIX: Check if seed date changed and logs exist
     if (_seedDate != widget.plant.seedDate && widget.plant.id != null) {
       final logCount = await _plantRepo.getLogCount(widget.plant.id!);
@@ -218,6 +280,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         effectiveSeedDate = DateTime(now.year, now.month, now.day);
       }
 
+      // ✅ FIX: Clear RDWC fields wenn Medium geändert wird
       final updatedPlant = widget.plant.copyWith(
         name: _nameController.text,
         strain: _strainController.text.isNotEmpty ? _strainController.text : null,
@@ -232,6 +295,9 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         harvestDate: newHarvestDate,
         roomId: _selectedRoomId,
         growId: _selectedGrowId,
+        // ✅ FIX: Wenn Medium nicht RDWC ist, RDWC Felder auf null setzen
+        rdwcSystemId: _medium == Medium.rdwc ? widget.plant.rdwcSystemId : null,
+        bucketNumber: _medium == Medium.rdwc ? widget.plant.bucketNumber : null,
         seedDate: effectiveSeedDate,
         currentContainerSize: _containerSizeController.text.isNotEmpty
             ? double.tryParse(_containerSizeController.text)

@@ -2,6 +2,7 @@
 // GROWLOG - Plant Repository
 // =============================================
 
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/plant.dart';
@@ -97,27 +98,25 @@ class PlantRepository implements IPlantRepository {
           final harvestDateChanged = oldPlant.harvestDate != plant.harvestDate;
           final anyPhaseDateChanged = vegDateChanged || bloomDateChanged || harvestDateChanged;
 
-          // Update plant
-          await db.update(
-            'plants',
-            plant.toMap(),
-            where: 'id = ?',
-            whereArgs: [plant.id],
-          );
+          // ✅ FIX: Recalculate ALL log data if ANY date changes
+          // This ensures consistency: seedDate changes affect phases too!
+          final anyDateChanged = seedDateChanged || anyPhaseDateChanged || phaseStartChanged;
 
-          // Recalculate log day_numbers if seed date changed
-          if (seedDateChanged && plant.seedDate != null) {
-            await recalculateLogDayNumbers(plant.id!, plant.seedDate!);
-          }
+          // ✅ FIX v11: All updates in transaction for consistency
+          await db.transaction((txn) async {
+            // 1. Update plant
+            await txn.update(
+              'plants',
+              plant.toMap(),
+              where: 'id = ?',
+              whereArgs: [plant.id],
+            );
 
-          // ✅ v10: Recalculate ALL phase data if any phase date changed
-          if (anyPhaseDateChanged) {
-            await recalculateAllPhaseDayNumbers(plant.id!, plant);
-          }
-          // Fallback to old logic if only phaseStartDate changed (backward compatibility)
-          else if (phaseStartChanged && plant.phaseStartDate != null) {
-            await recalculatePhaseDayNumbers(plant.id!, plant.phaseStartDate!);
-          }
+            // 2. Recalculate log data if any date changed
+            if (anyDateChanged && plant.seedDate != null) {
+              await _recalculateAllLogDataInTransaction(txn, plant.id!, plant);
+            }
+          });
         } else {
           // Old plant not found, just update
           await db.update(
@@ -136,18 +135,102 @@ class PlantRepository implements IPlantRepository {
     }
   }
 
-  /// Pflanze löschen
+  /// ✅ FIX v11: Cascading delete with transaction
+  /// Deletes plant and ALL related data to prevent orphaned records
+  ///
+  /// Deletion order (to respect foreign key constraints):
+  /// 1. Photos (via plant_logs.log_id)
+  /// 2. Plant logs
+  /// 3. Harvests
+  /// 4. Plant itself
   @override
   Future<int> delete(int id) async {
     try {
       final db = await _dbHelper.database;
-      return await db.delete(
-        'plants',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+
+      // Use transaction for atomic cascading delete
+      return await db.transaction((txn) async {
+        AppLogger.info('PlantRepo', 'Starting cascading delete for plant', 'plantId=$id');
+
+        // Step 1: Get all log IDs for this plant (needed to delete photos)
+        final logs = await txn.query(
+          'plant_logs',
+          columns: ['id'],
+          where: 'plant_id = ?',
+          whereArgs: [id],
+        );
+        final logIds = logs.map((log) => log['id'] as int).toList();
+
+        // Step 2: Delete all photos associated with these logs
+        // First, get photo file paths to delete physical files
+        int deletedPhotos = 0;
+        int deletedPhotoFiles = 0;
+        if (logIds.isNotEmpty) {
+          for (final logId in logIds) {
+            // Get photo records before deleting
+            final photos = await txn.query(
+              'photos',
+              where: 'log_id = ?',
+              whereArgs: [logId],
+            );
+
+            // Delete physical photo files from filesystem
+            for (final photo in photos) {
+              try {
+                final filePath = photo['file_path'] as String;
+                final file = File(filePath);
+                if (await file.exists()) {
+                  await file.delete();
+                  deletedPhotoFiles++;
+                  AppLogger.debug('PlantRepo', 'Deleted photo file', 'path=$filePath');
+                }
+              } catch (e) {
+                AppLogger.error('PlantRepo', 'Failed to delete photo file', e);
+                // Continue with database deletion even if file deletion fails
+              }
+            }
+
+            // Delete photo database records
+            final photoCount = await txn.delete(
+              'photos',
+              where: 'log_id = ?',
+              whereArgs: [logId],
+            );
+            deletedPhotos += photoCount;
+          }
+        }
+
+        // Step 3: Delete all plant logs
+        final deletedLogs = await txn.delete(
+          'plant_logs',
+          where: 'plant_id = ?',
+          whereArgs: [id],
+        );
+
+        // Step 4: Delete all harvests
+        final deletedHarvests = await txn.delete(
+          'harvests',
+          where: 'plant_id = ?',
+          whereArgs: [id],
+        );
+
+        // Step 5: Finally, delete the plant itself
+        final deletedPlant = await txn.delete(
+          'plants',
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+
+        AppLogger.info(
+          'PlantRepo',
+          '✅ Cascading delete completed',
+          'plant=$deletedPlant, logs=$deletedLogs, harvests=$deletedHarvests, photos=$deletedPhotos, photoFiles=$deletedPhotoFiles',
+        );
+
+        return deletedPlant;
+      });
     } catch (e, stackTrace) {
-      AppLogger.error('PlantRepository', 'Failed to delete plant', e, stackTrace);
+      AppLogger.error('PlantRepository', 'Failed to delete plant with cascading', e, stackTrace);
       rethrow;
     }
   }
@@ -192,170 +275,117 @@ class PlantRepository implements IPlantRepository {
     }
   }
 
-  /// ✅ FIX: Recalculate all log day_numbers for a plant
-  /// Called when seed date changes
-  @override
-  Future<void> recalculateLogDayNumbers(int plantId, DateTime seedDate) async {
+  /// ✅ FIX v11: Comprehensive log recalculation with transaction
+  /// This method handles ALL log recalculations in a single transaction:
+  /// 1. Deletes logs before seedDate
+  /// 2. Recalculates day_number for all remaining logs
+  /// 3. Recalculates phase and phase_day_number based on phase dates
+  ///
+  /// Called when ANY date changes (seedDate, vegDate, bloomDate, harvestDate, phaseStartDate)
+  Future<void> recalculateAllLogData(int plantId, Plant plant) async {
     final db = await _dbHelper.database;
-    AppLogger.debug('PlantRepo', 'Recalculating day_numbers for plant', 'plantId=$plantId');
 
-    // Get all logs for this plant
-    final logs = await db.query(
-      'plant_logs',
-      where: 'plant_id = ?',
-      whereArgs: [plantId],
-      orderBy: 'log_date ASC',
-    );
-
-    int updated = 0;
-    int deleted = 0;
-
-    for (final log in logs) {
-      final logDateStr = log['log_date'] as String;
-      final logDate = DateTime.parse(logDateStr);
-
-      // Check if log is before new seed date
-      final logDay = DateTime(logDate.year, logDate.month, logDate.day);
-      final seedDay = DateTime(seedDate.year, seedDate.month, seedDate.day);
-
-      if (logDay.isBefore(seedDay)) {
-        // Delete invalid logs (before seed date)
-        await db.delete('plant_logs', where: 'id = ?', whereArgs: [log['id']]);
-        deleted++;
-        AppLogger.debug('PlantRepo', 'Deleted log (before seed date)', 'logId=${log['id']}');
-      } else {
-        // Recalculate day_number
-        final newDayNumber = Validators.calculateDayNumber(logDate, seedDate);
-
-        await db.update(
-          'plant_logs',
-          {'day_number': newDayNumber},
-          where: 'id = ?',
-          whereArgs: [log['id']],
-        );
-        updated++;
-      }
-    }
-
-    AppLogger.info('PlantRepo', '✅ Updated logs and deleted invalid logs', 'updated=$updated, deleted=$deleted');
+    // Use transaction for data integrity
+    await db.transaction((txn) async {
+      await _recalculateAllLogDataInTransaction(txn, plantId, plant);
+    });
   }
 
-  /// ✅ FIX: Recalculate all phase_day_numbers for a plant
-  /// Called when phase start date changes
-  @override
-  Future<void> recalculatePhaseDayNumbers(int plantId, DateTime phaseStartDate) async {
-    final db = await _dbHelper.database;
-    AppLogger.debug('PlantRepo', 'Recalculating phase_day_numbers for plant', 'plantId=$plantId');
+  /// Internal helper: Recalculate log data within an existing transaction
+  /// This allows safe use when already inside a transaction (called from save())
+  Future<void> _recalculateAllLogDataInTransaction(
+    DatabaseExecutor txn,
+    int plantId,
+    Plant plant,
+  ) async {
+    AppLogger.debug('PlantRepo', 'Starting comprehensive log recalculation', 'plantId=$plantId');
 
-    // Get all logs for this plant
-    final logs = await db.query(
-      'plant_logs',
-      where: 'plant_id = ?',
-      whereArgs: [plantId],
-      orderBy: 'log_date ASC',
-    );
+      // Get all logs for this plant
+      final logs = await txn.query(
+        'plant_logs',
+        where: 'plant_id = ?',
+        whereArgs: [plantId],
+        orderBy: 'log_date ASC',
+      );
 
-    int updated = 0;
+      int deleted = 0;
+      int updated = 0;
 
-    for (final log in logs) {
-      final logDateStr = log['log_date'] as String;
-      final logDate = DateTime.parse(logDateStr);
+      for (final log in logs) {
+        final logDateStr = log['log_date'] as String;
+        final logDate = DateTime.parse(logDateStr);
+        final logDay = DateTime(logDate.year, logDate.month, logDate.day);
 
-      // Only update logs that are after (or on) phase start date
-      final logDay = DateTime(logDate.year, logDate.month, logDate.day);
-      final phaseDay = DateTime(phaseStartDate.year, phaseStartDate.month, phaseStartDate.day);
-
-      if (!logDay.isBefore(phaseDay)) {
-        // Recalculate phase_day_number
-        final newPhaseDayNumber = Validators.calculateDayNumber(logDate, phaseStartDate);
-
-        await db.update(
-          'plant_logs',
-          {'phase_day_number': newPhaseDayNumber},
-          where: 'id = ?',
-          whereArgs: [log['id']],
-        );
-        updated++;
-      }
-    }
-
-    AppLogger.info('PlantRepo', '✅ Updated phase_day_numbers', 'count=$updated');
-  }
-
-  /// ✅ v10: Recalculate ALL phase and phase_day_number for ALL logs based on phase history
-  /// This is called when vegDate, bloomDate, or harvestDate changes
-  @override
-  Future<void> recalculateAllPhaseDayNumbers(int plantId, Plant plant) async {
-    final db = await _dbHelper.database;
-    AppLogger.debug('PlantRepo', 'Recalculating ALL phase data for plant', 'plantId=$plantId');
-
-    // Get all logs for this plant
-    final logs = await db.query(
-      'plant_logs',
-      where: 'plant_id = ?',
-      whereArgs: [plantId],
-      orderBy: 'log_date ASC',
-    );
-
-    int updated = 0;
-
-    for (final log in logs) {
-      final logDateStr = log['log_date'] as String;
-      final logDate = DateTime.parse(logDateStr);
-      final logDay = DateTime(logDate.year, logDate.month, logDate.day);
-
-      // Determine which phase this log belongs to based on phase dates
-      String? newPhase;
-      int? newPhaseDayNumber;
-
-      // Check phases in reverse order (harvest → bloom → veg → seedling)
-      if (plant.harvestDate != null) {
-        final harvestDay = DateTime(
-          plant.harvestDate!.year,
-          plant.harvestDate!.month,
-          plant.harvestDate!.day,
-        );
-        if (!logDay.isBefore(harvestDay)) {
-          newPhase = 'HARVEST';
-          newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.harvestDate!);
+        if (plant.seedDate == null) {
+          AppLogger.error('PlantRepo', 'Plant has no seedDate, skipping log recalculation', Exception('Missing seedDate'));
+          continue;
         }
-      }
 
-      if (newPhase == null && plant.bloomDate != null) {
-        final bloomDay = DateTime(
-          plant.bloomDate!.year,
-          plant.bloomDate!.month,
-          plant.bloomDate!.day,
-        );
-        if (!logDay.isBefore(bloomDay)) {
-          newPhase = 'BLOOM';
-          newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.bloomDate!);
+        final seedDay = DateTime(plant.seedDate!.year, plant.seedDate!.month, plant.seedDate!.day);
+
+        // Step 1: Delete logs before seedDate
+        if (logDay.isBefore(seedDay)) {
+          await txn.delete('plant_logs', where: 'id = ?', whereArgs: [log['id']]);
+          deleted++;
+          AppLogger.debug('PlantRepo', 'Deleted log before seedDate', 'logId=${log['id']}');
+          continue;
         }
-      }
 
-      if (newPhase == null && plant.vegDate != null) {
-        final vegDay = DateTime(
-          plant.vegDate!.year,
-          plant.vegDate!.month,
-          plant.vegDate!.day,
-        );
-        if (!logDay.isBefore(vegDay)) {
-          newPhase = 'VEG';
-          newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.vegDate!);
+        // Step 2: Calculate day_number
+        final newDayNumber = Validators.calculateDayNumber(logDate, plant.seedDate!);
+
+        // Step 3: Determine phase and phase_day_number
+        String? newPhase;
+        int? newPhaseDayNumber;
+
+        // Check phases in reverse order (harvest → bloom → veg → seedling)
+        if (plant.harvestDate != null) {
+          final harvestDay = DateTime(
+            plant.harvestDate!.year,
+            plant.harvestDate!.month,
+            plant.harvestDate!.day,
+          );
+          if (!logDay.isBefore(harvestDay)) {
+            newPhase = 'HARVEST';
+            newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.harvestDate!);
+          }
         }
-      }
 
-      // If no specific phase date is set, default to SEEDLING
-      if (newPhase == null && plant.seedDate != null) {
-        newPhase = 'SEEDLING';
-        newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.seedDate!);
-      }
+        if (newPhase == null && plant.bloomDate != null) {
+          final bloomDay = DateTime(
+            plant.bloomDate!.year,
+            plant.bloomDate!.month,
+            plant.bloomDate!.day,
+          );
+          if (!logDay.isBefore(bloomDay)) {
+            newPhase = 'BLOOM';
+            newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.bloomDate!);
+          }
+        }
 
-      // Update log with new phase and phase_day_number
-      if (newPhase != null) {
-        await db.update(
+        if (newPhase == null && plant.vegDate != null) {
+          final vegDay = DateTime(
+            plant.vegDate!.year,
+            plant.vegDate!.month,
+            plant.vegDate!.day,
+          );
+          if (!logDay.isBefore(vegDay)) {
+            newPhase = 'VEG';
+            newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.vegDate!);
+          }
+        }
+
+        // Default to SEEDLING if no specific phase date matches
+        if (newPhase == null) {
+          newPhase = 'SEEDLING';
+          newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.seedDate!);
+        }
+
+        // Step 4: Update log with all recalculated data
+        await txn.update(
           'plant_logs',
           {
+            'day_number': newDayNumber,
             'phase': newPhase,
             'phase_day_number': newPhaseDayNumber,
           },
@@ -366,12 +396,15 @@ class PlantRepository implements IPlantRepository {
 
         AppLogger.debug(
           'PlantRepo',
-          'Updated log ${log['id']}: $logDate → $newPhase (Day $newPhaseDayNumber)',
+          'Updated log ${log['id']}: day=$newDayNumber, phase=$newPhase, phaseDay=$newPhaseDayNumber',
         );
       }
-    }
 
-    AppLogger.info('PlantRepo', '✅ Recalculated ALL phase data', 'updated=$updated logs');
+    AppLogger.info(
+      'PlantRepo',
+      '✅ Comprehensive log recalculation completed',
+      'updated=$updated, deleted=$deleted',
+    );
   }
 
   /// Get count of logs for a plant (used to show warning before seed date change)

@@ -4,6 +4,9 @@
 
 import 'enums.dart';
 
+/// Sentinel object for copyWith to distinguish between null and undefined
+const Object _undefined = Object();
+
 class Plant {
   final int? id;
   final String name;
@@ -119,55 +122,56 @@ class Plant {
   }
 
   /// Copy mit Änderungen
+  /// ✅ FIX: Nullable Felder können jetzt auf null gesetzt werden
   Plant copyWith({
     int? id,
     String? name,
-    String? breeder,
-    String? strain,
+    Object? breeder = _undefined,
+    Object? strain = _undefined,
     bool? feminized,
     SeedType? seedType,
     Medium? medium,
     PlantPhase? phase,
-    int? growId,
-    int? roomId,
-    int? rdwcSystemId,
-    int? bucketNumber,
-    DateTime? seedDate,
-    DateTime? phaseStartDate,
-    DateTime? vegDate,
-    DateTime? bloomDate,
-    DateTime? harvestDate,
+    Object? growId = _undefined,
+    Object? roomId = _undefined,
+    Object? rdwcSystemId = _undefined,
+    Object? bucketNumber = _undefined,
+    Object? seedDate = _undefined,
+    Object? phaseStartDate = _undefined,
+    Object? vegDate = _undefined,
+    Object? bloomDate = _undefined,
+    Object? harvestDate = _undefined,
     DateTime? createdAt,
-    String? createdBy,
+    Object? createdBy = _undefined,
     String? logProfileName,
     bool? archived,
-    double? currentContainerSize,
-    double? currentSystemSize,
+    Object? currentContainerSize = _undefined,
+    Object? currentSystemSize = _undefined,
   }) {
     return Plant(
       id: id ?? this.id,
       name: name ?? this.name,
-      breeder: breeder ?? this.breeder,
-      strain: strain ?? this.strain,
+      breeder: breeder == _undefined ? this.breeder : breeder as String?,
+      strain: strain == _undefined ? this.strain : strain as String?,
       feminized: feminized ?? this.feminized,
       seedType: seedType ?? this.seedType,
       medium: medium ?? this.medium,
       phase: phase ?? this.phase,
-      growId: growId ?? this.growId,
-      roomId: roomId ?? this.roomId,
-      rdwcSystemId: rdwcSystemId ?? this.rdwcSystemId,
-      bucketNumber: bucketNumber ?? this.bucketNumber,
-      seedDate: seedDate ?? this.seedDate,
-      phaseStartDate: phaseStartDate ?? this.phaseStartDate,
-      vegDate: vegDate ?? this.vegDate,
-      bloomDate: bloomDate ?? this.bloomDate,
-      harvestDate: harvestDate ?? this.harvestDate,
+      growId: growId == _undefined ? this.growId : growId as int?,
+      roomId: roomId == _undefined ? this.roomId : roomId as int?,
+      rdwcSystemId: rdwcSystemId == _undefined ? this.rdwcSystemId : rdwcSystemId as int?,
+      bucketNumber: bucketNumber == _undefined ? this.bucketNumber : bucketNumber as int?,
+      seedDate: seedDate == _undefined ? this.seedDate : seedDate as DateTime?,
+      phaseStartDate: phaseStartDate == _undefined ? this.phaseStartDate : phaseStartDate as DateTime?,
+      vegDate: vegDate == _undefined ? this.vegDate : vegDate as DateTime?,
+      bloomDate: bloomDate == _undefined ? this.bloomDate : bloomDate as DateTime?,
+      harvestDate: harvestDate == _undefined ? this.harvestDate : harvestDate as DateTime?,
       createdAt: createdAt ?? this.createdAt,
-      createdBy: createdBy ?? this.createdBy,
+      createdBy: createdBy == _undefined ? this.createdBy : createdBy as String?,
       logProfileName: logProfileName ?? this.logProfileName,
       archived: archived ?? this.archived,
-      currentContainerSize: currentContainerSize ?? this.currentContainerSize,
-      currentSystemSize: currentSystemSize ?? this.currentSystemSize,
+      currentContainerSize: currentContainerSize == _undefined ? this.currentContainerSize : currentContainerSize as double?,
+      currentSystemSize: currentSystemSize == _undefined ? this.currentSystemSize : currentSystemSize as double?,
     );
   }
 
