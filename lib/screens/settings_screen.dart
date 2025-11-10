@@ -99,28 +99,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
               const SizedBox(width: 12),
-              const Text('Expert-Modus'),
+              Text(_t['settings_expert_mode_title']),
             ],
           ),
-          content: const Text(
-            'Der Expert-Modus ist experimentell und kann noch Fehler enthalten.\n\n'
-            'Er bietet erweiterte Funktionen wie:\n'
-            '• RDWC System Management\n'
-            '• Detaillierte Nährstoff-Tracking\n'
-            '• EC/pH Drift-Analyse\n\n'
-            'Möchten Sie den Expert-Modus aktivieren?\n\n'
-            'Falls Sie unsicher sind, bleiben Sie im Normal-Modus.',
-            style: TextStyle(fontSize: 14),
+          content: Text(
+            '${_t['settings_expert_mode_warning']}\n\n'
+            '${_t['settings_expert_mode_features']}\n'
+            '${_t['settings_expert_mode_rdwc']}\n'
+            '${_t['settings_expert_mode_nutrients']}\n'
+            '${_t['settings_expert_mode_drift']}\n\n'
+            '${_t['settings_expert_mode_question']}\n\n'
+            '${_t['settings_expert_mode_unsure']}',
+            style: const TextStyle(fontSize: 14),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Normal-Modus behalten'),
+              child: Text(_t['settings_normal_mode_keep']),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              child: const Text('Expert-Modus aktivieren'),
+              child: Text(_t['settings_expert_mode_activate']),
             ),
           ],
         ),
@@ -477,8 +477,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Card(
             child: ListTile(
               leading: Icon(Icons.bug_report, color: Colors.orange[700]),
-              title: const Text('Debug Info'),
-              subtitle: Text('Theme: ${isDark ? "Dark" : "Light"}\nExpert Mode: ${_settings.isExpertMode ? "Enabled" : "Disabled"}'),
+              title: Text(_t['settings_debug_info']),
+              subtitle: Text(
+                '${_t['settings_debug_theme'].replaceAll('{theme}', isDark ? _t['dark_mode'] : _t['light_mode'])}\n'
+                '${_t['settings_debug_expert'].replaceAll('{status}', _settings.isExpertMode ? _t['expert_mode_enabled'] : _t['expert_mode_disabled'])}'
+              ),
             ),
           ),
         ],
@@ -525,18 +528,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
+      builder: (context) => Center(
         child: Card(
-          margin: EdgeInsets.all(24),
+          margin: const EdgeInsets.all(24),
           child: Padding(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
                 Text(
-                  'Creating backup...\nPlease wait!',
+                  _t['settings_creating_backup'],
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -668,18 +671,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
+        builder: (context) => Center(
           child: Card(
-            margin: EdgeInsets.all(24),
+            margin: const EdgeInsets.all(24),
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
                   Text(
-                    'Restoring backup...\nPlease wait!',
+                    _t['settings_restoring_backup'],
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -733,7 +736,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
                 Text(
-                  _t['creating_backup'],
+                  _t['settings_creating_backup'],
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),

@@ -7,8 +7,10 @@ import '../models/grow.dart';
 import '../models/room.dart';
 import '../repositories/interfaces/i_grow_repository.dart';
 import '../repositories/interfaces/i_room_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
 import '../utils/validators.dart';
 import '../utils/app_messages.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../utils/mounted_state_mixin.dart'; // ✅ FIX: Added for safe setState
 import '../di/service_locator.dart';
 
@@ -26,9 +28,11 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
   final _formKey = GlobalKey<FormState>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
 
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
 
   late DateTime _startDate;
   int? _selectedRoomId;
@@ -43,7 +47,18 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
     _descriptionController = TextEditingController(text: widget.grow.description ?? '');
     _startDate = widget.grow.startDate;
     _selectedRoomId = widget.grow.roomId;
+    _initTranslations(); // ✅ AUDIT FIX: i18n
     _loadRooms();
+  }
+
+  Future<void> _initTranslations() async {
+    // ✅ AUDIT FIX: i18n
+    final settings = await _settingsRepo.getSettings();
+    if (mounted) {
+      setState(() {
+        _t = AppTranslations(settings.language);
+      });
+    }
   }
 
   @override
@@ -106,7 +121,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Grow bearbeiten'),
+        title: Text(_t['edit_grow_title']),
         backgroundColor: const Color(0xFF004225),
         foregroundColor: Colors.white,
       ),
@@ -135,7 +150,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grow Informationen',
+          _t['add_grow_info_section'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -146,7 +161,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
         TextFormField(
           controller: _nameController,
           decoration: InputDecoration(
-            labelText: 'Name *',
+            labelText: _t['add_grow_name_label'],
             prefixIcon: Icon(Icons.eco, color: Colors.green[700]),
             border: const OutlineInputBorder(),
           ),
@@ -157,7 +172,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
         TextFormField(
           controller: _descriptionController,
           decoration: InputDecoration(
-            labelText: 'Beschreibung (optional)',
+            labelText: _t['add_grow_description_label'],
             prefixIcon: Icon(Icons.description, color: Colors.grey[600]),
             border: const OutlineInputBorder(),
           ),
@@ -172,7 +187,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Raum',
+          _t['add_grow_room_section'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -186,13 +201,13 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
           DropdownButtonFormField<int?>(
             initialValue: _selectedRoomId,
             decoration: InputDecoration(
-              labelText: 'Raum (optional)',
+              labelText: _t['add_grow_room_label'],
               prefixIcon: Icon(Icons.home, color: Colors.grey[700]),
               border: const OutlineInputBorder(),
-              helperText: 'In welchem Raum findet dieser Grow statt?',
+              helperText: _t['add_grow_room_helper'],
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('Kein Raum')),
+              DropdownMenuItem(value: null, child: Text(_t['add_grow_no_room'])),
               ..._rooms.map((room) {
                 return DropdownMenuItem(
                   value: room.id,
@@ -211,7 +226,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Start-Datum',
+          _t['add_grow_start_date_section'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -226,7 +241,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
             '${_startDate.day}.${_startDate.month}.${_startDate.year}',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
-          subtitle: const Text('Wann hast du mit diesem Grow begonnen?'),
+          subtitle: Text(_t['add_grow_start_date_subtitle']),
           trailing: const Icon(Icons.edit),
           onTap: () async {
             final date = await showDatePicker(
@@ -248,7 +263,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
     return ElevatedButton.icon(
       onPressed: _saveGrow,
       icon: const Icon(Icons.save),
-      label: const Text('Änderungen speichern'),
+      label: Text(_t['edit_grow_save_button']),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,

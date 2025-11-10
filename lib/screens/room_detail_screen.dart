@@ -4,7 +4,9 @@
 
 import 'package:flutter/material.dart';
 import '../utils/app_logger.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../models/room.dart';
+import '../models/app_settings.dart'; // ✅ AUDIT FIX: i18n
 import '../models/plant.dart';
 import '../models/hardware.dart';
 import '../models/rdwc_system.dart';
@@ -12,6 +14,7 @@ import '../models/enums.dart';
 import '../repositories/interfaces/i_plant_repository.dart';
 import '../repositories/interfaces/i_hardware_repository.dart';
 import '../repositories/interfaces/i_rdwc_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
 import 'edit_room_screen.dart';
 import 'plant_detail_screen.dart';
 import 'hardware_list_screen.dart';
@@ -31,17 +34,30 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
   final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
 
   List<Plant> _plants = [];
   List<Hardware> _hardware = [];
   RdwcSystem? _rdwcSystem;
   int _totalWattage = 0;
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _initTranslations(); // ✅ AUDIT FIX: i18n
     _loadData();
+  }
+
+  Future<void> _initTranslations() async {
+    // ✅ AUDIT FIX: i18n
+    final settings = await _settingsRepo.getSettings();
+    if (mounted) {
+      setState(() {
+        _t = AppTranslations(settings.language);
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -176,7 +192,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'RDWC System',
+                          _t['room_detail_rdwc_system'],
                           style: TextStyle(
                             fontSize: 14,
                             color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -208,7 +224,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Füllstand',
+                          _t['room_detail_fill_level'],
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -231,7 +247,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Aktuell',
+                          _t['room_detail_current'],
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -253,7 +269,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Kapazität',
+                          _t['room_detail_capacity'],
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -355,7 +371,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 if (widget.room.height > 0)
                   _buildInfoChip(
                     Icons.height,
-                    '${(widget.room.height * 100).toStringAsFixed(0)}cm Höhe',
+                    _t['room_detail_height'].replaceAll('{height}', '${(widget.room.height * 100).toStringAsFixed(0)}'),
                   ),
                 if (widget.room.wateringSystem != null)
                   _buildInfoChip(
@@ -364,7 +380,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                   ),
                 _buildInfoChip(
                   Icons.spa,
-                  '${_plants.length} Pflanze(n)',
+                  _t['room_detail_plants_count'].replaceAll('{count}', '${_plants.length}'),
                   color: Colors.green[600],
                 ),
               ],
@@ -410,11 +426,15 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
               backgroundColor: Colors.orange[700],
               child: const Icon(Icons.devices, color: Colors.white),
             ),
-            title: const Text(
-              'Hardware',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            title: Text(
+              _t['room_detail_hardware_title'],
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            subtitle: Text('${_hardware.length} Items • $_totalWattage W Gesamt'),
+            subtitle: Text(
+              _t['room_detail_hardware_subtitle']
+                  .replaceAll('{count}', '${_hardware.length}')
+                  .replaceAll('{wattage}', '$_totalWattage'),
+            ),
             trailing: IconButton(
               icon: const Icon(Icons.arrow_forward),
               onPressed: () async {
@@ -455,7 +475,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Text(
-                  '+ ${_hardware.length - 3} weitere...',
+                  _t['room_detail_more_items'].replaceAll('{count}', '${_hardware.length - 3}'),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -475,7 +495,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Keine Hardware erfasst',
+                    _t['room_detail_no_hardware'],
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[600],
@@ -483,7 +503,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Füge Hardware über den Pfeil oben hinzu',
+                    _t['room_detail_add_hardware_hint'],
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[500],
@@ -508,11 +528,13 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
               backgroundColor: Colors.green[700],
               child: const Icon(Icons.spa, color: Colors.white),
             ),
-            title: const Text(
-              'Pflanzen',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            title: Text(
+              _t['room_detail_plants_title'],
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            subtitle: Text('${_plants.length} Pflanze(n) in diesem Raum'),
+            subtitle: Text(
+              _t['room_detail_plants_subtitle'].replaceAll('{count}', '${_plants.length}'),
+            ),
           ),
           if (_plants.isNotEmpty) ...[
             const Divider(height: 1),
@@ -552,7 +574,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Keine Pflanzen in diesem Raum',
+                    _t['room_detail_no_plants'],
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[600],
@@ -560,7 +582,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Weise einer Pflanze diesen Raum zu',
+                    _t['room_detail_add_plant_hint'],
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[500],

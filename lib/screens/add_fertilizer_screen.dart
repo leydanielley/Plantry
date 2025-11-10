@@ -8,6 +8,7 @@ import '../models/app_settings.dart';
 import '../repositories/interfaces/i_fertilizer_repository.dart';
 import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/app_messages.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../di/service_locator.dart';
 
 class AddFertilizerScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
 
   bool _isLoading = true;
   AppSettings? _settings;
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
 
   @override
   void initState() {
@@ -44,6 +46,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
     if (mounted) {
       setState(() {
         _settings = settings;
+        _t = AppTranslations(settings.language); // ✅ AUDIT FIX: i18n
         _isLoading = false;
       });
     }
@@ -106,7 +109,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Neuer Dünger'),
+        title: Text(_t['add_fertilizer_title']),
         backgroundColor: const Color(0xFF004225),
         foregroundColor: Colors.white,
       ),
@@ -148,7 +151,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Füge Dünger hinzu, um sie später in Logs zu verwenden.',
+              _t['add_fertilizer_info_text'],
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.blue[700],
@@ -165,7 +168,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grundinformationen',
+          _t['add_fertilizer_basic_section'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -175,15 +178,15 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: 'Name *',
+          decoration: InputDecoration(
+            labelText: _t['add_fertilizer_name_label'],
             hintText: 'z.B. Bloom A+B',
             prefixIcon: Icon(Icons.science),
             border: OutlineInputBorder(),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Bitte Namen eingeben';
+              return _t['add_fertilizer_name_required'];
             }
             return null;
           },
@@ -191,8 +194,8 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _brandController,
-          decoration: const InputDecoration(
-            labelText: 'Hersteller',
+          decoration: InputDecoration(
+            labelText: _t['add_fertilizer_brand_label'],
             hintText: 'z.B. Canna, BioBizz, Advanced Nutrients',
             prefixIcon: Icon(Icons.business),
             border: OutlineInputBorder(),
@@ -207,7 +210,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Details',
+          _t['add_fertilizer_details_section'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -217,8 +220,8 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _npkController,
-          decoration: const InputDecoration(
-            labelText: 'NPK Verhältnis',
+          decoration: InputDecoration(
+            labelText: _t['add_fertilizer_npk_label'],
             hintText: 'z.B. 2-2-4 oder 5-4-3',
             prefixIcon: Icon(Icons.analytics),
             border: OutlineInputBorder(),
@@ -227,8 +230,8 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _typeController,
-          decoration: const InputDecoration(
-            labelText: 'Typ',
+          decoration: InputDecoration(
+            labelText: _t['add_fertilizer_type_label'],
             hintText: 'z.B. BLOOM, VEGA, ROOT, ADDITIVE',
             prefixIcon: Icon(Icons.category),
             border: OutlineInputBorder(),
@@ -238,8 +241,8 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
         TextFormField(
           controller: _descriptionController,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Beschreibung',
+          decoration: InputDecoration(
+            labelText: _t['add_fertilizer_description_label'],
             hintText: 'Zusätzliche Infos, Dosierung, etc...',
             prefixIcon: Icon(Icons.description),
             border: OutlineInputBorder(),
@@ -257,7 +260,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
         Row(
           children: [
             Text(
-              'RDWC Expert Settings',
+              _t['add_fertilizer_expert_section'],
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -272,7 +275,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                'EXPERT',
+                _t['add_fertilizer_expert_badge'],
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
@@ -296,7 +299,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Diese Werte werden für EC/PPM-Berechnungen in RDWC-Logs verwendet.',
+                  _t['add_fertilizer_expert_info'],
                   style: TextStyle(fontSize: 12, color: Colors.blue[900]),
                 ),
               ),
@@ -306,8 +309,8 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _ecValueController,
-          decoration: const InputDecoration(
-            labelText: 'EC-Wert pro ml (optional)',
+          decoration: InputDecoration(
+            labelText: _t['add_fertilizer_ec_label'],
             hintText: 'z.B. 0.5',
             helperText: 'EC-Beitrag pro ml Dünger',
             prefixIcon: Icon(Icons.science),
@@ -319,10 +322,10 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
             if (value != null && value.isNotEmpty) {
               final number = double.tryParse(value);
               if (number == null) {
-                return 'Bitte gültige Zahl eingeben';
+                return _t['add_fertilizer_validation_number'];
               }
               if (number < 0) {
-                return 'Wert muss positiv sein';
+                return _t['add_fertilizer_validation_positive'];
               }
             }
             return null;
@@ -331,8 +334,8 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _ppmValueController,
-          decoration: const InputDecoration(
-            labelText: 'PPM-Wert pro ml (optional)',
+          decoration: InputDecoration(
+            labelText: _t['add_fertilizer_ppm_label'],
             hintText: 'z.B. 250',
             helperText: 'PPM-Beitrag pro ml Dünger',
             prefixIcon: Icon(Icons.science),
@@ -344,10 +347,10 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
             if (value != null && value.isNotEmpty) {
               final number = double.tryParse(value);
               if (number == null) {
-                return 'Bitte gültige Zahl eingeben';
+                return _t['add_fertilizer_validation_number'];
               }
               if (number < 0) {
-                return 'Wert muss positiv sein';
+                return _t['add_fertilizer_validation_positive'];
               }
             }
             return null;
@@ -366,7 +369,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      child: const Text('Dünger speichern'),
+      child: Text(_t['add_fertilizer_save_button']),
     );
   }
 }

@@ -13,6 +13,7 @@ import '../repositories/interfaces/i_room_repository.dart';
 import '../repositories/interfaces/i_rdwc_repository.dart';
 import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/validators.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../di/service_locator.dart';
 
 class EditRoomScreen extends StatefulWidget {
@@ -41,6 +42,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
   int? _selectedRdwcSystemId;
   List<RdwcSystem> _rdwcSystems = [];
   AppSettings? _settings;
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
   bool _isLoading = false;
 
   @override
@@ -75,6 +77,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
       if (mounted) {
         setState(() {
           _settings = settings;
+          _t = AppTranslations(settings.language); // ✅ AUDIT FIX: i18n
           _rdwcSystems = systems;
         });
       }
@@ -142,9 +145,20 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ AUDIT FIX: Show loading until translations are initialized
+    if (_settings == null) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF004225),
+          foregroundColor: Colors.white,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Raum bearbeiten'),
+        title: Text(_t['edit_room_title']),
         backgroundColor: const Color(0xFF004225),
         foregroundColor: Colors.white,
       ),
@@ -174,7 +188,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grundinformationen',
+          _t['add_room_basic_info'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -184,8 +198,8 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: 'Name *',
+          decoration: InputDecoration(
+            labelText: _t['add_room_name_label'],
             prefixIcon: Icon(Icons.home),
             border: OutlineInputBorder(),
           ),
@@ -196,9 +210,9 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
         TextFormField(
           controller: _descriptionController,
           maxLines: 2,
-          decoration: const InputDecoration(
-            labelText: 'Beschreibung',
-            hintText: 'Optional',
+          decoration: InputDecoration(
+            labelText: _t['add_room_description_label'],
+            hintText: _t['add_room_description_hint'],
             prefixIcon: Icon(Icons.description),
             border: OutlineInputBorder(),
           ),
@@ -214,7 +228,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grow Setup',
+          _t['add_room_grow_setup'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -224,13 +238,13 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
         const SizedBox(height: 12),
         DropdownButtonFormField<GrowType?>(
           initialValue: _growType,
-          decoration: const InputDecoration(
-            labelText: 'Grow Type',
+          decoration: InputDecoration(
+            labelText: _t['add_room_grow_type'],
             prefixIcon: Icon(Icons.category),
             border: OutlineInputBorder(),
           ),
           items: [
-            const DropdownMenuItem(value: null, child: Text('Nicht angegeben')),
+            DropdownMenuItem(value: null, child: Text(_t['add_room_not_specified'])),
             ...GrowType.values.map((type) {
               return DropdownMenuItem(
                 value: type,
@@ -243,13 +257,13 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
         const SizedBox(height: 12),
         DropdownButtonFormField<WateringSystem?>(
           initialValue: _wateringSystem,
-          decoration: const InputDecoration(
-            labelText: 'Bewässerungssystem',
+          decoration: InputDecoration(
+            labelText: _t['add_room_watering_system'],
             prefixIcon: Icon(Icons.water_drop),
             border: OutlineInputBorder(),
           ),
           items: [
-            const DropdownMenuItem(value: null, child: Text('Nicht angegeben')),
+            DropdownMenuItem(value: null, child: Text(_t['add_room_not_specified'])),
             ...WateringSystem.values.map((system) {
               return DropdownMenuItem(
                 value: system,
@@ -265,13 +279,13 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
           DropdownButtonFormField<int?>(
             initialValue: _selectedRdwcSystemId,
             decoration: InputDecoration(
-              labelText: 'RDWC System (optional)',
-              helperText: 'Verknüpfe diesen Raum mit einem RDWC System',
+              labelText: _t['add_room_rdwc_system'],
+              helperText: _t['add_room_rdwc_helper'],
               prefixIcon: Icon(Icons.water, color: Colors.blue[700]),
               border: const OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('Kein RDWC System')),
+              DropdownMenuItem(value: null, child: Text(_t['add_room_no_rdwc'])),
               ..._rdwcSystems.map((system) {
                 return DropdownMenuItem(
                   value: system.id,
@@ -291,7 +305,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Abmessungen (optional)',
+          _t['add_room_dimensions'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -301,7 +315,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
         const SizedBox(height: 8),
         // ✅ BUG FIX #2: Jetzt Zentimeter statt Meter
         Text(
-          'Alle Maße in Zentimetern (cm)',
+          _t['add_room_dimensions_unit'],
           style: TextStyle(
             fontSize: 12,
             color: Colors.grey[600],
@@ -314,9 +328,9 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
               child: TextFormField(
                 controller: _widthController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Breite (cm)',  // ✅ KORRIGIERT
-                  hintText: 'z.B. 120',      // ✅ KORRIGIERT
+                decoration: InputDecoration(
+                  labelText: _t['add_room_width_label'],  // ✅ KORRIGIERT
+                  hintText: _t['add_room_width_hint'],      // ✅ KORRIGIERT
                   border: OutlineInputBorder(),
                 ),
                 // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
@@ -332,9 +346,9 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
               child: TextFormField(
                 controller: _depthController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Tiefe (cm)',   // ✅ KORRIGIERT
-                  hintText: 'z.B. 120',      // ✅ KORRIGIERT
+                decoration: InputDecoration(
+                  labelText: _t['add_room_depth_label'],   // ✅ KORRIGIERT
+                  hintText: _t['add_room_width_hint'],      // ✅ KORRIGIERT
                   border: OutlineInputBorder(),
                 ),
                 // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
@@ -350,9 +364,9 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
               child: TextFormField(
                 controller: _heightController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Höhe (cm)',    // ✅ KORRIGIERT
-                  hintText: 'z.B. 200',      // ✅ KORRIGIERT
+                decoration: InputDecoration(
+                  labelText: _t['add_room_height_label'],    // ✅ KORRIGIERT
+                  hintText: _t['add_room_height_hint'],      // ✅ KORRIGIERT
                   border: OutlineInputBorder(),
                 ),
                 // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
@@ -378,7 +392,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      child: const Text('Änderungen speichern'),
+      child: Text(_t['edit_room_save_button']),
     );
   }
 }

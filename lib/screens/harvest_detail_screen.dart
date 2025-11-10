@@ -5,12 +5,14 @@
 // Copy this ENTIRE file to: F:\ProjectX\growlog_app\lib\screens\harvest_detail_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
-import 'package:intl/intl.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../models/harvest.dart';
 import '../repositories/interfaces/i_harvest_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
 import 'edit_harvest_screen.dart';
 import 'harvest_drying_screen.dart';
 import 'harvest_curing_screen.dart';
@@ -28,15 +30,28 @@ class HarvestDetailScreen extends StatefulWidget {
 
 class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
 
   Harvest? _harvest;
   Map<String, dynamic>? _harvestWithPlant;
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _initTranslations(); // ✅ AUDIT FIX: i18n
     _loadHarvest();
+  }
+
+  Future<void> _initTranslations() async {
+    // ✅ AUDIT FIX: i18n
+    final settings = await _settingsRepo.getSettings();
+    if (mounted) {
+      setState(() {
+        _t = AppTranslations(settings.language);
+      });
+    }
   }
 
   Future<void> _loadHarvest() async {
@@ -72,8 +87,8 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Ernte löschen?'),
-        content: const Text('Möchtest du diese Ernte wirklich löschen?'),
+        title: Text(_t['harvest_detail_delete_title']),
+        content: Text(_t['harvest_detail_delete_message']),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -94,7 +109,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
         if (mounted) {
           Navigator.pop(context, true);
           AppMessages.showSuccess(context, 
-'Ernte gelöscht! 🗑️');
+_t['harvest_detail_deleted']);
         }
       } catch (e) {
         if (mounted) {
@@ -110,7 +125,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Ernte'),
+          title: Text(_t['harvest_detail_title']),
           backgroundColor: const Color(0xFF004225),
           foregroundColor: Colors.white,
         ),
@@ -121,7 +136,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
     if (_harvest == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Ernte'),
+          title: Text(_t['harvest_detail_title']),
           backgroundColor: const Color(0xFF004225),
           foregroundColor: Colors.white,
         ),
@@ -135,9 +150,9 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
                 color: Colors.red[400],
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Ernte nicht gefunden',
-                style: TextStyle(
+              Text(
+                _t['harvest_detail_not_found'],
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -168,7 +183,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ernte Details'),
+        title: Text(_t['harvest_detail_details_title']),
         backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
         actions: [
@@ -450,9 +465,9 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Ernte-Phasen',
-              style: TextStyle(
+            Text(
+              _t['harvest_detail_phases_title'],
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -480,14 +495,14 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
               children: [
                 Icon(Icons.scale, color: Colors.green[700]),
                 const SizedBox(width: 8),
-                const Text('Gewicht', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(_t['harvest_detail_weight_title'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ],
             ),
             const Divider(height: 20),
             if (_harvest!.wetWeight != null || _harvest!.dryWeight != null)
               _buildWeightVisual()
             else
-              const Text('Keine Gewichtsdaten vorhanden'),
+              Text(_t['harvest_detail_no_weight_data']),
           ],
         ),
       ),
@@ -505,11 +520,11 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
         Row(
           children: [
             if (hasWet) ...[
-              Expanded(child: _buildWeightBar('Nassgewicht', _harvest!.wetWeight!, Colors.blue, Icons.water_drop)),
+              Expanded(child: _buildWeightBar(_t['harvest_detail_wet_weight'], _harvest!.wetWeight!, Colors.blue, Icons.water_drop)),
               const SizedBox(width: 12),
             ],
             if (hasDry)
-              Expanded(child: _buildWeightBar('Trockengewicht', _harvest!.dryWeight!, Colors.green, Icons.grass)),
+              Expanded(child: _buildWeightBar(_t['harvest_detail_dry_weight'], _harvest!.dryWeight!, Colors.green, Icons.grass)),
           ],
         ),
         if (loss != null) ...[
@@ -633,7 +648,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
               if (_harvest!.curingMethod != null)
                 _buildInfoRow('Methode', _harvest!.curingMethod!),
               if (_harvest!.curingNotes != null)
-                _buildInfoRow('Notizen', _harvest!.curingNotes!),
+                _buildInfoRow(_t['harvest_detail_notes_label'], _harvest!.curingNotes!),
             ] else
               const Text('Curing noch nicht gestartet'),
           ],
@@ -654,7 +669,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
               children: [
                 Icon(Icons.science, color: Colors.blue[700]),
                 const SizedBox(width: 8),
-                const Text('Qualität', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(_t['harvest_detail_quality_title'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ],
             ),
             const Divider(height: 20),
@@ -718,7 +733,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
             if (_harvest!.rating != null) _buildRatingRow(_harvest!.rating!),
             if (_harvest!.tasteNotes != null) _buildInfoRow('Geschmack', _harvest!.tasteNotes!),
             if (_harvest!.effectNotes != null) _buildInfoRow('Wirkung', _harvest!.effectNotes!),
-            if (_harvest!.overallNotes != null) _buildInfoRow('Gesamt', _harvest!.overallNotes!),
+            if (_harvest!.overallNotes != null) _buildInfoRow(_t['harvest_detail_overall_notes'], _harvest!.overallNotes!),
           ],
         ),
       ),

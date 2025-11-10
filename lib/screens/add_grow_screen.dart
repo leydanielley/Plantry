@@ -7,8 +7,10 @@ import '../models/grow.dart';
 import '../models/room.dart';
 import '../repositories/interfaces/i_grow_repository.dart';
 import '../repositories/interfaces/i_room_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
 import '../utils/validators.dart';
 import '../utils/app_messages.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../di/service_locator.dart';
 
 class AddGrowScreen extends StatefulWidget {
@@ -22,9 +24,11 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
   final _formKey = GlobalKey<FormState>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
 
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
 
   DateTime _startDate = DateTime.now();
   int? _selectedRoomId;
@@ -35,11 +39,24 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(
-      text: 'Grow ${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}',
-    );
+    _initTranslations(); // ✅ AUDIT FIX: i18n
+    final dateStr = '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}';
+    _nameController = TextEditingController(text: 'Grow $dateStr');
     _descriptionController = TextEditingController();
     _loadRooms();
+  }
+
+  Future<void> _initTranslations() async {
+    // ✅ AUDIT FIX: i18n
+    final settings = await _settingsRepo.getSettings();
+    if (mounted) {
+      setState(() {
+        _t = AppTranslations(settings.language);
+        // Update name controller with translated default name
+        final dateStr = '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}';
+        _nameController.text = _t['add_grow_default_name'].replaceAll('{date}', dateStr);
+      });
+    }
   }
 
   @override
@@ -104,7 +121,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Neuer Grow'),
+        title: Text(_t['add_grow_title']), // ✅ i18n
         backgroundColor: const Color(0xFF004225),
         foregroundColor: Colors.white,
       ),
@@ -135,7 +152,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grow Informationen',
+          _t['add_grow_info_section'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -146,7 +163,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
         TextFormField(
           controller: _nameController,
           decoration: InputDecoration(
-            labelText: 'Name *',
+            labelText: _t['add_grow_name_label'],
             prefixIcon: Icon(Icons.eco, color: Colors.green[700]),
             border: const OutlineInputBorder(),
             helperText: 'z.B. "Grow 2025-10" oder "Winter Grow"',
@@ -159,7 +176,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
         TextFormField(
           controller: _descriptionController,
           decoration: InputDecoration(
-            labelText: 'Beschreibung (optional)',
+            labelText: _t['add_grow_description_label'],
             prefixIcon: Icon(Icons.description, color: Colors.grey[600]),
             border: const OutlineInputBorder(),
             helperText: 'z.B. "5x Wedding Cake + 3x Northern Lights"',
@@ -176,7 +193,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Raum',
+          _t['add_grow_room_section'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -190,13 +207,13 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
           DropdownButtonFormField<int?>(
             initialValue: _selectedRoomId,
             decoration: InputDecoration(
-              labelText: 'Raum (optional)',
+              labelText: _t['add_grow_room_label'],
               prefixIcon: Icon(Icons.home, color: Colors.grey[700]),
               border: const OutlineInputBorder(),
-              helperText: 'In welchem Raum findet dieser Grow statt?',
+              helperText: _t['add_grow_room_helper'],
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('Kein Raum')),
+              DropdownMenuItem(value: null, child: Text(_t['add_grow_no_room'])), // ✅ i18n
               ..._rooms.map((room) {
                 return DropdownMenuItem(
                   value: room.id,
@@ -215,7 +232,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Start-Datum',
+          _t['add_grow_start_date_section'],
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -230,7 +247,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
             '${_startDate.day}.${_startDate.month}.${_startDate.year}',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
-          subtitle: const Text('Wann hast du mit diesem Grow begonnen?'),
+          subtitle: Text(_t['add_grow_start_date_subtitle']), // ✅ i18n
           trailing: const Icon(Icons.edit),
           onTap: () async {
             final date = await showDatePicker(
@@ -261,7 +278,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
                 Icon(Icons.info_outline, color: Colors.blue[700]),
                 const SizedBox(width: 8),
                 Text(
-                  'Was ist ein Grow?',
+                  _t['add_grow_help_title'],
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -272,8 +289,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Ein Grow ist eine Gruppierung für mehrere Pflanzen. '
-              'Du kannst mehrere Pflanzen einem Grow zuordnen, um sie gemeinsam zu verwalten und zu tracken.',
+              _t['add_grow_help_text'], // ✅ i18n
               style: TextStyle(color: Colors.grey[800]),
             ),
           ],
@@ -286,7 +302,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
     return ElevatedButton.icon(
       onPressed: _saveGrow,
       icon: const Icon(Icons.add),
-      label: const Text('Grow erstellen'),
+      label: Text(_t['add_grow_create_button']), // ✅ i18n
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,

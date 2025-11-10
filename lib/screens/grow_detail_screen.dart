@@ -6,10 +6,13 @@ import 'package:flutter/material.dart';
 
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../models/grow.dart';
+import '../models/app_settings.dart'; // ✅ AUDIT FIX: i18n
 import '../models/plant.dart';
 import '../models/enums.dart';
 import '../repositories/interfaces/i_plant_repository.dart';
+import '../repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
 import '../widgets/empty_state_widget.dart';
 import 'plant_detail_screen.dart';
 import 'add_log_screen.dart';
@@ -27,13 +30,26 @@ class GrowDetailScreen extends StatefulWidget {
 
 class _GrowDetailScreenState extends State<GrowDetailScreen> {
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
   List<Plant> _plants = [];
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _initTranslations(); // ✅ AUDIT FIX: i18n
     _loadPlants();
+  }
+
+  Future<void> _initTranslations() async {
+    // ✅ AUDIT FIX: i18n
+    final settings = await _settingsRepo.getSettings();
+    if (mounted) {
+      setState(() {
+        _t = AppTranslations(settings.language);
+      });
+    }
   }
 
   Future<void> _loadPlants() async {
@@ -71,16 +87,16 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
     final choice = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Pflanze hinzufügen'),
-        content: const Text('Möchtest du eine neue Pflanze erstellen oder eine vorhandene Pflanze diesem Grow zuweisen?'),
+        title: Text(_t['grow_detail_add_plant_dialog_title']),
+        content: Text(_t['grow_detail_add_plant_dialog_content']),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop('existing'),
-            child: const Text('Vorhandene zuweisen'),
+            child: Text(_t['grow_detail_assign_existing']),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop('new'),
-            child: const Text('Neue erstellen'),
+            child: Text(_t['grow_detail_create_new']),
           ),
         ],
       ),
@@ -111,7 +127,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
 
     if (availablePlants.isEmpty) {
       if (mounted) {
-        AppMessages.showSuccess(context, 'Keine vorhandenen Pflanzen verfügbar. Erstelle erst eine neue Pflanze!');
+        AppMessages.showSuccess(context, _t['grow_detail_no_available_plants']);
       }
       return;
     }
@@ -123,7 +139,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return AlertDialog(
-          title: const Text('Pflanze auswählen'),
+          title: Text(_t['grow_detail_select_plant_title']),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
@@ -144,7 +160,11 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
                     ),
                   ),
                   title: Text(plant.name),
-                  subtitle: Text('${plant.strain ?? 'Unknown'} • Tag ${plant.totalDays}'),
+                  subtitle: Text(
+                    _t['grow_detail_plant_strain_days']
+                        .replaceAll('{strain}', plant.strain ?? 'Unknown')
+                        .replaceAll('{days}', '${plant.totalDays}'),
+                  ),
                   onTap: () => Navigator.of(context).pop(plant),
                 );
               },
@@ -153,7 +173,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Abbrechen'),
+              child: Text(_t['grow_detail_cancel']),
             ),
           ],
         );
@@ -169,7 +189,10 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
       _loadPlants();
       
       if (mounted) {
-        AppMessages.showSuccess(context, '${selectedPlant.name} wurde dem Grow hinzugefügt! 🌱');
+        AppMessages.showSuccess(
+          context,
+          _t['grow_detail_plant_assigned'].replaceAll('{name}', selectedPlant.name),
+        );
       }
     } catch (e) {
       AppLogger.error('GrowDetailScreen', 'Error assigning plant: $e');
@@ -181,7 +204,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
 
   Future<void> _bulkLog() async {
     if (_plants.isEmpty) {
-      AppMessages.showSuccess(context, 'Keine Pflanzen in diesem Grow! Füge erst Pflanzen hinzu.');
+      AppMessages.showSuccess(context, _t['grow_detail_no_plants_for_bulk']);
       return;
     }
 
@@ -221,7 +244,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
               onPressed: _showAddPlantOptions,
               backgroundColor: Colors.green[700],
               icon: const Icon(Icons.add),
-              label: const Text('Pflanze hinzufügen'),
+              label: Text(_t['grow_detail_add_plant_dialog_title']),
             )
           : Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -231,7 +254,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
                   onPressed: _showAddPlantOptions,
                   backgroundColor: Colors.green[700],
                   icon: const Icon(Icons.add),
-                  label: const Text('Pflanze'),
+                  label: Text(_t['grow_detail_plant_tab']),
                 ),
                 const SizedBox(width: 12),
                 FloatingActionButton.extended(
@@ -239,7 +262,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
                   onPressed: _bulkLog,
                   backgroundColor: Colors.blue[700],
                   icon: const Icon(Icons.edit_note),
-                  label: const Text('Massen-Log'),
+                  label: Text(_t['grow_detail_bulk_log_tab']),
                 ),
               ],
             ),
@@ -335,13 +358,12 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
     );
   }
 
-  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
-  /// NOTE: Hardcoded German strings to be migrated in future i18n cleanup
+  /// ✅ AUDIT FIX: Now using translations
   Widget _buildEmptyState() {
-    return const EmptyStateWidget(
+    return EmptyStateWidget(
       icon: Icons.spa,
-      title: 'Keine Pflanzen in diesem Grow',
-      subtitle: 'Füge Pflanzen zu diesem Grow hinzu!\n\nTipp: Beim Erstellen einer Pflanze kannst\ndu sie einem Grow zuweisen.',
+      title: _t['grow_detail_no_plants_title'],
+      subtitle: _t['grow_detail_no_plants_subtitle'],
     );
   }
 

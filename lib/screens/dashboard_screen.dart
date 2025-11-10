@@ -128,7 +128,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             _buildActionCard(
               'assets/icons/plant_icon.png',
               _t['plants'],
-              'Manage plants',
+              _t['dashboard_plants_subtitle'], // ✅ i18n
               isDark,
                   () => Navigator.of(context).push(
                 MaterialPageRoute(
@@ -141,7 +141,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             _buildActionCard(
               'assets/icons/grows_icon.png',
               _t['grows'],
-              'Organize grows',
+              _t['dashboard_grows_subtitle'], // ✅ i18n
               isDark,
                   () => Navigator.of(context).push(
                 MaterialPageRoute(
@@ -154,7 +154,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             _buildActionCard(
               'assets/icons/room_icon.png',
               _t['rooms'],
-              'Rooms & Hardware',
+              _t['dashboard_rooms_subtitle'], // ✅ i18n
               isDark,
                   () => Navigator.of(context).push(
                 MaterialPageRoute(
@@ -167,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             _buildActionCard(
               'assets/icons/fertilizer_icon.png',
               _t['fertilizers'],
-              'Manage fertilizers',
+              _t['dashboard_fertilizers_subtitle'], // ✅ i18n
               isDark,
                   () => Navigator.of(context).push(
                 MaterialPageRoute(
@@ -179,8 +179,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
             _buildActionCard(
               'assets/icons/harvest_icon.png',
-              'Harvests',
-              'Harvest tracking',
+              _t['dashboard_harvests_title'], // ✅ i18n
+              _t['dashboard_harvests_subtitle'], // ✅ i18n
               isDark,
                   () => Navigator.of(context).push(
                 MaterialPageRoute(
@@ -195,7 +195,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               _buildActionCard(
                 'assets/icons/fertilizer_icon.png', // Reusing icon for now
                 _t['rdwc_systems'],
-                'RDWC water tracking',
+                _t['dashboard_rdwc_subtitle'], // ✅ i18n
                 isDark,
                     () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -206,8 +206,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               const SizedBox(height: 12),
               _buildActionCard(
                 'assets/icons/fertilizer_icon.png', // Reusing icon for now
-                'Nutrient Calculator',
-                'Universal calculator for nutrient mixing',
+                _t['dashboard_nutrient_calculator'], // ✅ i18n
+                _t['dashboard_nutrient_calculator_subtitle'], // ✅ i18n
                 isDark,
                     () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -226,7 +226,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 const Text('🌿', style: TextStyle(fontSize: 16)),
                 const SizedBox(width: 8),
                 Text(
-                  'Plantry v1.0',
+                  _t['dashboard_app_version'], // ✅ i18n
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isDark ? Colors.grey[600] : Colors.grey[500],
                   ),
