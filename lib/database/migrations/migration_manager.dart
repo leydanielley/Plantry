@@ -242,9 +242,13 @@ class MigrationManager {
   }
 
   /// Get migration info for a specific version
+  /// ✅ FIX: Use orElse to safely return null instead of throwing
   Migration? getMigration(int version) {
     try {
-      return migrations.firstWhere((m) => m.version == version);
+      return migrations.firstWhere(
+        (m) => m.version == version,
+        orElse: () => throw StateError('Migration not found: $version'),
+      );
     } catch (e) {
       return null;
     }

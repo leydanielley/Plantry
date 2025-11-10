@@ -36,6 +36,8 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
   }
 
   Future<void> _loadPlants() async {
+    // ✅ FIX: Add mounted check before setState
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {

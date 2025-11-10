@@ -111,6 +111,11 @@ class MockPlantRepository implements IPlantRepository {
         .toList();
   }
 
+  @override
+  Future<int> countLogsToBeDeleted(int plantId, DateTime newSeedDate) async {
+    return 0; // Mock implementation
+  }
+
   // Helper methods for testing
   void clear() {
     _plants.clear();

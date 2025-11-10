@@ -33,14 +33,15 @@ class RdwcSystem {
   final DateTime createdAt;
   final bool archived;
 
+  // ✅ FIX: Replace assertions with safe validation and clamping
   RdwcSystem({
     this.id,
-    required this.name,
+    required String name,
     this.roomId,
     this.growId,
-    required this.maxCapacity,
-    this.currentLevel = 0.0,
-    this.bucketCount = 4,           // Default: 4 buckets
+    required double maxCapacity,
+    double currentLevel = 0.0,
+    int bucketCount = 4,           // Default: 4 buckets
     this.description,
     this.pumpBrand,
     this.pumpModel,
@@ -57,11 +58,12 @@ class RdwcSystem {
     this.accessories,
     DateTime? createdAt,
     this.archived = false,
-  }) : assert(name.isNotEmpty, 'Name cannot be empty'),
-       assert(maxCapacity > 0, 'Max capacity must be greater than 0'),
-       assert(currentLevel >= 0, 'Current level cannot be negative'),
-       assert(currentLevel <= maxCapacity, 'Current level cannot exceed max capacity'),
-       assert(bucketCount > 0, 'Bucket count must be greater than 0'),
+  }) :
+       // ✅ FIX: Validate and clamp values instead of assertions
+       name = name.trim().isEmpty ? 'Unnamed System' : name,
+       maxCapacity = maxCapacity > 0 ? maxCapacity : 100.0,
+       currentLevel = currentLevel < 0 ? 0.0 : (currentLevel > maxCapacity ? maxCapacity : currentLevel),
+       bucketCount = bucketCount > 0 ? bucketCount : 1,
        createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Create from database map

@@ -42,6 +42,9 @@ class LogProvider with ChangeNotifier {
   // STATE
   // ═══════════════════════════════════════════
 
+  /// ✅ FIX: Track dispose state to prevent notifyListeners after dispose
+  bool _disposed = false;
+
   /// Logs for a specific plant
   AsyncValue<List<PlantLog>> _logsForPlant = const Loading();
 
@@ -81,7 +84,7 @@ class LogProvider with ChangeNotifier {
 
     _currentPlantId = plantId;
     _logsForPlant = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final logs = await _repository.findByPlant(
@@ -96,7 +99,7 @@ class LogProvider with ChangeNotifier {
       AppLogger.error('LogProvider', 'Failed to load logs', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Load logs with full details (includes fertilizers/photos)
@@ -104,7 +107,7 @@ class LogProvider with ChangeNotifier {
     AppLogger.debug('LogProvider', 'Loading logs with details', plantId);
 
     _logsWithDetails = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final logs = await _repository.getLogsWithDetails(plantId);
@@ -118,7 +121,7 @@ class LogProvider with ChangeNotifier {
       AppLogger.error('LogProvider', 'Failed to load logs with details', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Load a single log by ID
@@ -126,7 +129,7 @@ class LogProvider with ChangeNotifier {
     AppLogger.debug('LogProvider', 'Loading log', id);
 
     _currentLog = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final log = await _repository.findById(id);
@@ -141,7 +144,7 @@ class LogProvider with ChangeNotifier {
       AppLogger.error('LogProvider', 'Failed to load log', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Load recent activity across all plants
@@ -149,7 +152,7 @@ class LogProvider with ChangeNotifier {
     AppLogger.debug('LogProvider', 'Loading recent activity', 'limit=$limit');
 
     _recentActivity = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final logs = await _repository.getRecentActivity(limit: limit);
@@ -160,7 +163,7 @@ class LogProvider with ChangeNotifier {
       AppLogger.error('LogProvider', 'Failed to load recent activity', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Save a log (create or update)
@@ -299,7 +302,7 @@ class LogProvider with ChangeNotifier {
   /// Clear current log selection
   void clearCurrentLog() {
     _currentLog = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Clear all logs state
@@ -309,6 +312,24 @@ class LogProvider with ChangeNotifier {
     _recentActivity = const Loading();
     _logsWithDetails = const Loading();
     _currentPlantId = null;
-    notifyListeners();
+    _safeNotifyListeners();
+  }
+
+  // ═══════════════════════════════════════════
+  // LIFECYCLE
+  // ═══════════════════════════════════════════
+
+  /// ✅ FIX: Override dispose to mark provider as disposed
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  /// ✅ FIX: Safe notifyListeners that checks dispose state
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 }

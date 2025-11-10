@@ -111,7 +111,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 decoration: BoxDecoration(
                   color: Colors.purple[50],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.purple[200]!),
+                  border: Border.all(color: Colors.purple[200] ?? Colors.purple),
                 ),
                 child: Row(
                   children: [
@@ -234,7 +234,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 decoration: BoxDecoration(
                   color: Colors.purple[50],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.purple[200]!),
+                  border: Border.all(color: Colors.purple[200] ?? Colors.purple),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +330,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: Colors.grey[300] ?? Colors.grey),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

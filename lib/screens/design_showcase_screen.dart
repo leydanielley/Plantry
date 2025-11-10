@@ -17,10 +17,10 @@ class DesignShowcaseScreen extends StatelessWidget {
       ),
       body: MultiColorGradientBackground(
         gradients: [
-          [Colors.green[100]!, Colors.blue[100]!],
-          [Colors.blue[100]!, Colors.purple[100]!],
-          [Colors.purple[100]!, Colors.pink[100]!],
-          [Colors.pink[100]!, Colors.green[100]!],
+          [Colors.green[100] ?? Colors.green, Colors.blue[100] ?? Colors.blue],
+          [Colors.blue[100] ?? Colors.blue, Colors.purple[100] ?? Colors.purple],
+          [Colors.purple[100] ?? Colors.purple, Colors.pink[100] ?? Colors.pink],
+          [Colors.pink[100] ?? Colors.pink, Colors.green[100] ?? Colors.green],
         ],
         duration: const Duration(seconds: 5),
         child: SingleChildScrollView(

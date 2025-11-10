@@ -55,7 +55,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 color: Colors.green[50],
                 border: Border(
                   left: BorderSide(
-                    color: Colors.green[400]!,
+                    color: Colors.green[400] ?? Colors.green,
                     width: 4,
                   ),
                 ),

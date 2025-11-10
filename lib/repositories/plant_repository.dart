@@ -275,6 +275,88 @@ class PlantRepository implements IPlantRepository {
     }
   }
 
+  /// ✅ NEW: Count how many logs would be deleted if seedDate changes
+  /// This allows UI to warn user before data loss
+  @override
+  Future<int> countLogsToBeDeleted(int plantId, DateTime newSeedDate) async {
+    try {
+      final db = await _dbHelper.database;
+      final seedDay = DateTime(newSeedDate.year, newSeedDate.month, newSeedDate.day);
+
+      final result = await db.rawQuery('''
+        SELECT COUNT(*) as count
+        FROM plant_logs
+        WHERE plant_id = ?
+          AND DATE(log_date) < DATE(?)
+      ''', [plantId, seedDay.toIso8601String()]);
+
+      return Sqflite.firstIntValue(result) ?? 0;
+    } catch (e) {
+      AppLogger.error('PlantRepository', 'Error counting logs to delete', e);
+      return 0;
+    }
+  }
+
+  /// ✅ REFACTOR: Extract phase determination logic for better maintainability
+  /// Determines which phase a log falls into based on plant's phase dates
+  /// Returns Map with 'phase' (String) and 'phaseDayNumber' (int)
+  Map<String, dynamic> _determinePhaseForLog(DateTime logDate, Plant plant) {
+    final logDay = DateTime(logDate.year, logDate.month, logDate.day);
+
+    // Check phases in reverse chronological order (harvest → bloom → veg → seedling)
+
+    // Check harvest phase
+    if (plant.harvestDate != null) {
+      final harvestDay = DateTime(
+        plant.harvestDate!.year,
+        plant.harvestDate!.month,
+        plant.harvestDate!.day,
+      );
+      if (!logDay.isBefore(harvestDay)) {
+        return {
+          'phase': 'HARVEST',
+          'phaseDayNumber': Validators.calculateDayNumber(logDate, plant.harvestDate!),
+        };
+      }
+    }
+
+    // Check bloom phase
+    if (plant.bloomDate != null) {
+      final bloomDay = DateTime(
+        plant.bloomDate!.year,
+        plant.bloomDate!.month,
+        plant.bloomDate!.day,
+      );
+      if (!logDay.isBefore(bloomDay)) {
+        return {
+          'phase': 'BLOOM',
+          'phaseDayNumber': Validators.calculateDayNumber(logDate, plant.bloomDate!),
+        };
+      }
+    }
+
+    // Check veg phase
+    if (plant.vegDate != null) {
+      final vegDay = DateTime(
+        plant.vegDate!.year,
+        plant.vegDate!.month,
+        plant.vegDate!.day,
+      );
+      if (!logDay.isBefore(vegDay)) {
+        return {
+          'phase': 'VEG',
+          'phaseDayNumber': Validators.calculateDayNumber(logDate, plant.vegDate!),
+        };
+      }
+    }
+
+    // Default to seedling phase
+    return {
+      'phase': 'SEEDLING',
+      'phaseDayNumber': Validators.calculateDayNumber(logDate, plant.seedDate!),
+    };
+  }
+
   /// ✅ FIX v11: Comprehensive log recalculation with transaction
   /// This method handles ALL log recalculations in a single transaction:
   /// 1. Deletes logs before seedDate
@@ -334,52 +416,10 @@ class PlantRepository implements IPlantRepository {
         // Step 2: Calculate day_number
         final newDayNumber = Validators.calculateDayNumber(logDate, plant.seedDate!);
 
-        // Step 3: Determine phase and phase_day_number
-        String? newPhase;
-        int? newPhaseDayNumber;
-
-        // Check phases in reverse order (harvest → bloom → veg → seedling)
-        if (plant.harvestDate != null) {
-          final harvestDay = DateTime(
-            plant.harvestDate!.year,
-            plant.harvestDate!.month,
-            plant.harvestDate!.day,
-          );
-          if (!logDay.isBefore(harvestDay)) {
-            newPhase = 'HARVEST';
-            newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.harvestDate!);
-          }
-        }
-
-        if (newPhase == null && plant.bloomDate != null) {
-          final bloomDay = DateTime(
-            plant.bloomDate!.year,
-            plant.bloomDate!.month,
-            plant.bloomDate!.day,
-          );
-          if (!logDay.isBefore(bloomDay)) {
-            newPhase = 'BLOOM';
-            newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.bloomDate!);
-          }
-        }
-
-        if (newPhase == null && plant.vegDate != null) {
-          final vegDay = DateTime(
-            plant.vegDate!.year,
-            plant.vegDate!.month,
-            plant.vegDate!.day,
-          );
-          if (!logDay.isBefore(vegDay)) {
-            newPhase = 'VEG';
-            newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.vegDate!);
-          }
-        }
-
-        // Default to SEEDLING if no specific phase date matches
-        if (newPhase == null) {
-          newPhase = 'SEEDLING';
-          newPhaseDayNumber = Validators.calculateDayNumber(logDate, plant.seedDate!);
-        }
+        // Step 3: Determine phase and phase_day_number using extracted helper
+        final phaseInfo = _determinePhaseForLog(logDate, plant);
+        final newPhase = phaseInfo['phase'] as String;
+        final newPhaseDayNumber = phaseInfo['phaseDayNumber'] as int;
 
         // Step 4: Update log with all recalculated data
         await txn.update(

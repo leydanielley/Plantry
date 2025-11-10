@@ -137,7 +137,7 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
 
   Future<void> _loadSettings() async {
     try {
-      // Timeout nach 10 Sekunden - verhindert unendliches Hängen
+      // Timeout claudenach 10 Sekunden - verhindert unendliches Hängen
       final settings = await _settingsRepo.getSettings().timeout(
         const Duration(seconds: 10),
         onTimeout: () {

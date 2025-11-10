@@ -1,6 +1,7 @@
 // =============================================
 // GROWLOG - Database Helper (✅ BUG FIX #4: SeedType CHECK korrigiert)
 // =============================================
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import 'package:sqflite/sqflite.dart';
@@ -12,7 +13,7 @@ import 'database_recovery.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static bool _isInitializing = false;
+  static Completer<Database>? _initCompleter;
 
   DatabaseHelper._init();
 
@@ -23,34 +24,43 @@ class DatabaseHelper {
     _database = db;
   }
 
+  // ✅ FIX: Use Completer instead of busy-wait polling to prevent deadlock
   Future<Database> get database async {
+    // If database is already initialized, return it
     if (_database != null) return _database!;
 
-    if (_isInitializing) {
-      // Warte maximal 15 Sekunden auf Initialisierung
-      final timeout = DateTime.now().add(const Duration(seconds: 15));
-      while (_isInitializing && DateTime.now().isBefore(timeout)) {
-        await Future.delayed(const Duration(milliseconds: 50));
-      }
-
-      if (_database != null) return _database!;
-
-      // Timeout erreicht - Force-Reset
-      if (_isInitializing) {
-        AppLogger.error('DatabaseHelper', 'Database initialization deadlock detected - forcing reset');
-        _isInitializing = false;
+    // If initialization is already in progress, wait for it to complete
+    if (_initCompleter != null) {
+      try {
+        return await _initCompleter!.future.timeout(
+          const Duration(seconds: 15),
+          onTimeout: () {
+            AppLogger.error('DatabaseHelper', 'Database initialization timeout');
+            throw TimeoutException('Database initialization took too long');
+          },
+        );
+      } catch (e) {
+        AppLogger.error('DatabaseHelper', 'Database initialization failed while waiting', e);
+        rethrow;
       }
     }
 
-    _isInitializing = true;
+    // Start new initialization
+    _initCompleter = Completer<Database>();
+
     try {
       _database = await _initDB('growlog.db');
+      _initCompleter!.complete(_database!);
       return _database!;
     } catch (e, stackTrace) {
       AppLogger.error('DatabaseHelper', 'Database initialization failed', e, stackTrace);
+      _initCompleter!.completeError(e, stackTrace);
       rethrow;
     } finally {
-      _isInitializing = false;
+      // Clear completer after a delay to allow all waiters to receive the result
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _initCompleter = null;
+      });
     }
   }
 

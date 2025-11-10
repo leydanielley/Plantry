@@ -210,17 +210,19 @@ class Harvest {
   }
 
   /// Berechne Trocknungs-Tage automatisch
+  /// ✅ FIX: Add +1 to include both start and end dates (was off-by-one)
   int? get calculatedDryingDays {
     if (dryingStartDate != null && dryingEndDate != null) {
-      return dryingEndDate!.difference(dryingStartDate!).inDays;
+      return dryingEndDate!.difference(dryingStartDate!).inDays + 1;
     }
     return dryingDays;
   }
 
   /// Berechne Curing-Tage automatisch
+  /// ✅ FIX: Add +1 to include both start and end dates (was off-by-one)
   int? get calculatedCuringDays {
     if (curingStartDate != null && curingEndDate != null) {
-      return curingEndDate!.difference(curingStartDate!).inDays;
+      return curingEndDate!.difference(curingStartDate!).inDays + 1;
     }
     return curingDays;
   }
@@ -240,8 +242,13 @@ class Harvest {
   }
 
   /// Gewichtsverlust in Prozent
+  /// ✅ FIX: Prevent negative percentages when dryWeight > wetWeight
   double? get weightLossPercentage {
     if (wetWeight != null && dryWeight != null && wetWeight! > 0) {
+      // Validate that dry weight is not greater than wet weight
+      if (dryWeight! > wetWeight!) {
+        return 0.0; // Invalid data, return 0 instead of negative
+      }
       return ((wetWeight! - dryWeight!) / wetWeight!) * 100;
     }
     return null;

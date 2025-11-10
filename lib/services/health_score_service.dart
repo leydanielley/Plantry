@@ -2,8 +2,11 @@
 // GROWLOG - Health Score Service
 // =============================================
 
+import 'dart:math';
+
 import '../models/plant.dart';
 import '../models/health_score.dart';
+import '../models/enums.dart';  // For PlantPhase
 import '../repositories/interfaces/i_plant_log_repository.dart';
 import '../repositories/interfaces/i_photo_repository.dart';
 import '../utils/app_logger.dart';
@@ -27,16 +30,16 @@ class HealthScoreService implements IHealthScoreService {
       final warnings = <String>[];
       final recommendations = <String>[];
 
-      // Factor 1: Watering Regularity (30%)
-      final wateringScore = await _calculateWateringScore(plant.id!, warnings, recommendations);
+      // Factor 1: Watering Regularity (30%) - Phase-specific
+      final wateringScore = await _calculateWateringScore(plant.id!, plant.phase, warnings, recommendations);
       factors['watering'] = wateringScore;
 
       // Factor 2: pH Stability (25%)
       final phScore = await _calculatePhScore(plant.id!, warnings, recommendations);
       factors['ph_stability'] = phScore;
 
-      // Factor 3: EC/Nutrient Trends (20%)
-      final ecScore = await _calculateEcScore(plant.id!, warnings, recommendations);
+      // Factor 3: EC/Nutrient Trends (20%) - Phase-specific
+      final ecScore = await _calculateEcScore(plant.id!, plant.phase, warnings, recommendations);
       factors['nutrient_health'] = ecScore;
 
       // Factor 4: Photo Documentation (15%)
@@ -73,12 +76,47 @@ class HealthScoreService implements IHealthScoreService {
   }
 
   // ============================================================
+  // PHASE-SPECIFIC THRESHOLDS
+  // ============================================================
+
+  /// Get phase-specific watering interval thresholds (in days)
+  Map<String, int> _getWateringThresholds(PlantPhase phase) {
+    switch (phase) {
+      case PlantPhase.seedling:
+        return {'warning': 2, 'critical': 3};  // Seedlings need frequent watering
+      case PlantPhase.veg:
+        return {'warning': 3, 'critical': 5};  // Veg phase moderate watering
+      case PlantPhase.bloom:
+        return {'warning': 2, 'critical': 4};  // Bloom needs consistent watering
+      case PlantPhase.harvest:
+      case PlantPhase.archived:
+        return {'warning': 7, 'critical': 14};  // Less critical after harvest
+    }
+  }
+
+  /// Get phase-specific EC/PPM acceptable ranges
+  Map<String, double> _getEcThresholds(PlantPhase phase) {
+    switch (phase) {
+      case PlantPhase.seedling:
+        return {'min': 0.3, 'max': 1.2};  // Low EC for seedlings
+      case PlantPhase.veg:
+        return {'min': 0.8, 'max': 2.0};  // Moderate EC for veg
+      case PlantPhase.bloom:
+        return {'min': 1.0, 'max': 2.5};  // Higher EC for bloom
+      case PlantPhase.harvest:
+      case PlantPhase.archived:
+        return {'min': 0.0, 'max': 3.0};  // Less strict after harvest
+    }
+  }
+
+  // ============================================================
   // FACTOR CALCULATIONS
   // ============================================================
 
-  /// Factor 1: Watering Regularity (30%)
+  /// Factor 1: Watering Regularity (30%) - Phase-specific thresholds
   Future<double> _calculateWateringScore(
     int plantId,
+    PlantPhase phase,
     List<String> warnings,
     List<String> recommendations,
   ) async {
@@ -105,18 +143,33 @@ class HealthScoreService implements IHealthScoreService {
         intervals.add(daysDiff);
       }
 
+      // ✅ FIX: Prevent crash if intervals is empty
       if (intervals.isEmpty) return 70.0;
 
       // Calculate standard deviation (measure of consistency)
+      // Additional safety check to prevent reduce() crash
+      if (intervals.length == 1) {
+        // With only one interval, there's no variance to calculate
+        final thresholds = _getWateringThresholds(phase);
+        final warningDays = thresholds['warning']!;
+        if (intervals.first <= warningDays) return 90.0;
+        return 75.0;
+      }
+
       final mean = intervals.reduce((a, b) => a + b) / intervals.length;
       final variance = intervals.map((i) => (i - mean) * (i - mean)).reduce((a, b) => a + b) / intervals.length;
-      final stdDev = variance.isNaN ? 0.0 : variance;
+      final stdDev = variance.isNaN ? 0.0 : sqrt(variance);
+
+      // Get phase-specific thresholds
+      final thresholds = _getWateringThresholds(phase);
+      final warningDays = thresholds['warning']!;
+      final criticalDays = thresholds['critical']!;
 
       // Check last watering
       final daysSinceLastWater = DateTime.now().difference(waterLogs.last.logDate).inDays;
 
-      if (daysSinceLastWater > 5) {
-        warnings.add('Zuletzt vor $daysSinceLastWater Tagen gegossen');
+      if (daysSinceLastWater > warningDays) {
+        warnings.add('Zuletzt vor $daysSinceLastWater Tagen gegossen (${phase.name} Phase)');
         recommendations.add('Prüfe, ob die Pflanze Wasser braucht');
       }
 
@@ -130,12 +183,12 @@ class HealthScoreService implements IHealthScoreService {
         recommendations.add('Versuche es regelmäßiger');
       }
 
-      // Penalty for long time since last watering
-      if (daysSinceLastWater > 7) {
+      // Phase-specific penalty for time since last watering
+      if (daysSinceLastWater > criticalDays) {
         score -= 30;
-      } else if (daysSinceLastWater > 5) {
+      } else if (daysSinceLastWater > warningDays) {
         score -= 15;
-      } else if (daysSinceLastWater > 3) {
+      } else if (daysSinceLastWater > (warningDays - 1)) {
         score -= 5;
       }
 
@@ -166,6 +219,9 @@ class HealthScoreService implements IHealthScoreService {
       // Get recent pH values (last 10 logs)
       phLogs.sort((a, b) => b.logDate.compareTo(a.logDate));
       final recentPh = phLogs.take(10).map((l) => l.phIn!).toList();
+
+      // ✅ FIX: Additional safety check before reduce
+      if (recentPh.isEmpty) return 70.0;
 
       // Calculate pH statistics
       final avgPh = recentPh.reduce((a, b) => a + b) / recentPh.length;
@@ -204,6 +260,7 @@ class HealthScoreService implements IHealthScoreService {
   /// Factor 3: EC/Nutrient Health (20%)
   Future<double> _calculateEcScore(
     int plantId,
+    PlantPhase phase,
     List<String> warnings,
     List<String> recommendations,
   ) async {
@@ -223,7 +280,15 @@ class HealthScoreService implements IHealthScoreService {
       ecLogs.sort((a, b) => b.logDate.compareTo(a.logDate));
       final recentEc = ecLogs.take(10).map((l) => l.ecIn!).toList();
 
+      // ✅ FIX: Additional safety check before reduce
+      if (recentEc.isEmpty) return 70.0;
+
       final avgEc = recentEc.reduce((a, b) => a + b) / recentEc.length;
+
+      // Get phase-specific EC thresholds
+      final thresholds = _getEcThresholds(phase);
+      final minEc = thresholds['min']!;
+      final maxEc = thresholds['max']!;
 
       double score = 100.0;
 
@@ -239,14 +304,14 @@ class HealthScoreService implements IHealthScoreService {
         }
       }
 
-      // Check if EC is reasonable
-      if (avgEc > 3.0) {
+      // Phase-specific EC range checking
+      if (avgEc > maxEc) {
         score -= 25;
-        warnings.add('EC sehr hoch (${avgEc.toStringAsFixed(2)})');
+        warnings.add('EC zu hoch für ${phase.name} Phase (${avgEc.toStringAsFixed(2)} > $maxEc)');
         recommendations.add('EC reduzieren, um Nährstoffverbrennung zu vermeiden');
-      } else if (avgEc < 0.3) {
+      } else if (avgEc < minEc) {
         score -= 15;
-        warnings.add('EC sehr niedrig');
+        warnings.add('EC zu niedrig für ${phase.name} Phase (${avgEc.toStringAsFixed(2)} < $minEc)');
         recommendations.add('Mehr Nährstoffe geben');
       }
 

@@ -97,7 +97,8 @@ class DriftChart extends StatelessWidget {
             horizontalInterval: (maxY - minY) / 5,
             getDrawingHorizontalLine: (value) {
               return FlLine(
-                color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                // ✅ FIX: Replace force unwrap with null-aware operator
+                color: isDark ? (Colors.grey[800] ?? Colors.grey) : (Colors.grey[300] ?? Colors.grey),
                 strokeWidth: 1,
               );
             },
@@ -140,7 +141,8 @@ class DriftChart extends StatelessWidget {
             horizontalLines: [
               HorizontalLine(
                 y: 0,
-                color: isDark ? Colors.grey[700]! : Colors.grey[400]!,
+                // ✅ FIX: Replace force unwrap with null-aware operator
+                color: isDark ? (Colors.grey[700] ?? Colors.grey) : (Colors.grey[400] ?? Colors.grey),
                 strokeWidth: 2,
                 dashArray: [5, 5],
               ),

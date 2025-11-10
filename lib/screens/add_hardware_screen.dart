@@ -415,7 +415,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
           decoration: BoxDecoration(
             color: Colors.orange[50],
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.orange[200]!),
+            border: Border.all(color: Colors.orange[200] ?? Colors.orange),
           ),
           child: Row(
             children: [
@@ -869,7 +869,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: BoxDecoration(
               color: Colors.blue[50],
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue[200]!),
+              border: Border.all(color: Colors.blue[200] ?? Colors.blue),
             ),
             child: Row(
               children: [
@@ -967,7 +967,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: BoxDecoration(
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[300]!),
+              border: Border.all(color: Colors.grey[300] ?? Colors.grey),
             ),
             child: const Text(
               'Nutze das Feld "Zusätzliche Spezifikationen" für Details',

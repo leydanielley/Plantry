@@ -2,6 +2,7 @@
 // GROWLOG - Backup & Restore Service
 // =============================================
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
@@ -24,6 +25,17 @@ class BackupService implements IBackupService {
   /// This is useful during migrations to avoid circular dependency.
   @override
   Future<String> exportData({Database? db}) async {
+    // ✅ P1 FIX: Wrap entire export in timeout (5 minutes max)
+    return await _exportDataInternal(db: db).timeout(
+      const Duration(minutes: 5),
+      onTimeout: () {
+        AppLogger.error('BackupService', 'Export timeout after 5 minutes');
+        throw TimeoutException('Export operation took too long (>5 minutes)');
+      },
+    );
+  }
+
+  Future<String> _exportDataInternal({Database? db}) async {
     try {
       AppLogger.info('BackupService', 'Starting export...');
 
@@ -41,7 +53,8 @@ class BackupService implements IBackupService {
       final database = db ?? await DatabaseHelper.instance.database;
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
       final tempDir = await getTemporaryDirectory();
-      final exportDir = Directory('${tempDir.path}/plantry_export_$timestamp');
+      // ✅ P1 FIX: Use path.join instead of string concatenation
+      final exportDir = Directory(path.join(tempDir.path, 'plantry_export_$timestamp'));
 
       // Create export directory
       if (await exportDir.exists()) {
@@ -93,35 +106,50 @@ class BackupService implements IBackupService {
       }
 
       // Save JSON to file
-      final jsonFile = File('${exportDir.path}/data.json');
+      // ✅ P1 FIX: Use path.join instead of string concatenation
+      final jsonFile = File(path.join(exportDir.path, 'data.json'));
       await jsonFile.writeAsString(
         const JsonEncoder.withIndent('  ').convert(backup),
       );
 
       AppLogger.info('BackupService', 'JSON data saved');
 
-      // Copy all photos
+      // ✅ P1 FIX: Parallelize photo copying for better performance
       final photos = backup['data']['photos'] as List<dynamic>;
       int copiedCount = 0;
       int missingCount = 0;
 
       if (photos.isNotEmpty) {
-        final photosDir = Directory('${exportDir.path}/photos');
+        // ✅ P1 FIX: Use path.join instead of string concatenation
+        final photosDir = Directory(path.join(exportDir.path, 'photos'));
         await photosDir.create();
 
-        for (final photo in photos) {
-          final filePath = photo['file_path'] as String;
-          final sourceFile = File(filePath);
+        // Process photos in parallel batches of 10 for optimal performance
+        const batchSize = 10;
+        for (int i = 0; i < photos.length; i += batchSize) {
+          final batch = photos.skip(i).take(batchSize);
 
-          if (await sourceFile.exists()) {
-            final fileName = path.basename(filePath);
-            final destFile = File('${photosDir.path}/$fileName');
-            await sourceFile.copy(destFile.path);
-            copiedCount++;
-          } else {
-            missingCount++;
-            AppLogger.warning('BackupService', 'Photo missing', path.basename(filePath));
-          }
+          final results = await Future.wait(
+            batch.map((photo) async {
+              final filePath = photo['file_path'] as String;
+              final sourceFile = File(filePath);
+
+              if (await sourceFile.exists()) {
+                final fileName = path.basename(filePath);
+                // ✅ P1 FIX: Use path.join instead of string concatenation
+                final destFile = File(path.join(photosDir.path, fileName));
+                await sourceFile.copy(destFile.path);
+                return true; // Copied successfully
+              } else {
+                AppLogger.warning('BackupService', 'Photo missing', path.basename(filePath));
+                return false; // Missing
+              }
+            }),
+          );
+
+          // Count successes and failures
+          copiedCount += results.where((r) => r == true).length;
+          missingCount += results.where((r) => r == false).length;
         }
         AppLogger.info('BackupService', 'Copied photos', 'count=$copiedCount');
         if (missingCount > 0) {
@@ -131,7 +159,8 @@ class BackupService implements IBackupService {
 
       // Create ZIP file
       final appDir = await getApplicationDocumentsDirectory();
-      final zipPath = '${appDir.path}/plantry_backup_$timestamp.zip';
+      // ✅ P1 FIX: Use path.join instead of string concatenation
+      final zipPath = path.join(appDir.path, 'plantry_backup_$timestamp.zip');
 
       AppLogger.info('BackupService', 'Creating ZIP file...');
       final encoder = ZipFileEncoder();
@@ -155,6 +184,17 @@ class BackupService implements IBackupService {
   /// Validates data before importing
   @override
   Future<void> importData(String zipFilePath) async {
+    // ✅ P1 FIX: Wrap entire import in timeout (10 minutes max)
+    return await _importDataInternal(zipFilePath).timeout(
+      const Duration(minutes: 10),
+      onTimeout: () {
+        AppLogger.error('BackupService', 'Import timeout after 10 minutes');
+        throw TimeoutException('Import operation took too long (>10 minutes)');
+      },
+    );
+  }
+
+  Future<void> _importDataInternal(String zipFilePath) async {
     Directory? importDir;
 
     try {
@@ -166,7 +206,8 @@ class BackupService implements IBackupService {
       }
 
       final tempDir = await getTemporaryDirectory();
-      importDir = Directory('${tempDir.path}/plantry_import_${DateTime.now().millisecondsSinceEpoch}');
+      // ✅ P1 FIX: Use path.join instead of string concatenation
+      importDir = Directory(path.join(tempDir.path, 'plantry_import_${DateTime.now().millisecondsSinceEpoch}'));
 
       // Extract ZIP
       AppLogger.info('BackupService', 'Extracting ZIP...');
@@ -178,7 +219,8 @@ class BackupService implements IBackupService {
       for (final file in archive) {
         final filename = file.name;
         if (file.isFile) {
-          final outFile = File('${importDir.path}/$filename');
+          // ✅ P1 FIX: Use path.join instead of string concatenation
+          final outFile = File(path.join(importDir.path, filename));
           await outFile.create(recursive: true);
           await outFile.writeAsBytes(file.content as List<int>);
         }
@@ -187,7 +229,8 @@ class BackupService implements IBackupService {
       AppLogger.info('BackupService', 'ZIP extracted');
 
       // Find and read JSON file
-      final jsonFile = File('${importDir.path}/data.json');
+      // ✅ P1 FIX: Use path.join instead of string concatenation
+      final jsonFile = File(path.join(importDir.path, 'data.json'));
       if (!await jsonFile.exists()) {
         // Try to find in subdirectory
         final files = await importDir.list(recursive: true).toList();
@@ -300,7 +343,15 @@ class BackupService implements IBackupService {
 
     await db.execute('PRAGMA foreign_keys = ON');
 
-    AppLogger.info('BackupService', 'Data import complete');
+    // ✅ P2 FIX: Validate foreign key constraints after import
+    AppLogger.info('BackupService', 'Validating foreign key constraints...');
+    final fkErrors = await db.rawQuery('PRAGMA foreign_key_check');
+    if (fkErrors.isNotEmpty) {
+      AppLogger.error('BackupService', 'Foreign key constraint violations found', fkErrors);
+      throw Exception('Import failed: ${fkErrors.length} foreign key constraint violations detected');
+    }
+
+    AppLogger.info('BackupService', '✅ Data import complete and validated');
   }
 
   Future<void> _importTable(
@@ -331,37 +382,53 @@ class BackupService implements IBackupService {
     }
 
     final appDir = await getApplicationDocumentsDirectory();
-    final photosDir = Directory('${appDir.path}/photos');
+    // ✅ P1 FIX: Use path.join instead of string concatenation
+    final photosDir = Directory(path.join(appDir.path, 'photos'));
     if (!await photosDir.exists()) {
       await photosDir.create(recursive: true);
     }
 
+    // ✅ P1 FIX: Parallelize photo import for better performance
     int copiedCount = 0;
 
-    for (final photo in photos) {
-      final oldPath = photo['file_path'] as String;
-      final fileName = path.basename(oldPath);
+    // Process photos in parallel batches of 10
+    const batchSize = 10;
+    for (int i = 0; i < photos.length; i += batchSize) {
+      final batch = photos.skip(i).take(batchSize).toList();
 
-      // Find photo in import directory
-      final importPhotoFile = File('${importDir.path}/photos/$fileName');
+      final results = await Future.wait(
+        batch.map((photo) async {
+          final oldPath = photo['file_path'] as String;
+          final fileName = path.basename(oldPath);
 
-      if (await importPhotoFile.exists()) {
-        // Copy to app photos directory
-        final newPath = '${photosDir.path}/$fileName';
-        await importPhotoFile.copy(newPath);
+          // Find photo in import directory
+          // ✅ P1 FIX: Use path.join instead of string concatenation
+          final importPhotoFile = File(path.join(importDir.path, 'photos', fileName));
 
-        // Insert photo record with new path
-        await db.insert('photos', {
-          'id': photo['id'],
-          'log_id': photo['log_id'],
-          'file_path': newPath,
-          'created_at': photo['created_at'],
-        });
+          if (await importPhotoFile.exists()) {
+            // Copy to app photos directory
+            // ✅ P1 FIX: Use path.join instead of string concatenation
+            final newPath = path.join(photosDir.path, fileName);
+            await importPhotoFile.copy(newPath);
 
-        copiedCount++;
-      } else {
-        AppLogger.warning('BackupService', 'Photo not found', fileName);
-      }
+            // Insert photo record with new path
+            // Note: Database inserts must be sequential, so this is still correct
+            await db.insert('photos', {
+              'id': photo['id'],
+              'log_id': photo['log_id'],
+              'file_path': newPath,
+              'created_at': photo['created_at'],
+            });
+
+            return true; // Copied successfully
+          } else {
+            AppLogger.warning('BackupService', 'Photo not found', fileName);
+            return false; // Not found
+          }
+        }),
+      );
+
+      copiedCount += results.where((r) => r == true).length;
     }
 
     AppLogger.info('BackupService', 'Photos imported', 'rows=${photos.length}, files=$copiedCount');

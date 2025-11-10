@@ -20,7 +20,7 @@ abstract class IRdwcRepository {
   Future<int> deleteSystem(int systemId);
 
   // RDWC Logs
-  Future<List<RdwcLog>> getLogsBySystem(int systemId);
+  Future<List<RdwcLog>> getLogsBySystem(int systemId, {int? limit});
   Future<List<RdwcLog>> getRecentLogs(int systemId, {int limit = 10});
   Future<RdwcLog?> getLatestLog(int systemId);
   Future<int> createLog(RdwcLog log);

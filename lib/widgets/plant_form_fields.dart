@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/enums.dart';
 import '../models/room.dart';
 import '../models/grow.dart';
+import '../utils/input_constraints.dart';
 
 /// Reusable form fields for plant creation and editing
 ///
@@ -116,10 +117,13 @@ class PlantFormFields extends StatelessWidget {
         const SizedBox(height: 16),
         TextFormField(
           controller: nameController,
+          // ✅ FIX: Add maxLength to prevent database overflow
+          maxLength: InputConstraints.nameMaxLength,
           decoration: const InputDecoration(
             labelText: 'Pflanzenname *',
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.local_florist),
+            counterText: '', // Hide character counter
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -145,21 +149,27 @@ class PlantFormFields extends StatelessWidget {
         const SizedBox(height: 16),
         TextFormField(
           controller: strainController,
+          // ✅ FIX: Add maxLength to prevent database overflow
+          maxLength: InputConstraints.nameMaxLength,
           decoration: const InputDecoration(
             labelText: 'Strain/Sorte',
             border: OutlineInputBorder(),
             hintText: 'z.B. Gorilla Glue #4',
             prefixIcon: Icon(Icons.science),
+            counterText: '', // Hide character counter
           ),
         ),
         const SizedBox(height: 16),
         TextFormField(
           controller: breederController,
+          // ✅ FIX: Add maxLength to prevent database overflow
+          maxLength: InputConstraints.shortNameMaxLength,
           decoration: const InputDecoration(
             labelText: 'Breeder',
             border: OutlineInputBorder(),
             hintText: 'z.B. Original Sensible',
             prefixIcon: Icon(Icons.business),
+            counterText: '', // Hide character counter
           ),
         ),
         const SizedBox(height: 16),
@@ -281,22 +291,28 @@ class PlantFormFields extends StatelessWidget {
         if (_isHydroSystem)
           TextFormField(
             controller: systemSizeController,
+            // ✅ FIX: Add maxLength to prevent database overflow
+            maxLength: InputConstraints.numericMaxLength,
             decoration: const InputDecoration(
               labelText: 'System-Größe (L)',
               border: OutlineInputBorder(),
               hintText: 'z.B. 80 für 80L System',
               prefixIcon: Icon(Icons.water),
+              counterText: '', // Hide character counter
             ),
             keyboardType: TextInputType.number,
           )
         else
           TextFormField(
             controller: containerSizeController,
+            // ✅ FIX: Add maxLength to prevent database overflow
+            maxLength: InputConstraints.numericMaxLength,
             decoration: const InputDecoration(
               labelText: 'Container-Größe (L)',
               border: OutlineInputBorder(),
               hintText: 'z.B. 11 für 11L Topf',
               prefixIcon: Icon(Icons.local_florist),
+              counterText: '', // Hide character counter
             ),
             keyboardType: TextInputType.number,
           ),

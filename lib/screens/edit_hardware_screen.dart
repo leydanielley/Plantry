@@ -327,7 +327,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> {
           decoration: BoxDecoration(
             color: Colors.orange[50],
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.orange[200]!),
+            border: Border.all(color: Colors.orange[200] ?? Colors.orange),
           ),
           child: Row(
             children: [

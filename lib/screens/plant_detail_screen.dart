@@ -74,6 +74,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
   @override
   void dispose() {
+    // ✅ FIX: Remove listener before disposing to prevent memory leak
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -620,10 +622,11 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.green[900]!.withValues(alpha: 0.3) : Colors.green[50],
+                  // ✅ FIX: Replace force unwrap with null-aware operator
+                  color: isDark ? (Colors.green[900] ?? Colors.green).withValues(alpha: 0.3) : Colors.green[50],
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Colors.green[600]!,
+                    color: Colors.green[600] ?? Colors.green,
                     width: 2,
                   ),
                 ),
@@ -679,7 +682,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               decoration: BoxDecoration(
                 color: Colors.red[50],
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red[300]!, width: 2),
+                // ✅ FIX: Replace force unwrap with null-aware operator
+                border: Border.all(color: Colors.red[300] ?? Colors.red, width: 2),
               ),
               child: Row(
                 children: [
@@ -864,7 +868,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                     decoration: BoxDecoration(
                       color: Colors.blue[100],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue[300]!, width: 1),
+                      // ✅ FIX: Replace force unwrap with null-aware operator
+                      border: Border.all(color: Colors.blue[300] ?? Colors.blue, width: 1),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1113,41 +1118,42 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
+  // ✅ FIX: Replace all force unwraps with null-aware operators
   Color _getPhaseColor(PlantPhase phase) {
     switch (phase) {
       case PlantPhase.seedling:
-        return Colors.green[300]!;
+        return Colors.green[300] ?? Colors.green;
       case PlantPhase.veg:
-        return Colors.green[600]!;
+        return Colors.green[600] ?? Colors.green;
       case PlantPhase.bloom:
-        return Colors.purple[400]!;
+        return Colors.purple[400] ?? Colors.purple;
       case PlantPhase.harvest:
-        return Colors.orange[600]!;
+        return Colors.orange[600] ?? Colors.orange;
       case PlantPhase.archived:
-        return Colors.grey[600]!;
+        return Colors.grey[600] ?? Colors.grey;
     }
   }
 
   Color _getActionTypeColor(ActionType actionType) {
     switch (actionType) {
       case ActionType.water:
-        return Colors.blue[600]!;
+        return Colors.blue[600] ?? Colors.blue;
       case ActionType.feed:
-        return Colors.green[600]!;
+        return Colors.green[600] ?? Colors.green;
       case ActionType.trim:
-        return Colors.teal[600]!;
+        return Colors.teal[600] ?? Colors.teal;
       case ActionType.training:
-        return Colors.indigo[600]!;
+        return Colors.indigo[600] ?? Colors.indigo;
       case ActionType.note:
-        return Colors.grey[600]!;
+        return Colors.grey[600] ?? Colors.grey;
       case ActionType.phaseChange:
-        return Colors.purple[600]!;
+        return Colors.purple[600] ?? Colors.purple;
       case ActionType.transplant:
-        return Colors.orange[600]!;
+        return Colors.orange[600] ?? Colors.orange;
       case ActionType.harvest:
-        return Colors.red[600]!;
+        return Colors.red[600] ?? Colors.red;
       case ActionType.other:
-        return Colors.brown[600]!;
+        return Colors.brown[600] ?? Colors.brown;
     }
   }
 }

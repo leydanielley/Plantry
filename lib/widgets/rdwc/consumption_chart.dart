@@ -29,13 +29,18 @@ class ConsumptionChart extends StatelessWidget {
     final entries = dailyConsumption.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
+    // ✅ FIX: Compute max value once to avoid multiple reduce calls and prevent crashes
+    final values = entries.map((e) => e.value as double).toList();
+    final maxValue = values.isEmpty ? 1.0 : values.reduce((a, b) => a > b ? a : b);
+    final chartMaxY = maxValue * 1.2;
+
     return Container(
       height: 300,
       padding: const EdgeInsets.all(16),
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
-          maxY: (entries.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.2),
+          maxY: chartMaxY,
           minY: 0,
           barTouchData: BarTouchData(
             enabled: true,
@@ -100,10 +105,11 @@ class ConsumptionChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            horizontalInterval: (entries.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.2) / 5,
+            horizontalInterval: chartMaxY / 5,
             getDrawingHorizontalLine: (value) {
               return FlLine(
-                color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                // ✅ FIX: Replace force unwrap with null-aware operator
+                color: isDark ? (Colors.grey[800] ?? Colors.grey) : (Colors.grey[300] ?? Colors.grey),
                 strokeWidth: 1,
               );
             },
@@ -122,8 +128,9 @@ class ConsumptionChart extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
                   backDrawRodData: BackgroundBarChartRodData(
                     show: true,
-                    toY: (entries.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.2),
-                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                    toY: chartMaxY,
+                    // ✅ FIX: Replace force unwrap with null-aware operator
+                    color: isDark ? (Colors.grey[800] ?? Colors.grey) : (Colors.grey[200] ?? Colors.grey),
                   ),
                 ),
               ],

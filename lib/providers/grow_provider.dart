@@ -42,6 +42,9 @@ class GrowProvider with ChangeNotifier {
   // STATE
   // ═══════════════════════════════════════════
 
+  /// ✅ FIX: Track dispose state to prevent notifyListeners after dispose
+  bool _disposed = false;
+
   /// List of all grows
   AsyncValue<List<Grow>> _grows = const Loading();
 
@@ -72,7 +75,7 @@ class GrowProvider with ChangeNotifier {
     );
 
     _grows = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final growList = await _repository.getAll(includeArchived: includeArchived);
@@ -90,7 +93,7 @@ class GrowProvider with ChangeNotifier {
       AppLogger.error('GrowProvider', 'Failed to load grows', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Load a single grow by ID
@@ -98,7 +101,7 @@ class GrowProvider with ChangeNotifier {
     AppLogger.debug('GrowProvider', 'Loading grow', id);
 
     _currentGrow = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final grow = await _repository.getById(id);
@@ -113,7 +116,7 @@ class GrowProvider with ChangeNotifier {
       AppLogger.error('GrowProvider', 'Failed to load grow', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Create a new grow
@@ -271,6 +274,24 @@ class GrowProvider with ChangeNotifier {
   /// Clear current grow selection
   void clearCurrentGrow() {
     _currentGrow = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
+  }
+
+  // ═══════════════════════════════════════════
+  // LIFECYCLE
+  // ═══════════════════════════════════════════
+
+  /// ✅ FIX: Override dispose to mark provider as disposed
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  /// ✅ FIX: Safe notifyListeners that checks dispose state
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 }

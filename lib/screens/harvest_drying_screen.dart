@@ -32,17 +32,21 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
   }
 
   Future<void> _loadHarvest() async {
+    // ✅ FIX: Add mounted check before setState
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final harvest = await _harvestRepo.getHarvestById(widget.harvestId);
+      if (!mounted) return;
       setState(() {
         _harvest = harvest;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       if (mounted) {
-        AppMessages.showError(context, 
+        AppMessages.showError(context,
 'Fehler: $e');
       }
     }
@@ -96,7 +100,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                 decoration: BoxDecoration(
                   color: Colors.blue[50],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue[200]!),
+                  border: Border.all(color: Colors.blue[200] ?? Colors.blue),
                 ),
                 child: Row(
                   children: [
@@ -131,16 +135,18 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            // ✅ FIX: Use dialogContext instead of context for proper navigation
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Abbrechen'),
           ),
           ElevatedButton(
             onPressed: () {
               final w = double.tryParse(dryWeightController.text);
               if (w != null && w > 0) {
-                Navigator.pop(context, w);
+                // ✅ FIX: Use dialogContext instead of context
+                Navigator.pop(dialogContext, w);
               } else {
-                AppMessages.showSuccess(context, 'Bitte gültiges Gewicht eingeben');
+                AppMessages.showSuccess(dialogContext, 'Bitte gültiges Gewicht eingeben');
               }
             },
             style: ElevatedButton.styleFrom(

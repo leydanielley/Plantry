@@ -191,7 +191,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
             decoration: BoxDecoration(
               color: Colors.blue[50],
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue[200]!),
+              border: Border.all(color: Colors.blue[200] ?? Colors.blue),
             ),
             child: Row(
               children: [
@@ -298,7 +298,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
             decoration: BoxDecoration(
               color: Colors.blue[50],
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue[200]!),
+              border: Border.all(color: Colors.blue[200] ?? Colors.blue),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,12 +327,12 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.purple[50]!, Colors.blue[50]!],
+          colors: [Colors.purple[50] ?? Colors.purple, Colors.blue[50] ?? Colors.blue],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200]!),
+        border: Border.all(color: Colors.blue[200] ?? Colors.blue),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,7 +405,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
             decoration: BoxDecoration(
               color: Colors.amber[50],
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber[200]!),
+              border: Border.all(color: Colors.amber[200] ?? Colors.amber),
             ),
             child: Row(
               children: [

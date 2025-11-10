@@ -42,6 +42,9 @@ class PlantProvider with ChangeNotifier {
   // STATE
   // ═══════════════════════════════════════════
 
+  /// ✅ FIX: Track dispose state to prevent notifyListeners after dispose
+  bool _disposed = false;
+
   /// List of all plants
   AsyncValue<List<Plant>> _plants = const Loading();
 
@@ -72,7 +75,7 @@ class PlantProvider with ChangeNotifier {
     AppLogger.debug('PlantProvider', 'Loading plants', 'limit=$limit, offset=$offset');
 
     _plants = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final plantList = await _repository.findAll(limit: limit, offset: offset);
@@ -83,7 +86,7 @@ class PlantProvider with ChangeNotifier {
       AppLogger.error('PlantProvider', 'Failed to load plants', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Load a single plant by ID
@@ -91,7 +94,7 @@ class PlantProvider with ChangeNotifier {
     AppLogger.debug('PlantProvider', 'Loading plant', id);
 
     _currentPlant = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final plant = await _repository.findById(id);
@@ -106,7 +109,7 @@ class PlantProvider with ChangeNotifier {
       AppLogger.error('PlantProvider', 'Failed to load plant', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Load plants by room
@@ -114,7 +117,7 @@ class PlantProvider with ChangeNotifier {
     AppLogger.debug('PlantProvider', 'Loading plants by room', roomId);
 
     _plantsByRoom = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final plantList = await _repository.findByRoom(roomId);
@@ -125,7 +128,7 @@ class PlantProvider with ChangeNotifier {
       AppLogger.error('PlantProvider', 'Failed to load plants by room', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Save a plant (create or update)
@@ -205,7 +208,7 @@ class PlantProvider with ChangeNotifier {
   /// Clear current plant selection
   void clearCurrentPlant() {
     _currentPlant = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Get plant count
@@ -215,6 +218,24 @@ class PlantProvider with ChangeNotifier {
     } catch (e) {
       AppLogger.error('PlantProvider', 'Failed to get plant count', e);
       return 0;
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // LIFECYCLE
+  // ═══════════════════════════════════════════
+
+  /// ✅ FIX: Override dispose to mark provider as disposed
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  /// ✅ FIX: Safe notifyListeners that checks dispose state
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      notifyListeners();
     }
   }
 }

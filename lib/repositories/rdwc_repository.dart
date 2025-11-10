@@ -204,7 +204,8 @@ class RdwcRepository implements IRdwcRepository {
 
   /// Get all logs for a system
   @override
-  Future<List<RdwcLog>> getLogsBySystem(int systemId) async {
+  /// ✅ FIX: Add limit parameter to prevent loading thousands of logs
+  Future<List<RdwcLog>> getLogsBySystem(int systemId, {int? limit}) async {
     try {
       final db = await _dbHelper.database;
       final maps = await db.query(
@@ -212,6 +213,7 @@ class RdwcRepository implements IRdwcRepository {
         where: 'system_id = ?',
         whereArgs: [systemId],
         orderBy: 'log_date DESC',
+        limit: limit, // ✅ FIX: Add LIMIT clause
       );
 
       return maps.map((map) => RdwcLog.fromMap(map)).toList();
@@ -336,11 +338,51 @@ class RdwcRepository implements IRdwcRepository {
   Future<int> deleteLog(int logId) async {
     try {
       final db = await _dbHelper.database;
+
+      // Get system ID before deleting the log
+      final logResult = await db.query(
+        'rdwc_logs',
+        columns: ['system_id'],
+        where: 'id = ?',
+        whereArgs: [logId],
+      );
+
+      if (logResult.isEmpty) {
+        AppLogger.warning('RdwcRepository', 'Log not found for deletion', 'ID: $logId');
+        return 0;
+      }
+
+      final systemId = logResult.first['system_id'] as int;
+
+      // Delete the log
       final count = await db.delete(
         'rdwc_logs',
         where: 'id = ?',
         whereArgs: [logId],
       );
+
+      // Update system level to the most recent remaining log's levelAfter
+      final mostRecentLog = await db.query(
+        'rdwc_logs',
+        where: 'system_id = ? AND level_after IS NOT NULL',
+        whereArgs: [systemId],
+        orderBy: 'log_date DESC, id DESC',
+        limit: 1,
+      );
+
+      if (mostRecentLog.isNotEmpty) {
+        final newLevel = mostRecentLog.first['level_after'] as double;
+        await updateSystemLevel(systemId, newLevel);
+        AppLogger.info('RdwcRepository', 'Updated system level after log deletion',
+          'SystemID: $systemId, NewLevel: $newLevel L');
+      } else {
+        // ✅ FIX: No logs remaining - set level to 0 (no data) instead of max capacity
+        // Resetting to max capacity is incorrect as it implies the system is full
+        await updateSystemLevel(systemId, 0.0);
+        AppLogger.info('RdwcRepository', 'Reset system level to 0 (no logs remaining)',
+          'SystemID: $systemId');
+      }
+
       AppLogger.info('RdwcRepository', 'Deleted RDWC log', 'ID: $logId');
       return count;
     } catch (e) {
@@ -757,6 +799,16 @@ class RdwcRepository implements IRdwcRepository {
       }
 
       final values = dailyConsumption.values.toList();
+      // ✅ FIX: Additional safety check before reduce
+      if (values.isEmpty) {
+        return {
+          'average': 0.0,
+          'total': 0.0,
+          'max': 0.0,
+          'min': 0.0,
+          'days': 0,
+        };
+      }
       final total = values.reduce((a, b) => a + b);
       final average = total / values.length;
       final max = values.reduce((a, b) => a > b ? a : b);

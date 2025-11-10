@@ -116,7 +116,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 decoration: BoxDecoration(
                   color: Colors.orange[50],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange[200]!),
+                  border: Border.all(color: Colors.orange[200] ?? Colors.orange),
                 ),
                 child: Row(
                   children: [
@@ -273,7 +273,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 decoration: BoxDecoration(
                   color: Colors.orange[50],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange[200]!),
+                  border: Border.all(color: Colors.orange[200] ?? Colors.orange),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +369,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: Colors.grey[300] ?? Colors.grey),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

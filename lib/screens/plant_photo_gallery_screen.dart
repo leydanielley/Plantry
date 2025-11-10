@@ -52,7 +52,9 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
   
   @override
   void dispose() {
-    _scrollController.dispose();  // ✅ FIX: Controller dispose
+    // ✅ FIX: Remove listener before disposing to prevent memory leak
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
   }
   

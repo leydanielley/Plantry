@@ -232,6 +232,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   }
 
   Future<void> _savePlant() async {
+    // ✅ FIX: Prevent double-tap by checking loading state first
+    if (_isLoading) return;
+
     if (!_formKey.currentState!.validate()) return;
 
     if (mounted) {
@@ -248,7 +251,11 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       List<int>? availableBuckets;
       if (_medium == Medium.rdwc && _selectedRdwcSystemId != null && quantity > 1) {
         final occupiedBuckets = await _getOccupiedBuckets(_selectedRdwcSystemId!);
-        final selectedSystem = _rdwcSystems.firstWhere((s) => s.id == _selectedRdwcSystemId);
+        // ✅ FIX: Add orElse to prevent StateError crash
+        final selectedSystem = _rdwcSystems.firstWhere(
+          (s) => s.id == _selectedRdwcSystemId,
+          orElse: () => _rdwcSystems.first,
+        );
         availableBuckets = [];
         for (int b = 1; b <= selectedSystem.bucketCount; b++) {
           if (!occupiedBuckets.contains(b)) {

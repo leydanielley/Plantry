@@ -86,22 +86,24 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
       final settings = await _settingsRepo.getSettings();
       final recipes = await _rdwcRepo.getAllRecipes();
 
-      // Load fertilizers for each recipe
+      // ✅ FIX: Load all fertilizers ONCE to prevent N+1 query
+      final allFertilizers = await _fertilizerRepo.findAll();
+      final fertilizerMap = {for (var f in allFertilizers) f.id: f};
+
+      // Load fertilizers for each recipe using map lookup
       final Map<int, List<Fertilizer>> fertilizers = {};
       for (final recipe in recipes) {
         if (recipe.id != null) {
           final recipeFerts = await _rdwcRepo.getRecipeFertilizers(recipe.id!);
           final List<Fertilizer> ferts = [];
           for (final rf in recipeFerts) {
-            final fert = await _fertilizerRepo.findById(rf.fertilizerId);
+            // ✅ FIX: Use map lookup instead of database query
+            final fert = fertilizerMap[rf.fertilizerId];
             if (fert != null) ferts.add(fert);
           }
           fertilizers[recipe.id!] = ferts;
         }
       }
-
-      // Load all fertilizers for direct mode
-      final allFertilizers = await _fertilizerRepo.findAll();
 
       if (mounted) {
         setState(() {
@@ -139,17 +141,22 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
   void _calculate() {
     if (!_formKey.currentState!.validate()) return;
 
-    final currentVolume = double.parse(_currentVolumeController.text);
-    final currentPPM = double.parse(_currentPpmController.text);
+    // For batch mix and quick mix, start from 0L and 0 PPM
+    final currentVolume = (_calculatorMode == CalculatorMode.batchMix || _calculatorMode == CalculatorMode.quickMix)
+        ? 0.0
+        : double.parse(_currentVolumeController.text);
+    final currentPPM = (_calculatorMode == CalculatorMode.batchMix || _calculatorMode == CalculatorMode.quickMix)
+        ? 0.0
+        : double.parse(_currentPpmController.text);
     final targetPPM = double.parse(_targetPpmController.text);
-    final targetVolume = _calculatorMode == CalculatorMode.batchMix
+    final targetVolume = _calculatorMode == CalculatorMode.batchMix || _calculatorMode == CalculatorMode.quickMix
         ? double.parse(_targetVolumeController.text)
         : widget.system!.maxCapacity;
 
     NutrientCalculation calculation;
 
-    // Batch mix mode
-    if (_calculatorMode == CalculatorMode.batchMix) {
+    // Batch mix or Quick mix mode (both start from 0L)
+    if (_calculatorMode == CalculatorMode.batchMix || _calculatorMode == CalculatorMode.quickMix) {
       calculation = NutrientCalculation.batchMix(
         volume: targetVolume,
         targetPPM: targetPPM,
@@ -466,8 +473,8 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
         ? 'EC (mS/cm)'
         : 'PPM (${_settings.ppmScale.scaleLabel})';
 
-    // Hide current status in batch mix mode (starting from 0)
-    if (_calculatorMode == CalculatorMode.batchMix) {
+    // Hide current status in batch mix and quick mix modes (starting from 0)
+    if (_calculatorMode == CalculatorMode.batchMix || _calculatorMode == CalculatorMode.quickMix) {
       return const SizedBox.shrink();
     }
 
@@ -708,7 +715,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
         border: Border.all(
           color: recipe.targetEc == null
               ? Colors.orange
-              : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+              : (isDark ? Colors.grey[700] ?? Colors.grey : Colors.grey[300] ?? Colors.grey),
         ),
       ),
       child: Column(
@@ -773,7 +780,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
         decoration: BoxDecoration(
           color: Colors.orange[50],
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.orange[300]!),
+          border: Border.all(color: Colors.orange[300] ?? Colors.orange),
         ),
         child: Row(
           children: [
@@ -814,7 +821,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
         Container(
           constraints: const BoxConstraints(maxHeight: 300),
           decoration: BoxDecoration(
-            border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
+            border: Border.all(color: isDark ? Colors.grey[700] ?? Colors.grey : Colors.grey[300] ?? Colors.grey),
             borderRadius: BorderRadius.circular(8),
           ),
           child: ListView.builder(
@@ -1148,8 +1155,10 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
           ],
           const SizedBox(height: 12),
           ...fertilizers.map((fert) {
+            // ✅ FIX: Add orElse to prevent StateError crash
             final recipeFert = _selectedRecipe!.fertilizers.firstWhere(
               (rf) => rf.fertilizerId == fert.id,
+              orElse: () => _selectedRecipe!.fertilizers.first,
             );
             final scaledTotalMl = scaledAmounts[fert.id] ?? 0;
             final scaledMlPerLiter = recipeFert.mlPerLiter * scalingFactor;

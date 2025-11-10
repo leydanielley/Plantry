@@ -157,11 +157,27 @@ class _EditLogScreenState extends State<EditLogScreen> {
         imageQuality: 85,
       );
 
-      if (photo != null && mounted) {
-        // ✅ FIX 1: Mounted check vor setState!
-        setState(() {
-          _newPhotos.add(photo);
-        });
+      if (photo != null) {
+        // ✅ FIX: Validate file type to prevent malicious uploads
+        final allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+        final extension = photo.path.toLowerCase().substring(photo.path.lastIndexOf('.'));
+
+        if (!allowedExtensions.contains(extension)) {
+          if (mounted) {
+            AppMessages.showError(
+              context,
+              'Ungültiger Dateityp. Nur Bilder (.jpg, .jpeg, .png, .webp) sind erlaubt.',
+            );
+          }
+          return;
+        }
+
+        if (mounted) {
+          // ✅ FIX 1: Mounted check vor setState!
+          setState(() {
+            _newPhotos.add(photo);
+          });
+        }
       }
     } catch (e) {
       // Error picking photo
@@ -325,7 +341,11 @@ class _EditLogScreenState extends State<EditLogScreen> {
       }
 
       for (var photoId in _photosToDelete) {
-        final photo = _existingPhotos.firstWhere((p) => p.id == photoId);
+        // ✅ FIX: Add orElse to prevent StateError crash
+        final photo = _existingPhotos.firstWhere(
+          (p) => p.id == photoId,
+          orElse: () => throw Exception('Photo not found: $photoId'),
+        );
         final file = File(photo.filePath);
         if (await file.exists()) {
           await file.delete();
@@ -395,11 +415,11 @@ class _EditLogScreenState extends State<EditLogScreen> {
 
   Color _getPhaseColor(PlantPhase phase) {
     switch (phase) {
-      case PlantPhase.seedling: return Colors.green[300]!;
-      case PlantPhase.veg: return Colors.green[600]!;
-      case PlantPhase.bloom: return Colors.purple[400]!;
-      case PlantPhase.harvest: return Colors.orange[600]!;
-      case PlantPhase.archived: return Colors.grey[600]!;
+      case PlantPhase.seedling: return Colors.green[300] ?? Colors.green;
+      case PlantPhase.veg: return Colors.green[600] ?? Colors.green;
+      case PlantPhase.bloom: return Colors.purple[400] ?? Colors.purple;
+      case PlantPhase.harvest: return Colors.orange[600] ?? Colors.orange;
+      case PlantPhase.archived: return Colors.grey[600] ?? Colors.grey;
     }
   }
 
@@ -543,7 +563,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
             decoration: BoxDecoration(
               color: Colors.orange[50],
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange[300]!),
+              border: Border.all(color: Colors.orange[300] ?? Colors.orange),
             ),
             child: Row(
               children: [
@@ -694,7 +714,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
         if (_existingPhotos.isEmpty && _newPhotos.isEmpty)
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[300]!)),
+            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[300] ?? Colors.grey)),
             child: Center(
               child: Column(
                 children: [
@@ -759,10 +779,18 @@ class _EditLogScreenState extends State<EditLogScreen> {
         ),
         const SizedBox(height: 8),
         if (_selectedFertilizers.isEmpty)
-          Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[300]!)), child: Text('Keine Dünger ausgewählt', style: TextStyle(color: Colors.grey[600])))
+          Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[300] ?? Colors.grey)), child: Text('Keine Dünger ausgewählt', style: TextStyle(color: Colors.grey[600])))
         else
           ..._selectedFertilizers.entries.map((entry) {
-            final fertilizer = _availableFertilizers.firstWhere((f) => f.id == entry.key);
+            // ✅ FIX: Add orElse to prevent StateError crash
+            final fertilizer = _availableFertilizers.firstWhere(
+              (f) => f.id == entry.key,
+              orElse: () => Fertilizer(
+                id: entry.key,
+                name: 'Unbekannt',
+                createdAt: DateTime.now(),
+              ),
+            );
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(

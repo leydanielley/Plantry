@@ -108,16 +108,21 @@ class WarningService implements IWarningService {
 
       // Check for extreme water amounts
       if (waterLogs.length >= 3) {
-        final avgWater = waterLogs.take(10).map((l) => l.waterAmount!).reduce((a, b) => a + b) / waterLogs.take(10).length;
-        final lastWater = waterLogs.first.waterAmount!;
+        // ✅ FIX: Store recentWaterLogs to avoid multiple evaluations and prevent division by zero
+        final recentWaterLogs = waterLogs.take(10).toList();
+        if (recentWaterLogs.isNotEmpty) {
+          final waterAmounts = recentWaterLogs.map((l) => l.waterAmount!).toList();
+          final avgWater = waterAmounts.reduce((a, b) => a + b) / waterAmounts.length;
+          final lastWater = waterLogs.first.waterAmount!;
 
-        if (lastWater > avgWater * 2) {
-          warnings.add(PlantWarning(
-            message: 'Letztes Gießen ungewöhnlich hoch (${lastWater.toStringAsFixed(1)}L)',
-            level: WarningLevel.info,
-            recommendation: 'Normale Menge: ~${avgWater.toStringAsFixed(1)}L',
-            detectedAt: DateTime.now(),
-          ));
+          if (lastWater > avgWater * 2) {
+            warnings.add(PlantWarning(
+              message: 'Letztes Gießen ungewöhnlich hoch (${lastWater.toStringAsFixed(1)}L)',
+              level: WarningLevel.info,
+              recommendation: 'Normale Menge: ~${avgWater.toStringAsFixed(1)}L',
+              detectedAt: DateTime.now(),
+            ));
+          }
         }
       }
     } catch (e) {

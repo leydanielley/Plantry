@@ -42,6 +42,9 @@ class RoomProvider with ChangeNotifier {
   // STATE
   // ═══════════════════════════════════════════
 
+  /// ✅ FIX: Track dispose state to prevent notifyListeners after dispose
+  bool _disposed = false;
+
   /// List of all rooms
   AsyncValue<List<Room>> _rooms = const Loading();
 
@@ -64,7 +67,7 @@ class RoomProvider with ChangeNotifier {
     AppLogger.debug('RoomProvider', 'Loading rooms');
 
     _rooms = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final roomList = await _repository.findAll();
@@ -75,7 +78,7 @@ class RoomProvider with ChangeNotifier {
       AppLogger.error('RoomProvider', 'Failed to load rooms', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Load a single room by ID
@@ -83,7 +86,7 @@ class RoomProvider with ChangeNotifier {
     AppLogger.debug('RoomProvider', 'Loading room', id);
 
     _currentRoom = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final room = await _repository.findById(id);
@@ -98,7 +101,7 @@ class RoomProvider with ChangeNotifier {
       AppLogger.error('RoomProvider', 'Failed to load room', e, stack);
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Save a room (create or update)
@@ -160,7 +163,7 @@ class RoomProvider with ChangeNotifier {
   /// Clear current room selection
   void clearCurrentRoom() {
     _currentRoom = const Loading();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Get room count
@@ -170,6 +173,24 @@ class RoomProvider with ChangeNotifier {
     } catch (e) {
       AppLogger.error('RoomProvider', 'Failed to get room count', e);
       return 0;
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // LIFECYCLE
+  // ═══════════════════════════════════════════
+
+  /// ✅ FIX: Override dispose to mark provider as disposed
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  /// ✅ FIX: Safe notifyListeners that checks dispose state
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      notifyListeners();
     }
   }
 }

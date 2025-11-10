@@ -204,12 +204,13 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     // End of chronological validation
     // =============================================
 
-    // ✅ FIX: Check if seed date changed and logs exist
-    if (_seedDate != widget.plant.seedDate && widget.plant.id != null) {
-      final logCount = await _plantRepo.getLogCount(widget.plant.id!);
+    // ✅ FIX: Check if seed date changed and warn about log deletion
+    if (_seedDate != widget.plant.seedDate && widget.plant.id != null && _seedDate != null) {
+      final logsToDelete = await _plantRepo.countLogsToBeDeleted(widget.plant.id!, _seedDate!);
 
-      if (logCount > 0) {
-        final confirmed = await _showSeedDateChangeWarning(logCount);
+      if (logsToDelete > 0) {
+        final totalLogs = await _plantRepo.getLogCount(widget.plant.id!);
+        final confirmed = await _showSeedDateChangeWarning(totalLogs, logsToDelete);
         if (!confirmed) return; // User cancelled
       }
     }
@@ -351,15 +352,15 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   /// ✅ FIX: Warning when changing seed date with existing logs
-  Future<bool> _showSeedDateChangeWarning(int logCount) async {
+  Future<bool> _showSeedDateChangeWarning(int totalLogs, int logsToDelete) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.warning, color: Colors.orange[700], size: 28),
+            Icon(Icons.warning, color: Colors.red[700], size: 28),
             const SizedBox(width: 12),
-            const Text('Seed-Datum ändern?'),
+            const Text('Achtung: Logs werden gelöscht!'),
           ],
         ),
         content: Column(
@@ -367,8 +368,41 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Diese Pflanze hat bereits $logCount Log-Einträge.',
+              'Diese Pflanze hat $totalLogs Log-Einträge.',
               style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[300] ?? Colors.red),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.delete_forever, color: Colors.red[700], size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$logsToDelete Logs werden GELÖSCHT!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red[900],
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Diese Logs liegen vor dem neuen Seed-Datum und werden permanent entfernt.',
+                    style: TextStyle(color: Colors.red[900], fontSize: 13),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             const Text(
@@ -378,10 +412,10 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
             const SizedBox(height: 8),
             const Text('✅ Alle Tagnummern (day_number) werden neu berechnet'),
             const SizedBox(height: 4),
-            const Text('⚠️ Logs vor dem neuen Seed-Datum werden gelöscht'),
+            Text('❌ $logsToDelete Logs werden permanent gelöscht'),
             const SizedBox(height: 12),
             const Text(
-              'Diese Aktion kann nicht rückgängig gemacht werden!',
+              'Diese Aktion kann NICHT rückgängig gemacht werden!',
               style: TextStyle(
                 color: Colors.red,
                 fontWeight: FontWeight.bold,
@@ -442,7 +476,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       await _plantRepo.delete(widget.plant.id!);
 
       if (mounted) {
-        Navigator.of(context).pop(true);
+        // ✅ FIX: Only pop once to close edit screen
+        // The confirmation dialog was already popped when user clicked "Löschen"
         Navigator.of(context).pop(true);
         AppMessages.deletedSuccessfully(context, 'Pflanze');
       }
@@ -902,7 +937,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       label: const Text('Pflanze löschen'),
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.red[700],
-        side: BorderSide(color: Colors.red[700]!),
+        side: BorderSide(color: Colors.red[700] ?? Colors.red),
         padding: const EdgeInsets.symmetric(vertical: 16),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),

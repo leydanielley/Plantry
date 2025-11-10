@@ -663,7 +663,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
             color: isDark ? Colors.grey[900] : Colors.grey[100],
             border: Border(
               top: BorderSide(
-                color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                color: isDark ? Colors.grey[800] ?? Colors.grey : Colors.grey[300] ?? Colors.grey,
               ),
             ),
           ),

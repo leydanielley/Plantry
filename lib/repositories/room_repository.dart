@@ -70,18 +70,64 @@ class RoomRepository implements IRoomRepository {
     }
   }
 
-  /// Raum löschen
+  /// Raum löschen mit Cascade-Update
+  /// ✅ FIX: Unlinks all related records before deleting room to prevent orphaned data
+  ///
+  /// Updates (sets room_id to NULL):
+  /// 1. Hardware linked to this room
+  /// 2. Plants linked to this room
+  /// 3. RDWC systems linked to this room
+  /// 4. Finally deletes the room itself
   @override
   Future<int> delete(int id) async {
     try {
       final db = await _dbHelper.database;
-      return await db.delete(
-        'rooms',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+
+      // Use transaction for atomic cascade delete
+      return await db.transaction((txn) async {
+        AppLogger.info('RoomRepo', 'Starting cascade delete for room', 'roomId=$id');
+
+        // Step 1: Unlink all hardware in this room
+        final hardwareCount = await txn.update(
+          'hardware',
+          {'room_id': null},
+          where: 'room_id = ?',
+          whereArgs: [id],
+        );
+
+        // Step 2: Unlink all plants in this room
+        final plantCount = await txn.update(
+          'plants',
+          {'room_id': null},
+          where: 'room_id = ?',
+          whereArgs: [id],
+        );
+
+        // Step 3: Unlink all RDWC systems in this room
+        final systemCount = await txn.update(
+          'rdwc_systems',
+          {'room_id': null},
+          where: 'room_id = ?',
+          whereArgs: [id],
+        );
+
+        // Step 4: Finally delete the room itself
+        final deletedRoom = await txn.delete(
+          'rooms',
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+
+        AppLogger.info(
+          'RoomRepo',
+          '✅ Cascade delete completed',
+          'room=$deletedRoom, hardware=$hardwareCount, plants=$plantCount, systems=$systemCount',
+        );
+
+        return deletedRoom;
+      });
     } catch (e, stackTrace) {
-      AppLogger.error('RoomRepository', 'Failed to delete room', e, stackTrace);
+      AppLogger.error('RoomRepository', 'Failed to delete room with cascade', e, stackTrace);
       rethrow;
     }
   }

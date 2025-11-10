@@ -774,7 +774,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             decoration: BoxDecoration(
               color: Colors.blue[50],
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue[200]!),
+              border: Border.all(color: Colors.blue[200] ?? Colors.blue),
             ),
             child: Row(
               children: [
@@ -805,12 +805,12 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.purple[50]!, Colors.blue[50]!],
+          colors: [Colors.purple[50] ?? Colors.purple, Colors.blue[50] ?? Colors.blue],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200]!),
+        border: Border.all(color: Colors.blue[200] ?? Colors.blue),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1075,7 +1075,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: Colors.grey[300] ?? Colors.grey),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -1209,7 +1209,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: Colors.grey[300] ?? Colors.grey),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

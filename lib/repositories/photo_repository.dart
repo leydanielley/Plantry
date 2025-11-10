@@ -116,7 +116,7 @@ class PhotoRepository implements IPhotoRepository {
   }
 
   /// Foto löschen (für Legacy-Code)
-  /// ✅ FIX BUG #1: Deletes file from disk AND database
+  /// ✅ FIX: Only deletes DB record if file deletion succeeds or file doesn't exist
   @override
   Future<int> delete(int id) async {
     final db = await _dbHelper.database;
@@ -126,21 +126,24 @@ class PhotoRepository implements IPhotoRepository {
 
     if (photo != null) {
       // 2. Delete physical file
-      try {
-        final file = File(photo.filePath);
-        if (await file.exists()) {
+      final file = File(photo.filePath);
+      final fileExists = await file.exists();
+
+      if (fileExists) {
+        try {
           await file.delete();
           AppLogger.info('PhotoRepo', '✅ Deleted file', photo.filePath);
-        } else {
-          AppLogger.warning('PhotoRepo', 'File already missing', photo.filePath);
+        } catch (e) {
+          AppLogger.error('PhotoRepo', 'Failed to delete file', e);
+          // Don't delete DB record if file deletion failed
+          throw Exception('Failed to delete photo file: $e');
         }
-      } catch (e) {
-        AppLogger.warning('PhotoRepo', 'Failed to delete file', e);
-        // Continue anyway to at least remove DB record
+      } else {
+        AppLogger.warning('PhotoRepo', 'File already missing, cleaning up DB record', photo.filePath);
       }
     }
 
-    // 3. Then delete DB record
+    // 3. Delete DB record (only reached if file delete succeeded or file doesn't exist)
     return await db.delete(
       'photos',
       where: 'id = ?',
@@ -185,7 +188,7 @@ class PhotoRepository implements IPhotoRepository {
   }
 
   /// Alle Fotos löschen die zu einem Log gehören
-  /// ✅ FIX BUG #1: Deletes files from disk AND database
+  /// ✅ FIX: Only deletes DB records for successfully deleted files
   @override
   Future<void> deleteByLogId(int logId) async {
     final db = await _dbHelper.database;
@@ -193,27 +196,51 @@ class PhotoRepository implements IPhotoRepository {
     // 1. Get all photos for this log
     final photos = await getPhotosByLogId(logId);
 
-    // 2. Delete all files
+    if (photos.isEmpty) return;
+
+    // 2. Delete all files and track successes
+    final List<int> successfullyDeletedIds = [];
+    final List<String> errors = [];
+
     for (final photo in photos) {
       try {
         final file = File(photo.filePath);
-        if (await file.exists()) {
+        final fileExists = await file.exists();
+
+        if (fileExists) {
           await file.delete();
           AppLogger.info('PhotoRepo', '✅ Deleted file', photo.filePath);
+          successfullyDeletedIds.add(photo.id!);
         } else {
-          AppLogger.warning('PhotoRepo', 'File already missing', photo.filePath);
+          AppLogger.warning('PhotoRepo', 'File already missing, will clean up DB', photo.filePath);
+          successfullyDeletedIds.add(photo.id!);  // Still delete DB record
         }
       } catch (e) {
-        AppLogger.warning('PhotoRepo', 'Failed to delete file', e);
-        // Continue to delete other files
+        AppLogger.error('PhotoRepo', 'Failed to delete file', e);
+        errors.add('${photo.filePath}: $e');
+        // Don't add to successfullyDeletedIds
       }
     }
 
-    // 3. Delete DB records
-    await db.delete(
-      'photos',
-      where: 'log_id = ?',
-      whereArgs: [logId],
-    );
+    // 3. Delete DB records only for successfully deleted files
+    if (successfullyDeletedIds.isNotEmpty) {
+      await db.transaction((txn) async {
+        for (final photoId in successfullyDeletedIds) {
+          await txn.delete(
+            'photos',
+            where: 'id = ?',
+            whereArgs: [photoId],
+          );
+        }
+      });
+      AppLogger.info('PhotoRepo', 'Deleted ${successfullyDeletedIds.length}/${photos.length} photos from DB');
+    }
+
+    // 4. If any errors occurred, log them
+    if (errors.isNotEmpty) {
+      AppLogger.warning('PhotoRepo',
+        'Failed to delete ${errors.length} photo files. DB records retained.',
+        errors.join('; '));
+    }
   }
 }

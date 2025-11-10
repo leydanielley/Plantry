@@ -142,8 +142,25 @@ class LogService implements ILogService {
     
     // ✅ v13: phase & phaseDayNumber berechnen
     int? phaseDayNumber;
-    if (plant.phaseStartDate != null) {
-      phaseDayNumber = Validators.calculateDayNumber(log.logDate, plant.phaseStartDate!);
+    // Use phase-specific date instead of deprecated phaseStartDate
+    DateTime? phaseStartDate;
+    switch (plant.phase) {
+      case PlantPhase.veg:
+        phaseStartDate = plant.vegDate;
+        break;
+      case PlantPhase.bloom:
+        phaseStartDate = plant.bloomDate;
+        break;
+      case PlantPhase.harvest:
+        phaseStartDate = plant.harvestDate;
+        break;
+      case PlantPhase.seedling:
+      case PlantPhase.archived:
+        phaseStartDate = plant.seedDate;
+        break;
+    }
+    if (phaseStartDate != null) {
+      phaseDayNumber = Validators.calculateDayNumber(log.logDate, phaseStartDate);
     }
     
     // Korrigierter Log mit richtigem dayNumber & phase
@@ -341,7 +358,11 @@ class LogService implements ILogService {
         // 1. Logs für alle Pflanzen erstellen (Batch)
         for (final plantId in plantIds) {
           // Lade Pflanze für Phase-Info
-          final plantMap = plantMaps.firstWhere((p) => p['id'] == plantId);
+          // ✅ FIX: Add orElse to prevent StateError crash
+          final plantMap = plantMaps.firstWhere(
+            (p) => p['id'] == plantId,
+            orElse: () => throw Exception('Plant not found: $plantId'),
+          );
           final plantPhase = PlantPhase.values.byName(
             plantMap['phase'].toString().toLowerCase()
           );

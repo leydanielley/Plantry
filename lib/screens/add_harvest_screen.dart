@@ -169,7 +169,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                     decoration: BoxDecoration(
                       color: Colors.green[50],
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green[200]!),
+                      border: Border.all(color: Colors.green[200] ?? Colors.green),
                     ),
                     child: Row(
                       children: [
@@ -206,7 +206,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
+                      border: Border.all(color: Colors.grey[300] ?? Colors.grey),
                     ),
                     child: Row(
                       children: [
@@ -291,7 +291,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
+                      border: Border.all(color: Colors.grey[300] ?? Colors.grey),
                     ),
                     child: Row(
                       children: [

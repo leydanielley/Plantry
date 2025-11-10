@@ -392,7 +392,7 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
       decoration: BoxDecoration(
         color: Colors.blue[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[300]!),
+        border: Border.all(color: Colors.blue[300] ?? Colors.blue),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,46 +415,46 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
           _buildSummaryRow(
             'File',
             widget.dbfFile.path.split('/').last,
-            Colors.blue[700]!,
+            Colors.blue[700] ?? Colors.blue,
           ),
           _buildSummaryRow(
             'Total Items',
             '${_parsedFertilizers.length}',
-            Colors.green[700]!,
+            Colors.green[700] ?? Colors.green,
           ),
           _buildSummaryRow(
             '  • Substances',
             '$substanceCount',
-            Colors.green[600]!,
+            Colors.green[600] ?? Colors.green,
           ),
           _buildSummaryRow(
             '  • Recipes/Formulas',
             '$recipeCount',
-            Colors.purple[600]!,
+            Colors.purple[600] ?? Colors.purple,
           ),
           if (_duplicateNames.isNotEmpty)
             _buildSummaryRow(
               'Duplicates',
               '${_duplicateNames.length}',
-              Colors.orange[700]!,
+              Colors.orange[700] ?? Colors.orange,
             ),
           if (invalidCount > 0)
             _buildSummaryRow(
               'Invalid (URLs/Links)',
               '$invalidCount',
-              Colors.red[700]!,
+              Colors.red[700] ?? Colors.red,
             ),
           if (incompleteCount > 0)
             _buildSummaryRow(
               'Incomplete Data',
               '$incompleteCount',
-              Colors.orange[600]!,
+              Colors.orange[600] ?? Colors.orange,
             ),
           const Divider(height: 24),
           _buildSummaryRow(
             'Selected to Import',
             '${_getSelectedCount()}',
-            Colors.blue[700]!,
+            Colors.blue[700] ?? Colors.blue,
           ),
           const SizedBox(height: 12),
           // Filter Buttons
@@ -633,10 +633,10 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
             borderRadius: BorderRadius.circular(8),
             side: BorderSide(
               color: isInvalid
-                  ? Colors.red[300]!
+                  ? Colors.red[300] ?? Colors.red
                   : (isIncomplete
-                      ? Colors.orange[300]!
-                      : (isDuplicate ? Colors.yellow[700]! : Colors.green[300]!)),
+                      ? Colors.orange[300] ?? Colors.orange
+                      : (isDuplicate ? Colors.yellow[700] ?? Colors.yellow : Colors.green[300] ?? Colors.green)),
               width: 1.5,
             ),
           ),
@@ -820,7 +820,7 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
               color: isDark ? Colors.grey[800] : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: Colors.red[300]!,
+                color: Colors.red[300] ?? Colors.red,
                 width: 1.5,
               ),
             ),

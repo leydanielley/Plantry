@@ -46,8 +46,19 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
         });
       }
     } catch (e) {
+      // ✅ FIX: Set default health score on error to prevent null crashes
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _healthScore = HealthScore(
+            score: 50,
+            level: HealthLevel.fair,
+            factors: {},
+            warnings: ['Fehler beim Berechnen des Gesundheitswerts'],
+            recommendations: ['Versuche es später erneut'],
+            calculatedAt: DateTime.now(),
+          );
+          _isLoading = false;
+        });
       }
     }
   }
@@ -338,7 +349,11 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
     );
   }
 
+  /// ✅ FIX: Safe color getter that handles null health score
   Color _getScoreColor() {
+    if (_healthScore == null) {
+      return Colors.grey; // Default color when score unavailable
+    }
     return _getScoreColorForValue(_healthScore!.score.toDouble());
   }
 

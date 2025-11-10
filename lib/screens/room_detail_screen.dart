@@ -575,14 +575,14 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   }
 
   Color _getGrowTypeColor(GrowType? type) {
-    if (type == null) return Colors.grey[600]!;
+    if (type == null) return Colors.grey[600] ?? Colors.grey;
     switch (type) {
       case GrowType.indoor:
-        return Colors.blue[600]!;
+        return Colors.blue[600] ?? Colors.blue;
       case GrowType.outdoor:
-        return Colors.green[600]!;
+        return Colors.green[600] ?? Colors.green;
       case GrowType.greenhouse:
-        return Colors.orange[600]!;
+        return Colors.orange[600] ?? Colors.orange;
     }
   }
 

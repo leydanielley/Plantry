@@ -9,10 +9,11 @@ class Validators {
     return value >= 0.0 && value <= 14.0;
   }
 
-  // EC validation (must be non-negative)
+  // EC validation (must be between 0 and 10.0 mS/cm)
+  // ✅ FIX: Add upper bound to prevent unrealistic EC values
   static bool isValidEc(double value) {
     if (value.isNaN || value.isInfinite) return false;
-    return value >= 0.0;
+    return value >= 0.0 && value <= 10.0;
   }
 
   // Temperature validation (-50 to 50°C)
@@ -131,7 +132,8 @@ class Validators {
 
     final parsed = double.tryParse(value);
     if (parsed == null) return 'Invalid EC value';
-    if (!isValidEc(parsed)) return 'EC value must be positive';
+    // ✅ FIX: Updated error message to reflect upper bound
+    if (!isValidEc(parsed)) return 'EC must be between 0 and 10.0 mS/cm';
 
     return null;
   }

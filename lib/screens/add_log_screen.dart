@@ -162,10 +162,26 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         imageQuality: 85,
       );
 
-      if (photo != null && mounted) {
-        setState(() {
-          _selectedPhotos.add(photo);
-        });
+      if (photo != null) {
+        // ✅ FIX: Validate file type to prevent malicious uploads
+        final allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+        final extension = photo.path.toLowerCase().substring(photo.path.lastIndexOf('.'));
+
+        if (!allowedExtensions.contains(extension)) {
+          if (mounted) {
+            AppMessages.showError(
+              context,
+              'Ungültiger Dateityp. Nur Bilder (.jpg, .jpeg, .png, .webp) sind erlaubt.',
+            );
+          }
+          return;
+        }
+
+        if (mounted) {
+          setState(() {
+            _selectedPhotos.add(photo);
+          });
+        }
       }
     } catch (e) {
       AppLogger.error('AddLogScreen', 'Error picking photo: $e');
@@ -333,6 +349,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       widget.plant.medium == Medium.hydro;
 
   Future<void> _saveLog() async {
+    // ✅ FIX: Prevent double-tap by checking loading state first
+    if (_isLoading) return;
+
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedAction == ActionType.phaseChange && _selectedPhase == null) {
@@ -530,18 +549,19 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
     }
   }
 
+  // ✅ FIX: Replace all force unwraps with null-aware operators
   Color _getPhaseColor(PlantPhase phase) {
     switch (phase) {
       case PlantPhase.seedling:
-        return Colors.green[300]!;
+        return Colors.green[300] ?? Colors.green;
       case PlantPhase.veg:
-        return Colors.green[600]!;
+        return Colors.green[600] ?? Colors.green;
       case PlantPhase.bloom:
-        return Colors.purple[400]!;
+        return Colors.purple[400] ?? Colors.purple;
       case PlantPhase.harvest:
-        return Colors.orange[600]!;
+        return Colors.orange[600] ?? Colors.orange;
       case PlantPhase.archived:
-        return Colors.grey[600]!;
+        return Colors.grey[600] ?? Colors.grey;
     }
   }
 
@@ -730,7 +750,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                 decoration: BoxDecoration(
                   color: Colors.blue[50],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue[200]!),
+                  border: Border.all(color: Colors.blue[200] ?? Colors.blue),
                 ),
                 child: Row(
                   children: [
@@ -758,7 +778,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                   label: const Text('Letzten Log kopieren'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.blue[700],
-                    side: BorderSide(color: Colors.blue[300]!),
+                    side: BorderSide(color: Colors.blue[300] ?? Colors.blue),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
@@ -936,7 +956,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             decoration: BoxDecoration(
               color: Colors.orange[50],
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange[300]!),
+              border: Border.all(color: Colors.orange[300] ?? Colors.orange),
             ),
             child: Row(
               children: [
@@ -992,7 +1012,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
               color: isDark ? Colors.grey[850] : Colors.grey[100],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                color: isDark ? Colors.grey[700] ?? Colors.grey : Colors.grey[300] ?? Colors.grey,
                 width: 2,
               ),
             ),
@@ -1127,7 +1147,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             decoration: BoxDecoration(
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[300]!),
+              border: Border.all(color: Colors.grey[300] ?? Colors.grey),
             ),
             child: Row(
               children: [
