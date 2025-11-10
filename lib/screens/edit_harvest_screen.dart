@@ -119,6 +119,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
       return;
     }
 
+    if (!mounted) return;
     setState(() => _isSaving = true);
 
     try {
@@ -167,8 +168,10 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
       }
     } catch (e) {
       AppLogger.error('EditHarvestScreen', 'Error: $e');
-      setState(() => _isSaving = false);
-      _showErrorSnackBar('Fehler beim Speichern: $e');
+      if (mounted) {
+        setState(() => _isSaving = false);
+        _showErrorSnackBar('Fehler beim Speichern: $e');
+      }
     }
   }
 

@@ -383,7 +383,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           // Inline update within transaction instead of calling method
           await txn.update(
             'rdwc_systems',
-            {'current_water_level': newLevel},
+            {'current_level': newLevel},  // ✅ FIXED: correct column name
             where: 'id = ?',
             whereArgs: [systemId],
           );
@@ -394,7 +394,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           // Resetting to max capacity is incorrect as it implies the system is full
           await txn.update(
             'rdwc_systems',
-            {'current_water_level': 0.0},
+            {'current_level': 0.0},  // ✅ FIXED: correct column name
             where: 'id = ?',
             whereArgs: [systemId],
           );
@@ -551,22 +551,88 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
   }
 
   /// Get recent logs with fertilizers loaded
+  /// ✅ FIX: Optimized to prevent N+1 query problem using single JOIN
   @override
   Future<List<RdwcLog>> getRecentLogsWithFertilizers(int systemId, {int limit = 10}) async {
     try {
-      final logs = await getRecentLogs(systemId, limit: limit);
-      final logsWithFertilizers = <RdwcLog>[];
+      final db = await _dbHelper.database;
 
-      for (final log in logs) {
-        if (log.id != null) {
-          final fertilizers = await getLogFertilizers(log.id!);
-          logsWithFertilizers.add(log.copyWith(fertilizers: fertilizers));
-        } else {
-          logsWithFertilizers.add(log);
+      // Single JOIN query instead of N+1 queries
+      final maps = await db.rawQuery('''
+        SELECT
+          rl.*,
+          rlf.id as rlf_id,
+          rlf.fertilizer_id,
+          rlf.amount,
+          rlf.amount_type,
+          f.name as fert_name,
+          f.brand as fert_brand,
+          f.npk as fert_npk
+        FROM rdwc_logs rl
+        LEFT JOIN rdwc_log_fertilizers rlf ON rl.id = rlf.rdwc_log_id
+        LEFT JOIN fertilizers f ON rlf.fertilizer_id = f.id
+        WHERE rl.system_id = ?
+        ORDER BY rl.log_date DESC, rl.id DESC
+        LIMIT ?
+      ''', [systemId, limit * 10]); // Multiply limit to account for multiple fertilizers per log
+
+      // Group results by log_id
+      final logMap = <int, Map<String, dynamic>>{};
+      final fertilizerMap = <int, List<Map<String, dynamic>>>{};
+
+      for (final row in maps) {
+        final logId = row['id'] as int;
+
+        // Store log data (only once per log_id)
+        if (!logMap.containsKey(logId)) {
+          logMap[logId] = {
+            'id': row['id'],
+            'system_id': row['system_id'],
+            'log_date': row['log_date'],
+            'log_type': row['log_type'],
+            'level_before': row['level_before'],
+            'level_after': row['level_after'],
+            'water_added': row['water_added'],
+            'water_temp': row['water_temp'],
+            'ph_before': row['ph_before'],
+            'ph_after': row['ph_after'],
+            'ec_before': row['ec_before'],
+            'ec_after': row['ec_after'],
+            'notes': row['notes'],
+            'created_at': row['created_at'],
+          };
+          fertilizerMap[logId] = [];
+        }
+
+        // Add fertilizer if present
+        if (row['rlf_id'] != null) {
+          fertilizerMap[logId]!.add({
+            'id': row['rlf_id'],
+            'fertilizer_id': row['fertilizer_id'],
+            'amount': row['amount'],
+            'amount_type': row['amount_type'],
+            'name': row['fert_name'],
+            'brand': row['fert_brand'],
+            'npk': row['fert_npk'],
+          });
         }
       }
 
-      return logsWithFertilizers;
+      // Convert to RdwcLog objects
+      final logs = <RdwcLog>[];
+      for (final logId in logMap.keys.take(limit)) {
+        final logData = logMap[logId]!;
+        final log = RdwcLog.fromMap(logData);
+
+        // Convert fertilizer maps to RdwcLogFertilizer objects
+        final fertilizers = fertilizerMap[logId]!
+            .map((fMap) => RdwcLogFertilizer.fromMap(fMap))
+            .toList();
+
+        logs.add(log.copyWith(fertilizers: fertilizers));
+      }
+
+      return logs;
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error loading logs with fertilizers', e);
       return [];

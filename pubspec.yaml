@@ -2,7 +2,7 @@ name: growlog_app
 description: "Private plant growing journal and log tracking app"
 publish_to: 'none'
 
-version: 0.9.1+16
+version: 0.9.6+21
 
 environment:
   sdk: ^3.9.2

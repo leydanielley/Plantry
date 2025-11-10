@@ -2,6 +2,7 @@
 // GROWLOG - Settings Screen (with Theme Switcher)
 // =============================================
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../utils/app_messages.dart';
@@ -759,11 +760,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       // Delete all tables content (but keep structure)
       await db.transaction((txn) async {
+        // 1. Delete photo files from filesystem BEFORE deleting DB entries
+        final photos = await txn.query('photos');
+        for (final photo in photos) {
+          try {
+            final file = File(photo['file_path'] as String);
+            if (await file.exists()) {
+              await file.delete();
+              AppLogger.debug('SettingsScreen', 'Deleted photo file', 'path=${photo['file_path']}');
+            }
+          } catch (e) {
+            AppLogger.warning('SettingsScreen', 'Failed to delete photo file', e);
+            // Continue with DB deletion even if file deletion fails
+          }
+        }
+
+        // 2. Delete child tables first (Foreign Key dependencies)
         await txn.delete('log_fertilizers');
+        await txn.delete('rdwc_log_fertilizers');
+        await txn.delete('rdwc_recipe_fertilizers');
+        await txn.delete('template_fertilizers');
         await txn.delete('photos');
+
+        // 3. Delete middle-level tables
         await txn.delete('harvests');
         await txn.delete('plant_logs');
+        await txn.delete('rdwc_logs');
+        await txn.delete('log_templates');
+        await txn.delete('rdwc_recipes');
+
+        // 4. Delete parent tables
         await txn.delete('plants');
+        await txn.delete('rdwc_systems');
         await txn.delete('grows');
         await txn.delete('rooms');
         await txn.delete('hardware');

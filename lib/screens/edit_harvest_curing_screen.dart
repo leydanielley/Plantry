@@ -52,9 +52,10 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (!mounted) return;
     setState(() => _isSaving = true);
 
-    try {
+    try{
       int? curingDays;
       if (_curingStartDate != null && _curingEndDate != null) {
         curingDays = _curingEndDate!.difference(_curingStartDate!).inDays;
@@ -76,9 +77,9 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
         AppMessages.showSuccess(context, 'Curing aktualisiert! ✅');
       }
     } catch (e) {
-      setState(() => _isSaving = false);
       if (mounted) {
-        AppMessages.showError(context, 
+        setState(() => _isSaving = false);
+        AppMessages.showError(context,
 'Fehler: $e');
       }
     }

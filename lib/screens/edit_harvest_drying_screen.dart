@@ -55,6 +55,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (!mounted) return;
     setState(() => _isSaving = true);
 
     try {
@@ -80,8 +81,8 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
         AppMessages.showSuccess(context, 'Trocknung aktualisiert! ✅');
       }
     } catch (e) {
-      setState(() => _isSaving = false);
       if (mounted) {
+        setState(() => _isSaving = false);
         AppMessages.showError(context, 
 'Fehler: $e');
       }
