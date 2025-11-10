@@ -4,13 +4,13 @@
 // Simuliert die tägliche Routine eines Users
 // der mehrere Pflanzen gleichzeitig pflegt
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/plant_log.dart';
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
-import 'package:growlog_app/services/interfaces/i_log_service.dart';
 import '../mocks/mock_plant_repository.dart';
 import '../mocks/mock_plant_log_repository.dart';
 
@@ -215,12 +215,12 @@ void main() {
       expect(feedingCount, 1);
       expect(noteCount, 2);
 
-      print('✅ Daily Routine Complete!');
-      print('🌿 4 Pflanzen gepflegt');
-      print('💧 $wateringCount x gegossen');
-      print('🥗 $feedingCount x gedüngt');
-      print('📝 $noteCount x notiert');
-      print('⏱️ Zeit: ~15 Minuten (realistic)');
+      debugPrint('✅ Daily Routine Complete!');
+      debugPrint('🌿 4 Pflanzen gepflegt');
+      debugPrint('💧 $wateringCount x gegossen');
+      debugPrint('🥗 $feedingCount x gedüngt');
+      debugPrint('📝 $noteCount x notiert');
+      debugPrint('⏱️ Zeit: ~15 Minuten (realistic)');
     });
 
     test('Scenario: User copies last log for quick entry', () async {
@@ -280,7 +280,7 @@ void main() {
       expect(allLogs.last.waterAmount, 500.0); // Gleiche Menge
       expect(allLogs.last.ecIn, 1.2); // Gleicher EC
 
-      print('✅ Quick Log Entry: User spart Zeit durch Kopieren!');
+      debugPrint('✅ Quick Log Entry: User spart Zeit durch Kopieren!');
     });
   });
 }

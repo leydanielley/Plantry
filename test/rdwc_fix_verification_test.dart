@@ -4,10 +4,10 @@
 // =============================================
 
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/models/rdwc_log.dart';
-import '../lib/models/rdwc_log_fertilizer.dart';
-import '../lib/models/plant_log.dart';
-import '../lib/models/enums.dart';
+import 'package:growlog_app/models/rdwc_log.dart';
+import 'package:growlog_app/models/rdwc_log_fertilizer.dart';
+import 'package:growlog_app/models/plant_log.dart';
+import 'package:growlog_app/models/enums.dart';
 
 void main() {
   group('RDWC Log Bug Fixes Verification', () {

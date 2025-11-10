@@ -124,9 +124,9 @@ class BackupConfig {
 
   /// Get export timeout duration
   static Duration get exportTimeout =>
-      Duration(minutes: exportTimeoutMinutes);
+      const Duration(minutes: exportTimeoutMinutes);
 
   /// Get import timeout duration
   static Duration get importTimeout =>
-      Duration(minutes: importTimeoutMinutes);
+      const Duration(minutes: importTimeoutMinutes);
 }

@@ -4,8 +4,13 @@
 // =============================================
 
 import 'dart:io';
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import '../utils/app_logger.dart';
+import '../utils/app_version.dart';
+import '../config/backup_config.dart';
 
 class DatabaseRecovery {
   /// Check if database is corrupted
@@ -125,31 +130,121 @@ class DatabaseRecovery {
       }
     }
 
-    // Step 3: Backup and delete corrupted database
-    AppLogger.warning('DatabaseRecovery', 'Step 2: Repair failed, creating fresh database...');
+    // Step 3: Emergency JSON export (last resort before deletion)
+    AppLogger.warning('DatabaseRecovery', 'Step 2: Repair failed, attempting emergency data export...');
+    String? emergencyBackupPath;
+
+    try {
+      // Try to open the corrupted database and export what we can
+      final corruptedDb = await openDatabase(dbPath, readOnly: true);
+      emergencyBackupPath = await exportToJSON(corruptedDb);
+      await corruptedDb.close();
+    } catch (e) {
+      AppLogger.warning('DatabaseRecovery', 'Emergency export not possible (DB cannot be opened)', e);
+      // Continue with deletion even if export fails
+    }
+
+    // Step 4: Backup and delete corrupted database
+    AppLogger.warning('DatabaseRecovery', 'Step 3: Creating fresh database...');
     final deleted = await deleteCorruptedDatabase(dbPath);
 
     if (deleted) {
+      String message = 'Corrupted database removed. A fresh database will be created.';
+
+      if (emergencyBackupPath != null) {
+        message += '\n\n✅ Emergency backup saved to:\n$emergencyBackupPath\n\n'
+            'You can manually recover data from this JSON file if needed.';
+        AppLogger.info('DatabaseRecovery', '✅ Emergency backup available at: $emergencyBackupPath');
+      } else {
+        message += '\n\nNote: Previous data may be lost. Check backups if available.';
+      }
+
       AppLogger.info('DatabaseRecovery', '✅ Fresh database will be created');
-      return DatabaseRecoveryResult.recreated(
-        'Corrupted database removed. A fresh database will be created. '
-        'Note: Previous data may be lost. Check backups if available.',
-      );
+      return DatabaseRecoveryResult.recreated(message);
     } else {
       AppLogger.error('DatabaseRecovery', '❌ Recovery failed completely');
       return DatabaseRecoveryResult.failed('Could not recover database');
     }
   }
 
-  /// Export database to JSON (emergency backup)
+  /// Export database to JSON (emergency backup before deletion)
+  ///
+  /// This is the "last resort" emergency backup that saves data from a corrupted
+  /// database to a JSON file before it gets deleted. This gives users a chance
+  /// to manually recover data if the corruption only affects structure, not content.
+  ///
+  /// Returns the path to the exported JSON file, or null if export failed.
   static Future<String?> exportToJSON(Database db) async {
     try {
-      // This would export all tables to JSON
-      // Implementation would be similar to BackupService
-      AppLogger.info('DatabaseRecovery', 'Emergency JSON export not yet implemented');
-      return null;
+      AppLogger.warning('DatabaseRecovery', '🚨 Attempting emergency JSON export...');
+
+      // Create emergency backup directory
+      final documentsDir = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final emergencyDir = Directory(
+        path.join(documentsDir.path, 'growlog_emergency_backups'),
+      );
+
+      if (!await emergencyDir.exists()) {
+        await emergencyDir.create(recursive: true);
+      }
+
+      // Build JSON backup structure
+      final Map<String, dynamic> emergencyBackup = {
+        'version': BackupConfig.backupVersion,
+        'exportDate': DateTime.now().toIso8601String(),
+        'appVersion': AppVersion.version,
+        'exportType': 'emergency_recovery',
+        'reason': 'Database corruption detected',
+        'data': {},
+      };
+
+      // Try to export each table (even from corrupted DB)
+      const tables = BackupConfig.exportTables;
+      int successfulTables = 0;
+      int failedTables = 0;
+
+      for (final table in tables) {
+        try {
+          final data = await db.query(table);
+          emergencyBackup['data'][table] = data;
+          successfulTables++;
+          AppLogger.debug(
+            'DatabaseRecovery',
+            'Emergency export: $table (${data.length} rows)',
+          );
+        } catch (e) {
+          // Table might be corrupted or inaccessible
+          failedTables++;
+          emergencyBackup['data'][table] = [];
+          AppLogger.warning(
+            'DatabaseRecovery',
+            'Emergency export failed for table: $table',
+            e,
+          );
+        }
+      }
+
+      // Save JSON file
+      final jsonFile = File(
+        path.join(emergencyDir.path, 'emergency_backup_$timestamp.json'),
+      );
+      await jsonFile.writeAsString(
+        const JsonEncoder.withIndent('  ').convert(emergencyBackup),
+      );
+
+      AppLogger.info(
+        'DatabaseRecovery',
+        '✅ Emergency JSON export complete: $successfulTables/${tables.length} tables saved, $failedTables failed',
+      );
+      AppLogger.info(
+        'DatabaseRecovery',
+        'Emergency backup saved to: ${jsonFile.path}',
+      );
+
+      return jsonFile.path;
     } catch (e) {
-      AppLogger.error('DatabaseRecovery', 'JSON export failed', e);
+      AppLogger.error('DatabaseRecovery', 'Emergency JSON export failed', e);
       return null;
     }
   }

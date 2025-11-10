@@ -87,8 +87,55 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_t['harvest_detail_delete_title']),
-        content: Text(_t['harvest_detail_delete_message']),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+            const SizedBox(width: 12),
+            Expanded(child: Text(_t['harvest_detail_delete_title'])),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _t['harvest_detail_delete_message'],
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 20, color: Colors.blue[700]),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Pflanze wird auf BLOOM zurückgesetzt',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Die zugehörige Pflanze wird automatisch wieder in die Blüte-Phase versetzt. '
+                    'Alle Harvest-Daten (Gewichte, Drying/Curing) gehen verloren.',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -108,12 +155,12 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
         await _harvestRepo.deleteHarvest(widget.harvestId);
         if (mounted) {
           Navigator.pop(context, true);
-          AppMessages.showSuccess(context, 
+          AppMessages.showSuccess(context,
 _t['harvest_detail_deleted']);
         }
       } catch (e) {
         if (mounted) {
-          AppMessages.showError(context, 
+          AppMessages.showError(context,
 'Fehler: $e');
         }
       }

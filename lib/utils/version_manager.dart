@@ -159,7 +159,7 @@ class VersionManager {
         final startTime = prefs.getInt('migration_start_time');
         if (startTime != null) {
           final elapsed = DateTime.now().millisecondsSinceEpoch - startTime;
-          final timeoutMs = _migrationTimeoutMinutes * 60 * 1000;
+          const timeoutMs = _migrationTimeoutMinutes * 60 * 1000;
           if (elapsed > timeoutMs) {
             // Migration stuck for too long
             AppLogger.error('VersionManager', 'Migration appears stuck (>$_migrationTimeoutMinutes min)');

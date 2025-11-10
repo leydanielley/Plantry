@@ -57,7 +57,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
 
   // Direct fertilizer mode
   List<Fertilizer> _allFertilizers = [];  // All fertilizers from DB
-  List<Fertilizer> _selectedFertilizers = [];  // Selected for direct mode
+  final List<Fertilizer> _selectedFertilizers = [];  // Selected for direct mode
 
   NutrientCalculation? _result;
 
@@ -385,7 +385,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _t['calculator_mode'] ?? 'Calculator Mode',
+              _t['calculator_mode'],
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -395,12 +395,12 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
               segments: [
                 ButtonSegment(
                   value: CalculatorMode.batchMix,
-                  label: Text(_t['batch_mix'] ?? 'Batch Mix'),
+                  label: Text(_t['batch_mix']),
                   icon: const Icon(Icons.science_outlined),
                 ),
                 ButtonSegment(
                   value: CalculatorMode.quickMix,
-                  label: Text(_t['quick_mix'] ?? 'Quick Mix'),
+                  label: Text(_t['quick_mix']),
                   icon: const Icon(Icons.speed),
                 ),
               ],
@@ -601,10 +601,10 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                       icon: const Icon(Icons.science),
                     ),
                   if (_allFertilizers.isNotEmpty)
-                    ButtonSegment(
+                    const ButtonSegment(
                       value: RecipeMode.direct,
-                      label: const Text('Direct'),
-                      icon: const Icon(Icons.local_florist),
+                      label: Text('Direct'),
+                      icon: Icon(Icons.local_florist),
                     ),
                 ],
                 selected: {_recipeMode},
@@ -668,7 +668,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DropdownButtonFormField<RdwcRecipe>(
-          value: _selectedRecipe,
+          initialValue: _selectedRecipe,
           decoration: InputDecoration(
             labelText: _t['select_recipe'],
             prefixIcon: Icon(Icons.science, color: Colors.green[700]),

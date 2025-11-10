@@ -11,7 +11,8 @@ class StorageHelper {
   // ✅ AUDIT FIX: Storage threshold constants already properly extracted
   static const int _minRequiredBytes = 100 * 1024 * 1024; // 100 MB minimum
   static const int _criticalThreshold = 50 * 1024 * 1024; // 50 MB critical
-  static const int _maxPhotoSizeBytes = 50 * 1024 * 1024; // 50 MB max photo size
+  // Note: _maxPhotoSizeBytes reserved for future photo validation feature
+  // static const int _maxPhotoSizeBytes = 50 * 1024 * 1024; // 50 MB max photo size
   static const int _thumbnailAgeDays = 30; // Delete thumbnails older than 30 days
   static const int _bytesPerKb = 1024;
 

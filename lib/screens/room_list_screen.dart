@@ -84,18 +84,87 @@ class _RoomListScreenState extends State<RoomListScreen> {
   }
 
   Future<void> _deleteRoom(Room room) async {
-    final plantCount = _plantCounts[room.id] ?? 0;
+    // 1. Prüfe ob Raum in Verwendung ist
+    final isInUse = await _roomRepo.isInUse(room.id!);
 
-    if (plantCount > 0) {
-      // Raum hat Pflanzen - warnen
+    if (isInUse) {
+      // Zeige benutzerfreundliche Warnung
+      final usage = await _roomRepo.getUsageDetails(room.id!);
+
+      if (!mounted) return;
+
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(_t['room_cannot_be_deleted']),
-          content: Text(
-            _t['delete_room_with_plants']
-                .replaceAll('{name}', room.name)
-                .replaceAll('{count}', plantCount.toString()),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+              const SizedBox(width: 12),
+              Expanded(child: Text(_t['room_cannot_be_deleted'])),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Der Raum "${room.name}" wird noch verwendet:',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              if (usage['plants']! > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.eco, size: 20, color: Colors.green[700]),
+                      const SizedBox(width: 8),
+                      Text('${usage['plants']} ${_t['plants']}'),
+                    ],
+                  ),
+                ),
+              if (usage['grows']! > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.spa, size: 20, color: Colors.teal[700]),
+                      const SizedBox(width: 8),
+                      Text('${usage['grows']} Grows'),
+                    ],
+                  ),
+                ),
+              if (usage['hardware']! > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.devices, size: 20, color: Colors.blue[700]),
+                      const SizedBox(width: 8),
+                      Text('${usage['hardware']} ${_t['hardware']}'),
+                    ],
+                  ),
+                ),
+              if (usage['rdwc_systems']! > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.water_drop, size: 20, color: Colors.cyan[700]),
+                      const SizedBox(width: 8),
+                      Text('${usage['rdwc_systems']} RDWC-Systeme'),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 16),
+              Text(
+                'Bitte verschieben oder löschen Sie diese Elemente zuerst.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -107,6 +176,9 @@ class _RoomListScreenState extends State<RoomListScreen> {
       );
       return;
     }
+
+    // 2. Raum ist NICHT in Verwendung - zeige normale Lösch-Bestätigung
+    if (!mounted) return;
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -135,9 +207,10 @@ class _RoomListScreenState extends State<RoomListScreen> {
           AppMessages.deletedSuccessfully(context, _t['rooms']);
         }
       } catch (e) {
-        AppLogger.error('RoomListScreen', 'Error deleting: $e');
+        // Sollte nicht passieren, da wir vorher geprüft haben
+        AppLogger.error('RoomListScreen', 'Unexpected delete error: $e');
         if (mounted) {
-          AppMessages.deletingError(context, e.toString());
+          AppMessages.deletingError(context, _t['unexpected_error']);
         }
       }
     }

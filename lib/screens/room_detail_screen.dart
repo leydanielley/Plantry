@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import '../utils/app_logger.dart';
 import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../models/room.dart';
-import '../models/app_settings.dart'; // ✅ AUDIT FIX: i18n
 import '../models/plant.dart';
 import '../models/hardware.dart';
 import '../models/rdwc_system.dart';
@@ -371,7 +370,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 if (widget.room.height > 0)
                   _buildInfoChip(
                     Icons.height,
-                    _t['room_detail_height'].replaceAll('{height}', '${(widget.room.height * 100).toStringAsFixed(0)}'),
+                    _t['room_detail_height'].replaceAll('{height}', (widget.room.height * 100).toStringAsFixed(0)),
                   ),
                 if (widget.room.wateringSystem != null)
                   _buildInfoChip(

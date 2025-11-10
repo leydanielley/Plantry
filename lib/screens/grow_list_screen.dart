@@ -90,9 +90,63 @@ class _GrowListScreenState extends State<GrowListScreen> {
       final confirmDetach = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(_t['attention']),
-          content: Text(
-            _t['delete_grow_with_plants'].replaceAll('{count}', plantCount.toString()),
+          title: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.orange[700]),
+              const SizedBox(width: 12),
+              Expanded(child: Text(_t['attention'])),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _t['delete_grow_with_plants'].replaceAll('{count}', plantCount.toString()),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, size: 20, color: Colors.blue[700]),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'Pflanzen werden NICHT gelöscht',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Die Pflanzen bleiben mit allen Logs, Fotos und Ernten erhalten. '
+                      'Nur die Zuordnung zum Grow wird entfernt.',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Tipp: Verwenden Sie "Archivieren" statt "Löschen", um den Grow-Zyklus abzuschließen.',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(

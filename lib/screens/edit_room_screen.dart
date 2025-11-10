@@ -200,8 +200,8 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
           controller: _nameController,
           decoration: InputDecoration(
             labelText: _t['add_room_name_label'],
-            prefixIcon: Icon(Icons.home),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.home),
+            border: const OutlineInputBorder(),
           ),
           validator: (value) => Validators.validateNotEmpty(value, fieldName: 'Name'),
           autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -213,8 +213,8 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
           decoration: InputDecoration(
             labelText: _t['add_room_description_label'],
             hintText: _t['add_room_description_hint'],
-            prefixIcon: Icon(Icons.description),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.description),
+            border: const OutlineInputBorder(),
           ),
         ),
       ],
@@ -240,8 +240,8 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
           initialValue: _growType,
           decoration: InputDecoration(
             labelText: _t['add_room_grow_type'],
-            prefixIcon: Icon(Icons.category),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.category),
+            border: const OutlineInputBorder(),
           ),
           items: [
             DropdownMenuItem(value: null, child: Text(_t['add_room_not_specified'])),
@@ -259,8 +259,8 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
           initialValue: _wateringSystem,
           decoration: InputDecoration(
             labelText: _t['add_room_watering_system'],
-            prefixIcon: Icon(Icons.water_drop),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.water_drop),
+            border: const OutlineInputBorder(),
           ),
           items: [
             DropdownMenuItem(value: null, child: Text(_t['add_room_not_specified'])),
@@ -331,7 +331,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
                 decoration: InputDecoration(
                   labelText: _t['add_room_width_label'],  // ✅ KORRIGIERT
                   hintText: _t['add_room_width_hint'],      // ✅ KORRIGIERT
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
                 // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
                 validator: (value) => Validators.validatePositiveNumber(
@@ -349,7 +349,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
                 decoration: InputDecoration(
                   labelText: _t['add_room_depth_label'],   // ✅ KORRIGIERT
                   hintText: _t['add_room_width_hint'],      // ✅ KORRIGIERT
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
                 // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
                 validator: (value) => Validators.validatePositiveNumber(
@@ -367,7 +367,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
                 decoration: InputDecoration(
                   labelText: _t['add_room_height_label'],    // ✅ KORRIGIERT
                   hintText: _t['add_room_height_hint'],      // ✅ KORRIGIERT
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
                 // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
                 validator: (value) => Validators.validatePositiveNumber(

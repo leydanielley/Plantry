@@ -288,7 +288,7 @@ class NotificationService implements INotificationService {
 
       // Remind 3 days before
       // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
-      final reminderDate = estimatedHarvestDate.subtract(Duration(days: NotificationConfig.harvestReminderDaysBefore));
+      final reminderDate = estimatedHarvestDate.subtract(const Duration(days: NotificationConfig.harvestReminderDaysBefore));
 
       final scheduledDate = tz.TZDateTime(
         tz.local,
@@ -385,7 +385,7 @@ class NotificationService implements INotificationService {
 
   NotificationDetails _notificationDetails() {
     // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
-    return NotificationDetails(
+    return const NotificationDetails(
       android: AndroidNotificationDetails(
         NotificationConfig.channelId,
         NotificationConfig.channelName,

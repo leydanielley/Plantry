@@ -7,7 +7,6 @@
 // Widget DB-Zugriff benötigt. Für umfassendere Widget-Tests sollten
 // die Repositories gemockt werden.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

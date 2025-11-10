@@ -20,7 +20,6 @@ import '../utils/validators.dart';
 import '../utils/error_handling_mixin.dart';
 import '../utils/app_messages.dart';
 import '../utils/storage_helper.dart';
-import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n extraction
 import '../di/service_locator.dart';
 
 class AddLogScreen extends StatefulWidget {

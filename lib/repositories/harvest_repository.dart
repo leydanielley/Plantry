@@ -16,39 +16,98 @@ class HarvestRepository with RepositoryErrorHandler implements IHarvestRepositor
   String get repositoryName => 'HarvestRepository';
 
   /// Harvest erstellen
+  ///
+  /// Erstellt einen neuen Harvest-Eintrag für eine Pflanze.
+  /// Die Pflanze sollte vor dem Aufruf dieser Methode bereits in Phase HARVEST sein.
   @override
   Future<int> createHarvest(Harvest harvest) async {
-    final db = await _dbHelper.database;
-    final harvestMap = harvest.toMap();
-
-    try {
-      final id = await db.insert('harvests', harvestMap);
-      return id;
-    } catch (e) {
-      rethrow;
-    }
+    return handleMutation(
+      operation: () async {
+        final db = await _dbHelper.database;
+        final harvestMap = harvest.toMap();
+        return await db.insert('harvests', harvestMap);
+      },
+      operationName: 'createHarvest',
+      context: {'plant_id': harvest.plantId},
+    );
   }
 
   /// Harvest aktualisieren
+  ///
+  /// Aktualisiert einen existierenden Harvest-Eintrag.
+  /// Hat keine Auswirkungen auf den Pflanzenstatus.
   @override
   Future<int> updateHarvest(Harvest harvest) async {
-    final db = await _dbHelper.database;
-    return await db.update(
-      'harvests',
-      harvest.copyWith(updatedAt: DateTime.now()).toMap(),
-      where: 'id = ?',
-      whereArgs: [harvest.id],
+    return handleMutation(
+      operation: () async {
+        final db = await _dbHelper.database;
+        return await db.update(
+          'harvests',
+          harvest.copyWith(updatedAt: DateTime.now()).toMap(),
+          where: 'id = ?',
+          whereArgs: [harvest.id],
+        );
+      },
+      operationName: 'updateHarvest',
+      context: {'id': harvest.id},
     );
   }
 
   /// Harvest löschen
+  ///
+  /// ⚠️ WICHTIGES VERHALTEN: Setzt Pflanze zurück auf BLOOM-Phase!
+  ///
+  /// Business-Logik:
+  /// - Löscht den Harvest-Eintrag aus der Datenbank
+  /// - Setzt die zugehörige Pflanze zurück auf Phase 'BLOOM'
+  /// - Ermöglicht Korrektur von versehentlich erstellten Ernten
+  ///
+  /// Anwendungsfälle:
+  /// ✅ Harvest wurde versehentlich zu früh angelegt
+  /// ✅ Falsche Daten wurden erfasst und sollen neu eingegeben werden
+  /// ✅ Pflanze soll weiter blühen (z.B. nach Teil-Ernte)
+  ///
+  /// ⚠️ ACHTUNG: Alle Harvest-Daten (Gewichte, Drying/Curing-Daten) gehen verloren!
   @override
   Future<int> deleteHarvest(int id) async {
-    final db = await _dbHelper.database;
-    return await db.delete(
-      'harvests',
-      where: 'id = ?',
-      whereArgs: [id],
+    return handleMutation(
+      operation: () async {
+        final db = await _dbHelper.database;
+
+        return await db.transaction((txn) async {
+          // Step 1: Get harvest to find plant_id
+          final harvestMaps = await txn.query(
+            'harvests',
+            where: 'id = ?',
+            whereArgs: [id],
+          );
+
+          if (harvestMaps.isEmpty) {
+            throw RepositoryException.notFound('Harvest', id);
+          }
+
+          final plantId = harvestMaps.first['plant_id'] as int;
+
+          // Step 2: Delete harvest
+          final deleteCount = await txn.delete(
+            'harvests',
+            where: 'id = ?',
+            whereArgs: [id],
+          );
+
+          // Step 3: Reset plant to BLOOM phase
+          await txn.update(
+            'plants',
+            {'phase': 'BLOOM'},
+            where: 'id = ?',
+            whereArgs: [plantId],
+          );
+
+          return deleteCount;
+        });
+      },
+      operationName: 'deleteHarvest',
+      context: {'id': id},
     );
   }
 

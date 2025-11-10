@@ -661,7 +661,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                               ),
                             ),
                           Text(
-                            _t['plant_detail_status'].replaceAll('{drying}', '${_harvest!.dryingStatus}').replaceAll('{curing}', '${_harvest!.curingStatus}'),  // ✅ i18n
+                            _t['plant_detail_status'].replaceAll('{drying}', _harvest!.dryingStatus).replaceAll('{curing}', _harvest!.curingStatus),  // ✅ i18n
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? Colors.grey[400] : Colors.grey[600],

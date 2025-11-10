@@ -8,7 +8,6 @@ import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../models/grow.dart';
-import '../models/app_settings.dart'; // ✅ AUDIT FIX: i18n
 import '../models/plant.dart';
 import '../models/enums.dart';
 import '../repositories/interfaces/i_plant_repository.dart';

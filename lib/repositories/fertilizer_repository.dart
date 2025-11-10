@@ -193,37 +193,6 @@ class FertilizerRepository with RepositoryErrorHandler implements IFertilizerRep
     );
   }
 
-  /// Alle Dünger löschen
-  /// ✅ PHASE 2: Uses standardized error handling (rethrows on error)
-  @override
-  Future<int> deleteAll() async {
-    return handleMutation(
-      operation: () async {
-        final db = await _dbHelper.database;
-        return await db.delete('fertilizers');
-      },
-      operationName: 'deleteAll',
-    );
-  }
-
-  /// Alle Dünger einer bestimmten Marke löschen (z.B. 'HydroBuddy')
-  /// ✅ PHASE 2: Uses standardized error handling (rethrows on error)
-  @override
-  Future<int> deleteByBrand(String brand) async {
-    return handleMutation(
-      operation: () async {
-        final db = await _dbHelper.database;
-        return await db.delete(
-          'fertilizers',
-          where: 'brand = ?',
-          whereArgs: [brand],
-        );
-      },
-      operationName: 'deleteByBrand',
-      context: {'brand': brand},
-    );
-  }
-
   /// Anzahl Dünger
   /// ✅ PHASE 2: Uses standardized error handling (returns 0 on error)
   @override

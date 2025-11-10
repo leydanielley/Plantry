@@ -174,8 +174,8 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> with Mounte
           controller: _nameController,
           decoration: InputDecoration(
             labelText: _t['add_fertilizer_name_label'],
-            prefixIcon: Icon(Icons.science),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.science),
+            border: const OutlineInputBorder(),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -189,8 +189,8 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> with Mounte
           controller: _brandController,
           decoration: InputDecoration(
             labelText: _t['add_fertilizer_brand_label'],
-            prefixIcon: Icon(Icons.business),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.business),
+            border: const OutlineInputBorder(),
           ),
         ),
       ],
@@ -216,8 +216,8 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> with Mounte
           decoration: InputDecoration(
             labelText: 'NPK Verhältnis',
             hintText: 'z.B. 2-2-4 oder 10-10-10',
-            prefixIcon: Icon(Icons.analytics),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.analytics),
+            border: const OutlineInputBorder(),
             helperText: _t['edit_fertilizer_npk_helper'],
           ),
           validator: (value) => Validators.validateNpk(value),
@@ -228,8 +228,8 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> with Mounte
           decoration: InputDecoration(
             labelText: _t['add_fertilizer_type_label'],
             hintText: 'z.B. BLOOM, VEGA, ROOT, ADDITIVE',
-            prefixIcon: Icon(Icons.category),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.category),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
@@ -239,8 +239,8 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> with Mounte
           decoration: InputDecoration(
             labelText: _t['add_fertilizer_description_label'],
             hintText: _t['add_fertilizer_description_hint'],
-            prefixIcon: Icon(Icons.description),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.description),
+            border: const OutlineInputBorder(),
             alignLabelWithHint: true,
           ),
         ),
@@ -304,7 +304,7 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> with Mounte
         const SizedBox(height: 12),
         TextFormField(
           controller: _ecValueController,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             labelText: 'EC-Wert pro ml (optional)',
             hintText: 'z.B. 0.5',
             helperText: 'EC-Beitrag pro ml Dünger',
@@ -329,7 +329,7 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> with Mounte
         const SizedBox(height: 12),
         TextFormField(
           controller: _ppmValueController,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             labelText: 'PPM-Wert pro ml (optional)',
             hintText: 'z.B. 250',
             helperText: 'PPM-Beitrag pro ml Dünger',

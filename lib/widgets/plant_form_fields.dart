@@ -228,7 +228,7 @@ class PlantFormFields extends StatelessWidget {
             children: [
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  value: selectedGrowId,
+                  initialValue: selectedGrowId,
                   decoration: const InputDecoration(
                     labelText: 'Grow zuweisen',
                     border: OutlineInputBorder(),
@@ -259,7 +259,7 @@ class PlantFormFields extends StatelessWidget {
           const Center(child: CircularProgressIndicator())
         else
           DropdownButtonFormField<int>(
-            value: selectedRoomId,
+            initialValue: selectedRoomId,
             decoration: const InputDecoration(
               labelText: 'Raum zuweisen',
               border: OutlineInputBorder(),
@@ -372,7 +372,7 @@ class PlantFormFields extends StatelessWidget {
     required ValueChanged<T> onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),

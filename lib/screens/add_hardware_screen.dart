@@ -511,7 +511,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: InputDecoration(
               labelText: _t['add_hardware_spectrum'], // ✅ i18n
               hintText: 'z.B. Full Spectrum, 3000K-6500K',
-              prefixIcon: Icon(Icons.wb_sunny),
+              prefixIcon: const Icon(Icons.wb_sunny),
               border: const OutlineInputBorder(),
             ),
           ),
@@ -546,7 +546,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: InputDecoration(
               labelText: _t['add_hardware_color_temp'], // ✅ i18n
               hintText: 'z.B. 2100K',
-              prefixIcon: Icon(Icons.wb_incandescent),
+              prefixIcon: const Icon(Icons.wb_incandescent),
               border: const OutlineInputBorder(),
             ),
           ),
@@ -573,7 +573,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: InputDecoration(
               labelText: _t['add_hardware_flange_size'], // ✅ i18n
               hintText: 'z.B. 150mm oder 6"',
-              prefixIcon: Icon(Icons.settings),
+              prefixIcon: const Icon(Icons.settings),
               border: const OutlineInputBorder(),
             ),
           ),
@@ -591,7 +591,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: InputDecoration(
               labelText: _t['add_hardware_wattage_optional'], // ✅ i18n
               hintText: _t['add_hardware_wattage_hint_optional'], // ✅ i18n
-              prefixIcon: Icon(Icons.bolt),
+              prefixIcon: const Icon(Icons.bolt),
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
@@ -619,7 +619,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: InputDecoration(
               labelText: _t['add_hardware_wattage_optional'], // ✅ i18n
               hintText: '50',
-              prefixIcon: Icon(Icons.bolt),
+              prefixIcon: const Icon(Icons.bolt),
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
@@ -638,7 +638,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: InputDecoration(
               labelText: _t['add_hardware_diameter'], // ✅ i18n
               hintText: '30',
-              prefixIcon: Icon(Icons.circle_outlined),
+              prefixIcon: const Icon(Icons.circle_outlined),
               border: const OutlineInputBorder(),
               suffixText: 'cm',
             ),
@@ -696,7 +696,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: InputDecoration(
               labelText: _t['add_hardware_coverage'], // ✅ i18n
               hintText: '20',
-              prefixIcon: Icon(Icons.crop_square),
+              prefixIcon: const Icon(Icons.crop_square),
               border: const OutlineInputBorder(),
               suffixText: 'm²',
             ),
@@ -801,7 +801,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: InputDecoration(
               labelText: _t['add_hardware_program_count'], // ✅ i18n
               hintText: '8',
-              prefixIcon: Icon(Icons.event_repeat),
+              prefixIcon: const Icon(Icons.event_repeat),
               border: const OutlineInputBorder(),
             ),
           ),
@@ -815,7 +815,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: InputDecoration(
               labelText: _t['add_hardware_dripper_count'], // ✅ i18n
               hintText: '12',
-              prefixIcon: Icon(Icons.water_drop_outlined),
+              prefixIcon: const Icon(Icons.water_drop_outlined),
               border: const OutlineInputBorder(),
             ),
           ),
@@ -841,7 +841,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             decoration: InputDecoration(
               labelText: _t['add_hardware_material'], // ✅ i18n
               hintText: 'z.B. Kunststoff, Edelstahl',
-              prefixIcon: Icon(Icons.category),
+              prefixIcon: const Icon(Icons.category),
               border: const OutlineInputBorder(),
             ),
           ),

@@ -92,21 +92,6 @@ class MockPlantRepository implements IPlantRepository {
   }
 
   @override
-  Future<void> recalculateLogDayNumbers(int plantId, DateTime newSeedDate) async {
-    // Mock implementation - no-op for now
-  }
-
-  @override
-  Future<void> recalculatePhaseDayNumbers(int plantId, DateTime newPhaseStartDate) async {
-    // Mock implementation - no-op for now
-  }
-
-  @override
-  Future<void> recalculateAllPhaseDayNumbers(int plantId, Plant plant) async {
-    // Mock implementation - no-op for now
-  }
-
-  @override
   Future<int> getLogCount(int plantId) async {
     return 0; // Mock implementation
   }

@@ -92,6 +92,24 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
   }
 
   /// Grow löschen
+  ///
+  /// ⚠️ WICHTIGES VERHALTEN: Pflanzen im Grow werden NICHT gelöscht!
+  ///
+  /// Architektonische Entscheidung:
+  /// - Grow ist ein Container-Objekt (wie Room, RDWC-System)
+  /// - Beim Löschen wird `plants.grow_id` auf NULL gesetzt (ON DELETE SET NULL)
+  /// - Pflanzen bleiben mit allen Logs, Fotos und Ernten erhalten
+  ///
+  /// Vorteile dieses Designs:
+  /// ✅ Datensicherheit: Versehentliches Löschen ist umkehrbar
+  /// ✅ Flexibilität: Pflanzen können später neu zugeordnet werden
+  /// ✅ Konsistenz: Gleiches Verhalten wie Room/RDWC-System
+  /// ✅ Historienschutz: Wertvolle Wachstumsdaten bleiben erhalten
+  ///
+  /// Alternative Operationen:
+  /// - Zum Abschließen eines Grow-Zyklus: archive(id) verwenden
+  /// - Zum vollständigen Löschen einer Pflanze: PlantRepository.delete() verwenden
+  ///
   /// ✅ FIX v11: Use transaction to prevent race condition
   @override
   Future<int> delete(int id) async {

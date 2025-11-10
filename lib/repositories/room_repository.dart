@@ -75,64 +75,145 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
     }
   }
 
-  /// Raum löschen mit Cascade-Update
-  /// ✅ FIX: Unlinks all related records before deleting room to prevent orphaned data
+  /// Prüft ob Raum in Verwendung ist
+  @override
+  Future<bool> isInUse(int id) async {
+    try {
+      final db = await _dbHelper.database;
+
+      // Check plants
+      final plantCount = Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(*) FROM plants WHERE room_id = ?',
+          [id],
+        ),
+      ) ?? 0;
+
+      // Check grows (indirekt über plants in grows)
+      final growCount = Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(DISTINCT grow_id) FROM plants WHERE room_id = ? AND grow_id IS NOT NULL',
+          [id],
+        ),
+      ) ?? 0;
+
+      // Check hardware
+      final hardwareCount = Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(*) FROM hardware WHERE room_id = ?',
+          [id],
+        ),
+      ) ?? 0;
+
+      // Check RDWC systems
+      final systemCount = Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(*) FROM rdwc_systems WHERE room_id = ?',
+          [id],
+        ),
+      ) ?? 0;
+
+      return (plantCount + growCount + hardwareCount + systemCount) > 0;
+    } catch (e, stackTrace) {
+      AppLogger.error('RoomRepository', 'Failed to check room usage', e, stackTrace);
+      return false;
+    }
+  }
+
+  /// Gibt detaillierte Nutzungs-Statistik zurück
+  @override
+  Future<Map<String, int>> getUsageDetails(int id) async {
+    try {
+      final db = await _dbHelper.database;
+
+      return {
+        'plants': Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM plants WHERE room_id = ?',
+            [id],
+          ),
+        ) ?? 0,
+        'grows': Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(DISTINCT grow_id) FROM plants WHERE room_id = ? AND grow_id IS NOT NULL',
+            [id],
+          ),
+        ) ?? 0,
+        'hardware': Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM hardware WHERE room_id = ?',
+            [id],
+          ),
+        ) ?? 0,
+        'rdwc_systems': Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM rdwc_systems WHERE room_id = ?',
+            [id],
+          ),
+        ) ?? 0,
+      };
+    } catch (e, stackTrace) {
+      AppLogger.error('RoomRepository', 'Failed to get room usage details', e, stackTrace);
+      return {'plants': 0, 'grows': 0, 'hardware': 0, 'rdwc_systems': 0};
+    }
+  }
+
+  /// Raum löschen
   ///
-  /// Updates (sets room_id to NULL):
-  /// 1. Hardware linked to this room
-  /// 2. Plants linked to this room
-  /// 3. RDWC systems linked to this room
-  /// 4. Finally deletes the room itself
+  /// ⚠️ WICHTIG: Blockiert Löschung wenn Raum in Verwendung ist!
+  ///
+  /// Die Methode prüft ob der Raum noch verwendet wird von:
+  /// - Pflanzen
+  /// - Grows (über plants.grow_id)
+  /// - Hardware
+  /// - RDWC-Systemen
+  ///
+  /// Wenn der Raum in Verwendung ist, wird eine RepositoryException geworfen.
+  /// Der Benutzer muss diese Elemente zuerst manuell verschieben oder löschen.
+  ///
+  /// Architektonische Entscheidung:
+  /// ❌ KEINE automatische Kaskadierung - verhindert versehentlichen Datenverlust
+  /// ✅ Explizite Benutzer-Aktion erforderlich für maximale Kontrolle
   @override
   Future<int> delete(int id) async {
     try {
       final db = await _dbHelper.database;
 
-      // Use transaction for atomic cascade delete
-      return await db.transaction((txn) async {
-        AppLogger.info('RoomRepo', 'Starting cascade delete for room', 'roomId=$id');
+      // Check if room is in use
+      final usageDetails = await getUsageDetails(id);
+      final totalUsage = usageDetails.values.reduce((a, b) => a + b);
 
-        // Step 1: Unlink all hardware in this room
-        final hardwareCount = await txn.update(
-          'hardware',
-          {'room_id': null},
-          where: 'room_id = ?',
-          whereArgs: [id],
+      if (totalUsage > 0) {
+        // Build helpful error message
+        final parts = <String>[];
+        if (usageDetails['plants']! > 0) {
+          parts.add('${usageDetails['plants']} Pflanze${usageDetails['plants']! > 1 ? 'n' : ''}');
+        }
+        if (usageDetails['grows']! > 0) {
+          parts.add('${usageDetails['grows']} Grow${usageDetails['grows']! > 1 ? 's' : ''}');
+        }
+        if (usageDetails['hardware']! > 0) {
+          parts.add('${usageDetails['hardware']} Hardware-Gerät${usageDetails['hardware']! > 1 ? 'e' : ''}');
+        }
+        if (usageDetails['rdwc_systems']! > 0) {
+          parts.add('${usageDetails['rdwc_systems']} RDWC-System${usageDetails['rdwc_systems']! > 1 ? 'e' : ''}');
+        }
+
+        throw RepositoryException.conflict(
+          'Raum kann nicht gelöscht werden. '
+          'Er enthält noch ${parts.join(', ')}. '
+          'Bitte verschieben oder löschen Sie diese Elemente zuerst.',
         );
+      }
 
-        // Step 2: Unlink all plants in this room
-        final plantCount = await txn.update(
-          'plants',
-          {'room_id': null},
-          where: 'room_id = ?',
-          whereArgs: [id],
-        );
-
-        // Step 3: Unlink all RDWC systems in this room
-        final systemCount = await txn.update(
-          'rdwc_systems',
-          {'room_id': null},
-          where: 'room_id = ?',
-          whereArgs: [id],
-        );
-
-        // Step 4: Finally delete the room itself
-        final deletedRoom = await txn.delete(
-          'rooms',
-          where: 'id = ?',
-          whereArgs: [id],
-        );
-
-        AppLogger.info(
-          'RoomRepo',
-          '✅ Cascade delete completed',
-          'room=$deletedRoom, hardware=$hardwareCount, plants=$plantCount, systems=$systemCount',
-        );
-
-        return deletedRoom;
-      });
+      // Safe to delete
+      return await db.delete(
+        'rooms',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     } catch (e, stackTrace) {
-      AppLogger.error('RoomRepository', 'Failed to delete room with cascade', e, stackTrace);
+      AppLogger.error('RoomRepository', 'Failed to delete room', e, stackTrace);
       rethrow;
     }
   }

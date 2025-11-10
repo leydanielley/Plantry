@@ -76,7 +76,7 @@ class BackupService implements IBackupService {
       };
 
       // Export each table
-      final tables = BackupConfig.exportTables;
+      const tables = BackupConfig.exportTables;
 
       for (final table in tables) {
         try {
@@ -111,7 +111,7 @@ class BackupService implements IBackupService {
         await photosDir.create();
 
         // Process photos in parallel batches for optimal performance
-        final batchSize = BackupConfig.photoBatchSize;
+        const batchSize = BackupConfig.photoBatchSize;
         for (int i = 0; i < photos.length; i += batchSize) {
           final batch = photos.skip(i).take(batchSize);
 
@@ -279,7 +279,7 @@ class BackupService implements IBackupService {
     AppLogger.info('BackupService', 'Clearing existing data...');
     await db.execute('PRAGMA foreign_keys = OFF');
 
-    final tables = BackupConfig.deletionOrderTables;
+    const tables = BackupConfig.deletionOrderTables;
 
     for (final table in tables) {
       try {
@@ -353,7 +353,7 @@ class BackupService implements IBackupService {
     int copiedCount = 0;
 
     // Process photos in parallel batches
-    final batchSize = BackupConfig.photoBatchSize;
+    const batchSize = BackupConfig.photoBatchSize;
     for (int i = 0; i < photos.length; i += batchSize) {
       final batch = photos.skip(i).take(batchSize).toList();
 

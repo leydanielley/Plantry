@@ -7,10 +7,9 @@ import 'package:flutter/material.dart';
 import '../models/fertilizer.dart';
 import '../services/dbf_import_service.dart';
 import '../repositories/interfaces/i_fertilizer_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../utils/translations.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../utils/fertilizer_validator.dart';
 import '../di/service_locator.dart';
 
 class FertilizerDbfImportScreen extends StatefulWidget {
@@ -27,9 +26,7 @@ class FertilizerDbfImportScreen extends StatefulWidget {
 
 class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
   final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
-  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
-  late AppTranslations _t;
   bool _isLoading = true;
   bool _isImporting = false;
   List<Fertilizer> _parsedFertilizers = [];
@@ -39,36 +36,48 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
   bool _showAllInvalid = false; // Show all invalid entries or just first 2
   String? _errorMessage;
 
+  // ✅ PERFORMANCE FIX: Cached filtered lists to avoid recomputation in build()
+  List<Fertilizer> _cachedFilteredFertilizers = [];
+  int _cachedInvalidCount = 0;
+  int _cachedIncompleteCount = 0;
+  int _cachedSubstanceCount = 0;
+  int _cachedRecipeCount = 0;
+
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
+  /// Load and parse DBF file data
+  ///
+  /// ✅ ARCHITECTURE FIX: Centralized error handling for UI state.
+  /// This is the single source of truth for setting _errorMessage and _isLoading.
   Future<void> _loadData() async {
     try {
-      final settings = await _settingsRepo.getSettings();
-      setState(() {
-        _t = AppTranslations(settings.language);
-      });
-
       await _parseDbfFile();
     } catch (e) {
+      // ✅ ARCHITECTURE FIX: Central error handling - now reachable!
       AppLogger.error('FertilizerDbfImportScreen', 'Error loading data', e);
       setState(() {
-        _errorMessage = 'Error loading file';
+        _errorMessage = 'Error loading file: ${e.toString()}';
         _isLoading = false;
       });
     }
   }
 
+  /// Parse DBF file and populate fertilizer list
+  ///
+  /// ✅ ARCHITECTURE FIX: This method now focuses solely on parsing logic.
+  /// Error handling and UI state management is delegated to _loadData().
+  /// Any exceptions are rethrown to be handled by the caller.
   Future<void> _parseDbfFile() async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
+    try {
       AppLogger.info('FertilizerDbfImportScreen', 'Parsing DBF file: ${widget.dbfFile.path}');
 
       // Parse DBF file
@@ -86,8 +95,8 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
       final selectedItems = <String>{};
       for (final fertilizer in fertilizers) {
         if (!duplicates.contains(fertilizer.name) &&
-            !_isInvalidEntry(fertilizer) &&
-            !_isIncompleteData(fertilizer)) {
+            !FertilizerValidator.isInvalid(fertilizer) &&
+            !FertilizerValidator.isIncomplete(fertilizer)) {
           selectedItems.add(fertilizer.name);
         }
       }
@@ -97,6 +106,8 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
         _duplicateNames = duplicates;
         _selectedItems = selectedItems;
         _isLoading = false;
+        // ✅ PERFORMANCE FIX: Recalculate cache after data load
+        _recalculateCache();
       });
 
       AppLogger.info(
@@ -104,157 +115,53 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
         'Parsed ${fertilizers.length} fertilizers, ${duplicates.length} duplicates',
       );
     } catch (e) {
+      // ✅ ARCHITECTURE FIX: Log the error but rethrow it
+      // This allows _loadData() to handle UI error state centrally
       AppLogger.error('FertilizerDbfImportScreen', 'Error parsing DBF', e);
-      setState(() {
-        _errorMessage = 'Error parsing DBF file: ${e.toString()}';
-        _isLoading = false;
-      });
+      rethrow; // Critical: Let caller handle UI state
     }
   }
 
-  /// Check if fertilizer has incomplete nutrient data
-  ///
-  /// Incomplete = only NPK without detailed micro/macro nutrients
-  /// These won't work well in the Top-up Calculator
-  bool _isIncompleteData(Fertilizer fertilizer) {
-    // Count how many nutrient values are available
-    int nutrientCount = 0;
-    if (fertilizer.nNO3 != null && fertilizer.nNO3! > 0) nutrientCount++;
-    if (fertilizer.nNH4 != null && fertilizer.nNH4! > 0) nutrientCount++;
-    if (fertilizer.p != null && fertilizer.p! > 0) nutrientCount++;
-    if (fertilizer.k != null && fertilizer.k! > 0) nutrientCount++;
-    if (fertilizer.mg != null && fertilizer.mg! > 0) nutrientCount++;
-    if (fertilizer.ca != null && fertilizer.ca! > 0) nutrientCount++;
-    if (fertilizer.s != null && fertilizer.s! > 0) nutrientCount++;
-    if (fertilizer.fe != null && fertilizer.fe! > 0) nutrientCount++;
-    if (fertilizer.mn != null && fertilizer.mn! > 0) nutrientCount++;
-    if (fertilizer.zn != null && fertilizer.zn! > 0) nutrientCount++;
-    if (fertilizer.cu != null && fertilizer.cu! > 0) nutrientCount++;
-    if (fertilizer.b != null && fertilizer.b! > 0) nutrientCount++;
-
-    // If less than 3 nutrients, it's too incomplete
-    // (commercial products often only have NPK = 3 values)
-    return nutrientCount < 3;
-  }
-
-  /// Check if name contains URLs or links (invalid entries)
-  bool _isInvalidEntry(Fertilizer fertilizer) {
-    final name = fertilizer.name.trim();
-    final nameLower = name.toLowerCase();
-
-    // 1. Too short (likely corrupted)
-    if (name.length < 3) {
-      return true;
-    }
-
-    // 2. URLs and links
-    if (nameLower.contains('http://') || nameLower.contains('https://')) {
-      return true;
-    }
-    if (nameLower.contains('www.')) {
-      return true;
-    }
-    if (nameLower.contains('amazon.') || nameLower.contains('amzn.to')) {
-      return true;
-    }
-    if (nameLower.contains('.com') || nameLower.contains('.de') || nameLower.contains('.co.uk') || nameLower.contains('.to/')) {
-      return true;
-    }
-    if (nameLower.startsWith('http') || nameLower.startsWith('www')) {
-      return true;
-    }
-
-    // 3. Only numbers, dots, and zeros (e.g. "0.00000000", "1.00000000", "000")
-    final cleanName = name.replaceAll(RegExp(r'[0-9\.\s]'), '');
-    if (cleanName.isEmpty) {
-      return true;
-    }
-
-    // 4. Starts with number or special char (likely corrupted, e.g. "7.93223900A", ".to/365sSi6")
-    if (!RegExp(r'^[A-Za-z]').hasMatch(name)) {
-      return true;
-    }
-
-    // 5. Looks like truncated/corrupted text (ends with incomplete word)
-    // Examples: "ate)", "c Acid", "alcium Nitrate"
-    if (name.length < 10 && (name.endsWith(')') || name.startsWith('c ') || !name.contains(' '))) {
-      // Very short names that look incomplete
-      final hasVowel = RegExp(r'[aeiouAEIOU]').hasMatch(name);
-      if (!hasVowel) {
-        return true; // No vowels = likely abbreviation or corrupted
-      }
-    }
-
-    // 6. Mostly numbers with few letters (e.g. "44.08146528B", "55.09356426B")
-    final digitCount = name.replaceAll(RegExp(r'[^0-9]'), '').length;
-    final letterCount = name.replaceAll(RegExp(r'[^A-Za-z]'), '').length;
-    if (digitCount > letterCount * 3) {
-      return true; // More than 3x digits vs letters = likely code/corrupted
-    }
-
-    return false;
-  }
-
-  bool _isLikelyRecipe(Fertilizer fertilizer) {
-    final name = fertilizer.name.toLowerCase();
-
-    // Recipe indicators
-    final recipeKeywords = [
-      'recipe', 'series', 'program', 'schedule', 'kit', 'system',
-      'complete', 'starter', 'finisher', 'expert', 'professional',
-      'flora', 'micro', 'bloom', 'grow', 'trio', 'duo',
-    ];
-
-    // Brand names that typically indicate pre-made formulas
-    final brandKeywords = [
-      'gh ', 'general hydro', 'advanced nutrients', 'canna',
-      'plagron', 'biobizz', 'house & garden', 'dutch pro',
-      'petery', 'flora series', 'lucas formula',
-    ];
-
-    // Check for recipe keywords
-    if (recipeKeywords.any((keyword) => name.contains(keyword))) {
-      return true;
-    }
-
-    // Check for brand keywords
-    if (brandKeywords.any((keyword) => name.contains(keyword))) {
-      return true;
-    }
-
-    // Very long names are usually recipes (but not URLs)
-    if (name.length > 40 && !_isInvalidEntry(fertilizer)) {
-      return true;
-    }
-
-    // Names with 4+ words are usually recipes
-    if (name.split(' ').length >= 4) {
-      return true;
-    }
-
-    return false;
-  }
-
-  List<Fertilizer> _getFilteredFertilizers() {
+  /// ✅ PERFORMANCE FIX: Recalculate cached values when data or filter changes
+  /// This should be called whenever _parsedFertilizers or _filterMode changes
+  void _recalculateCache() {
+    // Calculate filtered list
     var filtered = _parsedFertilizers.where((fertilizer) {
       if (_filterMode == 'substances') {
-        return !_isLikelyRecipe(fertilizer);
+        return !FertilizerValidator.isLikelyRecipe(fertilizer);
       } else if (_filterMode == 'recipes') {
-        return _isLikelyRecipe(fertilizer);
+        return FertilizerValidator.isLikelyRecipe(fertilizer);
       }
       return true; // 'all'
     }).toList();
 
     // Sort: valid entries first (green), then invalid (red)
     filtered.sort((a, b) {
-      final aInvalid = _isInvalidEntry(a);
-      final bInvalid = _isInvalidEntry(b);
+      final aInvalid = FertilizerValidator.isInvalid(a);
+      final bInvalid = FertilizerValidator.isInvalid(b);
       if (aInvalid && !bInvalid) return 1; // a is invalid, b is valid -> b comes first
       if (!aInvalid && bInvalid) return -1; // a is valid, b is invalid -> a comes first
       return 0; // both same validity -> keep original order
     });
 
-    return filtered;
+    // Calculate statistics
+    final invalidCount = _parsedFertilizers.where((f) => FertilizerValidator.isInvalid(f)).length;
+    final incompleteCount = _parsedFertilizers.where((f) => !FertilizerValidator.isInvalid(f) && FertilizerValidator.isIncomplete(f)).length;
+    final validFertilizers = _parsedFertilizers.where((f) => !FertilizerValidator.isInvalid(f) && !FertilizerValidator.isIncomplete(f));
+    final substanceCount = validFertilizers.where((f) => !FertilizerValidator.isLikelyRecipe(f)).length;
+    final recipeCount = validFertilizers.where((f) => FertilizerValidator.isLikelyRecipe(f)).length;
+
+    // Update cached values
+    _cachedFilteredFertilizers = filtered;
+    _cachedInvalidCount = invalidCount;
+    _cachedIncompleteCount = incompleteCount;
+    _cachedSubstanceCount = substanceCount;
+    _cachedRecipeCount = recipeCount;
+  }
+
+  /// Returns cached filtered fertilizers (no computation in build)
+  List<Fertilizer> _getFilteredFertilizers() {
+    return _cachedFilteredFertilizers;
   }
 
   int _getSelectedCount() {
@@ -380,11 +287,11 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
   }
 
   Widget _buildSummaryCard(bool isDark) {
-    final invalidCount = _parsedFertilizers.where((f) => _isInvalidEntry(f)).length;
-    final incompleteCount = _parsedFertilizers.where((f) => !_isInvalidEntry(f) && _isIncompleteData(f)).length;
-    final validFertilizers = _parsedFertilizers.where((f) => !_isInvalidEntry(f) && !_isIncompleteData(f));
-    final substanceCount = validFertilizers.where((f) => !_isLikelyRecipe(f)).length;
-    final recipeCount = validFertilizers.where((f) => _isLikelyRecipe(f)).length;
+    // ✅ PERFORMANCE FIX: Use cached statistics instead of recalculating
+    final invalidCount = _cachedInvalidCount;
+    final incompleteCount = _cachedIncompleteCount;
+    final substanceCount = _cachedSubstanceCount;
+    final recipeCount = _cachedRecipeCount;
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -485,8 +392,8 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
                       final filteredItems = _getFilteredFertilizers();
                       for (final fertilizer in filteredItems) {
                         if (!_duplicateNames.contains(fertilizer.name) &&
-                            !_isInvalidEntry(fertilizer) &&
-                            !_isIncompleteData(fertilizer)) {
+                            !FertilizerValidator.isInvalid(fertilizer) &&
+                            !FertilizerValidator.isIncomplete(fertilizer)) {
                           _selectedItems.add(fertilizer.name);
                         }
                       }
@@ -537,6 +444,8 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
       onPressed: () {
         setState(() {
           _filterMode = mode;
+          // ✅ PERFORMANCE FIX: Recalculate cache when filter changes
+          _recalculateCache();
         });
       },
       icon: Icon(icon, size: 16),
@@ -583,14 +492,14 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
     final filteredFertilizers = _getFilteredFertilizers();
 
     if (filteredFertilizers.isEmpty) {
-      return Center(
+      return const Center(
         child: Text('No items in this filter'),
       );
     }
 
     // Separate valid and invalid entries
-    final validEntries = filteredFertilizers.where((f) => !_isInvalidEntry(f)).toList();
-    final invalidEntries = filteredFertilizers.where((f) => _isInvalidEntry(f)).toList();
+    final validEntries = filteredFertilizers.where((f) => !FertilizerValidator.isInvalid(f)).toList();
+    final invalidEntries = filteredFertilizers.where((f) => FertilizerValidator.isInvalid(f)).toList();
 
     // Build display list: valid entries + limited invalid entries
     final displayList = <Fertilizer>[];
@@ -610,14 +519,14 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
 
         final fertilizer = displayList[displayIndex];
         final isDuplicate = _duplicateNames.contains(fertilizer.name);
-        final isInvalid = _isInvalidEntry(fertilizer);
-        final isIncomplete = !isInvalid && _isIncompleteData(fertilizer);
-        final isRecipe = _isLikelyRecipe(fertilizer);
+        final isInvalid = FertilizerValidator.isInvalid(fertilizer);
+        final isIncomplete = !isInvalid && FertilizerValidator.isIncomplete(fertilizer);
+        final isRecipe = FertilizerValidator.isLikelyRecipe(fertilizer);
         final isSelected = _selectedItems.contains(fertilizer.name);
 
         AppLogger.debug(
           'FertilizerDbfImport',
-          'Item: ${fertilizer.name.length > 20 ? fertilizer.name.substring(0, 20) + '...' : fertilizer.name} displayIdx=$displayIndex selected=$isSelected invalid=$isInvalid incomplete=$isIncomplete',
+          'Item: ${fertilizer.name.length > 20 ? '${fertilizer.name.substring(0, 20)}...' : fertilizer.name} displayIdx=$displayIndex selected=$isSelected invalid=$isInvalid incomplete=$isIncomplete',
         );
 
         return Card(
