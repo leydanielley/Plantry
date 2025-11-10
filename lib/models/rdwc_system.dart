@@ -1,6 +1,9 @@
 // =============================================
 // GROWLOG - RDWC System Model
+// ✅ AUDIT FIX: Magic numbers extracted to RdwcSystemConfig
 // =============================================
+
+import '../config/rdwc_system_config.dart';
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -59,11 +62,11 @@ class RdwcSystem {
     DateTime? createdAt,
     this.archived = false,
   }) :
-       // ✅ FIX: Validate and clamp values instead of assertions
-       name = name.trim().isEmpty ? 'Unnamed System' : name,
-       maxCapacity = maxCapacity > 0 ? maxCapacity : 100.0,
-       currentLevel = currentLevel < 0 ? 0.0 : (currentLevel > maxCapacity ? maxCapacity : currentLevel),
-       bucketCount = bucketCount > 0 ? bucketCount : 1,
+       // ✅ AUDIT FIX: Use config constants for validation
+       name = RdwcSystemConfig.validateName(name),
+       maxCapacity = RdwcSystemConfig.validateCapacity(maxCapacity),
+       currentLevel = RdwcSystemConfig.validateLevel(currentLevel, maxCapacity),
+       bucketCount = RdwcSystemConfig.validateBucketCount(bucketCount),
        createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Create from database map
@@ -192,18 +195,21 @@ class RdwcSystem {
   }
 
   /// Check if system is low on water (below 30%)
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
   bool get isLowWater {
-    return fillPercentage < 30.0;
+    return RdwcSystemConfig.isLowWater(fillPercentage);
   }
 
   /// Check if system is critically low (below 15%)
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
   bool get isCriticallyLow {
-    return fillPercentage < 15.0;
+    return RdwcSystemConfig.isCriticallyLow(fillPercentage);
   }
 
   /// Check if system is full (above 95%)
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
   bool get isFull {
-    return fillPercentage >= 95.0;
+    return RdwcSystemConfig.isFull(fillPercentage);
   }
 
   @override

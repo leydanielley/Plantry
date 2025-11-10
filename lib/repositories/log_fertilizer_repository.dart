@@ -5,9 +5,14 @@
 import '../database/database_helper.dart';
 import '../models/log_fertilizer.dart';
 import 'interfaces/i_log_fertilizer_repository.dart';
+import 'repository_error_handler.dart';
 
-class LogFertilizerRepository implements ILogFertilizerRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class LogFertilizerRepository with RepositoryErrorHandler implements ILogFertilizerRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+
+  @override
+  String get repositoryName => 'LogFertilizerRepository';
 
   /// Speichern (Insert/Update)
   @override

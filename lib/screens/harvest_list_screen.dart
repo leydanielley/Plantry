@@ -10,6 +10,7 @@ import '../repositories/interfaces/i_harvest_repository.dart';
 import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
+import '../widgets/empty_state_widget.dart';
 import 'harvest_detail_screen.dart';
 import '../di/service_locator.dart';
 
@@ -141,36 +142,12 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
     );
   }
 
+  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.grass, 
-            size: AppConstants.emptyStateIconSize, 
-            color: Colors.grey[400]
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingTop),
-          Text(
-            _filter == 'all' ? _t['no_harvests_yet'] : _t['no_harvests_found'],
-            style: TextStyle(
-              fontSize: AppConstants.fontSizeLarge, 
-              color: Colors.grey[600]
-            ),
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
-          Text(
-            _filter == 'all' 
-                ? _t['record_first_harvest'] 
-                : _t['no_harvests_filter'],
-            style: TextStyle(
-              fontSize: AppConstants.fontSizeMedium, 
-              color: Colors.grey[500]
-            ),
-          ),
-        ],
-      ),
+    return EmptyStateWidget(
+      icon: Icons.grass,
+      title: _filter == 'all' ? _t['no_harvests_yet'] : _t['no_harvests_found'],
+      subtitle: _filter == 'all' ? _t['record_first_harvest'] : _t['no_harvests_filter'],
     );
   }
 

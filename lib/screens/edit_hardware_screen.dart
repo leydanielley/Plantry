@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../utils/mounted_state_mixin.dart'; // ✅ FIX: Added for safe setState
 import 'package:intl/intl.dart';
 import '../models/hardware.dart';
 import '../models/room.dart';
@@ -22,7 +23,8 @@ class EditHardwareScreen extends StatefulWidget {
   State<EditHardwareScreen> createState() => _EditHardwareScreenState();
 }
 
-class _EditHardwareScreenState extends State<EditHardwareScreen> {
+// ✅ FIX: Added MountedStateMixin to prevent setState after dispose
+class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedStateMixin {
   final _formKey = GlobalKey<FormState>();
   final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
@@ -129,7 +131,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> {
   Future<void> _saveHardware() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
 
     try {
       final hardware = widget.hardware.copyWith(
@@ -170,7 +172,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> {
         AppMessages.savingError(context, e.toString());
       }
     } finally {
-      setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
   }
 

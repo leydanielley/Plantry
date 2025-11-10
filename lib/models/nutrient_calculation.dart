@@ -1,10 +1,12 @@
 // =============================================
 // GROWLOG - Universal Nutrient Calculation Model
+// ✅ AUDIT FIX: Magic numbers extracted to NutrientCalculationConfig
 // =============================================
 
 import 'rdwc_recipe.dart';
 import 'app_settings.dart';
 import '../utils/unit_converter.dart';
+import '../config/nutrient_calculation_config.dart';
 
 /// Calculator modes
 enum CalculatorMode {
@@ -142,35 +144,44 @@ class NutrientCalculation {
   }
 
   /// Check if scaling is moderate (1.2x - 1.5x)
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
   bool get isModerateScaling {
-    return scalingFactor > 1.2 && scalingFactor <= 1.5;
+    return NutrientCalculationConfig.isModerateScaling(scalingFactor);
   }
 
   /// Check if scaling is high/dangerous (>1.5x)
   /// This could lead to nutrient burn
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
   bool get isHighScaling {
-    return scalingFactor > 1.5;
+    return NutrientCalculationConfig.isHighScaling(scalingFactor);
   }
 
   /// Check if downscaling (< 0.8x)
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
   bool get isDownScaling {
-    return scalingFactor < 0.8;
+    return NutrientCalculationConfig.isDownScaling(scalingFactor);
   }
 
   /// Validation checks
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
   bool get isValid {
-    return volumeToAdd > 0 && !needsDilution && !isSystemFull;
+    return volumeToAdd > NutrientCalculationConfig.minimumVolumeToAdd &&
+           !needsDilution &&
+           !isSystemFull;
   }
 
   bool get isSystemFull => currentVolume >= targetVolume;
 
   bool get volumeExceedsCapacity => currentVolume > targetVolume;
 
-  bool get needsDilution => requiredPPM < 0;
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
+  bool get needsDilution => NutrientCalculationConfig.needsDilution(requiredPPM);
 
-  bool get isHighPPM => requiredPPM > 3000 && requiredPPM <= 5000;
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
+  bool get isHighPPM => NutrientCalculationConfig.isHighPpm(requiredPPM);
 
-  bool get isExtremePPM => requiredPPM > 5000;
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
+  bool get isExtremePPM => NutrientCalculationConfig.isExtremePpm(requiredPPM);
 
   bool get hasRecipeWithoutEC => recipe != null && recipe!.targetEc == null;
 
@@ -214,10 +225,14 @@ class NutrientCalculation {
   }
 
   /// Check if this is a batch mix (starting from 0L)
-  bool get isBatchMix => calculatorMode == CalculatorMode.batchMix || currentVolume == 0;
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
+  bool get isBatchMix => calculatorMode == CalculatorMode.batchMix ||
+                         currentVolume == NutrientCalculationConfig.batchMixStartVolume;
 
   /// Check if this is a dilution (lowering PPM with water)
-  bool get isDilutionMode => calculatorMode == CalculatorMode.dilution || (targetPPM < currentPPM && currentVolume > 0);
+  /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
+  bool get isDilutionMode => calculatorMode == CalculatorMode.dilution ||
+                             (targetPPM < currentPPM && currentVolume > NutrientCalculationConfig.minimumVolumeToAdd);
 
   @override
   String toString() {

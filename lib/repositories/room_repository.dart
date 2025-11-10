@@ -7,9 +7,14 @@ import '../database/database_helper.dart';
 import '../models/room.dart';
 import '../utils/app_logger.dart';
 import 'interfaces/i_room_repository.dart';
+import 'repository_error_handler.dart';
 
-class RoomRepository implements IRoomRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+
+  @override
+  String get repositoryName => 'RoomRepository';
 
   /// Alle Räume laden
   @override

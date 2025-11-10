@@ -11,6 +11,7 @@ import '../repositories/interfaces/i_hardware_repository.dart';
 import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
+import '../widgets/empty_state_widget.dart';
 import 'add_hardware_screen.dart';
 import 'edit_hardware_screen.dart';
 import '../di/service_locator.dart';
@@ -227,34 +228,12 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
     );
   }
 
+  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.devices,
-            size: AppConstants.emptyStateIconSize,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingTop),
-          Text(
-            _t['no_hardware'],
-            style: TextStyle(
-              fontSize: AppConstants.fontSizeLarge,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
-          Text(
-            _t['add_first_hardware'],
-            style: TextStyle(
-              fontSize: AppConstants.fontSizeMedium,
-              color: Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
+    return EmptyStateWidget(
+      icon: Icons.devices,
+      title: _t['no_hardware'],
+      subtitle: _t['add_first_hardware'],
     );
   }
 

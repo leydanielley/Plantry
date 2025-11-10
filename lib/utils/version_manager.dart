@@ -8,11 +8,15 @@ import 'app_logger.dart';
 import 'app_version.dart';
 
 class VersionManager {
+  // ✅ AUDIT FIX: Extracted timeout constants
   static const String _keyLastVersion = 'last_app_version';
   static const String _keyLastDbVersion = 'last_db_version';
   static const String _keyUpdateTimestamp = 'last_update_timestamp';
   static const String _keyMigrationStatus = 'migration_status';
   static const String _keyFailedMigrations = 'failed_migrations';
+
+  // Timeout constants
+  static const int _migrationTimeoutMinutes = 30; // Migration timeout threshold
 
   /// Current app version (from pubspec.yaml via AppVersion)
   /// ✅ AUTO-SYNC: Version wird aus app_version.dart geladen
@@ -150,14 +154,15 @@ class VersionManager {
       final status = prefs.getString(_keyMigrationStatus);
 
       if (status == 'in_progress') {
-        // ✅ FIX: Check if migration started more than 30 minutes ago
+        // ✅ FIX: Check if migration started more than N minutes ago
         // (Increased from 10 min to allow for legitimate long migrations)
         final startTime = prefs.getInt('migration_start_time');
         if (startTime != null) {
           final elapsed = DateTime.now().millisecondsSinceEpoch - startTime;
-          if (elapsed > 30 * 60 * 1000) {
-            // Migration stuck for >30 minutes
-            AppLogger.error('VersionManager', 'Migration appears stuck (>30 min)');
+          final timeoutMs = _migrationTimeoutMinutes * 60 * 1000;
+          if (elapsed > timeoutMs) {
+            // Migration stuck for too long
+            AppLogger.error('VersionManager', 'Migration appears stuck (>$_migrationTimeoutMinutes min)');
             await prefs.setString(_keyMigrationStatus, 'timeout');
             return false;
           }

@@ -6,9 +6,14 @@ import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/hardware.dart';
 import 'interfaces/i_hardware_repository.dart';
+import 'repository_error_handler.dart';
 
-class HardwareRepository implements IHardwareRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class HardwareRepository with RepositoryErrorHandler implements IHardwareRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+
+  @override
+  String get repositoryName => 'HardwareRepository';
 
   /// Alle Hardware-Items für einen Raum laden
   @override

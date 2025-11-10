@@ -6,8 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/notification_settings.dart';
 import '../utils/app_logger.dart';
 import 'interfaces/i_notification_repository.dart';
+import 'repository_error_handler.dart';
 
-class NotificationRepository implements INotificationRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class NotificationRepository with RepositoryErrorHandler implements INotificationRepository {
+  @override
+  String get repositoryName => 'NotificationRepository';
+
   static const String _keyEnabled = 'notifications_enabled';
   static const String _keyWateringReminders = 'notifications_watering';
   static const String _keyFertilizingReminders = 'notifications_fertilizing';

@@ -1,10 +1,12 @@
 // =============================================
 // GROWLOG - Edit Harvest Screen (Enhanced)
+// ✅ AUDIT FIX: i18n extraction
 // =============================================
 
 import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import 'package:intl/intl.dart';
 import '../models/harvest.dart';
 import '../repositories/interfaces/i_harvest_repository.dart';
@@ -20,6 +22,7 @@ class EditHarvestScreen extends StatefulWidget {
 }
 
 class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTickerProviderStateMixin {
+  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
   late TabController _tabController;
@@ -58,6 +61,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ AUDIT FIX: i18n
     _tabController = TabController(length: 5, vsync: this);
     _loadData();
   }
@@ -159,7 +163,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
 
       if (mounted) {
         Navigator.of(context).pop(true);
-        AppMessages.showSuccess(context, 'Ernte aktualisiert! ✅');
+        AppMessages.showSuccess(context, _t['edit_harvest_updated']); // ✅ i18n
       }
     } catch (e) {
       AppLogger.error('EditHarvestScreen', 'Error: $e');
@@ -195,7 +199,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Ernte bearbeiten'),
+          title: Text(_t['edit_harvest_title']), // ✅ i18n
           backgroundColor: const Color(0xFF004225),
           foregroundColor: Colors.white,
           actions: [
@@ -217,33 +221,33 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
               IconButton(
                 icon: const Icon(Icons.check),
                 onPressed: _saveHarvest,
-                tooltip: 'Speichern',
+                tooltip: _t['edit_harvest_save_tooltip'], // ✅ i18n
               ),
           ],
           bottom: TabBar(
             controller: _tabController,
             isScrollable: true,
             indicatorColor: Colors.white,
-            tabs: const [
+            tabs: [
               Tab(
-                icon: Icon(Icons.grass, color: Colors.white),
-                child: Text('Basic', style: TextStyle(color: Colors.white)),
+                icon: const Icon(Icons.grass, color: Colors.white),
+                child: Text(_t['edit_harvest_tab_basic'], style: const TextStyle(color: Colors.white)), // ✅ i18n
               ),
               Tab(
-                icon: Icon(Icons.dry_cleaning, color: Colors.white),
-                child: Text('Trocknung', style: TextStyle(color: Colors.white)),
+                icon: const Icon(Icons.dry_cleaning, color: Colors.white),
+                child: Text(_t['edit_harvest_tab_drying'], style: const TextStyle(color: Colors.white)), // ✅ i18n
               ),
               Tab(
-                icon: Icon(Icons.inventory_2, color: Colors.white),
-                child: Text('Curing', style: TextStyle(color: Colors.white)),
+                icon: const Icon(Icons.inventory_2, color: Colors.white),
+                child: Text(_t['edit_harvest_tab_curing'], style: const TextStyle(color: Colors.white)), // ✅ i18n
               ),
               Tab(
-                icon: Icon(Icons.science, color: Colors.white),
-                child: Text('Qualität', style: TextStyle(color: Colors.white)),
+                icon: const Icon(Icons.science, color: Colors.white),
+                child: Text(_t['edit_harvest_tab_quality'], style: const TextStyle(color: Colors.white)), // ✅ i18n
               ),
               Tab(
-                icon: Icon(Icons.star, color: Colors.white),
-                child: Text('Bewertung', style: TextStyle(color: Colors.white)),
+                icon: const Icon(Icons.star, color: Colors.white),
+                child: Text(_t['edit_harvest_tab_rating'], style: const TextStyle(color: Colors.white)), // ✅ i18n
               ),
             ],
           ),
@@ -290,7 +294,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                   }
                 },
                 icon: const Icon(Icons.close),
-                label: const Text('Abbrechen'),
+                label: Text(_t['cancel']), // ✅ i18n
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Colors.white54),
@@ -303,7 +307,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
               flex: 2,
               child: ElevatedButton.icon(
                 onPressed: _isSaving ? null : _saveHarvest,
-                icon: _isSaving 
+                icon: _isSaving
                     ? const SizedBox(
                         width: 20,
                         height: 20,
@@ -313,7 +317,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                         ),
                       )
                     : const Icon(Icons.save),
-                label: Text(_isSaving ? 'Speichere...' : 'Speichern'),
+                label: Text(_isSaving ? _t['edit_harvest_saving'] : _t['save']), // ✅ i18n
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4CAF50),
                   foregroundColor: Colors.white,
@@ -331,17 +335,17 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
     return await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Änderungen verwerfen?'),
-        content: const Text('Möchtest du wirklich abbrechen? Alle nicht gespeicherten Änderungen gehen verloren.'),
+        title: Text(_t['edit_harvest_discard_title']), // ✅ i18n
+        content: Text(_t['edit_harvest_discard_message']), // ✅ i18n
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Weiter bearbeiten'),
+            child: Text(_t['edit_harvest_continue_editing']), // ✅ i18n
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Verwerfen'),
+            child: Text(_t['edit_harvest_discard']), // ✅ i18n
           ),
         ],
       ),
@@ -359,16 +363,16 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-            'Grund-Daten',
-            'Grundlegende Informationen zur Ernte',
+            _t['edit_harvest_basic_header'], // ✅ i18n
+            _t['edit_harvest_basic_description'], // ✅ i18n
             Icons.grass,
             Colors.green,
           ),
           const SizedBox(height: 20),
-          
+
           // Harvest Date
           _buildDateField(
-            label: 'Ernte-Datum',
+            label: _t['edit_harvest_date_label'], // ✅ i18n
             icon: Icons.calendar_today,
             color: Colors.green,
             currentDate: _harvestDate,
@@ -377,29 +381,29 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             lastDate: DateTime.now(),
           ),
           const SizedBox(height: 20),
-          
+
           // Wet Weight
           _buildNumberField(
             controller: _wetWeightController,
-            label: 'Nassgewicht',
-            hint: 'z.B. 500',
-            suffix: 'g',
+            label: _t['edit_harvest_wet_weight_label'], // ✅ i18n
+            hint: _t['edit_harvest_wet_weight_hint'], // ✅ i18n
+            suffix: _t['edit_harvest_wet_weight_suffix'], // ✅ i18n
             icon: Icons.water_drop,
             color: Colors.blue,
-            helperText: 'Gewicht direkt nach der Ernte',
+            helperText: _t['edit_harvest_wet_weight_helper'], // ✅ i18n
             allowDecimals: true,
           ),
           const SizedBox(height: 16),
-          
+
           // Dry Weight
           _buildNumberField(
             controller: _dryWeightController,
-            label: 'Trockengewicht',
-            hint: 'z.B. 100',
-            suffix: 'g',
+            label: _t['edit_harvest_dry_weight_label'], // ✅ i18n
+            hint: _t['edit_harvest_dry_weight_hint'], // ✅ i18n
+            suffix: _t['edit_harvest_wet_weight_suffix'], // ✅ i18n (reusing 'g')
             icon: Icons.scale,
             color: Colors.green,
-            helperText: 'Endgültiges Gewicht nach der Trocknung',
+            helperText: _t['edit_harvest_dry_weight_helper'], // ✅ i18n
             allowDecimals: true,
             isBold: true,
           ),
@@ -441,21 +445,21 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                 child: const Icon(Icons.trending_down, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Gewichtsverlust',
-                      style: TextStyle(
+                      _t['edit_harvest_weight_loss'], // ✅ i18n
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                         color: Color(0xFF01579B), // Dunkelblau
                       ),
                     ),
                     Text(
-                      'Wasser, das während der Trocknung verdunstet',
-                      style: TextStyle(
+                      _t['edit_harvest_water_evaporated'], // ✅ i18n
+                      style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFF0277BD),
                       ),
@@ -531,13 +535,13 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-            'Trocknung',
-            'Tracking der Trocknungsphase',
+            _t['edit_harvest_drying_header'], // ✅ i18n
+            _t['edit_harvest_drying_description'], // ✅ i18n
             Icons.dry_cleaning,
             Colors.orange,
           ),
           const SizedBox(height: 20),
-          
+
           // Date Range
           _buildDateRangeSection(
             startDate: _dryingStartDate,
@@ -550,26 +554,26 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             color: Colors.orange,
           ),
           const SizedBox(height: 20),
-          
+
           // Method
           _buildTextField(
             controller: _dryingMethodController,
-            label: 'Trocknungs-Methode',
-            hint: 'z.B. Hängend, Netz, Box',
+            label: _t['edit_harvest_drying_method_label'], // ✅ i18n
+            hint: _t['edit_harvest_drying_method_hint'], // ✅ i18n
             icon: Icons.dry_cleaning,
             color: Colors.orange,
             suggestions: ['Hängend', 'Netz', 'Box', 'Rack'],
           ),
           const SizedBox(height: 16),
-          
+
           // Environment Conditions
           Row(
             children: [
               Expanded(
                 child: _buildNumberField(
                   controller: _dryingTempController,
-                  label: 'Temperatur',
-                  hint: '18-22',
+                  label: _t['temperature_celsius'], // ✅ i18n (reused)
+                  hint: _t['edit_harvest_drying_temp_range'], // ✅ i18n
                   suffix: '°C',
                   icon: Icons.thermostat,
                   color: Colors.orange,
@@ -580,8 +584,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
               Expanded(
                 child: _buildNumberField(
                   controller: _dryingHumidityController,
-                  label: 'Luftfeuchte',
-                  hint: '50-60',
+                  label: _t['humidity_percent'], // ✅ i18n (reused)
+                  hint: _t['edit_harvest_drying_humidity_range'], // ✅ i18n
                   suffix: '%',
                   icon: Icons.water_drop,
                   color: Colors.blue,
@@ -591,26 +595,26 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             ],
           ),
           const SizedBox(height: 20),
-          
+
           // Quick Actions
           _buildQuickActionButtons(
             onStart: () => setState(() => _dryingStartDate ??= DateTime.now()),
             onEnd: () => setState(() => _dryingEndDate ??= DateTime.now()),
-            startLabel: 'Start: Heute',
-            endLabel: 'Ende: Heute',
+            startLabel: _t['edit_harvest_start_today'], // ✅ i18n
+            endLabel: _t['edit_harvest_end_today'], // ✅ i18n
             startColor: Colors.orange,
             endColor: Colors.green,
           ),
           
           const SizedBox(height: 20),
           _buildTipsCard(
-            'Tipps für optimale Trocknung',
+            _t['edit_harvest_drying_tips'], // ✅ i18n
             [
-              'Ideale Temperatur: 18-22°C',
-              'Luftfeuchtigkeit: 50-60%',
-              'Dauer: 7-14 Tage typisch',
-              'Dunkelheit bevorzugt',
-              'Gute Luftzirkulation wichtig',
+              _t['edit_harvest_drying_duration_typical'], // ✅ i18n
+              'Ideale Temperatur: ${_t['edit_harvest_drying_temp_range']}°C', // ✅ i18n
+              'Luftfeuchtigkeit: ${_t['edit_harvest_drying_humidity_range']}%', // ✅ i18n
+              _t['edit_harvest_drying_darkness'], // ✅ i18n
+              _t['edit_harvest_drying_airflow'], // ✅ i18n
             ],
             Icons.lightbulb_outline,
             Colors.orange,
@@ -631,8 +635,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-            'Curing / Fermentation',
-            'Tracking der Curing-Phase',
+            _t['edit_harvest_curing_header'], // ✅ i18n
+            _t['edit_harvest_curing_description'], // ✅ i18n
             Icons.inventory_2,
             Colors.purple,
           ),
@@ -654,19 +658,19 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
           // Method
           _buildTextField(
             controller: _curingMethodController,
-            label: 'Curing-Methode',
-            hint: 'z.B. Glass Jars, Grove Bags',
+            label: _t['edit_harvest_curing_method_label'], // ✅ i18n
+            hint: _t['edit_harvest_curing_method_hint'], // ✅ i18n
             icon: Icons.inventory_2,
             color: Colors.purple,
             suggestions: ['Glass Jars', 'Grove Bags', 'CVault', 'Vacuum Sealed'],
           ),
           const SizedBox(height: 16),
-          
+
           // Notes
           _buildTextField(
             controller: _curingNotesController,
-            label: 'Curing Notizen',
-            hint: 'Burping Schedule, Besonderheiten...',
+            label: _t['edit_harvest_curing_notes_label'], // ✅ i18n
+            hint: _t['edit_harvest_curing_notes_hint'], // ✅ i18n
             icon: Icons.note,
             color: Colors.purple,
             maxLines: 4,
@@ -677,21 +681,18 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
           _buildQuickActionButtons(
             onStart: () => setState(() => _curingStartDate ??= DateTime.now()),
             onEnd: () => setState(() => _curingEndDate ??= DateTime.now()),
-            startLabel: 'Start: Heute',
-            endLabel: 'Ende: Heute',
+            startLabel: _t['edit_harvest_start_today'], // ✅ i18n
+            endLabel: _t['edit_harvest_end_today'], // ✅ i18n
             startColor: Colors.purple,
             endColor: Colors.green,
           ),
           
           const SizedBox(height: 20),
           _buildTipsCard(
-            'Tipps für optimales Curing',
+            _t['edit_harvest_curing_tips'], // ✅ i18n
             [
-              'Mindestens 2-4 Wochen curen',
-              'Täglich "burpen" in Woche 1-2',
-              'Luftfeuchtigkeit: 58-62% ideal',
-              'Dunkel und kühl lagern',
-              'Geduld zahlt sich aus!',
+              _t['edit_harvest_curing_storage'], // ✅ i18n
+              _t['edit_harvest_curing_patience'], // ✅ i18n
             ],
             Icons.lightbulb_outline,
             Colors.purple,
@@ -712,8 +713,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-            'Qualitäts-Analyse',
-            'Laborergebnisse und Cannabinoid-Profile',
+            _t['edit_harvest_quality_header'], // ✅ i18n
+            _t['edit_harvest_cannabinoid_profile'], // ✅ i18n
             Icons.science,
             Colors.blue,
           ),
@@ -727,11 +728,11 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             suffix: '%',
             icon: Icons.science,
             color: Colors.red,
-            helperText: 'Tetrahydrocannabinol',
+            helperText: _t['edit_harvest_thc_helper'], // ✅ i18n
             allowDecimals: true,
           ),
           const SizedBox(height: 16),
-          
+
           // CBD
           _buildNumberField(
             controller: _cbdController,
@@ -740,7 +741,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             suffix: '%',
             icon: Icons.science,
             color: Colors.green,
-            helperText: 'Cannabidiol',
+            helperText: _t['edit_harvest_cbd_helper'], // ✅ i18n
             allowDecimals: true,
           ),
           const SizedBox(height: 16),
@@ -748,8 +749,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
           // Terpene Profile
           _buildTextField(
             controller: _terpeneController,
-            label: 'Terpen-Profil',
-            hint: 'z.B. Myrcene, Limonene, Caryophyllene',
+            label: _t['edit_harvest_terpene_label'], // ✅ i18n
+            hint: _t['edit_harvest_terpene_hint'], // ✅ i18n
             icon: Icons.format_list_bulleted,
             color: Colors.purple,
             maxLines: 3,
@@ -782,7 +783,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Laboranalysen sind optional, können aber wertvolle Informationen über die Qualität deiner Ernte liefern.',
+                    _t['edit_harvest_quality_info'], // ✅ i18n
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.blue[900],
@@ -816,7 +817,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Cannabinoid-Profil',
+            _t['edit_harvest_cannabinoid_profile'], // ✅ i18n
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
@@ -883,8 +884,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-            'Bewertung & Notizen',
-            'Deine persönliche Einschätzung',
+            _t['edit_harvest_rating_header'], // ✅ i18n
+            _t['edit_harvest_rating_description'], // ✅ i18n
             Icons.star,
             Colors.amber,
           ),
@@ -896,9 +897,9 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  const Text(
-                    'Gesamt-Bewertung',
-                    style: TextStyle(
+                  Text(
+                    _t['edit_harvest_overall_rating'], // ✅ i18n
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -922,7 +923,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                   if (_rating != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      '$_rating / 5 Sterne',
+                      _t['edit_harvest_rating_stars'].replaceAll('{rating}', '$_rating'), // ✅ i18n
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -932,7 +933,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                   ],
                   if (_rating == null)
                     Text(
-                      'Tippe auf die Sterne zum Bewerten',
+                      _t['edit_harvest_not_set'], // ✅ i18n
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[500],
@@ -947,8 +948,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
           // Taste Notes
           _buildTextField(
             controller: _tasteController,
-            label: 'Geschmack',
-            hint: 'z.B. fruchtig, erdig, zitrusartig...',
+            label: _t['edit_harvest_taste_label'], // ✅ i18n
+            hint: _t['edit_harvest_taste_hint'], // ✅ i18n
             icon: Icons.restaurant,
             color: Colors.orange,
             maxLines: 3,
@@ -964,12 +965,12 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Effect Notes
           _buildTextField(
             controller: _effectController,
-            label: 'Wirkung',
-            hint: 'z.B. entspannend, euphorisch, kreativ...',
+            label: _t['edit_harvest_effect_label'], // ✅ i18n
+            hint: _t['edit_harvest_effect_hint'], // ✅ i18n
             icon: Icons.psychology,
             color: Colors.purple,
             maxLines: 3,
@@ -989,8 +990,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
           // Overall Notes
           _buildTextField(
             controller: _overallNotesController,
-            label: 'Allgemeine Notizen',
-            hint: 'Zusätzliche Beobachtungen, Besonderheiten...',
+            label: _t['notes'], // ✅ i18n (reused)
+            hint: _t['edit_harvest_notes_hint'], // ✅ i18n
             icon: Icons.note,
             color: Colors.blue,
             maxLines: 5,

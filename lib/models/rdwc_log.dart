@@ -201,10 +201,15 @@ class RdwcLog {
 
   /// Formatted date for display
   String get formattedDate {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    // ✅ AUDIT FIX: Safe month array access with bounds checking
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    final monthIndex = logDate.month - 1;
+    final monthName = (monthIndex >= 0 && monthIndex < months.length)
+        ? months[monthIndex]
+        : 'N/A';
     final hour = logDate.hour.toString().padLeft(2, '0');
     final minute = logDate.minute.toString().padLeft(2, '0');
-    return '${logDate.day}. ${months[logDate.month - 1]} $hour:$minute';
+    return '${logDate.day}. $monthName $hour:$minute';
   }
 
   @override

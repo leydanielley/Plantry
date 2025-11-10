@@ -1,5 +1,6 @@
 // =============================================
 // GROWLOG - Edit Log Screen (MIT FOTOS!)
+// ✅ AUDIT FIX: i18n extraction
 // =============================================
 
 import 'dart:io';
@@ -21,6 +22,7 @@ import '../repositories/interfaces/i_fertilizer_repository.dart';
 import '../repositories/interfaces/i_log_fertilizer_repository.dart';
 import '../repositories/interfaces/i_photo_repository.dart';
 import '../utils/validators.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../di/service_locator.dart';
 
 class EditLogScreen extends StatefulWidget {
@@ -38,6 +40,7 @@ class EditLogScreen extends StatefulWidget {
 }
 
 class _EditLogScreenState extends State<EditLogScreen> {
+  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
   final _formKey = GlobalKey<FormState>();
   final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
@@ -81,6 +84,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
   @override
   void initState() {
     super.initState();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ AUDIT FIX: i18n
     _loadExistingData();
     _loadFertilizers();
     _loadExistingPhotos();
@@ -166,7 +170,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
           if (mounted) {
             AppMessages.showError(
               context,
-              'Ungültiger Dateityp. Nur Bilder (.jpg, .jpeg, .png, .webp) sind erlaubt.',
+              _t['edit_log_invalid_file_type'], // ✅ i18n
             );
           }
           return;
@@ -192,7 +196,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text('Kamera'),
+              title: Text(_t['camera']), // ✅ i18n
               onTap: () {
                 // ✅ Mounted check für höchste Sicherheit
                 if (!mounted) return;
@@ -202,7 +206,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Galerie'),
+              title: Text(_t['gallery']), // ✅ i18n
               onTap: () {
                 // ✅ Mounted check für höchste Sicherheit
                 if (!mounted) return;
@@ -373,7 +377,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
         final newPhase = await showDialog<PlantPhase>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Neue Phase wählen'),
+            title: Text(_t['edit_log_select_new_phase']), // ✅ i18n
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: PlantPhase.values.map((phase) {
@@ -427,7 +431,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Log bearbeiten - ${widget.plant.name}'),
+        title: Text(_t['edit_log_title'].replaceAll('{plant}', widget.plant.name)), // ✅ i18n
         backgroundColor: Colors.orange[700],
         foregroundColor: Colors.white,
       ),
@@ -481,8 +485,8 @@ class _EditLogScreenState extends State<EditLogScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Tag $_dayNumber bearbeiten', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange[700])),
-                  Text('Erstellt: ${DateFormat('dd.MM.yyyy HH:mm').format(widget.log.createdAt)}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  Text(_t['edit_log_day_info'].replaceAll('{day}', '$_dayNumber'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange[700])), // ✅ i18n
+                  Text(_t['edit_log_created_at'].replaceAll('{date}', DateFormat('dd.MM.yyyy HH:mm').format(widget.log.createdAt)), style: TextStyle(fontSize: 12, color: Colors.grey[600])), // ✅ i18n
                 ],
               ),
             ),
@@ -496,7 +500,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Aktion', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+        Text(_t['action'], style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])), // ✅ i18n
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -529,7 +533,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
       children: [
         ListTile(
           leading: Icon(Icons.access_time, color: Colors.grey[700]),
-          title: const Text('Datum & Uhrzeit'),
+          title: Text(_t['date_time']), // ✅ i18n
           subtitle: Text(DateFormat('dd.MM.yyyy HH:mm').format(_selectedDate)),
           trailing: const Icon(Icons.edit),
           onTap: () async {
@@ -587,7 +591,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
 
   Widget _buildPhotoSection() {
     final totalPhotos = _existingPhotos.length - _photosToDelete.length + _newPhotos.length;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -595,14 +599,14 @@ class _EditLogScreenState extends State<EditLogScreen> {
           children: [
             Icon(Icons.camera_alt, color: Colors.grey[700]),
             const SizedBox(width: 8),
-            Text('Fotos ($totalPhotos)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+            Text(_t['edit_log_photos_count'].replaceAll('{count}', '$totalPhotos'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])), // ✅ i18n
             const Spacer(),
-            TextButton.icon(onPressed: _showPhotoSourceDialog, icon: const Icon(Icons.add_a_photo), label: const Text('Hinzufügen')),
+            TextButton.icon(onPressed: _showPhotoSourceDialog, icon: const Icon(Icons.add_a_photo), label: Text(_t['add_photo'])), // ✅ i18n
           ],
         ),
         const SizedBox(height: 12),
         if (_existingPhotos.isNotEmpty) ...[
-          Text('Vorhandene Fotos:', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          Text(_t['edit_log_existing_photos'], style: TextStyle(fontSize: 12, color: Colors.grey[600])), // ✅ i18n
           const SizedBox(height: 8),
           SizedBox(
             height: 120,
@@ -652,7 +656,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(8)),
-                            child: const Text('Wird gelöscht', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                            child: Text(_t['edit_log_marked_for_deletion'], style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)), // ✅ i18n
                           ),
                         ),
                       ),
@@ -664,7 +668,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
           const SizedBox(height: 16),
         ],
         if (_newPhotos.isNotEmpty) ...[
-          Text('Neue Fotos:', style: TextStyle(fontSize: 12, color: Colors.green[700])),
+          Text(_t['edit_log_new_photos'], style: TextStyle(fontSize: 12, color: Colors.green[700])), // ✅ i18n
           const SizedBox(height: 8),
           SizedBox(
             height: 120,
@@ -702,7 +706,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(4)),
-                        child: const Text('NEU', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        child: Text(_t['edit_log_new_badge'], style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)), // ✅ i18n
                       ),
                     ),
                   ],
@@ -720,7 +724,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
                 children: [
                   Icon(Icons.add_photo_alternate, size: 48, color: Colors.grey[400]),
                   const SizedBox(height: 8),
-                  Text('Keine Fotos vorhanden', style: TextStyle(color: Colors.grey[600])),
+                  Text(_t['edit_log_no_photos'], style: TextStyle(color: Colors.grey[600])), // ✅ i18n
                 ],
               ),
             ),
@@ -733,14 +737,14 @@ class _EditLogScreenState extends State<EditLogScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Container / Topf', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+        Text(_t['container_pot'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[700])), // ✅ i18n
         const SizedBox(height: 12),
-        TextFormField(controller: _containerSizeController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Topfgröße (Liter)', border: OutlineInputBorder()), validator: (value) => Validators.validatePositiveNumber(value, min: 0.5, max: 500.0)),
+        TextFormField(controller: _containerSizeController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['pot_size_liter'], border: const OutlineInputBorder()), validator: (value) => Validators.validatePositiveNumber(value, min: 0.5, max: 500.0)), // ✅ i18n
         const SizedBox(height: 12),
-        TextFormField(controller: _containerMediumAmountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Medium-Menge (Liter)', border: OutlineInputBorder()), validator: (value) => Validators.validatePositiveNumber(value, min: 0.1, max: 500.0)),
+        TextFormField(controller: _containerMediumAmountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['medium_amount_liter'], border: const OutlineInputBorder()), validator: (value) => Validators.validatePositiveNumber(value, min: 0.1, max: 500.0)), // ✅ i18n
         const SizedBox(height: 12),
-        SwitchListTile(title: const Text('Drainage'), value: _containerDrainage, onChanged: (value) => setState(() => _containerDrainage = value)),
-        if (_containerDrainage) ...[const SizedBox(height: 12), TextFormField(controller: _containerDrainageMaterialController, decoration: const InputDecoration(labelText: 'Drainage-Material', border: OutlineInputBorder()))],
+        SwitchListTile(title: Text(_t['drainage']), value: _containerDrainage, onChanged: (value) => setState(() => _containerDrainage = value)), // ✅ i18n
+        if (_containerDrainage) ...[const SizedBox(height: 12), TextFormField(controller: _containerDrainageMaterialController, decoration: InputDecoration(labelText: _t['drainage_material'], border: const OutlineInputBorder()))], // ✅ i18n
       ],
     );
   }
@@ -749,22 +753,22 @@ class _EditLogScreenState extends State<EditLogScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('System (RDWC/DWC/Hydro)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+        Text(_t['system_rdwc_dwc_hydro'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[700])), // ✅ i18n
         const SizedBox(height: 12),
-        TextFormField(controller: _systemReservoirSizeController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Reservoir Größe (Liter)', border: OutlineInputBorder()), validator: (value) => Validators.validatePositiveNumber(value, min: 1.0, max: 10000.0)),
+        TextFormField(controller: _systemReservoirSizeController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['reservoir_size_liter'], border: const OutlineInputBorder()), validator: (value) => Validators.validatePositiveNumber(value, min: 1.0, max: 10000.0)), // ✅ i18n
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: TextFormField(controller: _systemBucketCountController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Anzahl Buckets', border: OutlineInputBorder()), validator: (value) => Validators.validateInteger(value, min: 1, max: 100))),
+            Expanded(child: TextFormField(controller: _systemBucketCountController, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _t['bucket_count'], border: const OutlineInputBorder()), validator: (value) => Validators.validateInteger(value, min: 1, max: 100))), // ✅ i18n
             const SizedBox(width: 8),
-            Expanded(child: TextFormField(controller: _systemBucketSizeController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Bucket-Größe (L)', border: OutlineInputBorder()), validator: (value) => Validators.validatePositiveNumber(value, min: 1.0, max: 200.0))),
+            Expanded(child: TextFormField(controller: _systemBucketSizeController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['bucket_size_liter'], border: const OutlineInputBorder()), validator: (value) => Validators.validatePositiveNumber(value, min: 1.0, max: 200.0))), // ✅ i18n
           ],
         ),
       ],
     );
   }
 
-  Widget _buildWaterSection() => TextFormField(controller: _waterAmountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Wasser-Menge (Liter)', border: OutlineInputBorder()), validator: (value) => Validators.validatePositiveNumber(value, min: 0.1, max: 1000.0));
+  Widget _buildWaterSection() => TextFormField(controller: _waterAmountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['amount_liter'], border: const OutlineInputBorder()), validator: (value) => Validators.validatePositiveNumber(value, min: 0.1, max: 1000.0)); // ✅ i18n
 
   Widget _buildFertilizerSection() {
     return Column(
@@ -772,14 +776,14 @@ class _EditLogScreenState extends State<EditLogScreen> {
       children: [
         Row(
           children: [
-            Text('Dünger', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+            Text(_t['fertilizers'], style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])), // ✅ i18n
             const Spacer(),
-            TextButton.icon(onPressed: _showAddFertilizerDialog, icon: const Icon(Icons.add), label: const Text('Hinzufügen')),
+            TextButton.icon(onPressed: _showAddFertilizerDialog, icon: const Icon(Icons.add), label: Text(_t['add_photo'])), // ✅ i18n (reusing add_photo = "Hinzufügen")
           ],
         ),
         const SizedBox(height: 8),
         if (_selectedFertilizers.isEmpty)
-          Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[300] ?? Colors.grey)), child: Text('Keine Dünger ausgewählt', style: TextStyle(color: Colors.grey[600])))
+          Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[300] ?? Colors.grey)), child: Text(_t['no_fertilizers_selected'], style: TextStyle(color: Colors.grey[600]))) // ✅ i18n
         else
           ..._selectedFertilizers.entries.map((entry) {
             // ✅ FIX: Add orElse to prevent StateError crash
@@ -787,7 +791,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
               (f) => f.id == entry.key,
               orElse: () => Fertilizer(
                 id: entry.key,
-                name: 'Unbekannt',
+                name: _t['edit_log_unknown_fertilizer'], // ✅ i18n
                 createdAt: DateTime.now(),
               ),
             );
@@ -807,14 +811,14 @@ class _EditLogScreenState extends State<EditLogScreen> {
 
   void _showAddFertilizerDialog() {
     if (_availableFertilizers.isEmpty) {
-      AppMessages.showInfo(context, 'Keine Dünger verfügbar');
+      AppMessages.showInfo(context, _t['edit_log_no_fertilizers_available']); // ✅ i18n
       return;
     }
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Dünger hinzufügen'),
+        title: Text(_t['add_fertilizer']), // ✅ i18n
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -840,19 +844,19 @@ class _EditLogScreenState extends State<EditLogScreen> {
   void _addFertilizer(Fertilizer fertilizer) {
     // ✅ Extra Null-Check für Sicherheit
     if (fertilizer.id == null) {
-      AppMessages.showError(context, 'Fehler: Dünger hat keine gültige ID');
+      AppMessages.showError(context, _t['edit_log_fertilizer_no_id_error']); // ✅ i18n
       return;
     }
 
     final amountController = TextEditingController(text: '10');
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(fertilizer.name),
-        content: TextFormField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Menge (ml)', border: OutlineInputBorder()), autofocus: true),
+        content: TextFormField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['amount_ml'], border: const OutlineInputBorder()), autofocus: true), // ✅ i18n
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(_t['cancel'])), // ✅ i18n
           ElevatedButton(
             onPressed: () {
               final amount = double.tryParse(amountController.text);
@@ -861,7 +865,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
                 Navigator.of(context).pop();
               }
             },
-            child: const Text('Hinzufügen'),
+            child: Text(_t['add_photo']), // ✅ i18n (reusing add_photo = "Hinzufügen")
           ),
         ],
       ),
@@ -875,14 +879,14 @@ class _EditLogScreenState extends State<EditLogScreen> {
       (f) => f.id == fertilizerId,
       orElse: () => throw Exception('Dünger mit ID $fertilizerId nicht gefunden'),
     );
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(fertilizer.name),
-        content: TextFormField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Menge (ml)', border: OutlineInputBorder()), autofocus: true),
+        content: TextFormField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['amount_ml'], border: const OutlineInputBorder()), autofocus: true), // ✅ i18n
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Abbrechen')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(_t['cancel'])), // ✅ i18n
           ElevatedButton(
             onPressed: () {
               final amount = double.tryParse(amountController.text);
@@ -891,7 +895,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
                 Navigator.of(context).pop();
               }
             },
-            child: const Text('Speichern'),
+            child: Text(_t['save']), // ✅ i18n
           ),
         ],
       ),
@@ -902,22 +906,22 @@ class _EditLogScreenState extends State<EditLogScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('pH & EC Werte', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+        Text(_t['ph_ec_values'], style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])), // ✅ i18n
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(child: TextFormField(controller: _phInController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'pH In', border: OutlineInputBorder()), validator: (value) => Validators.validatePH(value))),
+            Expanded(child: TextFormField(controller: _phInController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['ph_in'], border: const OutlineInputBorder()), validator: (value) => Validators.validatePH(value))), // ✅ i18n
             const SizedBox(width: 8),
-            Expanded(child: TextFormField(controller: _ecInController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'EC In', border: OutlineInputBorder()), validator: (value) => Validators.validateEC(value))),
+            Expanded(child: TextFormField(controller: _ecInController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['ec_in'], border: const OutlineInputBorder()), validator: (value) => Validators.validateEC(value))), // ✅ i18n
           ],
         ),
         if (_showPhEcOut) ...[
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: TextFormField(controller: _phOutController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'pH Out', border: OutlineInputBorder()), validator: (value) => Validators.validatePH(value))),
+              Expanded(child: TextFormField(controller: _phOutController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['ph_out'], border: const OutlineInputBorder()), validator: (value) => Validators.validatePH(value))), // ✅ i18n
               const SizedBox(width: 8),
-              Expanded(child: TextFormField(controller: _ecOutController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'EC Out', border: OutlineInputBorder()), validator: (value) => Validators.validateEC(value))),
+              Expanded(child: TextFormField(controller: _ecOutController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['ec_out'], border: const OutlineInputBorder()), validator: (value) => Validators.validateEC(value))), // ✅ i18n
             ],
           ),
         ],
@@ -925,30 +929,30 @@ class _EditLogScreenState extends State<EditLogScreen> {
     );
   }
 
-  Widget _buildFlagsSection() => Column(children: [SwitchListTile(title: const Text('Runoff'), value: _runoff, onChanged: (value) => setState(() => _runoff = value)), SwitchListTile(title: const Text('Cleanse'), value: _cleanse, onChanged: (value) => setState(() => _cleanse = value))]);
+  Widget _buildFlagsSection() => Column(children: [SwitchListTile(title: Text(_t['runoff']), value: _runoff, onChanged: (value) => setState(() => _runoff = value)), SwitchListTile(title: Text(_t['cleanse']), value: _cleanse, onChanged: (value) => setState(() => _cleanse = value))]); // ✅ i18n
 
   Widget _buildEnvironmentSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Umgebung', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+        Text(_t['environment_optional'], style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])), // ✅ i18n
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(child: TextFormField(controller: _temperatureController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Temperatur (°C)', border: OutlineInputBorder()), validator: (value) => Validators.validateTemperature(value))),
+            Expanded(child: TextFormField(controller: _temperatureController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['temperature_celsius'], border: const OutlineInputBorder()), validator: (value) => Validators.validateTemperature(value))), // ✅ i18n
             const SizedBox(width: 8),
-            Expanded(child: TextFormField(controller: _humidityController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Luftfeuchte (%)', border: OutlineInputBorder()), validator: (value) => Validators.validateHumidity(value))),
+            Expanded(child: TextFormField(controller: _humidityController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: _t['humidity_percent'], border: const OutlineInputBorder()), validator: (value) => Validators.validateHumidity(value))), // ✅ i18n
           ],
         ),
       ],
     );
   }
 
-  Widget _buildNoteSection() => TextFormField(controller: _noteController, maxLines: 4, decoration: const InputDecoration(labelText: 'Notizen', hintText: 'Beobachtungen, Änderungen, etc...', border: OutlineInputBorder()));
+  Widget _buildNoteSection() => TextFormField(controller: _noteController, maxLines: 4, decoration: InputDecoration(labelText: _t['notes'], hintText: _t['notes_hint'], border: const OutlineInputBorder())); // ✅ i18n
 
   Widget _buildSaveButton() => ElevatedButton(
     onPressed: _saveLog,
     style: ElevatedButton.styleFrom(backgroundColor: Colors.orange[700], foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16)),
-    child: const Text('Änderungen speichern', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+    child: Text(_t['edit_log_save_changes'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // ✅ i18n
   );
 }

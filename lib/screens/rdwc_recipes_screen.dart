@@ -11,6 +11,7 @@ import '../models/fertilizer.dart';
 import '../utils/translations.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../widgets/empty_state_widget.dart';
 import 'rdwc_recipe_form_screen.dart';
 import '../di/service_locator.dart';
 
@@ -148,47 +149,26 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
     );
   }
 
+  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
   Widget _buildEmptyState(bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.science_outlined,
-            size: 80,
-            color: isDark ? Colors.grey[700] : Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _t['no_recipes_yet'],
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: isDark ? Colors.grey[600] : Colors.grey[500],
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _t['create_first_recipe'],
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDark ? Colors.grey[700] : Colors.grey[600],
-                ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const RdwcRecipeFormScreen(),
-                ),
-              );
-              if (result == true) {
-                _loadData();
-              }
-            },
-            icon: const Icon(Icons.add),
-            label: Text(_t['create_recipe']),
-          ),
-        ],
+    return EmptyStateWidget(
+      icon: Icons.science_outlined,
+      title: _t['no_recipes_yet'],
+      subtitle: _t['create_first_recipe'],
+      action: ElevatedButton.icon(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const RdwcRecipeFormScreen(),
+            ),
+          );
+          if (result == true) {
+            _loadData();
+          }
+        },
+        icon: const Icon(Icons.add),
+        label: Text(_t['create_recipe']),
       ),
     );
   }

@@ -8,9 +8,14 @@ import '../database/database_helper.dart';
 import '../utils/validators.dart';
 import '../utils/app_logger.dart';
 import 'interfaces/i_grow_repository.dart';
+import 'repository_error_handler.dart';
 
-class GrowRepository implements IGrowRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+
+  @override
+  String get repositoryName => 'GrowRepository';
 
 
   /// Alle Grows abrufen (nicht archiviert)

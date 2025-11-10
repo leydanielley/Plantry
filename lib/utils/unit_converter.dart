@@ -5,6 +5,20 @@
 import '../models/app_settings.dart';
 
 class UnitConverter {
+  // ✅ AUDIT FIX: Extracted conversion factor constants
+
+  // Temperature conversion constants
+  static const double _celsiusToFahrenheitMultiplier = 9 / 5;
+  static const double _celsiusToFahrenheitOffset = 32;
+  static const double _fahrenheitToCelsiusMultiplier = 5 / 9;
+
+  // Length conversion constants
+  static const double _cmToInchFactor = 0.393701; // 1 cm = 0.393701 inches
+  static const double _inchToCmFactor = 2.54;     // 1 inch = 2.54 cm
+
+  // Volume conversion constants
+  static const double _literToGallonFactor = 0.264172; // 1 liter = 0.264172 US gallons
+  static const double _gallonToLiterFactor = 3.78541; // 1 US gallon = 3.78541 liters
   /// Convert EC to PPM using the specified scale
   /// EC (mS/cm) * scale = PPM
   /// @param ec - EC value in mS/cm
@@ -47,13 +61,13 @@ class UnitConverter {
   /// Convert Celsius to Fahrenheit
   /// F = (C × 9/5) + 32
   static double celsiusToFahrenheit(double celsius) {
-    return (celsius * 9 / 5) + 32;
+    return (celsius * _celsiusToFahrenheitMultiplier) + _celsiusToFahrenheitOffset;
   }
 
   /// Convert Fahrenheit to Celsius
   /// C = (F - 32) × 5/9
   static double fahrenheitToCelsius(double fahrenheit) {
-    return (fahrenheit - 32) * 5 / 9;
+    return (fahrenheit - _celsiusToFahrenheitOffset) * _fahrenheitToCelsiusMultiplier;
   }
 
   /// Format temperature based on user preference
@@ -71,13 +85,13 @@ class UnitConverter {
   /// Convert centimeters to inches
   /// 1 cm = 0.393701 inches
   static double cmToInch(double cm) {
-    return cm * 0.393701;
+    return cm * _cmToInchFactor;
   }
 
   /// Convert inches to centimeters
   /// 1 inch = 2.54 cm
   static double inchToCm(double inch) {
-    return inch * 2.54;
+    return inch * _inchToCmFactor;
   }
 
   /// Format length based on user preference
@@ -95,13 +109,13 @@ class UnitConverter {
   /// Convert liters to gallons (US)
   /// 1 liter = 0.264172 gallons
   static double literToGallon(double liter) {
-    return liter * 0.264172;
+    return liter * _literToGallonFactor;
   }
 
   /// Convert gallons (US) to liters
   /// 1 gallon = 3.78541 liters
   static double gallonToLiter(double gallon) {
-    return gallon * 3.78541;
+    return gallon * _gallonToLiterFactor;
   }
 
   /// Format volume based on user preference

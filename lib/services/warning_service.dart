@@ -6,6 +6,7 @@ import '../models/plant.dart';
 import '../repositories/interfaces/i_plant_log_repository.dart';
 import '../repositories/interfaces/i_photo_repository.dart';
 import '../utils/app_logger.dart';
+import '../config/warning_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to WarningConfig
 import 'interfaces/i_warning_service.dart';
 
 enum WarningLevel {
@@ -90,14 +91,15 @@ class WarningService implements IWarningService {
       waterLogs.sort((a, b) => b.logDate.compareTo(a.logDate));
       final daysSinceWatering = DateTime.now().difference(waterLogs.first.logDate).inDays;
 
-      if (daysSinceWatering >= 7) {
+      // ✅ AUDIT FIX: Magic numbers extracted to WarningConfig
+      if (daysSinceWatering >= WarningConfig.wateringCriticalDays) {
         warnings.add(PlantWarning(
           message: 'Lange nicht gegossen ($daysSinceWatering Tage)',
           level: WarningLevel.critical,
           recommendation: 'Prüfe Pflanze und gieße falls nötig',
           detectedAt: DateTime.now(),
         ));
-      } else if (daysSinceWatering >= 4) {
+      } else if (daysSinceWatering >= WarningConfig.wateringWarningDays) {
         warnings.add(PlantWarning(
           message: 'Bewässerung könnte bald nötig sein',
           level: WarningLevel.warning,
@@ -107,15 +109,15 @@ class WarningService implements IWarningService {
       }
 
       // Check for extreme water amounts
-      if (waterLogs.length >= 3) {
+      if (waterLogs.length >= WarningConfig.minWaterLogsForTrend) {
         // ✅ FIX: Store recentWaterLogs to avoid multiple evaluations and prevent division by zero
-        final recentWaterLogs = waterLogs.take(10).toList();
+        final recentWaterLogs = waterLogs.take(WarningConfig.recentWaterLogsCount).toList();
         if (recentWaterLogs.isNotEmpty) {
           final waterAmounts = recentWaterLogs.map((l) => l.waterAmount!).toList();
           final avgWater = waterAmounts.reduce((a, b) => a + b) / waterAmounts.length;
           final lastWater = waterLogs.first.waterAmount!;
 
-          if (lastWater > avgWater * 2) {
+          if (lastWater > avgWater * WarningConfig.waterAmountAbnormalityMultiplier) {
             warnings.add(PlantWarning(
               message: 'Letztes Gießen ungewöhnlich hoch (${lastWater.toStringAsFixed(1)}L)',
               level: WarningLevel.info,
@@ -139,34 +141,36 @@ class WarningService implements IWarningService {
       final logs = await _logRepo.findByPlant(plantId);
 
       // pH warnings
+      // ✅ AUDIT FIX: Magic numbers extracted to WarningConfig
       final phLogs = logs.where((l) => l.phIn != null).toList();
       if (phLogs.isNotEmpty) {
         phLogs.sort((a, b) => b.logDate.compareTo(a.logDate));
         final latestPh = phLogs.first.phIn!;
 
-        if (latestPh < 4.5 || latestPh > 8.0) {
+        if (WarningConfig.isPhCritical(latestPh)) {
           warnings.add(PlantWarning(
             message: 'pH kritisch: ${latestPh.toStringAsFixed(1)}',
             level: WarningLevel.critical,
-            recommendation: 'pH sofort auf 5.8-6.5 korrigieren',
+            recommendation: 'pH sofort auf ${WarningConfig.phOptimalMin}-${WarningConfig.phOptimalMax} korrigieren',
             detectedAt: DateTime.now(),
           ));
-        } else if (latestPh < 5.3 || latestPh > 7.2) {
+        } else if (WarningConfig.isPhWarning(latestPh)) {
           warnings.add(PlantWarning(
             message: 'pH außerhalb optimal: ${latestPh.toStringAsFixed(1)}',
             level: WarningLevel.warning,
-            recommendation: 'pH auf 5.8-6.5 anpassen',
+            recommendation: 'pH auf ${WarningConfig.phOptimalMin}-${WarningConfig.phOptimalMax} anpassen',
             detectedAt: DateTime.now(),
           ));
         }
 
         // Check pH fluctuation
-        if (phLogs.length >= 5) {
-          final recentPh = phLogs.take(5).map((l) => l.phIn!).toList();
+        if (phLogs.length >= WarningConfig.minPhLogsForFluctuation) {
+          final recentPh = phLogs.take(WarningConfig.recentPhLogsCount).map((l) => l.phIn!).toList();
           final minPh = recentPh.reduce((a, b) => a < b ? a : b);
           final maxPh = recentPh.reduce((a, b) => a > b ? a : b);
+          final range = maxPh - minPh;
 
-          if ((maxPh - minPh) > 2.0) {
+          if (WarningConfig.isPhFluctuationConcerning(range)) {
             warnings.add(PlantWarning(
               message: 'pH schwankt stark (${minPh.toStringAsFixed(1)} - ${maxPh.toStringAsFixed(1)})',
               level: WarningLevel.warning,
@@ -178,41 +182,44 @@ class WarningService implements IWarningService {
       }
 
       // EC warnings
+      // ✅ AUDIT FIX: Magic numbers extracted to WarningConfig
       final ecLogs = logs.where((l) => l.ecIn != null).toList();
       if (ecLogs.isNotEmpty) {
         ecLogs.sort((a, b) => b.logDate.compareTo(a.logDate));
         final latestEc = ecLogs.first.ecIn!;
 
-        if (latestEc > 3.5) {
+        if (WarningConfig.isEcCritical(latestEc)) {
           warnings.add(PlantWarning(
             message: 'EC sehr hoch: ${latestEc.toStringAsFixed(2)}',
             level: WarningLevel.critical,
             recommendation: 'Nährstoffverbrennung möglich - EC reduzieren',
             detectedAt: DateTime.now(),
           ));
-        } else if (latestEc > 2.8) {
-          warnings.add(PlantWarning(
-            message: 'EC hoch: ${latestEc.toStringAsFixed(2)}',
-            level: WarningLevel.warning,
-            recommendation: 'EC überwachen, evtl. reduzieren',
-            detectedAt: DateTime.now(),
-          ));
-        } else if (latestEc < 0.3) {
-          warnings.add(PlantWarning(
-            message: 'EC sehr niedrig: ${latestEc.toStringAsFixed(2)}',
-            level: WarningLevel.warning,
-            recommendation: 'Nährstoffgabe erhöhen',
-            detectedAt: DateTime.now(),
-          ));
+        } else if (WarningConfig.isEcWarning(latestEc)) {
+          if (latestEc > WarningConfig.ecWarningMax) {
+            warnings.add(PlantWarning(
+              message: 'EC hoch: ${latestEc.toStringAsFixed(2)}',
+              level: WarningLevel.warning,
+              recommendation: 'EC überwachen, evtl. reduzieren',
+              detectedAt: DateTime.now(),
+            ));
+          } else {
+            warnings.add(PlantWarning(
+              message: 'EC sehr niedrig: ${latestEc.toStringAsFixed(2)}',
+              level: WarningLevel.warning,
+              recommendation: 'Nährstoffgabe erhöhen',
+              detectedAt: DateTime.now(),
+            ));
+          }
         }
 
         // Check EC trend
-        if (ecLogs.length >= 5) {
-          final recentEc = ecLogs.take(5).map((l) => l.ecIn!).toList();
+        if (ecLogs.length >= WarningConfig.minEcLogsForTrend) {
+          final recentEc = ecLogs.take(WarningConfig.recentEcLogsCount).map((l) => l.ecIn!).toList();
           final isIncreasing = recentEc.first > recentEc.last;
           final change = (recentEc.first - recentEc.last).abs();
 
-          if (change > 0.5 && isIncreasing) {
+          if (WarningConfig.isEcTrendSignificant(change) && isIncreasing) {
             warnings.add(PlantWarning(
               message: 'EC steigt kontinuierlich',
               level: WarningLevel.warning,
@@ -248,7 +255,8 @@ class WarningService implements IWarningService {
       logs.sort((a, b) => b.logDate.compareTo(a.logDate));
       final daysSinceLog = DateTime.now().difference(logs.first.logDate).inDays;
 
-      if (daysSinceLog >= 10) {
+      // ✅ AUDIT FIX: Magic numbers extracted to WarningConfig
+      if (daysSinceLog >= WarningConfig.activityWarningDays) {
         warnings.add(PlantWarning(
           message: 'Lange kein Log-Eintrag ($daysSinceLog Tage)',
           level: WarningLevel.warning,
@@ -282,7 +290,8 @@ class WarningService implements IWarningService {
       photos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       final daysSincePhoto = DateTime.now().difference(photos.first.createdAt).inDays;
 
-      if (daysSincePhoto >= 14) {
+      // ✅ AUDIT FIX: Magic numbers extracted to WarningConfig
+      if (daysSincePhoto >= WarningConfig.photoInfoDays) {
         warnings.add(PlantWarning(
           message: 'Lange kein Foto gemacht ($daysSincePhoto Tage)',
           level: WarningLevel.info,

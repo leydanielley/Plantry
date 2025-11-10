@@ -2,11 +2,11 @@
 // GROWLOG - Notification Service (100% Offline)
 // =============================================
 
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import '../utils/app_logger.dart';
+import '../config/notification_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
 import 'interfaces/i_notification_service.dart';
 
 class NotificationService implements INotificationService {
@@ -24,8 +24,9 @@ class NotificationService implements INotificationService {
 
     try {
       // Initialize timezone
+      // ✅ AUDIT FIX: Hardcoded timezone extracted to NotificationConfig
       tz.initializeTimeZones();
-      tz.setLocalLocation(tz.getLocation('Europe/Berlin'));
+      tz.setLocalLocation(tz.getLocation(NotificationConfig.defaultTimezone));
 
       // Android initialization
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -128,7 +129,7 @@ class NotificationService implements INotificationService {
     required String plantName,
     required DateTime lastWatering,
     required int intervalDays,
-    String notificationTime = "09:00",
+    String notificationTime = NotificationConfig.defaultNotificationTime,  // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
 
@@ -153,8 +154,9 @@ class NotificationService implements INotificationService {
         return;
       }
 
+      // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
       await _notifications.zonedSchedule(
-        _getWateringNotificationId(plantId),
+        NotificationConfig.getWateringNotificationId(plantId),
         '💧 Zeit zum Gießen!',
         '$plantName braucht Wasser',
         scheduledDate,
@@ -178,7 +180,7 @@ class NotificationService implements INotificationService {
     required String plantName,
     required DateTime lastFertilizing,
     required int intervalDays,
-    String notificationTime = "09:00",
+    String notificationTime = NotificationConfig.defaultNotificationTime,  // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
 
@@ -201,8 +203,9 @@ class NotificationService implements INotificationService {
         return;
       }
 
+      // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
       await _notifications.zonedSchedule(
-        _getFertilizingNotificationId(plantId),
+        NotificationConfig.getFertilizingNotificationId(plantId),
         '🌿 Zeit zum Düngen!',
         '$plantName braucht Nährstoffe',
         scheduledDate,
@@ -226,7 +229,7 @@ class NotificationService implements INotificationService {
     required String plantName,
     required DateTime lastPhoto,
     required int intervalDays,
-    String notificationTime = "09:00",
+    String notificationTime = NotificationConfig.defaultNotificationTime,  // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
 
@@ -249,8 +252,9 @@ class NotificationService implements INotificationService {
         return;
       }
 
+      // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
       await _notifications.zonedSchedule(
-        _getPhotoNotificationId(plantId),
+        NotificationConfig.getPhotoNotificationId(plantId),
         '📸 Foto-Erinnerung',
         'Wöchentliches Foto von $plantName machen',
         scheduledDate,
@@ -273,7 +277,7 @@ class NotificationService implements INotificationService {
     required int plantId,
     required String plantName,
     required DateTime estimatedHarvestDate,
-    String notificationTime = "09:00",
+    String notificationTime = NotificationConfig.defaultNotificationTime,  // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
 
@@ -283,7 +287,8 @@ class NotificationService implements INotificationService {
       final minute = int.parse(timeParts[1]);
 
       // Remind 3 days before
-      final reminderDate = estimatedHarvestDate.subtract(const Duration(days: 3));
+      // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
+      final reminderDate = estimatedHarvestDate.subtract(Duration(days: NotificationConfig.harvestReminderDaysBefore));
 
       final scheduledDate = tz.TZDateTime(
         tz.local,
@@ -298,10 +303,11 @@ class NotificationService implements INotificationService {
         return;
       }
 
+      // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
       await _notifications.zonedSchedule(
-        _getHarvestNotificationId(plantId),
+        NotificationConfig.getHarvestNotificationId(plantId),
         '🌾 Ernte bald fertig!',
-        '$plantName: Ernte in ca. 3 Tagen',
+        '$plantName: Ernte in ca. ${NotificationConfig.harvestReminderDaysBefore} Tagen',
         scheduledDate,
         _notificationDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -320,10 +326,11 @@ class NotificationService implements INotificationService {
   @override
   Future<void> cancelPlantReminders(int plantId) async {
     try {
-      await _notifications.cancel(_getWateringNotificationId(plantId));
-      await _notifications.cancel(_getFertilizingNotificationId(plantId));
-      await _notifications.cancel(_getPhotoNotificationId(plantId));
-      await _notifications.cancel(_getHarvestNotificationId(plantId));
+      // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
+      await _notifications.cancel(NotificationConfig.getWateringNotificationId(plantId));
+      await _notifications.cancel(NotificationConfig.getFertilizingNotificationId(plantId));
+      await _notifications.cancel(NotificationConfig.getPhotoNotificationId(plantId));
+      await _notifications.cancel(NotificationConfig.getHarvestNotificationId(plantId));
 
       AppLogger.info('NotificationService', 'Cancelled all reminders for plant $plantId');
     } catch (e) {
@@ -359,8 +366,9 @@ class NotificationService implements INotificationService {
     if (!_initialized) await initialize();
 
     try {
+      // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
       await _notifications.show(
-        999,
+        NotificationConfig.testNotificationId,
         '🌱 Plantry Test',
         'Benachrichtigungen funktionieren!',
         _notificationDetails(),
@@ -376,23 +384,19 @@ class NotificationService implements INotificationService {
   // ============================================================
 
   NotificationDetails _notificationDetails() {
-    return const NotificationDetails(
+    // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
+    return NotificationDetails(
       android: AndroidNotificationDetails(
-        'plantry_reminders',
-        'Pflanz-Erinnerungen',
-        channelDescription: 'Erinnerungen für Gießen, Düngen und Pflege',
+        NotificationConfig.channelId,
+        NotificationConfig.channelName,
+        channelDescription: NotificationConfig.channelDescription,
         importance: Importance.high,
         priority: Priority.high,
-        icon: '@mipmap/ic_launcher',
-        color: Color(0xFF004225),
+        icon: NotificationConfig.notificationIcon,
+        color: NotificationConfig.notificationColor,
         enableVibration: true,
         playSound: true,
       ),
     );
   }
-
-  int _getWateringNotificationId(int plantId) => plantId * 10 + 1;
-  int _getFertilizingNotificationId(int plantId) => plantId * 10 + 2;
-  int _getPhotoNotificationId(int plantId) => plantId * 10 + 3;
-  int _getHarvestNotificationId(int plantId) => plantId * 10 + 4;
 }

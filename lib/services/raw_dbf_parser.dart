@@ -121,86 +121,10 @@ class RawDbfParser {
     // Total: 80 + 80 + 119 + (19 × 20) + 2 = 661 bytes (19 bytes padding/reserved)
   }
 
-  static _DbfHeader _parseHeader(Uint8List bytes) {
-    // Read header structure
-    final recordCount = ByteData.view(bytes.buffer).getUint32(4, Endian.little);
-    final headerLength = ByteData.view(bytes.buffer).getUint16(8, Endian.little);
-    final recordLength = ByteData.view(bytes.buffer).getUint16(10, Endian.little);
-
-    // Check for DBMS signature at byte 32 (like "DB850US0")
-    // If present, field descriptors start at byte 64, otherwise at byte 32
-    int fieldDescriptorStart = 32;
-    final signature = String.fromCharCodes(bytes.sublist(32, 40));
-    if (signature.startsWith('DB')) {
-      fieldDescriptorStart = 64;
-      AppLogger.debug('RawDbfParser', 'DBMS signature found: $signature, fields start at 64');
-    }
-
-    // Parse field descriptors (each is 32 bytes)
-    // Field descriptors end with 0x0D terminator
-    final fields = <_DbfField>[];
-    int offset = fieldDescriptorStart;
-
-    while (offset < headerLength - 1) {
-      // Check for field terminator (0x0D)
-      if (bytes[offset] == 0x0D) {
-        AppLogger.debug('RawDbfParser', 'Found field terminator at offset $offset');
-        break;
-      }
-
-      // Standard dBase field descriptor structure:
-      // Bytes 0-10: Field name (11 bytes, null-terminated)
-      final fieldNameBytes = bytes.sublist(offset, offset + 11);
-      final fieldName = String.fromCharCodes(
-        fieldNameBytes.where((b) => b != 0),
-      ).trim();
-
-      if (fieldName.isEmpty) {
-        AppLogger.debug('RawDbfParser', 'Empty field name at offset $offset, skipping');
-        offset += 32;
-        continue;
-      }
-
-      // Byte 11: Field type (C=Character, N=Numeric, L=Logical, D=Date)
-      final fieldType = String.fromCharCode(bytes[offset + 11]);
-      // Byte 16: Field length
-      final fieldLength = bytes[offset + 16];
-      // Byte 17: Decimal count
-      final fieldDecimals = bytes[offset + 17];
-
-      fields.add(_DbfField(
-        name: fieldName,
-        type: fieldType,
-        length: fieldLength,
-        decimals: fieldDecimals,
-      ));
-
-      AppLogger.debug('RawDbfParser', 'Field: $fieldName ($fieldType, len=$fieldLength, dec=$fieldDecimals)');
-
-      offset += 32;
-    }
-
-    return _DbfHeader(
-      recordCount: recordCount,
-      headerLength: headerLength,
-      recordLength: recordLength,
-      fields: fields,
-    );
-  }
-}
-
-class _DbfHeader {
-  final int recordCount;
-  final int headerLength;
-  final int recordLength;
-  final List<_DbfField> fields;
-
-  _DbfHeader({
-    required this.recordCount,
-    required this.headerLength,
-    required this.recordLength,
-    required this.fields,
-  });
+  // ✅ AUDIT FIX: Removed unused _parseHeader method
+  // The parser uses hardcoded HydroBuddy field structure instead of dynamic parsing
+  // because the proprietary DBF format doesn't follow standard dBase conventions.
+  // The method was kept for reference but never called in production code.
 }
 
 class _DbfField {

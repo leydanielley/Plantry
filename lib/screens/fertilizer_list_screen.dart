@@ -12,6 +12,7 @@ import '../repositories/interfaces/i_fertilizer_repository.dart';
 import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
+import '../widgets/empty_state_widget.dart';
 import 'add_fertilizer_screen.dart';
 import 'edit_fertilizer_screen.dart';
 import 'fertilizer_dbf_import_screen.dart';
@@ -475,34 +476,12 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
     );
   }
 
+  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.science,
-            size: AppConstants.emptyStateIconSize,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingTop),
-          Text(
-            _t['no_fertilizers'],
-            style: TextStyle(
-              fontSize: AppConstants.fontSizeLarge,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
-          Text(
-            _t['add_first_fertilizer'],
-            style: TextStyle(
-              fontSize: AppConstants.fontSizeMedium,
-              color: Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
+    return EmptyStateWidget(
+      icon: Icons.science,
+      title: _t['no_fertilizers'],
+      subtitle: _t['add_first_fertilizer'],
     );
   }
 

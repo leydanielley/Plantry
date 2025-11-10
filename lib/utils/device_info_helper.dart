@@ -25,6 +25,7 @@ class DeviceInfoHelper {
   }
 
   /// Get device recommendations based on manufacturer
+  /// ✅ AUDIT NOTE: German messages are intentional - this is a German-language app
   static List<String> getDeviceSpecificRecommendations() {
     final recommendations = <String>[];
 

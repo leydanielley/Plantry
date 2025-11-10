@@ -7,11 +7,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app_logger.dart';
 
 class AppStateRecovery {
+  // ✅ AUDIT FIX: Extracted timeout and threshold constants
   static const String _keyLastActiveTimestamp = 'last_active_timestamp';
   static const String _keyLastActiveScreen = 'last_active_screen';
   static const String _keyHasUnsavedChanges = 'has_unsaved_changes';
   static const String _keyUnsavedDataJson = 'unsaved_data_json';
   static const String _keyCrashCount = 'crash_count';
+
+  // Timeout constants
+  static const int _recentActivityMinutes = 5; // Consider app recently active if within 5 minutes
+  static const int _crashLoopThreshold = 3; // 3+ crashes = crash loop
 
   /// Save current app state
   static Future<void> saveState({
@@ -51,8 +56,8 @@ class AppStateRecovery {
       final lastActive = DateTime.fromMillisecondsSinceEpoch(lastActiveTimestamp);
       final timeSinceActive = DateTime.now().difference(lastActive);
 
-      // If app was active within last 5 minutes and had unsaved changes, likely killed
-      final wasRecentlyActive = timeSinceActive.inMinutes < 5;
+      // If app was active within last N minutes and had unsaved changes, likely killed
+      final wasRecentlyActive = timeSinceActive.inMinutes < _recentActivityMinutes;
 
       if (wasRecentlyActive && hasUnsavedChanges) {
         AppLogger.warning('AppStateRecovery', 'App may have been killed unexpectedly');
@@ -158,7 +163,7 @@ class AppStateRecovery {
   /// Check if app is in crash loop (3+ crashes in short time)
   static Future<bool> isInCrashLoop() async {
     final count = await getCrashCount();
-    return count >= 3;
+    return count >= _crashLoopThreshold;
   }
 
   /// Perform recovery check on app start
@@ -167,7 +172,7 @@ class AppStateRecovery {
     final lastScreen = await getLastActiveScreen();
     final unsavedData = await getUnsavedData();
     final crashCount = await getCrashCount();
-    final inCrashLoop = crashCount >= 3;
+    final inCrashLoop = crashCount >= _crashLoopThreshold;
 
     if (wasKilled) {
       await incrementCrashCount();

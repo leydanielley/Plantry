@@ -10,12 +10,41 @@ class AppConstants {
   static const Color darkModeSecondary = Color(0xFF3C3C3C);
   static const Color lightModeSecondary = Color(0xFFF5F5F5);
   
-  // Spacing
+  // ✅ PHASE 2 FIX: Comprehensive spacing constants (for SizedBox)
   static const double spacingXs = 4.0;
   static const double spacingSmall = 8.0;
+  static const double spacingNormal = 12.0;
   static const double spacingMedium = 16.0;
-  static const double spacingLarge = 24.0;
-  static const double spacingXl = 32.0;
+  static const double spacingLarge = 20.0;
+  static const double spacingXl = 24.0;
+  static const double spacingXxl = 32.0;
+
+  // Common SizedBox Widgets (for convenience)
+  static const SizedBox gapXs = SizedBox(height: spacingXs, width: spacingXs);
+  static const SizedBox gapSmall = SizedBox(height: spacingSmall, width: spacingSmall);
+  static const SizedBox gapNormal = SizedBox(height: spacingNormal, width: spacingNormal);
+  static const SizedBox gapMedium = SizedBox(height: spacingMedium, width: spacingMedium);
+  static const SizedBox gapLarge = SizedBox(height: spacingLarge, width: spacingLarge);
+  static const SizedBox gapXl = SizedBox(height: spacingXl, width: spacingXl);
+  static const SizedBox gapXxl = SizedBox(height: spacingXxl, width: spacingXxl);
+
+  // Vertical Gaps (height only)
+  static const SizedBox gapVerticalXs = SizedBox(height: spacingXs);
+  static const SizedBox gapVerticalSmall = SizedBox(height: spacingSmall);
+  static const SizedBox gapVerticalNormal = SizedBox(height: spacingNormal);
+  static const SizedBox gapVerticalMedium = SizedBox(height: spacingMedium);
+  static const SizedBox gapVerticalLarge = SizedBox(height: spacingLarge);
+  static const SizedBox gapVerticalXl = SizedBox(height: spacingXl);
+  static const SizedBox gapVerticalXxl = SizedBox(height: spacingXxl);
+
+  // Horizontal Gaps (width only)
+  static const SizedBox gapHorizontalXs = SizedBox(width: spacingXs);
+  static const SizedBox gapHorizontalSmall = SizedBox(width: spacingSmall);
+  static const SizedBox gapHorizontalNormal = SizedBox(width: spacingNormal);
+  static const SizedBox gapHorizontalMedium = SizedBox(width: spacingMedium);
+  static const SizedBox gapHorizontalLarge = SizedBox(width: spacingLarge);
+  static const SizedBox gapHorizontalXl = SizedBox(width: spacingXl);
+  static const SizedBox gapHorizontalXxl = SizedBox(width: spacingXxl);
 
   // Font Sizes
   static const double fontSizeSmall = 12.0;
@@ -29,17 +58,39 @@ class AppConstants {
   static const double iconSizeMedium = 24.0;
   static const double iconSizeLarge = 32.0;
 
-  // Padding
+  // ✅ PHASE 2 FIX: Comprehensive padding constants to eliminate magic numbers
+  // Base Padding Values (EdgeInsets.all)
+  static const EdgeInsets paddingXs = EdgeInsets.all(4.0);
   static const EdgeInsets paddingSmall = EdgeInsets.all(8.0);
+  static const EdgeInsets paddingNormal = EdgeInsets.all(12.0);
   static const EdgeInsets paddingMedium = EdgeInsets.all(16.0);
-  static const EdgeInsets paddingLarge = EdgeInsets.all(24.0);
+  static const EdgeInsets paddingLarge = EdgeInsets.all(20.0);
+  static const EdgeInsets paddingXl = EdgeInsets.all(24.0);
+  static const EdgeInsets paddingXxl = EdgeInsets.all(32.0);
+
+  // Horizontal Padding (EdgeInsets.symmetric)
+  static const EdgeInsets paddingHorizontalXs = EdgeInsets.symmetric(horizontal: 4.0);
   static const EdgeInsets paddingHorizontalSmall = EdgeInsets.symmetric(horizontal: 8.0);
+  static const EdgeInsets paddingHorizontalNormal = EdgeInsets.symmetric(horizontal: 12.0);
   static const EdgeInsets paddingHorizontalMedium = EdgeInsets.symmetric(horizontal: 16.0);
+  static const EdgeInsets paddingHorizontalLarge = EdgeInsets.symmetric(horizontal: 20.0);
+  static const EdgeInsets paddingHorizontalXl = EdgeInsets.symmetric(horizontal: 24.0);
+
+  // Vertical Padding (EdgeInsets.symmetric)
+  static const EdgeInsets paddingVerticalXs = EdgeInsets.symmetric(vertical: 4.0);
   static const EdgeInsets paddingVerticalSmall = EdgeInsets.symmetric(vertical: 8.0);
+  static const EdgeInsets paddingVerticalNormal = EdgeInsets.symmetric(vertical: 12.0);
   static const EdgeInsets paddingVerticalMedium = EdgeInsets.symmetric(vertical: 16.0);
-  
+  static const EdgeInsets paddingVerticalLarge = EdgeInsets.symmetric(vertical: 20.0);
+  static const EdgeInsets paddingVerticalXl = EdgeInsets.symmetric(vertical: 24.0);
+
+  // Common Chip/Badge Padding
+  static const EdgeInsets paddingChip = EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0);
+  static const EdgeInsets paddingChipLarge = EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0);
+
   // List Padding
   static const EdgeInsets listPadding = EdgeInsets.all(8.0);
+  static const EdgeInsets screenPadding = EdgeInsets.all(16.0);
   
   // Card Margins
   static const EdgeInsets cardMarginVertical = EdgeInsets.only(bottom: 8.0);

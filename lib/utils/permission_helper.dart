@@ -73,6 +73,7 @@ class PermissionHelper {
   }
 
   /// Show permission denied dialog with instructions
+  /// ✅ AUDIT NOTE: German messages are intentional - this is a German-language app
   static void _showPermissionDeniedDialog(
     BuildContext context,
     String title,

@@ -8,8 +8,12 @@ import 'package:path_provider/path_provider.dart';
 import 'app_logger.dart';
 
 class StorageHelper {
+  // ✅ AUDIT FIX: Storage threshold constants already properly extracted
   static const int _minRequiredBytes = 100 * 1024 * 1024; // 100 MB minimum
   static const int _criticalThreshold = 50 * 1024 * 1024; // 50 MB critical
+  static const int _maxPhotoSizeBytes = 50 * 1024 * 1024; // 50 MB max photo size
+  static const int _thumbnailAgeDays = 30; // Delete thumbnails older than 30 days
+  static const int _bytesPerKb = 1024;
 
   /// Check if enough storage is available
   /// Returns true if enough space, false otherwise
@@ -26,7 +30,7 @@ class StorageHelper {
           if (parts.length >= 4) {
             // Available space is typically in column 3 (in KB)
             final availableKB = int.tryParse(parts[3]) ?? 0;
-            final availableBytes = availableKB * 1024;
+            final availableBytes = availableKB * _bytesPerKb;
 
             final required = bytesNeeded ?? _minRequiredBytes;
             final hasSpace = availableBytes > required;
@@ -65,7 +69,7 @@ class StorageHelper {
           final parts = lines[1].split(RegExp(r'\s+'));
           if (parts.length >= 4) {
             final availableKB = int.tryParse(parts[3]) ?? 0;
-            return availableKB * 1024;
+            return availableKB * _bytesPerKb;
           }
         }
       }
@@ -138,7 +142,7 @@ class StorageHelper {
               final stat = await entity.stat();
               final age = now.difference(stat.modified);
 
-              if (age.inDays > 30) {
+              if (age.inDays > _thumbnailAgeDays) {
                 await entity.delete();
                 deletedCount++;
               }

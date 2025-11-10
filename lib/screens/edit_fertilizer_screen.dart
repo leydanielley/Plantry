@@ -11,6 +11,7 @@ import '../repositories/interfaces/i_fertilizer_repository.dart';
 import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/validators.dart';
 import '../di/service_locator.dart';
+import '../utils/mounted_state_mixin.dart'; // ✅ FIX: Added for safe setState
 
 class EditFertilizerScreen extends StatefulWidget {
   final Fertilizer fertilizer;
@@ -21,7 +22,8 @@ class EditFertilizerScreen extends StatefulWidget {
   State<EditFertilizerScreen> createState() => _EditFertilizerScreenState();
 }
 
-class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
+// ✅ FIX: Added MountedStateMixin to prevent setState after dispose
+class _EditFertilizerScreenState extends State<EditFertilizerScreen> with MountedStateMixin {
   final _formKey = GlobalKey<FormState>();
   final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
@@ -81,7 +83,8 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
   Future<void> _saveFertilizer() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    // ✅ FIX: Use safeSetState to prevent setState after dispose
+    safeSetState(() => _isLoading = true);
 
     try {
       final ecValue = _ecValueController.text.isNotEmpty
@@ -115,7 +118,8 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
         AppMessages.savingError(context, e.toString());
       }
     } finally {
-      setState(() => _isLoading = false);
+      // ✅ FIX: Use safeSetState to prevent setState after dispose
+      safeSetState(() => _isLoading = false);
     }
   }
 

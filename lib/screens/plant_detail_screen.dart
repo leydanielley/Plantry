@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../utils/app_logger.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../models/plant.dart';
 import '../models/plant_log.dart';
 import '../models/fertilizer.dart';
@@ -47,6 +48,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   final ILogFertilizerRepository _logFertilizerRepo = getIt<ILogFertilizerRepository>();
   final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
   final IHarvestService _harvestService = getIt<IHarvestService>();
+  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
 
   final ScrollController _scrollController = ScrollController();
 
@@ -67,6 +69,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ AUDIT FIX: i18n
     _currentPlant = widget.plant;
     _scrollController.addListener(_onScroll);
     _loadData();
@@ -217,32 +220,32 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     final choice = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Log-Eintrag erstellen'),
+        title: Text(_t['plant_detail_create_log_title']), // ✅ i18n
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Diese Pflanze gehört zu einem Grow mit $plantCount Pflanzen.',
+              _t['plant_detail_grow_plant_count'].replaceAll('{count}', '$plantCount'),  // ✅ i18n
               style: TextStyle(
                 color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Was möchtest du loggen?',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              _t['plant_detail_what_to_log'], // ✅ i18n
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop('single'),
-            child: const Text('Nur diese Pflanze'),
+            child: Text(_t['plant_detail_only_this_plant']), // ✅ i18n
           ),
           ElevatedButton.icon(
             onPressed: () => Navigator.of(context).pop('bulk'),
             icon: const Icon(Icons.group),
-            label: Text('Alle $plantCount Pflanzen'),
+            label: Text(_t['plant_detail_all_plants'].replaceAll('{count}', '$plantCount')),  // ✅ i18n
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue[700],
               foregroundColor: Colors.white,
@@ -287,8 +290,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Log löschen?'),
-        content: const Text('Möchtest du diesen Log-Eintrag wirklich löschen?'),
+        title: Text(_t['plant_detail_delete_log_title']), // ✅ i18n
+        content: Text(_t['plant_detail_delete_log_confirm']), // ✅ i18n
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -375,8 +378,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Foto löschen?'),
-        content: const Text('Möchtest du dieses Foto wirklich löschen?'),
+        title: Text(_t['plant_detail_delete_photo_title']), // ✅ i18n
+        content: Text(_t['plant_detail_delete_photo_confirm']), // ✅ i18n
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -451,7 +454,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 );
                 _loadData();
               },
-              tooltip: 'Foto-Galerie',
+              tooltip: _t['plant_detail_photo_gallery'], // ✅ i18n
             ),
             IconButton(
               icon: const Icon(Icons.edit),
@@ -499,7 +502,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   if (result == true) _loadData();
                 },
                 icon: const Icon(Icons.grass),
-                label: const Text('Ernte'),
+                label: Text(_t['plant_detail_harvest']), // ✅ i18n
                 backgroundColor: const Color(0xFF004225),
               ),
             if ((_currentPlant.phase == PlantPhase.bloom ||
@@ -511,7 +514,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 await _showLogOptions();
               },
               icon: const Icon(Icons.add),
-              label: const Text('Log Entry'),
+              label: Text(_t['plant_detail_log_entry']), // ✅ i18n
             ),
           ],
         ),
@@ -546,7 +549,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _currentPlant.strain ?? 'Unknown Strain',
+                      _currentPlant.strain ?? _t['plant_detail_unknown_strain'], // ✅ i18n
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -554,7 +557,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       ),
                     ),
                     Text(
-                      _currentPlant.breeder ?? 'Unknown Breeder',
+                      _currentPlant.breeder ?? _t['plant_detail_unknown_breeder'], // ✅ i18n
                       style: TextStyle(
                         fontSize: 14,
                         color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -570,7 +573,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             children: [
               _buildInfoChip(
                 Icons.calendar_today,
-                'Tag ${_currentPlant.totalDays}',
+                _t['plant_detail_day'].replaceAll('{day}', '${_currentPlant.totalDays}'), // ✅ i18n
                 isDark,
               ),
               const SizedBox(width: 8),
@@ -658,7 +661,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                               ),
                             ),
                           Text(
-                            'Status: ${_harvest!.dryingStatus} / ${_harvest!.curingStatus}',
+                            _t['plant_detail_status'].replaceAll('{drying}', '${_harvest!.dryingStatus}').replaceAll('{curing}', '${_harvest!.curingStatus}'),  // ✅ i18n
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -701,7 +704,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                           ),
                         ),
                         Text(
-                          'Ernte-ID fehlt - bitte Support kontaktieren',
+                          _t['plant_detail_harvest_id_missing'], // ✅ i18n
                           style: TextStyle(fontSize: 12, color: Colors.red[600]),
                         ),
                       ],
@@ -760,7 +763,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Noch keine Logs',
+            _t['plant_detail_no_logs'], // ✅ i18n
             style: TextStyle(
               fontSize: 20,
               color: Colors.grey[600],
@@ -768,7 +771,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Füge den ersten Log-Eintrag hinzu!',
+            _t['plant_detail_add_first_log'], // ✅ i18n
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[500],
@@ -844,7 +847,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      'Tag ${log.dayNumber}',
+                      _t['plant_detail_day'].replaceAll('{day}', '${log.dayNumber}'), // ✅ i18n
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -895,7 +898,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 const Spacer(),
                 // ✅ Gesamt-Tag als Info rechts
                 Text(
-                  'Gesamt: Tag ${log.dayNumber}',
+                  _t['plant_detail_total_day'].replaceAll('{day}', '${log.dayNumber}'), // ✅ i18n
                   style: TextStyle(
                     fontSize: 11,
                     color: isDark ? Colors.grey[500] : Colors.grey[600],

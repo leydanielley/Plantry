@@ -42,6 +42,13 @@ class MockPlantRepository implements IPlantRepository {
   }
 
   @override
+  Future<List<Plant>> findByGrow(int growId) async {
+    return _plants.values
+        .where((p) => p.growId == growId && !p.archived)
+        .toList();
+  }
+
+  @override
   Future<Plant> save(Plant plant) async {
     if (plant.id == null) {
       final id = _nextId++;

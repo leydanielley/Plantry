@@ -12,6 +12,7 @@ import '../repositories/interfaces/i_plant_repository.dart';
 import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
+import '../widgets/empty_state_widget.dart'; // ✅ PHASE 3: Shared widget
 import 'add_room_screen.dart';
 import 'edit_room_screen.dart';
 import 'room_detail_screen.dart';
@@ -179,34 +180,12 @@ class _RoomListScreenState extends State<RoomListScreen> {
     );
   }
 
+  /// ✅ PHASE 3: Replaced with shared EmptyStateWidget
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.home_work,
-            size: AppConstants.emptyStateIconSize,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingTop),
-          Text(
-            _t['no_rooms'],
-            style: TextStyle(
-              fontSize: AppConstants.emptyStateTitleFontSize,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
-          Text(
-            _t['add_first_room'],
-            style: TextStyle(
-              fontSize: AppConstants.emptyStateSubtitleFontSize,
-              color: Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
+    return EmptyStateWidget(
+      icon: Icons.home_work,
+      title: _t['no_rooms'],
+      subtitle: _t['add_first_room'],
     );
   }
 

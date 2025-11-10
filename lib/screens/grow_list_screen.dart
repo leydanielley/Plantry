@@ -9,6 +9,7 @@ import '../repositories/interfaces/i_grow_repository.dart';
 import '../repositories/interfaces/i_settings_repository.dart';
 import '../utils/translations.dart';
 import '../utils/app_constants.dart';
+import '../widgets/empty_state_widget.dart'; // ✅ PHASE 3: Shared widget
 import 'add_grow_screen.dart';
 import 'edit_grow_screen.dart';
 import 'grow_detail_screen.dart';
@@ -207,34 +208,12 @@ class _GrowListScreenState extends State<GrowListScreen> {
     );
   }
 
+  /// ✅ PHASE 3: Replaced with shared EmptyStateWidget
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.eco,
-            size: AppConstants.emptyStateIconSize,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingTop),
-          Text(
-            _showArchived ? _t['no_archived_grows'] : _t['no_grows'],
-            style: TextStyle(
-              fontSize: AppConstants.emptyStateTitleFontSize,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
-          Text(
-            _showArchived ? _t['archive_grow_to_see'] : _t['create_first_grow'],
-            style: TextStyle(
-              fontSize: AppConstants.emptyStateSubtitleFontSize,
-              color: Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
+    return EmptyStateWidget(
+      icon: Icons.eco,
+      title: _showArchived ? _t['no_archived_grows'] : _t['no_grows'],
+      subtitle: _showArchived ? _t['archive_grow_to_see'] : _t['create_first_grow'],
     );
   }
 

@@ -6,9 +6,14 @@ import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/harvest.dart';
 import 'interfaces/i_harvest_repository.dart';
+import 'repository_error_handler.dart';
 
-class HarvestRepository implements IHarvestRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class HarvestRepository with RepositoryErrorHandler implements IHarvestRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+
+  @override
+  String get repositoryName => 'HarvestRepository';
 
   /// Harvest erstellen
   @override

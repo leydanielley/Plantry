@@ -13,10 +13,10 @@ import '../database/database_helper.dart';
 import '../utils/app_logger.dart';
 import '../utils/app_version.dart';
 import '../utils/storage_helper.dart';
+import '../config/backup_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
 import 'interfaces/i_backup_service.dart';
 
 class BackupService implements IBackupService {
-  static const int _backupVersion = 1;
 
   /// Export all app data to a ZIP file
   /// Returns the path to the created backup file
@@ -26,11 +26,12 @@ class BackupService implements IBackupService {
   @override
   Future<String> exportData({Database? db}) async {
     // ✅ P1 FIX: Wrap entire export in timeout (5 minutes max)
+    // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
     return await _exportDataInternal(db: db).timeout(
-      const Duration(minutes: 5),
+      BackupConfig.exportTimeout,
       onTimeout: () {
-        AppLogger.error('BackupService', 'Export timeout after 5 minutes');
-        throw TimeoutException('Export operation took too long (>5 minutes)');
+        AppLogger.error('BackupService', 'Export timeout after ${BackupConfig.exportTimeoutMinutes} minutes');
+        throw TimeoutException('Export operation took too long (>${BackupConfig.exportTimeoutMinutes} minutes)');
       },
     );
   }
@@ -40,8 +41,9 @@ class BackupService implements IBackupService {
       AppLogger.info('BackupService', 'Starting export...');
 
       // ✅ P0 FIX: Check storage BEFORE starting export
+      // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
       final hasSpace = await StorageHelper.hasEnoughStorage(
-        bytesNeeded: 200 * 1024 * 1024, // 200MB for safe backup
+        bytesNeeded: BackupConfig.minimumStorageBytes,
       );
 
       if (!hasSpace) {
@@ -65,33 +67,16 @@ class BackupService implements IBackupService {
       AppLogger.debug('BackupService', 'Export directory created', exportDir.path);
 
       // Export all tables to JSON
+      // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
       final Map<String, dynamic> backup = {
-        'version': _backupVersion,
+        'version': BackupConfig.backupVersion,
         'exportDate': DateTime.now().toIso8601String(),
         'appVersion': AppVersion.version,
         'data': {},
       };
 
       // Export each table
-      final tables = [
-        'rooms',
-        'grows',
-        'plants',
-        'plant_logs',
-        'fertilizers',
-        'log_fertilizers',
-        'hardware',
-        'photos',
-        'log_templates',
-        'template_fertilizers',
-        'harvests',
-        'app_settings',
-        'rdwc_systems',
-        'rdwc_logs',
-        'rdwc_log_fertilizers',
-        'rdwc_recipes',
-        'rdwc_recipe_fertilizers',
-      ];
+      final tables = BackupConfig.exportTables;
 
       for (final table in tables) {
         try {
@@ -121,11 +106,12 @@ class BackupService implements IBackupService {
 
       if (photos.isNotEmpty) {
         // ✅ P1 FIX: Use path.join instead of string concatenation
-        final photosDir = Directory(path.join(exportDir.path, 'photos'));
+        // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
+        final photosDir = Directory(path.join(exportDir.path, BackupConfig.photosDirectoryName));
         await photosDir.create();
 
-        // Process photos in parallel batches of 10 for optimal performance
-        const batchSize = 10;
+        // Process photos in parallel batches for optimal performance
+        final batchSize = BackupConfig.photoBatchSize;
         for (int i = 0; i < photos.length; i += batchSize) {
           final batch = photos.skip(i).take(batchSize);
 
@@ -185,11 +171,12 @@ class BackupService implements IBackupService {
   @override
   Future<void> importData(String zipFilePath) async {
     // ✅ P1 FIX: Wrap entire import in timeout (10 minutes max)
+    // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
     return await _importDataInternal(zipFilePath).timeout(
-      const Duration(minutes: 10),
+      BackupConfig.importTimeout,
       onTimeout: () {
-        AppLogger.error('BackupService', 'Import timeout after 10 minutes');
-        throw TimeoutException('Import operation took too long (>10 minutes)');
+        AppLogger.error('BackupService', 'Import timeout after ${BackupConfig.importTimeoutMinutes} minutes');
+        throw TimeoutException('Import operation took too long (>${BackupConfig.importTimeoutMinutes} minutes)');
       },
     );
   }
@@ -230,13 +217,14 @@ class BackupService implements IBackupService {
 
       // Find and read JSON file
       // ✅ P1 FIX: Use path.join instead of string concatenation
-      final jsonFile = File(path.join(importDir.path, 'data.json'));
+      // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
+      final jsonFile = File(path.join(importDir.path, BackupConfig.dataJsonFilename));
       if (!await jsonFile.exists()) {
         // Try to find in subdirectory
         final files = await importDir.list(recursive: true).toList();
         final dataJsonFile = files.firstWhere(
-          (f) => f.path.endsWith('data.json'),
-          orElse: () => throw Exception('data.json not found in backup'),
+          (f) => f.path.endsWith(BackupConfig.dataJsonFilename),
+          orElse: () => throw Exception('${BackupConfig.dataJsonFilename} not found in backup'),
         );
         if (dataJsonFile is File) {
           final content = await dataJsonFile.readAsString();
@@ -274,8 +262,9 @@ class BackupService implements IBackupService {
     Directory importDir,
   ) async {
     // Validate backup version
+    // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
     final version = backup['version'] as int?;
-    if (version == null || version > _backupVersion) {
+    if (version == null || version > BackupConfig.backupVersion) {
       throw Exception('Incompatible backup version');
     }
 
@@ -286,28 +275,11 @@ class BackupService implements IBackupService {
     final db = await DatabaseHelper.instance.database;
 
     // Clear existing data
+    // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
     AppLogger.info('BackupService', 'Clearing existing data...');
     await db.execute('PRAGMA foreign_keys = OFF');
 
-    final tables = [
-      'rdwc_recipe_fertilizers',
-      'rdwc_log_fertilizers',
-      'rdwc_logs',
-      'rdwc_recipes',
-      'log_fertilizers',
-      'template_fertilizers',
-      'photos',
-      'plant_logs',
-      'harvests',
-      'log_templates',
-      'hardware',
-      'fertilizers',
-      'plants',
-      'rdwc_systems',
-      'grows',
-      'rooms',
-      'app_settings',
-    ];
+    final tables = BackupConfig.deletionOrderTables;
 
     for (final table in tables) {
       try {
@@ -321,22 +293,10 @@ class BackupService implements IBackupService {
     AppLogger.info('BackupService', 'Existing data cleared');
 
     // Import data in correct order (respecting foreign keys)
-    await _importTable(db, 'rooms', data['rooms'] as List<dynamic>?);
-    await _importTable(db, 'grows', data['grows'] as List<dynamic>?);
-    await _importTable(db, 'rdwc_systems', data['rdwc_systems'] as List<dynamic>?);
-    await _importTable(db, 'plants', data['plants'] as List<dynamic>?);
-    await _importTable(db, 'fertilizers', data['fertilizers'] as List<dynamic>?);
-    await _importTable(db, 'plant_logs', data['plant_logs'] as List<dynamic>?);
-    await _importTable(db, 'log_fertilizers', data['log_fertilizers'] as List<dynamic>?);
-    await _importTable(db, 'rdwc_logs', data['rdwc_logs'] as List<dynamic>?);
-    await _importTable(db, 'rdwc_log_fertilizers', data['rdwc_log_fertilizers'] as List<dynamic>?);
-    await _importTable(db, 'rdwc_recipes', data['rdwc_recipes'] as List<dynamic>?);
-    await _importTable(db, 'rdwc_recipe_fertilizers', data['rdwc_recipe_fertilizers'] as List<dynamic>?);
-    await _importTable(db, 'hardware', data['hardware'] as List<dynamic>?);
-    await _importTable(db, 'log_templates', data['log_templates'] as List<dynamic>?);
-    await _importTable(db, 'template_fertilizers', data['template_fertilizers'] as List<dynamic>?);
-    await _importTable(db, 'harvests', data['harvests'] as List<dynamic>?);
-    await _importTable(db, 'app_settings', data['app_settings'] as List<dynamic>?);
+    // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
+    for (final tableName in BackupConfig.importOrderTables) {
+      await _importTable(db, tableName, data[tableName] as List<dynamic>?);
+    }
 
     // Import photos and restore image files
     await _importPhotos(db, data['photos'] as List<dynamic>?, importDir);
@@ -383,7 +343,8 @@ class BackupService implements IBackupService {
 
     final appDir = await getApplicationDocumentsDirectory();
     // ✅ P1 FIX: Use path.join instead of string concatenation
-    final photosDir = Directory(path.join(appDir.path, 'photos'));
+    // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
+    final photosDir = Directory(path.join(appDir.path, BackupConfig.photosDirectoryName));
     if (!await photosDir.exists()) {
       await photosDir.create(recursive: true);
     }
@@ -391,8 +352,8 @@ class BackupService implements IBackupService {
     // ✅ P1 FIX: Parallelize photo import for better performance
     int copiedCount = 0;
 
-    // Process photos in parallel batches of 10
-    const batchSize = 10;
+    // Process photos in parallel batches
+    final batchSize = BackupConfig.photoBatchSize;
     for (int i = 0; i < photos.length; i += batchSize) {
       final batch = photos.skip(i).take(batchSize).toList();
 
@@ -403,7 +364,8 @@ class BackupService implements IBackupService {
 
           // Find photo in import directory
           // ✅ P1 FIX: Use path.join instead of string concatenation
-          final importPhotoFile = File(path.join(importDir.path, 'photos', fileName));
+          // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
+          final importPhotoFile = File(path.join(importDir.path, BackupConfig.photosDirectoryName, fileName));
 
           if (await importPhotoFile.exists()) {
             // Copy to app photos directory

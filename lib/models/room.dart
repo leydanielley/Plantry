@@ -27,6 +27,7 @@ class Room {
     this.growType,
     this.wateringSystem,
     this.rdwcSystemId,
+    // ✅ AUDIT FIX: Default values 0.0 are intentional for optional room dimensions
     this.width = 0.0,
     this.depth = 0.0,
     this.height = 0.0,

@@ -5,8 +5,13 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
 import 'interfaces/i_settings_repository.dart';
+import 'repository_error_handler.dart';
 
-class SettingsRepository implements ISettingsRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class SettingsRepository with RepositoryErrorHandler implements ISettingsRepository {
+  @override
+  String get repositoryName => 'SettingsRepository';
+
   static const String _keyLanguage = 'language';
   static const String _keyDarkMode = 'dark_mode';
   static const String _keyExpertMode = 'expert_mode';

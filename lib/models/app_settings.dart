@@ -97,36 +97,41 @@ class AppSettings {
 
 /// Extension for PPM Scale display names
 extension PpmScaleExtension on PpmScale {
+  // ✅ AUDIT FIX: Extract PPM conversion factor constants
+  static const int _conversionFactor500 = 500;
+  static const int _conversionFactor700 = 700;
+  static const int _conversionFactor640 = 640;
+
   String get displayName {
     switch (this) {
       case PpmScale.scale500:
-        return '500 (USA/Hanna)';
+        return '$_conversionFactor500 (USA/Hanna)';
       case PpmScale.scale700:
-        return '700 (EU/Eutech)';
+        return '$_conversionFactor700 (EU/Eutech)';
       case PpmScale.scale640:
-        return '640 (Truncheon)';
+        return '$_conversionFactor640 (Truncheon)';
     }
   }
 
   int get conversionFactor {
     switch (this) {
       case PpmScale.scale500:
-        return 500;
+        return _conversionFactor500;
       case PpmScale.scale700:
-        return 700;
+        return _conversionFactor700;
       case PpmScale.scale640:
-        return 640;
+        return _conversionFactor640;
     }
   }
 
   String get scaleLabel {
     switch (this) {
       case PpmScale.scale500:
-        return '500';
+        return '$_conversionFactor500';
       case PpmScale.scale700:
-        return '700';
+        return '$_conversionFactor700';
       case PpmScale.scale640:
-        return '640';
+        return '$_conversionFactor640';
     }
   }
 }

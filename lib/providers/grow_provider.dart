@@ -282,9 +282,11 @@ class GrowProvider with ChangeNotifier {
   // ═══════════════════════════════════════════
 
   /// ✅ FIX: Override dispose to mark provider as disposed
+  /// ✅ PHASE 3: Clear maps to prevent memory leaks
   @override
   void dispose() {
     _disposed = true;
+    _plantCounts.clear(); // Clear map to prevent memory leaks
     super.dispose();
   }
 

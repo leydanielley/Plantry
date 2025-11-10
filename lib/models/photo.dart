@@ -1,5 +1,6 @@
 // =============================================
 // GROWLOG - Photo Model
+// ✅ AUDIT FIX: Null safety for lastIndexOf operations
 // =============================================
 
 class Photo {
@@ -87,10 +88,22 @@ class Photo {
   }
 
   /// Generate thumbnail path
+  /// ✅ AUDIT FIX: Safe lastIndexOf with fallback for missing separators
   String get thumbnailPath {
-    final dir = filePath.substring(0, filePath.lastIndexOf('/'));
-    final name = fileName.substring(0, fileName.lastIndexOf('.'));
-    final ext = fileExtension;
+    // Get directory safely
+    final lastSlashIndex = filePath.lastIndexOf('/');
+    final dir = lastSlashIndex != -1
+        ? filePath.substring(0, lastSlashIndex)
+        : '.'; // Current directory if no slash found
+
+    // Get filename without extension safely
+    final lastDotIndex = fileName.lastIndexOf('.');
+    final name = lastDotIndex != -1
+        ? fileName.substring(0, lastDotIndex)
+        : fileName; // Use full filename if no extension
+
+    final ext = fileExtension.isNotEmpty ? fileExtension : 'jpg'; // Default to jpg
+
     return '$dir/thumbs/${name}_thumb.$ext';
   }
 

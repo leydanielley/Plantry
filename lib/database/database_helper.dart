@@ -409,6 +409,7 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX IF NOT EXISTS idx_plant_logs_action_date ON plant_logs(action_type, log_date DESC)');
 
     // Fertilizers Table (v8: added ec_value, ppm_value for RDWC calculations)
+    // ✅ FIX: Added v11 migration fields to prevent schema mismatch on fresh installs
     await db.execute('''
       CREATE TABLE IF NOT EXISTS fertilizers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -419,6 +420,27 @@ class DatabaseHelper {
         description TEXT,
         ec_value REAL,
         ppm_value REAL,
+        formula TEXT,
+        source TEXT,
+        purity REAL,
+        is_liquid INTEGER DEFAULT 1,
+        density REAL,
+        n_no3 REAL,
+        n_nh4 REAL,
+        p REAL,
+        k REAL,
+        mg REAL,
+        ca REAL,
+        s REAL,
+        b REAL,
+        fe REAL,
+        zn REAL,
+        cu REAL,
+        mn REAL,
+        mo REAL,
+        na REAL,
+        si REAL,
+        cl REAL,
         created_at TEXT DEFAULT (datetime('now'))
       )
     ''');

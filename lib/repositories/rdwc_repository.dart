@@ -9,9 +9,14 @@ import '../models/rdwc_log_fertilizer.dart';
 import '../models/rdwc_recipe.dart';
 import '../utils/app_logger.dart';
 import 'interfaces/i_rdwc_repository.dart';
+import 'repository_error_handler.dart';
 
-class RdwcRepository implements IRdwcRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+
+  @override
+  String get repositoryName => 'RdwcRepository';
 
   // ==========================================
   // RDWC SYSTEMS
@@ -334,57 +339,72 @@ class RdwcRepository implements IRdwcRepository {
   }
 
   /// Delete RDWC log
+  /// ✅ PHASE 3: Wrapped in transaction for data integrity (delete + update must be atomic)
   @override
   Future<int> deleteLog(int logId) async {
     try {
       final db = await _dbHelper.database;
 
-      // Get system ID before deleting the log
-      final logResult = await db.query(
-        'rdwc_logs',
-        columns: ['system_id'],
-        where: 'id = ?',
-        whereArgs: [logId],
-      );
+      // Use transaction to ensure atomic operation
+      return await db.transaction((txn) async {
+        // Get system ID before deleting the log
+        final logResult = await txn.query(
+          'rdwc_logs',
+          columns: ['system_id'],
+          where: 'id = ?',
+          whereArgs: [logId],
+        );
 
-      if (logResult.isEmpty) {
-        AppLogger.warning('RdwcRepository', 'Log not found for deletion', 'ID: $logId');
-        return 0;
-      }
+        if (logResult.isEmpty) {
+          AppLogger.warning('RdwcRepository', 'Log not found for deletion', 'ID: $logId');
+          return 0;
+        }
 
-      final systemId = logResult.first['system_id'] as int;
+        final systemId = logResult.first['system_id'] as int;
 
-      // Delete the log
-      final count = await db.delete(
-        'rdwc_logs',
-        where: 'id = ?',
-        whereArgs: [logId],
-      );
+        // Delete the log
+        final count = await txn.delete(
+          'rdwc_logs',
+          where: 'id = ?',
+          whereArgs: [logId],
+        );
 
-      // Update system level to the most recent remaining log's levelAfter
-      final mostRecentLog = await db.query(
-        'rdwc_logs',
-        where: 'system_id = ? AND level_after IS NOT NULL',
-        whereArgs: [systemId],
-        orderBy: 'log_date DESC, id DESC',
-        limit: 1,
-      );
+        // Update system level to the most recent remaining log's levelAfter
+        final mostRecentLog = await txn.query(
+          'rdwc_logs',
+          where: 'system_id = ? AND level_after IS NOT NULL',
+          whereArgs: [systemId],
+          orderBy: 'log_date DESC, id DESC',
+          limit: 1,
+        );
 
-      if (mostRecentLog.isNotEmpty) {
-        final newLevel = mostRecentLog.first['level_after'] as double;
-        await updateSystemLevel(systemId, newLevel);
-        AppLogger.info('RdwcRepository', 'Updated system level after log deletion',
-          'SystemID: $systemId, NewLevel: $newLevel L');
-      } else {
-        // ✅ FIX: No logs remaining - set level to 0 (no data) instead of max capacity
-        // Resetting to max capacity is incorrect as it implies the system is full
-        await updateSystemLevel(systemId, 0.0);
-        AppLogger.info('RdwcRepository', 'Reset system level to 0 (no logs remaining)',
-          'SystemID: $systemId');
-      }
+        if (mostRecentLog.isNotEmpty) {
+          final newLevel = mostRecentLog.first['level_after'] as double;
+          // Inline update within transaction instead of calling method
+          await txn.update(
+            'rdwc_systems',
+            {'current_water_level': newLevel},
+            where: 'id = ?',
+            whereArgs: [systemId],
+          );
+          AppLogger.info('RdwcRepository', 'Updated system level after log deletion',
+            'SystemID: $systemId, NewLevel: $newLevel L');
+        } else {
+          // ✅ FIX: No logs remaining - set level to 0 (no data) instead of max capacity
+          // Resetting to max capacity is incorrect as it implies the system is full
+          await txn.update(
+            'rdwc_systems',
+            {'current_water_level': 0.0},
+            where: 'id = ?',
+            whereArgs: [systemId],
+          );
+          AppLogger.info('RdwcRepository', 'Reset system level to 0 (no logs remaining)',
+            'SystemID: $systemId');
+        }
 
-      AppLogger.info('RdwcRepository', 'Deleted RDWC log', 'ID: $logId');
-      return count;
+        AppLogger.info('RdwcRepository', 'Deleted RDWC log', 'ID: $logId');
+        return count;
+      });
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error deleting RDWC log', e);
       rethrow;

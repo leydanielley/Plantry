@@ -15,6 +15,7 @@ import '../models/plant_log.dart';
 import '../repositories/interfaces/i_photo_repository.dart';
 import '../repositories/interfaces/i_plant_log_repository.dart';
 import '../helpers/image_cache_helper.dart';
+import '../widgets/empty_state_widget.dart';
 import '../di/service_locator.dart';
 
 class PlantPhotoGalleryScreen extends StatefulWidget {
@@ -254,34 +255,13 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
     );
   }
 
+  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
+  /// NOTE: Hardcoded German strings to be migrated in future i18n cleanup
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.photo_library_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Noch keine Fotos',
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Füge Fotos zu deinen Logs hinzu!',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
+    return const EmptyStateWidget(
+      icon: Icons.photo_library_outlined,
+      title: 'Noch keine Fotos',
+      subtitle: 'Füge Fotos zu deinen Logs hinzu!',
     );
   }
 

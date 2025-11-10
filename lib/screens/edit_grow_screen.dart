@@ -9,6 +9,7 @@ import '../repositories/interfaces/i_grow_repository.dart';
 import '../repositories/interfaces/i_room_repository.dart';
 import '../utils/validators.dart';
 import '../utils/app_messages.dart';
+import '../utils/mounted_state_mixin.dart'; // ✅ FIX: Added for safe setState
 import '../di/service_locator.dart';
 
 class EditGrowScreen extends StatefulWidget {
@@ -20,7 +21,8 @@ class EditGrowScreen extends StatefulWidget {
   State<EditGrowScreen> createState() => _EditGrowScreenState();
 }
 
-class _EditGrowScreenState extends State<EditGrowScreen> {
+// ✅ FIX: Added MountedStateMixin to prevent setState after dispose
+class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin {
   final _formKey = GlobalKey<FormState>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
@@ -71,7 +73,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> {
   Future<void> _saveGrow() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
 
     try {
       final updatedGrow = widget.grow.copyWith(
@@ -95,7 +97,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        safeSetState(() => _isLoading = false);
       }
     }
   }

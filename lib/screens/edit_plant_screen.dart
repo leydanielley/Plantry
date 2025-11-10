@@ -1,10 +1,12 @@
 // =============================================
 // GROWLOG - Edit Plant Screen (✅ BUG FIX #6 & #7: GenderType + mounted-checks)
+// ✅ AUDIT FIX: i18n extraction - all strings extracted to translations.dart
 // =============================================
 
 import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../utils/translations.dart';
 import '../models/plant.dart';
 import '../models/room.dart';
 import '../models/grow.dart';
@@ -142,9 +144,13 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   Future<void> _savePlant() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // ✅ AUDIT FIX: i18n - Get translations for validation
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     // =============================================
     // ✅ FIX v11: UI-Level Cross-Validation for chronological date consistency
     // Prevents saving logically impossible plant phase dates
+    // ✅ AUDIT FIX: i18n extraction - validation messages
     // =============================================
     final seedDate = _seedDate;
     final vegDate = _vegDate;
@@ -156,7 +162,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       final vegDay = DateTime(vegDate.year, vegDate.month, vegDate.day);
       final seedDay = DateTime(seedDate.year, seedDate.month, seedDate.day);
       if (vegDay.isBefore(seedDay)) {
-        AppMessages.showError(context, 'Wachstumsdatum kann nicht vor dem Keimdatum liegen!');
+        AppMessages.showError(context, _t['edit_plant_error_veg_before_seed']!); // ✅ i18n
         return; // Abort save
       }
     }
@@ -166,7 +172,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       final bloomDay = DateTime(bloomDate.year, bloomDate.month, bloomDate.day);
       final vegDay = DateTime(vegDate.year, vegDate.month, vegDate.day);
       if (bloomDay.isBefore(vegDay)) {
-        AppMessages.showError(context, 'Blütedatum kann nicht vor dem Wachstumsdatum liegen!');
+        AppMessages.showError(context, _t['edit_plant_error_bloom_before_veg']!); // ✅ i18n
         return; // Abort save
       }
     }
@@ -176,7 +182,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       final harvestDay = DateTime(harvestDate.year, harvestDate.month, harvestDate.day);
       final bloomDay = DateTime(bloomDate.year, bloomDate.month, bloomDate.day);
       if (harvestDay.isBefore(bloomDay)) {
-        AppMessages.showError(context, 'Erntedatum kann nicht vor dem Blütedatum liegen!');
+        AppMessages.showError(context, _t['edit_plant_error_harvest_before_bloom']!); // ✅ i18n
         return; // Abort save
       }
     }
@@ -186,7 +192,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       final bloomDay = DateTime(bloomDate.year, bloomDate.month, bloomDate.day);
       final seedDay = DateTime(seedDate.year, seedDate.month, seedDate.day);
       if (bloomDay.isBefore(seedDay)) {
-        AppMessages.showError(context, 'Blütedatum kann nicht vor dem Keimdatum liegen!');
+        AppMessages.showError(context, _t['edit_plant_error_bloom_before_seed']!); // ✅ i18n
         return; // Abort save
       }
     }
@@ -196,7 +202,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       final harvestDay = DateTime(harvestDate.year, harvestDate.month, harvestDate.day);
       final vegDay = DateTime(vegDate.year, vegDate.month, vegDate.day);
       if (harvestDay.isBefore(vegDay)) {
-        AppMessages.showError(context, 'Erntedatum kann nicht vor dem Wachstumsdatum liegen!');
+        AppMessages.showError(context, _t['edit_plant_error_harvest_before_veg']!); // ✅ i18n
         return; // Abort save
       }
     }
@@ -232,17 +238,16 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         // Von Harvest zurück
         if (widget.plant.phase == PlantPhase.harvest &&
             _phase != PlantPhase.archived) {
-          proceedWithChange = await _showPhaseChangeWarning(
-              'Du möchtest von Harvest zurück zu ${_phase.displayName} wechseln. '
-                  'Dies ist ungewöhnlich. Fortfahren?'
-          );
+          // ✅ AUDIT FIX: i18n - phase change warning
+          final message = _t['edit_plant_warning_from_harvest']!.replaceAll('{phase}', _phase.displayName);
+          proceedWithChange = await _showPhaseChangeWarning(message);
         }
         // Von Archived zurück
         else if (widget.plant.phase == PlantPhase.archived &&
             _phase != PlantPhase.archived) {
-          proceedWithChange = await _showPhaseChangeWarning(
-              'Pflanze reaktivieren auf ${_phase.displayName}. Fortfahren?'
-          );
+          // ✅ AUDIT FIX: i18n - reactivate warning
+          final message = _t['edit_plant_warning_reactivate']!.replaceAll('{phase}', _phase.displayName);
+          proceedWithChange = await _showPhaseChangeWarning(message);
         }
 
         if (!proceedWithChange) {
@@ -312,7 +317,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
 
       if (mounted) {
         Navigator.of(context).pop(true);
-        AppMessages.updatedSuccessfully(context, 'Pflanze');
+        AppMessages.updatedSuccessfully(context, _t['plant']!); // ✅ i18n
       }
     } catch (e) {
       AppLogger.error('EditPlantScreen', 'Error saving: $e');
@@ -327,15 +332,18 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Future<bool> _showPhaseChangeWarning(String message) async {
+    // ✅ AUDIT FIX: i18n - Get translations for dialog
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('⚠️ Warnung'),
+        title: Text(_t['edit_plant_warning_title']!), // ✅ i18n
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Abbrechen'),
+            child: Text(_t['cancel']!), // ✅ i18n
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -343,7 +351,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
               backgroundColor: Colors.orange[700],
               foregroundColor: Colors.white,
             ),
-            child: const Text('Fortfahren'),
+            child: Text(_t['edit_plant_proceed_button']!), // ✅ i18n
           ),
         ],
       ),
@@ -352,7 +360,11 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   /// ✅ FIX: Warning when changing seed date with existing logs
+  /// ✅ AUDIT FIX: i18n extraction - seed date change warning dialog
   Future<bool> _showSeedDateChangeWarning(int totalLogs, int logsToDelete) async {
+    // ✅ AUDIT FIX: i18n - Get translations for dialog
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -360,7 +372,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           children: [
             Icon(Icons.warning, color: Colors.red[700], size: 28),
             const SizedBox(width: 12),
-            const Text('Achtung: Logs werden gelöscht!'),
+            Text(_t['edit_plant_seed_warning_title']!), // ✅ i18n
           ],
         ),
         content: Column(
@@ -368,7 +380,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Diese Pflanze hat $totalLogs Log-Einträge.',
+              _t['edit_plant_seed_warning_total']!.replaceAll('{count}', totalLogs.toString()), // ✅ i18n
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -387,7 +399,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                       Icon(Icons.delete_forever, color: Colors.red[700], size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        '$logsToDelete Logs werden GELÖSCHT!',
+                        _t['edit_plant_seed_warning_deleted']!.replaceAll('{count}', logsToDelete.toString()), // ✅ i18n
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.red[900],
@@ -398,25 +410,25 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Diese Logs liegen vor dem neuen Seed-Datum und werden permanent entfernt.',
+                    _t['edit_plant_seed_warning_before_date']!, // ✅ i18n
                     style: TextStyle(color: Colors.red[900], fontSize: 13),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Was passiert beim Ändern des Seed-Datums:',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              _t['edit_plant_seed_warning_what_happens']!, // ✅ i18n
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text('✅ Alle Tagnummern (day_number) werden neu berechnet'),
+            Text(_t['edit_plant_seed_warning_recalculate']!), // ✅ i18n
             const SizedBox(height: 4),
-            Text('❌ $logsToDelete Logs werden permanent gelöscht'),
+            Text(_t['edit_plant_seed_warning_delete_logs']!.replaceAll('{count}', logsToDelete.toString())), // ✅ i18n
             const SizedBox(height: 12),
-            const Text(
-              'Diese Aktion kann NICHT rückgängig gemacht werden!',
-              style: TextStyle(
+            Text(
+              _t['edit_plant_seed_warning_irreversible']!, // ✅ i18n
+              style: const TextStyle(
                 color: Colors.red,
                 fontWeight: FontWeight.bold,
               ),
@@ -426,7 +438,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Abbrechen'),
+            child: Text(_t['cancel']!), // ✅ i18n
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -434,7 +446,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
               backgroundColor: Colors.orange[700],
               foregroundColor: Colors.white,
             ),
-            child: const Text('Ja, Seed-Datum ändern'),
+            child: Text(_t['edit_plant_seed_change_confirm']!), // ✅ i18n
           ),
         ],
       ),
@@ -443,24 +455,25 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Future<void> _deletePlant() async {
+    // ✅ AUDIT FIX: i18n - Get translations for delete dialog
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Pflanze löschen?'),
+        title: Text(_t['edit_plant_delete_title']!), // ✅ i18n
         content: Text(
-          'Möchtest du "${widget.plant.name}" wirklich löschen? '
-              'Alle Logs und Daten gehen verloren.\n\n'
-              'Diese Aktion kann nicht rückgängig gemacht werden!',
+          _t['edit_plant_delete_message']!.replaceAll('{name}', widget.plant.name), // ✅ i18n
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Abbrechen'),
+            child: Text(_t['cancel']!), // ✅ i18n
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Löschen'),
+            child: Text(_t['delete']!), // ✅ i18n
           ),
         ],
       ),
@@ -477,9 +490,9 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
 
       if (mounted) {
         // ✅ FIX: Only pop once to close edit screen
-        // The confirmation dialog was already popped when user clicked "Löschen"
+        // The confirmation dialog was already popped when user clicked delete button
         Navigator.of(context).pop(true);
-        AppMessages.deletedSuccessfully(context, 'Pflanze');
+        AppMessages.deletedSuccessfully(context, _t['plant']!); // ✅ i18n
       }
     } catch (e) {
       AppLogger.error('EditPlantScreen', 'Error deleting: $e');
@@ -495,9 +508,12 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ AUDIT FIX: i18n - Initialize translations
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pflanze bearbeiten'),
+        title: Text(_t['edit_plant_title']!), // ✅ i18n
         backgroundColor: const Color(0xFF004225),
         foregroundColor: Colors.white,
       ),
@@ -531,11 +547,14 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Widget _buildBasicInfo() {
+    // ✅ AUDIT FIX: i18n - Get translations for basic info section
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Basis Info',
+          _t['edit_plant_basic_info']!, // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -545,14 +564,14 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: 'Name *',
-            prefixIcon: Icon(Icons.label),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _t['edit_plant_name_label']!, // ✅ i18n
+            prefixIcon: const Icon(Icons.label),
+            border: const OutlineInputBorder(),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Bitte Namen eingeben';
+              return _t['edit_plant_name_required']!; // ✅ i18n
             }
             return null;
           },
@@ -560,19 +579,19 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _strainController,
-          decoration: const InputDecoration(
-            labelText: 'Strain',
-            prefixIcon: Icon(Icons.local_florist),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _t['edit_plant_strain_label']!, // ✅ i18n
+            prefixIcon: const Icon(Icons.local_florist),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: _breederController,
-          decoration: const InputDecoration(
-            labelText: 'Breeder',
-            prefixIcon: Icon(Icons.business),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _t['edit_plant_breeder_label']!, // ✅ i18n
+            prefixIcon: const Icon(Icons.business),
+            border: const OutlineInputBorder(),
           ),
         ),
       ],
@@ -580,12 +599,16 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   // ✅ BUG FIX #6: Switch durch Dropdown ersetzt
+  // ✅ AUDIT FIX: i18n extraction - genetics section
   Widget _buildGeneticsInfo() {
+    // ✅ AUDIT FIX: i18n - Get translations for genetics section
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Genetik',
+          _t['edit_plant_genetics_section']!, // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -594,7 +617,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         ),
         const SizedBox(height: 12),
         _buildDropdown<SeedType>(
-          label: 'Seed Type',
+          label: _t['edit_plant_seed_type_label']!, // ✅ i18n
           value: _seedType,
           items: SeedType.values,
           onChanged: (value) => setState(() => _seedType = value!),
@@ -602,7 +625,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         const SizedBox(height: 12),
         // ✅ BUG FIX #6: Dropdown statt Switch
         _buildDropdown<GenderType>(
-          label: 'Geschlecht',
+          label: _t['edit_plant_gender_label']!, // ✅ i18n
           value: _genderType,
           items: GenderType.values,
           onChanged: (value) => setState(() => _genderType = value!),
@@ -612,11 +635,14 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Widget _buildGrowInfo() {
+    // ✅ AUDIT FIX: i18n - Get translations for grow setup section
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grow Setup',
+          _t['edit_plant_grow_setup_section']!, // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -625,14 +651,14 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         ),
         const SizedBox(height: 12),
         _buildDropdown<Medium>(
-          label: 'Medium',
+          label: _t['edit_plant_medium_label']!, // ✅ i18n
           value: _medium,
           items: Medium.values,
           onChanged: (value) => setState(() => _medium = value!),
         ),
         const SizedBox(height: 12),
         _buildDropdown<PlantPhase>(
-          label: 'Phase',
+          label: _t['edit_plant_phase_label']!, // ✅ i18n
           value: _phase,
           items: PlantPhase.values,
           onChanged: (value) => setState(() => _phase = value!),
@@ -644,13 +670,13 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           DropdownButtonFormField<int?>(
             initialValue: _selectedGrowId,
             decoration: InputDecoration(
-              labelText: 'Grow (optional)',
+              labelText: _t['edit_plant_grow_label']!, // ✅ i18n
               prefixIcon: Icon(Icons.eco, color: Colors.green[700]),
               border: const OutlineInputBorder(),
-              helperText: 'Pflanze einem Grow zuordnen',
+              helperText: _t['edit_plant_grow_helper']!, // ✅ i18n
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('Kein Grow')),
+              DropdownMenuItem(value: null, child: Text(_t['edit_plant_no_grow']!)), // ✅ i18n
               ..._grows.map((grow) {
                 return DropdownMenuItem(
                   value: grow.id,
@@ -666,13 +692,13 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         else
           DropdownButtonFormField<int?>(
             initialValue: _selectedRoomId,
-            decoration: const InputDecoration(
-              labelText: 'Raum (optional)',
-              prefixIcon: Icon(Icons.home),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: _t['edit_plant_room_label']!, // ✅ i18n
+              prefixIcon: const Icon(Icons.home),
+              border: const OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('Kein Raum')),
+              DropdownMenuItem(value: null, child: Text(_t['edit_plant_no_room']!)), // ✅ i18n
               ..._rooms.map((room) {
                 return DropdownMenuItem(
                   value: room.id,
@@ -687,11 +713,14 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Widget _buildContainerInfo() {
+    // ✅ AUDIT FIX: i18n - Get translations for container info section
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _isHydroSystem ? 'System Info' : 'Container Info',
+          _isHydroSystem ? _t['edit_plant_system_info']! : _t['edit_plant_container_info']!, // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -704,11 +733,11 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
             controller: _systemSizeController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'System Größe (Liter)',
-              hintText: 'z.B. 100',
+              labelText: _t['edit_plant_system_size_label']!, // ✅ i18n
+              hintText: _t['edit_plant_system_size_hint']!, // ✅ i18n
               prefixIcon: Icon(Icons.water, color: Colors.blue[600]),
               border: const OutlineInputBorder(),
-              helperText: 'Gesamtgröße des Hydro-Systems',
+              helperText: _t['edit_plant_system_size_helper']!, // ✅ i18n
             ),
           )
         else
@@ -716,11 +745,11 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
             controller: _containerSizeController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'Topfgröße (Liter)',
-              hintText: 'z.B. 11',
+              labelText: _t['edit_plant_pot_size_label']!, // ✅ i18n
+              hintText: _t['edit_plant_pot_size_hint']!, // ✅ i18n
               prefixIcon: Icon(Icons.local_florist, color: Colors.brown[600]),
               border: const OutlineInputBorder(),
-              helperText: 'Aktueller Topf',
+              helperText: _t['edit_plant_pot_size_helper']!, // ✅ i18n
             ),
           ),
       ],
@@ -763,13 +792,16 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Widget _buildDatePicker() {
+    // ✅ AUDIT FIX: i18n - Get translations for date picker
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return ListTile(
       leading: Icon(Icons.calendar_today, color: Colors.grey[700]),
-      title: const Text('Seed-Datum'),
+      title: Text(_t['edit_plant_seed_date_label']!), // ✅ i18n
       subtitle: Text(
         _seedDate != null
             ? '${_seedDate!.day}.${_seedDate!.month}.${_seedDate!.year}'
-            : 'Nicht gesetzt',
+            : _t['edit_plant_not_set']!, // ✅ i18n
       ),
       trailing: const Icon(Icons.edit),
       onTap: () async {
@@ -787,12 +819,16 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   // ✅ v10: Phase History Date Pickers
+  // ✅ AUDIT FIX: i18n extraction - phase date pickers
   Widget _buildPhaseDatePickers() {
+    // ✅ AUDIT FIX: i18n - Get translations for phase dates section
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Phasen-Daten (optional)',
+          _t['edit_plant_phases_section']!, // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -801,7 +837,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Setze die Startdaten für jede Phase manuell. Dies ermöglicht retroaktive Korrekturen.',
+          _t['edit_plant_phases_description']!, // ✅ i18n
           style: TextStyle(
             fontSize: 13,
             color: Colors.grey[600],
@@ -816,13 +852,16 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Widget _buildVegDatePicker() {
+    // ✅ AUDIT FIX: i18n - Get translations for veg date picker
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return ListTile(
       leading: Icon(Icons.eco, color: Colors.green[700]),
-      title: const Text('Veg-Start'),
+      title: Text(_t['edit_plant_veg_start_label']!), // ✅ i18n
       subtitle: Text(
         _vegDate != null
             ? '${_vegDate!.day}.${_vegDate!.month}.${_vegDate!.year}'
-            : 'Nicht gesetzt',
+            : _t['edit_plant_not_set']!, // ✅ i18n
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -850,13 +889,16 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Widget _buildBloomDatePicker() {
+    // ✅ AUDIT FIX: i18n - Get translations for bloom date picker
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return ListTile(
       leading: Icon(Icons.local_florist, color: Colors.purple[700]),
-      title: const Text('Bloom-Start'),
+      title: Text(_t['edit_plant_bloom_start_label']!), // ✅ i18n
       subtitle: Text(
         _bloomDate != null
             ? '${_bloomDate!.day}.${_bloomDate!.month}.${_bloomDate!.year}'
-            : 'Nicht gesetzt',
+            : _t['edit_plant_not_set']!, // ✅ i18n
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -884,13 +926,16 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Widget _buildHarvestDatePicker() {
+    // ✅ AUDIT FIX: i18n - Get translations for harvest date picker
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return ListTile(
       leading: Icon(Icons.agriculture, color: Colors.brown[700]),
-      title: const Text('Harvest-Start'),
+      title: Text(_t['edit_plant_harvest_start_label']!), // ✅ i18n
       subtitle: Text(
         _harvestDate != null
             ? '${_harvestDate!.day}.${_harvestDate!.month}.${_harvestDate!.year}'
-            : 'Nicht gesetzt',
+            : _t['edit_plant_not_set']!, // ✅ i18n
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -918,6 +963,9 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Widget _buildSaveButton() {
+    // ✅ AUDIT FIX: i18n - Get translations for save button
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return ElevatedButton(
       onPressed: _savePlant,
       style: ElevatedButton.styleFrom(
@@ -926,15 +974,18 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      child: const Text('Änderungen speichern'),
+      child: Text(_t['edit_plant_save_button']!), // ✅ i18n
     );
   }
 
   Widget _buildDeleteButton() {
+    // ✅ AUDIT FIX: i18n - Get translations for delete button
+    final _t = AppTranslations(Localizations.localeOf(context).languageCode);
+
     return OutlinedButton.icon(
       onPressed: _deletePlant,
       icon: const Icon(Icons.delete),
-      label: const Text('Pflanze löschen'),
+      label: Text(_t['edit_plant_delete_button']!), // ✅ i18n
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.red[700],
         side: BorderSide(color: Colors.red[700] ?? Colors.red),

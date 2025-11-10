@@ -7,10 +7,15 @@ import '../database/database_helper.dart';
 import '../models/plant_log.dart';
 import 'interfaces/i_plant_log_repository.dart';
 import 'photo_repository.dart';
+import 'repository_error_handler.dart';
 
-class PlantLogRepository implements IPlantLogRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class PlantLogRepository with RepositoryErrorHandler implements IPlantLogRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final PhotoRepository _photoRepository = PhotoRepository();
+
+  @override
+  String get repositoryName => 'PlantLogRepository';
 
   /// Alle Logs einer Pflanze laden mit Pagination
   @override

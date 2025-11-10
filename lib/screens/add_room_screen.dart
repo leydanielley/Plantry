@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import '../utils/app_logger.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../models/room.dart';
 import '../models/enums.dart';
 import '../models/rdwc_system.dart';
@@ -28,6 +29,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
+  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
 
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -45,6 +47,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
   @override
   void initState() {
     super.initState();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ AUDIT FIX: i18n
     _loadInitialData();
   }
 
@@ -118,23 +121,22 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
               children: [
                 Icon(Icons.hardware, color: Colors.orange[700]),
                 const SizedBox(width: 12),
-                const Expanded(child: Text('Hardware hinzufügen?')),
+                Expanded(child: Text(_t['add_room_hardware_dialog_title'])), // ✅ i18n
               ],
             ),
             content: Text(
-              'Möchtest du jetzt Hardware für "${room.name}" hinzufügen?\n\n'
-                  'Du kannst z.B. Lampen, Lüfter oder andere Geräte erfassen.',
+              _t['add_room_hardware_dialog_message'].replaceAll('{name}', room.name),  // ✅ i18n
               style: const TextStyle(fontSize: 15),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Später'),
+                child: Text(_t['add_room_hardware_later']), // ✅ i18n
               ),
               ElevatedButton.icon(
                 onPressed: () => Navigator.of(context).pop(true),
                 icon: const Icon(Icons.add),
-                label: const Text('Jetzt hinzufügen'),
+                label: Text(_t['add_room_hardware_now']), // ✅ i18n
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange[700],
                   foregroundColor: Colors.white,
@@ -153,7 +155,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
           );
 
           if (mounted) {
-            AppMessages.showSuccess(context, 'Hardware-Eingabe abgeschlossen! 🔧');
+            AppMessages.showSuccess(context, _t['add_room_hardware_complete']); // ✅ i18n
           }
         }
 
@@ -178,7 +180,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Neuer Raum'),
+        title: Text(_t['add_room_title']), // ✅ i18n
         backgroundColor: const Color(0xFF004225),
         foregroundColor: Colors.white,
       ),
@@ -208,7 +210,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grundinformationen',
+          _t['add_room_basic_info'], // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -218,11 +220,11 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: 'Name *',
-            hintText: 'z.B. Grow Tent 120x120',
-            prefixIcon: Icon(Icons.home),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _t['add_room_name_label'], // ✅ i18n
+            hintText: _t['add_room_name_hint'], // ✅ i18n
+            prefixIcon: const Icon(Icons.home),
+            border: const OutlineInputBorder(),
           ),
           validator: (value) => Validators.validateNotEmpty(value, fieldName: 'Name'),
           autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -231,11 +233,11 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
         TextFormField(
           controller: _descriptionController,
           maxLines: 2,
-          decoration: const InputDecoration(
-            labelText: 'Beschreibung',
-            hintText: 'Optional',
-            prefixIcon: Icon(Icons.description),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _t['add_room_description_label'], // ✅ i18n
+            hintText: _t['add_room_description_hint'], // ✅ i18n
+            prefixIcon: const Icon(Icons.description),
+            border: const OutlineInputBorder(),
           ),
         ),
       ],
@@ -249,7 +251,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grow Setup',
+          _t['add_room_grow_setup'], // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -259,13 +261,13 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
         const SizedBox(height: 12),
         DropdownButtonFormField<GrowType?>(
           initialValue: _growType,
-          decoration: const InputDecoration(
-            labelText: 'Grow Type',
-            prefixIcon: Icon(Icons.category),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _t['add_room_grow_type'], // ✅ i18n
+            prefixIcon: const Icon(Icons.category),
+            border: const OutlineInputBorder(),
           ),
           items: [
-            const DropdownMenuItem(value: null, child: Text('Nicht angegeben')),
+            DropdownMenuItem(value: null, child: Text(_t['add_room_not_specified'])), // ✅ i18n
             ...GrowType.values.map((type) {
               return DropdownMenuItem(
                 value: type,
@@ -278,13 +280,13 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
         const SizedBox(height: 12),
         DropdownButtonFormField<WateringSystem?>(
           initialValue: _wateringSystem,
-          decoration: const InputDecoration(
-            labelText: 'Bewässerungssystem',
-            prefixIcon: Icon(Icons.water_drop),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _t['add_room_watering_system'], // ✅ i18n
+            prefixIcon: const Icon(Icons.water_drop),
+            border: const OutlineInputBorder(),
           ),
           items: [
-            const DropdownMenuItem(value: null, child: Text('Nicht angegeben')),
+            DropdownMenuItem(value: null, child: Text(_t['add_room_not_specified'])), // ✅ i18n
             ...WateringSystem.values.map((system) {
               return DropdownMenuItem(
                 value: system,
@@ -300,13 +302,13 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
           DropdownButtonFormField<int?>(
             initialValue: _selectedRdwcSystemId,
             decoration: InputDecoration(
-              labelText: 'RDWC System (optional)',
-              helperText: 'Verknüpfe diesen Raum mit einem RDWC System',
+              labelText: _t['add_room_rdwc_system'], // ✅ i18n
+              helperText: _t['add_room_rdwc_helper'], // ✅ i18n
               prefixIcon: Icon(Icons.water, color: Colors.blue[700]),
               border: const OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('Kein RDWC System')),
+              DropdownMenuItem(value: null, child: Text(_t['add_room_no_rdwc'])), // ✅ i18n
               ..._rdwcSystems.map((system) {
                 return DropdownMenuItem(
                   value: system.id,
@@ -326,7 +328,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Abmessungen (optional)',
+          _t['add_room_dimensions'], // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -336,7 +338,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
         const SizedBox(height: 8),
         // ✅ KORRIGIERT: Jetzt Zentimeter statt Meter
         Text(
-          'Alle Maße in Zentimetern (cm)',
+          _t['add_room_dimensions_unit'], // ✅ i18n
           style: TextStyle(
             fontSize: 12,
             color: Colors.grey[600],
@@ -349,10 +351,10 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
               child: TextFormField(
                 controller: _widthController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Breite (cm)',  // ✅ KORRIGIERT
-                  hintText: 'z.B. 120',      // ✅ KORRIGIERT
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: _t['add_room_width_label'],  // ✅ i18n
+                  hintText: _t['add_room_width_hint'],  // ✅ i18n
+                  border: const OutlineInputBorder(),
                 ),
                 // ✅ KORRIGIERT: Validator für CM (10-1000 cm)
                 validator: (value) => Validators.validatePositiveNumber(
@@ -367,10 +369,10 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
               child: TextFormField(
                 controller: _depthController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Tiefe (cm)',   // ✅ KORRIGIERT
-                  hintText: 'z.B. 120',      // ✅ KORRIGIERT
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: _t['add_room_depth_label'],  // ✅ i18n
+                  hintText: _t['add_room_depth_hint'],  // ✅ i18n
+                  border: const OutlineInputBorder(),
                 ),
                 // ✅ KORRIGIERT: Validator für CM (10-1000 cm)
                 validator: (value) => Validators.validatePositiveNumber(
@@ -385,10 +387,10 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
               child: TextFormField(
                 controller: _heightController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Höhe (cm)',    // ✅ KORRIGIERT
-                  hintText: 'z.B. 200',      // ✅ KORRIGIERT
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: _t['add_room_height_label'],  // ✅ i18n
+                  hintText: _t['add_room_height_hint'],  // ✅ i18n
+                  border: const OutlineInputBorder(),
                 ),
                 // ✅ KORRIGIERT: Validator für CM (10-1000 cm)
                 validator: (value) => Validators.validatePositiveNumber(
@@ -413,7 +415,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      child: const Text('Raum speichern'),
+      child: Text(_t['add_room_save_button']), // ✅ i18n
     );
   }
 }

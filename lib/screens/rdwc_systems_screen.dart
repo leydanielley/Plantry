@@ -10,6 +10,7 @@ import '../models/app_settings.dart';
 import '../utils/translations.dart';
 import '../utils/unit_converter.dart';
 import '../utils/app_logger.dart';
+import '../widgets/empty_state_widget.dart';
 import 'rdwc_system_detail_screen.dart';
 import 'rdwc_system_form_screen.dart';
 import '../di/service_locator.dart';
@@ -116,32 +117,12 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
     );
   }
 
+  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
   Widget _buildEmptyState(bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.water_drop_outlined,
-            size: 80,
-            color: isDark ? Colors.grey[700] : Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _t['no_logs_yet'],
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: isDark ? Colors.grey[600] : Colors.grey[500],
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _t['create_first_log'],
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDark ? Colors.grey[700] : Colors.grey[600],
-                ),
-          ),
-        ],
-      ),
+    return EmptyStateWidget(
+      icon: Icons.water_drop_outlined,
+      title: _t['no_logs_yet'],
+      subtitle: _t['create_first_log'],
     );
   }
 

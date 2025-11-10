@@ -55,7 +55,8 @@ class PlantProvider with ChangeNotifier {
   AsyncValue<List<Plant>> _plantsByRoom = const Loading();
 
   /// Plants filtered by grow
-  final AsyncValue<List<Plant>> _plantsByGrow = const Loading();
+  /// ✅ FIX: Changed from final to mutable so it can be updated
+  AsyncValue<List<Plant>> _plantsByGrow = const Loading();
 
   // ═══════════════════════════════════════════
   // GETTERS
@@ -126,6 +127,26 @@ class PlantProvider with ChangeNotifier {
     } catch (e, stack) {
       _plantsByRoom = Error('Failed to load plants by room', e, stack);
       AppLogger.error('PlantProvider', 'Failed to load plants by room', e, stack);
+    }
+
+    _safeNotifyListeners();
+  }
+
+  /// ✅ FIX: Added missing method to load plants by grow
+  /// This method updates the _plantsByGrow state that was previously stuck in Loading
+  Future<void> loadPlantsByGrow(int growId) async {
+    AppLogger.debug('PlantProvider', 'Loading plants by grow', growId);
+
+    _plantsByGrow = const Loading();
+    _safeNotifyListeners();
+
+    try {
+      final plantList = await _repository.findByGrow(growId);
+      _plantsByGrow = Success(plantList);
+      AppLogger.info('PlantProvider', 'Loaded ${plantList.length} plants for grow');
+    } catch (e, stack) {
+      _plantsByGrow = Error('Failed to load plants by grow', e, stack);
+      AppLogger.error('PlantProvider', 'Failed to load plants by grow', e, stack);
     }
 
     _safeNotifyListeners();

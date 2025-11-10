@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import '../utils/app_logger.dart';
+import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import '../models/plant.dart';
 import '../models/room.dart';
 import '../models/grow.dart';
@@ -31,6 +32,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
+  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
 
   // Form Controllers
   final _nameController = TextEditingController();
@@ -62,6 +64,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   @override
   void initState() {
     super.initState();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ AUDIT FIX: i18n
     _selectedGrowId = widget.preselectedGrowId;
     _loadRooms();
     _loadGrows();
@@ -152,26 +155,26 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Neuen Grow erstellen'),
+        title: Text(_t['add_plant_create_grow']), // ✅ i18n
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name *',
-                  hintText: 'z.B. Winter Grow 2025',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: _t['add_plant_name_label'], // ✅ i18n
+                  hintText: _t['add_plant_grow_name_hint'], // ✅ i18n
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Beschreibung (optional)',
-                  hintText: 'z.B. 5x Wedding Cake',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: _t['add_plant_grow_description'], // ✅ i18n
+                  hintText: _t['add_plant_grow_description_hint'], // ✅ i18n
+                  border: const OutlineInputBorder(),
                 ),
                 maxLines: 2,
               ),
@@ -268,7 +271,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           if (mounted) {
             AppMessages.showError(
               context,
-              'Nur ${availableBuckets.length} freie Buckets verfügbar, aber $quantity Plants gewählt!',
+              _t['add_plant_bucket_insufficient'] // ✅ i18n
+                .replaceAll('{available}', '${availableBuckets.length}')
+                .replaceAll('{requested}', '$quantity'),
             );
           }
           return;
@@ -349,7 +354,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Neue Pflanze'),
+        title: Text(_t['add_plant_title']),  // ✅ i18n
         backgroundColor: const Color(0xFF004225),
         foregroundColor: Colors.white,
       ),
@@ -383,7 +388,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grundinformationen',
+          _t['add_plant_basic_info'], // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -393,15 +398,15 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: 'Name *',
-            hintText: 'z.B. Wedding Cake',
-            prefixIcon: Icon(Icons.spa),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _t['add_plant_name_label'], // ✅ i18n
+            hintText: _t['add_plant_name_hint'], // ✅ i18n
+            prefixIcon: const Icon(Icons.spa),
+            border: const OutlineInputBorder(),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Bitte Namen eingeben';
+              return _t['add_plant_name_required']; // ✅ i18n
             }
             return null;
           },
@@ -410,12 +415,12 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         TextFormField(
           controller: _quantityController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Anzahl',
-            hintText: '1-50',
-            prefixIcon: Icon(Icons.filter_list, color: Color(0xFF004225)),
-            border: OutlineInputBorder(),
-            helperText: 'Wie viele Pflanzen erstellen?',
+          decoration: InputDecoration(
+            labelText: _t['add_plant_quantity'], // ✅ i18n
+            hintText: _t['add_plant_quantity_hint'], // ✅ i18n
+            prefixIcon: const Icon(Icons.filter_list, color: Color(0xFF004225)),
+            border: const OutlineInputBorder(),
+            helperText: _t['add_plant_quantity_helper'], // ✅ i18n
           ),
           onChanged: (value) {
             // Trigger rebuild to update bucket info
@@ -424,7 +429,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           validator: (value) {
             final count = int.tryParse(value ?? '');
             if (count == null || count < 1 || count > 50) {
-              return 'Zahl zwischen 1-50';
+              return _t['add_plant_quantity_validator']; // ✅ i18n
             }
             return null;
           },
@@ -432,21 +437,21 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _strainController,
-          decoration: const InputDecoration(
-            labelText: 'Strain',
-            hintText: 'z.B. Wedding Cake',
-            prefixIcon: Icon(Icons.local_florist),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _t['add_plant_strain'], // ✅ i18n
+            hintText: _t['add_plant_name_hint'], // ✅ i18n
+            prefixIcon: const Icon(Icons.local_florist),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: _breederController,
-          decoration: const InputDecoration(
-            labelText: 'Breeder',
-            hintText: 'z.B. Barney\'s Farm',
-            prefixIcon: Icon(Icons.business),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: _t['add_plant_breeder'], // ✅ i18n
+            hintText: _t['add_plant_breeder_hint'], // ✅ i18n
+            prefixIcon: const Icon(Icons.business),
+            border: const OutlineInputBorder(),
           ),
         ),
       ],
@@ -459,7 +464,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Genetik',
+          _t['add_plant_genetics'], // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -468,7 +473,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         ),
         const SizedBox(height: 12),
         _buildDropdown<SeedType>(
-          label: 'Seed Type',
+          label: _t['add_plant_seed_type'], // ✅ i18n
           value: _seedType,
           items: SeedType.values,
           onChanged: (value) => setState(() => _seedType = value!),
@@ -476,7 +481,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         const SizedBox(height: 12),
         // ✅ KORRIGIERT: Dropdown statt Switch
         _buildDropdown<GenderType>(
-          label: 'Geschlecht',
+          label: _t['add_plant_gender'], // ✅ i18n
           value: _genderType,
           items: GenderType.values,
           onChanged: (value) => setState(() => _genderType = value!),
@@ -490,7 +495,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grow Setup',
+          _t['add_plant_grow_setup'], // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -499,7 +504,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         ),
         const SizedBox(height: 12),
         _buildDropdown<Medium>(
-          label: 'Medium',
+          label: _t['add_plant_medium'], // ✅ i18n
           value: _medium,
           items: Medium.values,
           onChanged: (value) {
@@ -517,7 +522,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         ),
         const SizedBox(height: 12),
         _buildDropdown<PlantPhase>(
-          label: 'Phase',
+          label: _t['add_plant_phase'], // ✅ i18n
           value: _phase,
           items: PlantPhase.values,
           onChanged: (value) => setState(() => _phase = value!),
@@ -531,7 +536,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
               DropdownButtonFormField<int?>(
                 initialValue: _selectedGrowId,
                 decoration: InputDecoration(
-                  labelText: widget.preselectedGrowId != null ? 'Grow (vorgegeben)' : 'Grow (optional)',
+                  labelText: widget.preselectedGrowId != null ? _t['add_plant_grow_preselected'] : _t['add_plant_grow_optional'], // ✅ i18n
                   prefixIcon: const Icon(Icons.eco, color: Color(0xFF004225)),
                   border: const OutlineInputBorder(),
                   helperText: widget.preselectedGrowId != null
@@ -539,7 +544,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                       : 'Mehrere Pflanzen zu einem Grow zusammenfassen',
                 ),
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('Kein Grow')),
+                  DropdownMenuItem(value: null, child: Text(_t['add_plant_no_grow'])), // ✅ i18n
                   ..._grows.map((grow) {
                     return DropdownMenuItem(
                       value: grow.id,
@@ -556,7 +561,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 TextButton.icon(
                   onPressed: _createNewGrow,
                   icon: const Icon(Icons.add_circle_outline),
-                  label: const Text('Neuen Grow erstellen'),
+                  label: Text(_t['add_plant_create_grow']), // ✅ i18n
                   style: TextButton.styleFrom(
                     foregroundColor: const Color(0xFF004225),
                   ),
@@ -572,14 +577,14 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           else
             DropdownButtonFormField<int?>(
               initialValue: _selectedRdwcSystemId,
-              decoration: const InputDecoration(
-                labelText: 'RDWC System *',
-                prefixIcon: Icon(Icons.water),
-                border: OutlineInputBorder(),
-                helperText: 'Wähle das RDWC System für diese Pflanze',
+              decoration: InputDecoration(
+                labelText: _t['add_plant_rdwc_system'], // ✅ i18n
+                prefixIcon: const Icon(Icons.water),
+                border: const OutlineInputBorder(),
+                helperText: _t['add_plant_rdwc_helper'], // ✅ i18n
               ),
               items: [
-                const DropdownMenuItem(value: null, child: Text('Kein System')),
+                DropdownMenuItem(value: null, child: Text(_t['add_plant_no_system'])), // ✅ i18n
                 ..._rdwcSystems.map((system) {
                   return DropdownMenuItem(
                     value: system.id,
@@ -603,7 +608,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
               },
               validator: (value) {
                 if (_medium == Medium.rdwc && value == null) {
-                  return 'RDWC System erforderlich';
+                  return _t['add_plant_rdwc_required']; // ✅ i18n
                 }
                 return null;
               },
@@ -643,7 +648,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Automatische Verteilung:\nBuckets ${freeBuckets.take(quantity).join(', ')} werden verwendet',
+                            '${_t['add_plant_bucket_auto_distribution']}\n${_t['add_plant_bucket_auto_info'].replaceAll('{buckets}', freeBuckets.take(quantity).join(', '))}',  // ✅ i18n
                             style: const TextStyle(fontSize: 13),
                           ),
                         ),
@@ -656,13 +661,13 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 return DropdownButtonFormField<int?>(
                   initialValue: _selectedBucketNumber,
                   decoration: InputDecoration(
-                    labelText: 'Bucket Nummer *',
+                    labelText: _t['add_plant_bucket_number'],  // ✅ i18n
                     prefixIcon: const Icon(Icons.filter_list),
                     border: const OutlineInputBorder(),
-                    helperText: '${_occupiedBuckets.length}/${selectedSystem.bucketCount} Buckets belegt',
+                    helperText: _t['add_plant_bucket_occupied'].replaceAll('{occupied}', '${_occupiedBuckets.length}').replaceAll('{total}', '${selectedSystem.bucketCount}'),  // ✅ i18n
                   ),
                   items: [
-                    const DropdownMenuItem(value: null, child: Text('Wähle Bucket')),
+                    DropdownMenuItem(value: null, child: Text(_t['add_plant_bucket_select'])), // ✅ i18n
                     ...List.generate(selectedSystem.bucketCount, (index) {
                       final bucketNum = index + 1;
                       final isOccupied = _occupiedBuckets.contains(bucketNum);
@@ -676,7 +681,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                   onChanged: (value) => setState(() => _selectedBucketNumber = value),
                   validator: (value) {
                     if (_medium == Medium.rdwc && _selectedRdwcSystemId != null && value == null) {
-                      return 'Bucket Nummer erforderlich';
+                      return _t['add_plant_bucket_required']; // ✅ i18n
                     }
                     return null;
                   },
@@ -690,13 +695,13 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         else
           DropdownButtonFormField<int?>(
             initialValue: _selectedRoomId,
-            decoration: const InputDecoration(
-              labelText: 'Raum (optional)',
-              prefixIcon: Icon(Icons.home),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: _t['add_plant_room_optional'], // ✅ i18n
+              prefixIcon: const Icon(Icons.home),
+              border: const OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('Kein Raum')),
+              DropdownMenuItem(value: null, child: Text(_t['add_plant_no_room'])), // ✅ i18n
               ..._rooms.map((room) {
                 return DropdownMenuItem(
                   value: room.id,
@@ -726,7 +731,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'System-Größe wird vom RDWC System übernommen',
+                _t['add_plant_system_info_rdwc'],  // ✅ i18n
                 style: TextStyle(fontSize: 13, color: Colors.grey[700]),
               ),
             ),
@@ -739,7 +744,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _isHydroSystem ? 'System Info (optional)' : 'Container Info (optional)',
+          _isHydroSystem ? _t['add_plant_system_info'] : _t['add_plant_container_info'],  // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -752,11 +757,11 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
             controller: _systemSizeController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'System Größe (Liter)',
-              hintText: 'z.B. 100',
+              labelText: _t['add_plant_system_size'], // ✅ i18n
+              hintText: _t['add_plant_system_size_hint'], // ✅ i18n
               prefixIcon: Icon(Icons.water, color: Colors.blue[600]),
               border: const OutlineInputBorder(),
-              helperText: 'Gesamtgröße des Hydro-Systems (DWC/Hydro)',
+              helperText: _t['add_plant_system_size_helper'], // ✅ i18n
             ),
           )
         else
@@ -764,11 +769,11 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
             controller: _containerSizeController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'Topfgröße (Liter)',
-              hintText: 'z.B. 11',
+              labelText: _t['add_plant_container_size'], // ✅ i18n
+              hintText: _t['add_plant_container_size_hint'], // ✅ i18n
               prefixIcon: Icon(Icons.local_florist, color: Colors.brown[600]),
               border: const OutlineInputBorder(),
-              helperText: 'Aktueller Topf',
+              helperText: _t['add_plant_container_size_helper'], // ✅ i18n
             ),
           ),
       ],
@@ -818,11 +823,11 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           children: [
             ListTile(
               leading: Icon(Icons.calendar_today, color: Colors.grey[700]),
-              title: const Text('Seed-Datum'),
+              title: Text(_t['add_plant_seed_date']), // ✅ i18n
               subtitle: Text(
                 _seedDate != null
                     ? '${_seedDate!.day}.${_seedDate!.month}.${_seedDate!.year}'
-                    : 'Nicht gesetzt (wird auf Erstellungszeitpunkt gesetzt)',
+                    : _t['add_plant_seed_date_not_set'], // ✅ i18n
                 style: TextStyle(
                   color: _seedDate != null ? null : Colors.orange[700],
                   fontStyle: _seedDate != null ? null : FontStyle.italic,
@@ -839,7 +844,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                           setState(() => _seedDate = null);
                         }
                       },
-                      tooltip: 'Datum zurücksetzen',
+                      tooltip: _t['add_plant_seed_date_reset'], // ✅ i18n
                     ),
                   const Icon(Icons.edit),
                 ],
@@ -865,7 +870,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Tipp: Setze ein Datum für genaueres Day-Tracking',
+                        _t['add_plant_seed_date_tip'], // ✅ i18n
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -890,7 +895,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      child: const Text('Pflanze(n) erstellen'),
+      child: Text(_t['add_plant_create_button']), // ✅ i18n
     );
   }
 }

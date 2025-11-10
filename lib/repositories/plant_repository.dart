@@ -9,9 +9,14 @@ import '../models/plant.dart';
 import '../utils/validators.dart';
 import '../utils/app_logger.dart';
 import 'interfaces/i_plant_repository.dart';
+import 'repository_error_handler.dart';
 
-class PlantRepository implements IPlantRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+
+  @override
+  String get repositoryName => 'PlantRepository';
 
   /// Alle Pflanzen laden (nicht archiviert) mit Pagination
   @override
@@ -69,6 +74,25 @@ class PlantRepository implements IPlantRepository {
       return maps.map((map) => Plant.fromMap(map)).toList();
     } catch (e, stackTrace) {
       AppLogger.error('PlantRepository', 'Failed to load plants by room', e, stackTrace);
+      return [];
+    }
+  }
+
+  /// ✅ FIX: Added method to load plants by grow
+  @override
+  Future<List<Plant>> findByGrow(int growId) async {
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'plants',
+        where: 'grow_id = ? AND archived = ?',
+        whereArgs: [growId, 0],
+        orderBy: 'id DESC',
+      );
+
+      return maps.map((map) => Plant.fromMap(map)).toList();
+    } catch (e, stackTrace) {
+      AppLogger.error('PlantRepository', 'Failed to load plants by grow', e, stackTrace);
       return [];
     }
   }

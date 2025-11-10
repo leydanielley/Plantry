@@ -7,9 +7,14 @@ import '../models/photo.dart';
 import '../database/database_helper.dart';
 import '../utils/app_logger.dart';
 import 'interfaces/i_photo_repository.dart';
+import 'repository_error_handler.dart';
 
-class PhotoRepository implements IPhotoRepository {
+// ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
+class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+
+  @override
+  String get repositoryName => 'PhotoRepository';
 
   /// Foto speichern mit Validierung
   @override

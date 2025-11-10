@@ -195,6 +195,8 @@ class Hardware {
 
   /// Zu Map konvertieren (für Datenbank)
   Map<String, dynamic> toMap() {
+    // ✅ AUDIT FIX: Boolean to int conversion is intentional for SQLite compatibility
+    // SQLite stores booleans as INTEGER (0/1). Pattern: bool? to int? or bool to int
     return {
       'id': id,
       'room_id': roomId,

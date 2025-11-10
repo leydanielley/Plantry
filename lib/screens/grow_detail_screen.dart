@@ -10,6 +10,7 @@ import '../models/grow.dart';
 import '../models/plant.dart';
 import '../models/enums.dart';
 import '../repositories/interfaces/i_plant_repository.dart';
+import '../widgets/empty_state_widget.dart';
 import 'plant_detail_screen.dart';
 import 'add_log_screen.dart';
 import 'add_plant_screen.dart';
@@ -334,43 +335,13 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
     );
   }
 
+  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
+  /// NOTE: Hardcoded German strings to be migrated in future i18n cleanup
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.spa,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Keine Pflanzen in diesem Grow',
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Füge Pflanzen zu diesem Grow hinzu!',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Tipp: Beim Erstellen einer Pflanze kannst\ndu sie einem Grow zuweisen.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
+    return const EmptyStateWidget(
+      icon: Icons.spa,
+      title: 'Keine Pflanzen in diesem Grow',
+      subtitle: 'Füge Pflanzen zu diesem Grow hinzu!\n\nTipp: Beim Erstellen einer Pflanze kannst\ndu sie einem Grow zuweisen.',
     );
   }
 
