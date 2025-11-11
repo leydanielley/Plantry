@@ -13,6 +13,7 @@ import '../models/rdwc_recipe.dart';
 import '../models/fertilizer.dart';
 import '../models/app_settings.dart';
 import '../utils/translations.dart';
+import '../database/database_helper.dart';  // ✅ FIX: For transaction support
 import '../utils/unit_converter.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
@@ -310,9 +311,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
           break;
       }
 
+      // ✅ FIX: Show success message BEFORE popping to avoid using disposed context
       if (mounted) {
-        Navigator.of(context).pop(true);
         AppMessages.showSuccess(context, successMessage);
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       AppLogger.error('RdwcAddbackFormScreen', 'Error saving log', e);
@@ -368,9 +370,12 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
     final note = _noteController.text.trim();
 
     // Calculate water consumed
+    // ✅ FIX: Correct formula: consumed = (before + added) - after
     double? waterConsumed;
     if (levelBefore != null && levelAfter != null && waterAdded != null) {
-      waterConsumed = widget.system.currentLevel - levelBefore;
+      waterConsumed = (levelBefore + waterAdded) - levelAfter;
+      // Ensure positive value (data validation issue if negative)
+      if (waterConsumed < 0) waterConsumed = 0;
     }
 
     final log = RdwcLog(
@@ -469,8 +474,24 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   }
 
   /// Helper: Save fertilizers to a log
+  /// ✅ FIX: Use transaction to ensure atomic operation (delete + insert)
   Future<void> _saveFertilizers(int logId) async {
-    if (_addedFertilizers.isNotEmpty) {
+    if (_addedFertilizers.isEmpty && widget.existingLog == null) return;
+
+    final db = await DatabaseHelper.instance.database;
+
+    // ✅ FIX: Wrap in transaction for atomicity
+    await db.transaction((txn) async {
+      // When editing: delete old fertilizers first to avoid duplicates
+      if (widget.existingLog != null) {
+        await txn.delete(
+          'rdwc_log_fertilizers',
+          where: 'rdwc_log_id = ?',
+          whereArgs: [logId],
+        );
+      }
+
+      // Insert new fertilizers
       for (final entry in _addedFertilizers) {
         final amount = double.tryParse(entry.amountController.text);
         if (amount != null && amount > 0) {
@@ -480,10 +501,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
             amount: amount,
             amountType: entry.amountType,
           );
-          await _rdwcRepo.addFertilizerToLog(fertilizerLog);
+          await txn.insert('rdwc_log_fertilizers', fertilizerLog.toMap());
         }
       }
-    }
+    });
   }
 
   // v8: Build fertilizer section widgets (Expert Mode)

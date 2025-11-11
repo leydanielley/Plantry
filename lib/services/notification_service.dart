@@ -2,9 +2,11 @@
 // GROWLOG - Notification Service (100% Offline)
 // =============================================
 
+import 'dart:io' show Platform;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
 import '../utils/app_logger.dart';
 import '../config/notification_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
 import 'interfaces/i_notification_service.dart';
@@ -23,15 +25,31 @@ class NotificationService implements INotificationService {
     if (_initialized) return;
 
     try {
-      // Initialize timezone
-      // ✅ AUDIT FIX: Hardcoded timezone extracted to NotificationConfig
+      // Initialize timezone with device's actual timezone
+      // ✅ FIX: Detect device timezone instead of hardcoding Europe/Berlin
       tz.initializeTimeZones();
-      tz.setLocalLocation(tz.getLocation(NotificationConfig.defaultTimezone));
+      try {
+        final String deviceTimezone = await FlutterTimezone.getLocalTimezone();
+        tz.setLocalLocation(tz.getLocation(deviceTimezone));
+        AppLogger.info('NotificationService', 'Using device timezone: $deviceTimezone');
+      } catch (e) {
+        // Fallback to default if detection fails
+        tz.setLocalLocation(tz.getLocation(NotificationConfig.defaultTimezone));
+        AppLogger.warning('NotificationService', 'Timezone detection failed, using default: ${NotificationConfig.defaultTimezone}');
+      }
 
-      // Android initialization
+      // ✅ FIX: Add iOS initialization settings
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
 
-      const initSettings = InitializationSettings(android: androidSettings);
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
 
       await _notifications.initialize(
         initSettings,
@@ -103,19 +121,36 @@ class NotificationService implements INotificationService {
     }
   }
 
-  /// Request notification permissions (Android 13+)
+  /// Request notification permissions (Android 13+, iOS)
+  /// ✅ FIX: Now properly requests permissions on both platforms
   @override
   Future<bool> requestPermissions() async {
     try {
-      final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      if (Platform.isAndroid) {
+        final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
 
-      if (androidPlugin != null) {
-        final granted = await androidPlugin.requestNotificationsPermission();
-        AppLogger.info('NotificationService', 'Permission granted: $granted');
-        return granted ?? false;
+        if (androidPlugin != null) {
+          final granted = await androidPlugin.requestNotificationsPermission();
+          AppLogger.info('NotificationService', 'Android permission granted: $granted');
+          return granted ?? false;
+        }
+      } else if (Platform.isIOS) {
+        final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
+
+        if (iosPlugin != null) {
+          final granted = await iosPlugin.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+          AppLogger.info('NotificationService', 'iOS permission granted: $granted');
+          return granted ?? false;
+        }
       }
-      return true;
+
+      return false;  // ✅ FIX: Return false instead of true if no platform matched
     } catch (e) {
       AppLogger.error('NotificationService', 'Permission request failed', e);
       return false;
@@ -136,8 +171,21 @@ class NotificationService implements INotificationService {
     try {
       final nextWatering = lastWatering.add(Duration(days: intervalDays));
       final timeParts = notificationTime.split(':');
-      final hour = int.parse(timeParts[0]);
-      final minute = int.parse(timeParts[1]);
+
+      // ✅ FIX: Proper time validation with range checks
+      if (timeParts.length < 2) {
+        AppLogger.error('NotificationService', 'Invalid notification time format: $notificationTime');
+        return;
+      }
+
+      final hour = int.tryParse(timeParts[0]);
+      final minute = int.tryParse(timeParts[1]);
+
+      // ✅ FIX: Validate time ranges (0-23 hours, 0-59 minutes)
+      if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        AppLogger.error('NotificationService', 'Invalid time values: hour=$hour, minute=$minute');
+        throw ArgumentError('Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)');
+      }
 
       final scheduledDate = tz.TZDateTime(
         tz.local,
@@ -187,8 +235,21 @@ class NotificationService implements INotificationService {
     try {
       final nextFertilizing = lastFertilizing.add(Duration(days: intervalDays));
       final timeParts = notificationTime.split(':');
-      final hour = int.parse(timeParts[0]);
-      final minute = int.parse(timeParts[1]);
+
+      // ✅ FIX: Proper time validation with range checks
+      if (timeParts.length < 2) {
+        AppLogger.error('NotificationService', 'Invalid notification time format: $notificationTime');
+        return;
+      }
+
+      final hour = int.tryParse(timeParts[0]);
+      final minute = int.tryParse(timeParts[1]);
+
+      // ✅ FIX: Validate time ranges (0-23 hours, 0-59 minutes)
+      if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        AppLogger.error('NotificationService', 'Invalid time values: hour=$hour, minute=$minute');
+        throw ArgumentError('Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)');
+      }
 
       final scheduledDate = tz.TZDateTime(
         tz.local,
@@ -236,8 +297,21 @@ class NotificationService implements INotificationService {
     try {
       final nextPhoto = lastPhoto.add(Duration(days: intervalDays));
       final timeParts = notificationTime.split(':');
-      final hour = int.parse(timeParts[0]);
-      final minute = int.parse(timeParts[1]);
+
+      // ✅ FIX: Proper time validation with range checks
+      if (timeParts.length < 2) {
+        AppLogger.error('NotificationService', 'Invalid notification time format: $notificationTime');
+        return;
+      }
+
+      final hour = int.tryParse(timeParts[0]);
+      final minute = int.tryParse(timeParts[1]);
+
+      // ✅ FIX: Validate time ranges (0-23 hours, 0-59 minutes)
+      if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        AppLogger.error('NotificationService', 'Invalid time values: hour=$hour, minute=$minute');
+        throw ArgumentError('Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)');
+      }
 
       final scheduledDate = tz.TZDateTime(
         tz.local,
@@ -283,8 +357,21 @@ class NotificationService implements INotificationService {
 
     try {
       final timeParts = notificationTime.split(':');
-      final hour = int.parse(timeParts[0]);
-      final minute = int.parse(timeParts[1]);
+
+      // ✅ FIX: Proper time validation with range checks
+      if (timeParts.length < 2) {
+        AppLogger.error('NotificationService', 'Invalid notification time format: $notificationTime');
+        return;
+      }
+
+      final hour = int.tryParse(timeParts[0]);
+      final minute = int.tryParse(timeParts[1]);
+
+      // ✅ FIX: Validate time ranges (0-23 hours, 0-59 minutes)
+      if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        AppLogger.error('NotificationService', 'Invalid time values: hour=$hour, minute=$minute');
+        throw ArgumentError('Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)');
+      }
 
       // Remind 3 days before
       // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
@@ -384,7 +471,7 @@ class NotificationService implements INotificationService {
   // ============================================================
 
   NotificationDetails _notificationDetails() {
-    // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
+    // ✅ FIX: Add iOS notification details for cross-platform support
     return const NotificationDetails(
       android: AndroidNotificationDetails(
         NotificationConfig.channelId,
@@ -396,6 +483,11 @@ class NotificationService implements INotificationService {
         color: NotificationConfig.notificationColor,
         enableVibration: true,
         playSound: true,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
       ),
     );
   }

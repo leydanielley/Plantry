@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/foundation.dart';
+import 'package:synchronized/synchronized.dart';
 import '../models/plant.dart';
 import '../repositories/interfaces/i_plant_repository.dart';
 import '../utils/app_logger.dart';
@@ -44,6 +45,9 @@ class PlantProvider with ChangeNotifier {
 
   /// ✅ FIX: Track dispose state to prevent notifyListeners after dispose
   bool _disposed = false;
+
+  /// ✅ CRITICAL FIX: Lock to prevent concurrent state modifications
+  final _saveLock = Lock();
 
   /// List of all plants
   AsyncValue<List<Plant>> _plants = const Loading();
@@ -153,71 +157,80 @@ class PlantProvider with ChangeNotifier {
   }
 
   /// Save a plant (create or update)
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent save race conditions
   Future<bool> savePlant(Plant plant) async {
     AppLogger.debug('PlantProvider', 'Saving plant', plant.name);
 
-    try {
-      final savedPlant = await _repository.save(plant);
+    return await _saveLock.synchronized(() async {
+      try {
+        final savedPlant = await _repository.save(plant);
 
-      // Update current plant if it's the same one
-      if (_currentPlant case Success(:final data)) {
-        if (data.id == savedPlant.id) {
-          _currentPlant = Success(savedPlant);
+        // Update current plant if it's the same one
+        if (_currentPlant case Success(:final data)) {
+          if (data.id == savedPlant.id) {
+            _currentPlant = Success(savedPlant);
+          }
         }
+
+        // Reload plants list to reflect changes
+        await loadPlants();
+
+        AppLogger.info('PlantProvider', '✅ Plant saved', savedPlant.name);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('PlantProvider', 'Failed to save plant', e, stack);
+        return false;
       }
-
-      // Reload plants list to reflect changes
-      await loadPlants();
-
-      AppLogger.info('PlantProvider', '✅ Plant saved', savedPlant.name);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('PlantProvider', 'Failed to save plant', e, stack);
-      return false;
-    }
+    });
   }
 
   /// Delete a plant
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent delete race conditions
   Future<bool> deletePlant(int id) async {
     AppLogger.debug('PlantProvider', 'Deleting plant', id);
 
-    try {
-      await _repository.delete(id);
+    return await _saveLock.synchronized(() async {
+      try {
+        await _repository.delete(id);
 
-      // Clear current plant if it was deleted
-      if (_currentPlant case Success(:final data)) {
-        if (data.id == id) {
-          _currentPlant = const Loading();
+        // Clear current plant if it was deleted
+        if (_currentPlant case Success(:final data)) {
+          if (data.id == id) {
+            _currentPlant = const Loading();
+          }
         }
+
+        // Reload plants list
+        await loadPlants();
+
+        AppLogger.info('PlantProvider', '✅ Plant deleted', id);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('PlantProvider', 'Failed to delete plant', e, stack);
+        return false;
       }
-
-      // Reload plants list
-      await loadPlants();
-
-      AppLogger.info('PlantProvider', '✅ Plant deleted', id);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('PlantProvider', 'Failed to delete plant', e, stack);
-      return false;
-    }
+    });
   }
 
   /// Archive a plant
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent archive race conditions
   Future<bool> archivePlant(int id) async {
     AppLogger.debug('PlantProvider', 'Archiving plant', id);
 
-    try {
-      await _repository.archive(id);
+    return await _saveLock.synchronized(() async {
+      try {
+        await _repository.archive(id);
 
-      // Reload to reflect changes
-      await loadPlants();
+        // Reload to reflect changes
+        await loadPlants();
 
-      AppLogger.info('PlantProvider', '✅ Plant archived', id);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('PlantProvider', 'Failed to archive plant', e, stack);
-      return false;
-    }
+        AppLogger.info('PlantProvider', '✅ Plant archived', id);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('PlantProvider', 'Failed to archive plant', e, stack);
+        return false;
+      }
+    });
   }
 
   /// Refresh all data

@@ -219,7 +219,8 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           });
         }
 
-        if (mounted) {
+        // ✅ CRITICAL FIX: Check both mounted AND context.mounted to prevent crash
+        if (mounted && context.mounted) {
           AppMessages.growCreated(context);
         }
       } catch (e) {
@@ -245,7 +246,8 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     }
 
     try {
-      final quantity = int.parse(_quantityController.text);
+      // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
+      final quantity = int.tryParse(_quantityController.text) ?? 1;
       final baseName = _nameController.text;
 
       AppLogger.info('AddPlantScreen', 'Saving $quantity plant(s) with growId: $_selectedGrowId');
@@ -254,10 +256,16 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       List<int>? availableBuckets;
       if (_medium == Medium.rdwc && _selectedRdwcSystemId != null && quantity > 1) {
         final occupiedBuckets = await _getOccupiedBuckets(_selectedRdwcSystemId!);
-        // ✅ FIX: Add orElse to prevent StateError crash
+        // ✅ CRITICAL FIX: Safe fallback for empty list
         final selectedSystem = _rdwcSystems.firstWhere(
           (s) => s.id == _selectedRdwcSystemId,
-          orElse: () => _rdwcSystems.first,
+          orElse: () {
+            if (_rdwcSystems.isEmpty) {
+              AppLogger.error('AddPlantScreen', 'No RDWC systems found');
+              return RdwcSystem(name: 'Unknown', maxCapacity: 100, bucketCount: 1);
+            }
+            return _rdwcSystems.first;
+          },
         );
         availableBuckets = [];
         for (int b = 1; b <= selectedSystem.bucketCount; b++) {
@@ -618,9 +626,15 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           if (_selectedRdwcSystemId != null)
             Builder(
               builder: (context) {
+                // ✅ CRITICAL FIX: Safe fallback for empty list
                 final selectedSystem = _rdwcSystems.firstWhere(
                   (s) => s.id == _selectedRdwcSystemId,
-                  orElse: () => _rdwcSystems.first,
+                  orElse: () {
+                    if (_rdwcSystems.isEmpty) {
+                      return RdwcSystem(name: 'Unknown', maxCapacity: 100, bucketCount: 1);
+                    }
+                    return _rdwcSystems.first;
+                  },
                 );
 
                 // Bei Quantity > 1: Keine manuelle Auswahl, automatische Verteilung

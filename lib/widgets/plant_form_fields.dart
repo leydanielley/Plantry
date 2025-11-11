@@ -7,6 +7,7 @@ import '../models/enums.dart';
 import '../models/room.dart';
 import '../models/grow.dart';
 import '../utils/input_constraints.dart';
+import '../utils/translations.dart';
 
 /// Reusable form fields for plant creation and editing
 ///
@@ -105,11 +106,12 @@ class PlantFormFields extends StatelessWidget {
   }
 
   Widget _buildBasicInfo(BuildContext context) {
+    final t = AppTranslations(Localizations.localeOf(context).languageCode);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grundlegende Informationen',
+          t.translate('add_plant_basic_info'),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -119,15 +121,15 @@ class PlantFormFields extends StatelessWidget {
           controller: nameController,
           // ✅ FIX: Add maxLength to prevent database overflow
           maxLength: InputConstraints.nameMaxLength,
-          decoration: const InputDecoration(
-            labelText: 'Pflanzenname *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.local_florist),
+          decoration: InputDecoration(
+            labelText: t.translate('add_plant_name_label'),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.local_florist),
             counterText: '', // Hide character counter
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Bitte Namen eingeben';
+              return t.translate('add_plant_name_required');
             }
             return null;
           },
@@ -137,11 +139,12 @@ class PlantFormFields extends StatelessWidget {
   }
 
   Widget _buildGeneticsInfo(BuildContext context) {
+    final t = AppTranslations(Localizations.localeOf(context).languageCode);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Genetik-Informationen',
+          t.translate('add_plant_genetics'),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -151,11 +154,11 @@ class PlantFormFields extends StatelessWidget {
           controller: strainController,
           // ✅ FIX: Add maxLength to prevent database overflow
           maxLength: InputConstraints.nameMaxLength,
-          decoration: const InputDecoration(
-            labelText: 'Strain/Sorte',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.translate('add_plant_strain'),
+            border: const OutlineInputBorder(),
             hintText: 'z.B. Gorilla Glue #4',
-            prefixIcon: Icon(Icons.science),
+            prefixIcon: const Icon(Icons.science),
             counterText: '', // Hide character counter
           ),
         ),
@@ -164,18 +167,18 @@ class PlantFormFields extends StatelessWidget {
           controller: breederController,
           // ✅ FIX: Add maxLength to prevent database overflow
           maxLength: InputConstraints.shortNameMaxLength,
-          decoration: const InputDecoration(
-            labelText: 'Breeder',
-            border: OutlineInputBorder(),
-            hintText: 'z.B. Original Sensible',
-            prefixIcon: Icon(Icons.business),
+          decoration: InputDecoration(
+            labelText: t.translate('add_plant_breeder'),
+            border: const OutlineInputBorder(),
+            hintText: t.translate('add_plant_breeder_hint'),
+            prefixIcon: const Icon(Icons.business),
             counterText: '', // Hide character counter
           ),
         ),
         const SizedBox(height: 16),
         _buildDropdown<SeedType>(
           context: context,
-          label: 'Samen-Typ',
+          label: t.translate('add_plant_seed_type'),
           value: seedType,
           items: SeedType.values,
           onChanged: onSeedTypeChanged,
@@ -183,7 +186,7 @@ class PlantFormFields extends StatelessWidget {
         const SizedBox(height: 16),
         _buildDropdown<GenderType>(
           context: context,
-          label: 'Geschlecht',
+          label: t.translate('add_plant_gender'),
           value: genderType,
           items: GenderType.values,
           onChanged: onGenderTypeChanged,
@@ -191,7 +194,7 @@ class PlantFormFields extends StatelessWidget {
         const SizedBox(height: 16),
         _buildDropdown<Medium>(
           context: context,
-          label: 'Medium',
+          label: t.translate('add_plant_medium'),
           value: medium,
           items: Medium.values,
           onChanged: onMediumChanged,
@@ -200,7 +203,7 @@ class PlantFormFields extends StatelessWidget {
           const SizedBox(height: 16),
           _buildDropdown<PlantPhase>(
             context: context,
-            label: 'Phase',
+            label: t.translate('add_plant_phase'),
             value: phase,
             items: PlantPhase.values,
             onChanged: onPhaseChanged,
@@ -211,11 +214,12 @@ class PlantFormFields extends StatelessWidget {
   }
 
   Widget _buildGrowInfo(BuildContext context) {
+    final t = AppTranslations(Localizations.localeOf(context).languageCode);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Grow-Zuordnung',
+          t.translate('add_plant_grow_setup'),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -229,10 +233,10 @@ class PlantFormFields extends StatelessWidget {
               Expanded(
                 child: DropdownButtonFormField<int>(
                   initialValue: selectedGrowId,
-                  decoration: const InputDecoration(
-                    labelText: 'Grow zuweisen',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.eco),
+                  decoration: InputDecoration(
+                    labelText: t.translate('add_plant_grow_optional'),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.eco),
                   ),
                   items: grows.map((grow) {
                     return DropdownMenuItem(
@@ -249,7 +253,7 @@ class PlantFormFields extends StatelessWidget {
                   icon: const Icon(Icons.add_circle),
                   color: Colors.green[700],
                   onPressed: onCreateGrow,
-                  tooltip: 'Neuen Grow erstellen',
+                  tooltip: t.translate('add_plant_create_grow'),
                 ),
               ],
             ],
@@ -260,10 +264,10 @@ class PlantFormFields extends StatelessWidget {
         else
           DropdownButtonFormField<int>(
             initialValue: selectedRoomId,
-            decoration: const InputDecoration(
-              labelText: 'Raum zuweisen',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.home),
+            decoration: InputDecoration(
+              labelText: t.translate('add_plant_room_optional'),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.home),
             ),
             items: rooms.map((room) {
               return DropdownMenuItem(
@@ -278,11 +282,12 @@ class PlantFormFields extends StatelessWidget {
   }
 
   Widget _buildContainerInfo(BuildContext context) {
+    final t = AppTranslations(Localizations.localeOf(context).languageCode);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Container-Informationen',
+          t.translate(_isHydroSystem ? 'add_plant_system_info' : 'add_plant_container_info'),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -293,11 +298,11 @@ class PlantFormFields extends StatelessWidget {
             controller: systemSizeController,
             // ✅ FIX: Add maxLength to prevent database overflow
             maxLength: InputConstraints.numericMaxLength,
-            decoration: const InputDecoration(
-              labelText: 'System-Größe (L)',
-              border: OutlineInputBorder(),
-              hintText: 'z.B. 80 für 80L System',
-              prefixIcon: Icon(Icons.water),
+            decoration: InputDecoration(
+              labelText: t.translate('add_plant_system_size'),
+              border: const OutlineInputBorder(),
+              hintText: t.translate('add_plant_system_size_hint'),
+              prefixIcon: const Icon(Icons.water),
               counterText: '', // Hide character counter
             ),
             keyboardType: TextInputType.number,
@@ -307,11 +312,11 @@ class PlantFormFields extends StatelessWidget {
             controller: containerSizeController,
             // ✅ FIX: Add maxLength to prevent database overflow
             maxLength: InputConstraints.numericMaxLength,
-            decoration: const InputDecoration(
-              labelText: 'Container-Größe (L)',
-              border: OutlineInputBorder(),
-              hintText: 'z.B. 11 für 11L Topf',
-              prefixIcon: Icon(Icons.local_florist),
+            decoration: InputDecoration(
+              labelText: t.translate('add_plant_container_size'),
+              border: const OutlineInputBorder(),
+              hintText: t.translate('add_plant_container_size_hint'),
+              prefixIcon: const Icon(Icons.local_florist),
               counterText: '', // Hide character counter
             ),
             keyboardType: TextInputType.number,
@@ -321,11 +326,12 @@ class PlantFormFields extends StatelessWidget {
   }
 
   Widget _buildDatePicker(BuildContext context) {
+    final t = AppTranslations(Localizations.localeOf(context).languageCode);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Start-Datum',
+          t.translate('add_plant_seed_date'),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -333,11 +339,11 @@ class PlantFormFields extends StatelessWidget {
         const SizedBox(height: 16),
         ListTile(
           leading: const Icon(Icons.calendar_today),
-          title: const Text('Seed/Klon Datum'),
+          title: Text(t.translate('add_plant_seed_date')),
           subtitle: Text(
             seedDate != null
                 ? '${seedDate!.day}.${seedDate!.month}.${seedDate!.year}'
-                : 'Nicht gesetzt',
+                : t.translate('add_plant_seed_date_not_set'),
           ),
           trailing: IconButton(
             icon: const Icon(Icons.edit),

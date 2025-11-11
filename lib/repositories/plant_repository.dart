@@ -8,6 +8,7 @@ import '../database/database_helper.dart';
 import '../models/plant.dart';
 import '../utils/validators.dart';
 import '../utils/app_logger.dart';
+import '../utils/safe_parsers.dart';
 import 'interfaces/i_plant_repository.dart';
 import 'repository_error_handler.dart';
 
@@ -125,6 +126,22 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
           // ✅ FIX: Recalculate ALL log data if ANY date changes
           // This ensures consistency: seedDate changes affect phases too!
           final anyDateChanged = seedDateChanged || anyPhaseDateChanged || phaseStartChanged;
+
+          // ✅ CRITICAL FIX: Warn user before deleting logs
+          if (seedDateChanged && plant.seedDate != null) {
+            final logsToDelete = await countLogsToBeDeleted(plant.id!, plant.seedDate!);
+            if (logsToDelete > 0) {
+              AppLogger.warning(
+                'PlantRepository',
+                'Seed date change will delete $logsToDelete logs',
+                'plantId=${plant.id}, oldDate=${oldPlant.seedDate}, newDate=${plant.seedDate}',
+              );
+              throw Exception(
+                'SEED_DATE_CHANGE_WARNING: Changing seed date will delete $logsToDelete log(s). '
+                'This action cannot be undone. Please confirm in the UI before proceeding.',
+              );
+            }
+          }
 
           // ✅ FIX v11: All updates in transaction for consistency
           await db.transaction((txn) async {
@@ -419,7 +436,12 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
 
       for (final log in logs) {
         final logDateStr = log['log_date'] as String;
-        final logDate = DateTime.parse(logDateStr);
+        // ✅ HIGH FIX: Use SafeParsers to prevent crashes from corrupted DB data
+        final logDate = SafeParsers.parseDateTime(
+          logDateStr,
+          fallback: DateTime.now(),
+          context: 'PlantRepository.recalculateDayNumbers',
+        );
         final logDay = DateTime(logDate.year, logDate.month, logDate.day);
 
         if (plant.seedDate == null) {

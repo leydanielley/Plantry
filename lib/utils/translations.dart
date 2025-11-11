@@ -70,7 +70,9 @@ class AppTranslations {
       'delete': 'Löschen',
       'edit': 'Bearbeiten',
       'save': 'Speichern',
+      'save_changes': 'Änderungen speichern',
       'cancel': 'Abbrechen',
+      'back': 'Zurück',
       'optional': 'optional',
       'none': 'Keine',
 
@@ -423,6 +425,13 @@ class AppTranslations {
       'creating_backup': 'Erstelle Backup...',
       'backup_created': 'Backup erstellt',
 
+      // Battery Optimization Dialog
+      'battery_dialog_title': 'App-Stabilität verbessern',
+      'battery_dialog_crashes': 'Die App wurde {count} mal unerwartet beendet.',
+      'battery_dialog_reason': 'Dies kann durch aggressive Akku-Optimierung verursacht werden.',
+      'battery_dialog_recommendations': 'Empfohlene Einstellungen:',
+      'battery_dialog_understood': 'Verstanden',
+
       // ✅ AUDIT FIX: i18n extraction - Validation Messages
       'error_invalid_ph': 'Ungültiger pH-Wert',
       'error_ph_range': 'pH-Wert muss zwischen 0 und 14 liegen',
@@ -449,6 +458,18 @@ class AppTranslations {
       'error_log_future': 'Log-Datum kann nicht in der Zukunft liegen',
       'error_log_before_seed_short': 'Log-Datum kann nicht vor dem Pflanz-Datum liegen',
       'warning_log_old': 'Achtung: Log liegt {days} Tage nach Pflanz-Datum',
+
+      // Photo Gallery
+      'no_photos_yet': 'Noch keine Fotos',
+      'add_photos_to_logs': 'Füge Fotos zu deinen Logs hinzu!',
+
+      // Hints/Placeholders
+      'hint_additional_info': 'Zusätzliche Informationen...',
+      'hint_drying_method': 'z.B. Hängend, Netz, Box',
+      'hint_drainage_material': 'z.B. Blähton, Perlite, Kies',
+      'hint_fertilizer_dosage': 'Zusätzliche Infos, Dosierung, etc...',
+      'hint_hardware_notes': 'Zusätzliche Informationen, Wartungshinweise, etc...',
+      'hint_harvest_observations': 'Zusätzliche Beobachtungen, Besonderheiten...',
 
       // ✅ AUDIT FIX: i18n extraction - Add Log Screen
       'add_log_title': 'Log für {plant}',
@@ -591,6 +612,12 @@ class AppTranslations {
       'edit_harvest_not_set': 'Nicht gesetzt',
       'edit_harvest_start_today': 'Start: Heute',
       'edit_harvest_end_today': 'Ende: Heute',
+
+      // Harvest Completion
+      'complete_harvest': 'Ernte abschließen',
+
+      // Notification Settings
+      'harvest_reminder_subtitle': 'Erinnerung 3 Tage vor geschätzter Ernte',
 
       // ✅ AUDIT FIX: i18n extraction - Add Hardware Screen
       'add_hardware_title': 'Hardware hinzufügen',
@@ -875,7 +902,9 @@ class AppTranslations {
       'delete': 'Delete',
       'edit': 'Edit',
       'save': 'Save',
+      'save_changes': 'Save Changes',
       'cancel': 'Cancel',
+      'back': 'Back',
       'optional': 'optional',
       'none': 'None',
 
@@ -1228,6 +1257,13 @@ class AppTranslations {
       'creating_backup': 'Creating backup...',
       'backup_created': 'Backup created',
 
+      // Battery Optimization Dialog
+      'battery_dialog_title': 'Improve App Stability',
+      'battery_dialog_crashes': 'The app has been unexpectedly closed {count} times.',
+      'battery_dialog_reason': 'This can be caused by aggressive battery optimization.',
+      'battery_dialog_recommendations': 'Recommended settings:',
+      'battery_dialog_understood': 'Understood',
+
       // ✅ AUDIT FIX: i18n extraction - Validation Messages
       'error_invalid_ph': 'Invalid pH value',
       'error_ph_range': 'pH value must be between 0 and 14',
@@ -1254,6 +1290,18 @@ class AppTranslations {
       'error_log_future': 'Log date cannot be in the future',
       'error_log_before_seed_short': 'Log date cannot be before seed date',
       'warning_log_old': 'Warning: Log is {days} days after seed date',
+
+      // Photo Gallery
+      'no_photos_yet': 'No photos yet',
+      'add_photos_to_logs': 'Add photos to your logs!',
+
+      // Hints/Placeholders
+      'hint_additional_info': 'Additional information...',
+      'hint_drying_method': 'e.g. Hanging, Net, Box',
+      'hint_drainage_material': 'e.g. Clay pebbles, Perlite, Gravel',
+      'hint_fertilizer_dosage': 'Additional info, dosage, etc...',
+      'hint_hardware_notes': 'Additional information, maintenance notes, etc...',
+      'hint_harvest_observations': 'Additional observations, special notes...',
 
       // ✅ AUDIT FIX: i18n extraction - Add Log Screen
       'add_log_title': 'Log for {plant}',
@@ -1396,6 +1444,12 @@ class AppTranslations {
       'edit_harvest_not_set': 'Not set',
       'edit_harvest_start_today': 'Start: Today',
       'edit_harvest_end_today': 'End: Today',
+
+      // Harvest Completion
+      'complete_harvest': 'Complete Harvest',
+
+      // Notification Settings
+      'harvest_reminder_subtitle': 'Reminder 3 days before estimated harvest',
 
       // ✅ AUDIT FIX: i18n extraction - Add Hardware Screen
       'add_hardware_title': 'Add Hardware',

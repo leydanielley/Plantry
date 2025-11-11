@@ -207,7 +207,8 @@ class DatabaseRecovery {
       for (final table in tables) {
         try {
           final data = await db.query(table);
-          emergencyBackup['data'][table] = data;
+          // ✅ CRITICAL FIX: Cast to avoid dynamic call error
+          (emergencyBackup['data'] as Map<String, dynamic>)[table] = data;
           successfulTables++;
           AppLogger.debug(
             'DatabaseRecovery',
@@ -216,7 +217,8 @@ class DatabaseRecovery {
         } catch (e) {
           // Table might be corrupted or inaccessible
           failedTables++;
-          emergencyBackup['data'][table] = [];
+          // ✅ CRITICAL FIX: Cast to avoid dynamic call error
+          (emergencyBackup['data'] as Map<String, dynamic>)[table] = [];
           AppLogger.warning(
             'DatabaseRecovery',
             'Emergency export failed for table: $table',

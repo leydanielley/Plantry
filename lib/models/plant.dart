@@ -3,6 +3,7 @@
 // =============================================
 
 import 'enums.dart';
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -64,6 +65,7 @@ class Plant {
   }) : createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
+  /// ✅ FIX: All DateTime.parse and enum parsing now use safe parsers
   factory Plant.fromMap(Map<String, dynamic> map) {
     return Plant(
       id: map['id'] as int?,
@@ -71,19 +73,53 @@ class Plant {
       breeder: map['breeder'] as String?,
       strain: map['strain'] as String?,
       feminized: (map['feminized'] as int) == 1,
-      seedType: SeedType.values.byName(map['seed_type'].toString().toLowerCase()),
-      medium: Medium.values.byName(map['medium'].toString().toLowerCase()),
-      phase: PlantPhase.values.byName(map['phase'].toString().toLowerCase()),
+      seedType: SafeParsers.parseEnum<SeedType>(
+        SeedType.values,
+        map['seed_type']?.toString(),
+        fallback: SeedType.photo,
+        context: 'Plant.fromMap.seedType',
+      ),
+      medium: SafeParsers.parseEnum<Medium>(
+        Medium.values,
+        map['medium']?.toString(),
+        fallback: Medium.erde,
+        context: 'Plant.fromMap.medium',
+      ),
+      phase: SafeParsers.parseEnum<PlantPhase>(
+        PlantPhase.values,
+        map['phase']?.toString(),
+        fallback: PlantPhase.veg,
+        context: 'Plant.fromMap.phase',
+      ),
       growId: map['grow_id'] as int?,
       roomId: map['room_id'] as int?,
       rdwcSystemId: map['rdwc_system_id'] as int?,
       bucketNumber: map['bucket_number'] as int?,
-      seedDate: map['seed_date'] != null ? DateTime.parse(map['seed_date'] as String) : null,
-      phaseStartDate: map['phase_start_date'] != null ? DateTime.parse(map['phase_start_date'] as String) : null,
-      vegDate: map['veg_date'] != null ? DateTime.parse(map['veg_date'] as String) : null,
-      bloomDate: map['bloom_date'] != null ? DateTime.parse(map['bloom_date'] as String) : null,
-      harvestDate: map['harvest_date'] != null ? DateTime.parse(map['harvest_date'] as String) : null,
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at'] as String) : DateTime.now(),
+      seedDate: SafeParsers.parseDateTimeNullable(
+        map['seed_date'] as String?,
+        context: 'Plant.fromMap.seedDate',
+      ),
+      phaseStartDate: SafeParsers.parseDateTimeNullable(
+        map['phase_start_date'] as String?,
+        context: 'Plant.fromMap.phaseStartDate',
+      ),
+      vegDate: SafeParsers.parseDateTimeNullable(
+        map['veg_date'] as String?,
+        context: 'Plant.fromMap.vegDate',
+      ),
+      bloomDate: SafeParsers.parseDateTimeNullable(
+        map['bloom_date'] as String?,
+        context: 'Plant.fromMap.bloomDate',
+      ),
+      harvestDate: SafeParsers.parseDateTimeNullable(
+        map['harvest_date'] as String?,
+        context: 'Plant.fromMap.harvestDate',
+      ),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'Plant.fromMap.createdAt',
+      ),
       createdBy: map['created_by'] as String?,
       logProfileName: map['log_profile_name'] as String? ?? 'standard',
       archived: (map['archived'] as int?) == 1,

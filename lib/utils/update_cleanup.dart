@@ -5,6 +5,7 @@
 
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'app_logger.dart';
 import 'version_manager.dart';
 import '../helpers/image_cache_helper.dart';
@@ -76,7 +77,8 @@ class UpdateCleanup {
   static Future<void> _cleanupOldThumbnails() async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      final thumbDir = Directory('${appDir.path}/thumbnails');
+      // ✅ FIX: Use path.join for cross-platform compatibility (Windows uses backslash)
+      final thumbDir = Directory(path.join(appDir.path, 'thumbnails'));
 
       if (!await thumbDir.exists()) {
         return;
@@ -201,7 +203,8 @@ class UpdateCleanup {
     try {
       // Old thumbnails
       final appDir = await getApplicationDocumentsDirectory();
-      final thumbDir = Directory('${appDir.path}/thumbnails');
+      // ✅ FIX: Use path.join for cross-platform compatibility (Windows uses backslash)
+      final thumbDir = Directory(path.join(appDir.path, 'thumbnails'));
 
       if (await thumbDir.exists()) {
         final now = DateTime.now();

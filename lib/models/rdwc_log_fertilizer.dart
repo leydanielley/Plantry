@@ -2,6 +2,8 @@
 // GROWLOG - RDWC Log Fertilizer Model
 // =============================================
 
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+
 /// Type of fertilizer amount entry
 enum FertilizerAmountType {
   /// Amount specified per liter (e.g., 2ml/L)
@@ -57,30 +59,39 @@ class RdwcLogFertilizer {
   }
 
   /// Factory: Create from database map
+  /// ✅ FIX: DateTime.parse and enum parsing now safe (no throw on invalid data)
   factory RdwcLogFertilizer.fromMap(Map<String, dynamic> map) {
-    // Parse amountType from database format
+    // ✅ FIX: Parse amountType safely with fallback instead of throwing
     FertilizerAmountType amountType;
-    final dbAmountType = map['amount_type'] as String;
-    switch (dbAmountType) {
+    final dbAmountType = map['amount_type']?.toString() ?? '';
+    switch (dbAmountType.toUpperCase()) {
       case 'PER_LITER':
+      case 'PERLITER':
         amountType = FertilizerAmountType.perLiter;
         break;
       case 'TOTAL':
         amountType = FertilizerAmountType.total;
         break;
       default:
-        throw ArgumentError('Unknown amount_type: $dbAmountType');
+        // ✅ FIX: Use fallback instead of throwing
+        amountType = FertilizerAmountType.perLiter; // Safe default
     }
 
     return RdwcLogFertilizer(
       id: map['id'] as int?,
       rdwcLogId: map['rdwc_log_id'] as int,
       fertilizerId: map['fertilizer_id'] as int,
-      amount: (map['amount'] as num).toDouble(),
+      amount: SafeParsers.parseDouble(
+        map['amount'],
+        fallback: 0.0,
+        context: 'RdwcLogFertilizer.fromMap.amount',
+      ),
       amountType: amountType,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'RdwcLogFertilizer.fromMap.createdAt',
+      ),
     );
   }
 

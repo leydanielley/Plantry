@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
 import '../utils/mounted_state_mixin.dart'; // ✅ FIX: Added for safe setState
+import '../utils/translations.dart';
 import 'package:intl/intl.dart';
 import '../models/hardware.dart';
 import '../models/room.dart';
@@ -201,7 +202,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
                   const SizedBox(height: 24),
                   _buildNotesSection(),
                   const SizedBox(height: 24),
-                  _buildSaveButton(),
+                  _buildSaveButton(context),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -303,7 +304,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Bitte Marke eingeben';
+                    return AppTranslations(Localizations.localeOf(context).languageCode)['add_hardware_brand_required'];
                   }
                   return null;
                 },
@@ -434,7 +435,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
           subtitle: Text(
             _purchaseDate != null
                 ? dateFormat.format(_purchaseDate!)
-                : 'Nicht gesetzt',
+                : AppTranslations(Localizations.localeOf(context).languageCode)['add_hardware_not_set'],
           ),
           trailing: const Icon(Icons.edit),
           onTap: () async {
@@ -490,7 +491,8 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
     );
   }
 
-  Widget _buildSaveButton() {
+  Widget _buildSaveButton(BuildContext context) {
+    final t = AppTranslations(Localizations.localeOf(context).languageCode);
     return ElevatedButton(
       onPressed: _saveHardware,
       style: ElevatedButton.styleFrom(
@@ -499,7 +501,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
         padding: const EdgeInsets.symmetric(vertical: 16),
         textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      child: const Text('Änderungen speichern'),
+      child: Text(t['save_changes']),
     );
   }
 }

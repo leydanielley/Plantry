@@ -4,6 +4,7 @@
 
 import 'enums.dart';
 import '../utils/app_logger.dart';
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -101,17 +102,24 @@ class PlantLog {
   }
 
   /// Factory: Aus Map erstellen (von Datenbank)
+  /// ✅ FIX: DateTime.parse and enum parsing now use safe parsers
   factory PlantLog.fromMap(Map<String, dynamic> map) {
     return PlantLog(
       id: map['id'] as int?,
       plantId: map['plant_id'] as int,
       dayNumber: map['day_number'] as int,
-      logDate: DateTime.parse(map['log_date'] as String),
+      logDate: SafeParsers.parseDateTime(
+        map['log_date'] as String?,
+        fallback: DateTime.now(),
+        context: 'PlantLog.fromMap.logDate',
+      ),
       loggedBy: map['logged_by'] as String?,
       actionType: _parseActionType(map['action_type'] as String),
-      phase: map['phase'] != null 
-          ? PlantPhase.values.byName(map['phase'].toString().toLowerCase())
-          : null,
+      phase: SafeParsers.parseEnumNullable<PlantPhase>(
+        PlantPhase.values,
+        map['phase']?.toString(),
+        context: 'PlantLog.fromMap.phase',
+      ),
       phaseDayNumber: map['phase_day_number'] as int?,
       waterAmount: (map['water_amount'] as num?)?.toDouble(),
       phIn: (map['ph_in'] as num?)?.toDouble(),
@@ -130,9 +138,11 @@ class PlantLog {
       systemBucketCount: map['system_bucket_count'] as int?,
       systemBucketSize: (map['system_bucket_size'] as num?)?.toDouble(),
       note: map['note'] as String?,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'PlantLog.fromMap.createdAt',
+      ),
     );
   }
 

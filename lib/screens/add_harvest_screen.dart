@@ -59,24 +59,25 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
     AppLogger.info('AddHarvestScreen', '🟢 Starting to save harvest...');
 
     try{
+      // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
       final harvest = Harvest(
         plantId: widget.plant.id!,
         harvestDate: _harvestDate,
-        wetWeight: _wetWeightController.text.isNotEmpty 
-            ? double.parse(_wetWeightController.text) 
+        wetWeight: _wetWeightController.text.isNotEmpty
+            ? double.tryParse(_wetWeightController.text)
             : null,
         dryingStartDate: _dryingStartDate,
-        dryingMethod: _dryingMethodController.text.isNotEmpty 
-            ? _dryingMethodController.text 
+        dryingMethod: _dryingMethodController.text.isNotEmpty
+            ? _dryingMethodController.text
             : null,
-        dryingTemperature: _dryingTempController.text.isNotEmpty 
-            ? double.parse(_dryingTempController.text) 
+        dryingTemperature: _dryingTempController.text.isNotEmpty
+            ? double.tryParse(_dryingTempController.text)
             : null,
-        dryingHumidity: _dryingHumidityController.text.isNotEmpty 
-            ? double.parse(_dryingHumidityController.text) 
+        dryingHumidity: _dryingHumidityController.text.isNotEmpty
+            ? double.tryParse(_dryingHumidityController.text)
             : null,
-        overallNotes: _notesController.text.isNotEmpty 
-            ? _notesController.text 
+        overallNotes: _notesController.text.isNotEmpty
+            ? _notesController.text
             : null,
       );
 

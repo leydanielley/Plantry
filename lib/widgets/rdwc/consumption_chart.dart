@@ -66,8 +66,10 @@ class ConsumptionChart extends StatelessWidget {
                 showTitles: true,
                 reservedSize: 30,
                 getTitlesWidget: (value, meta) {
-                  if (value.toInt() >= entries.length) return const Text('');
-                  final date = entries[value.toInt()].key;
+                  // ✅ CRITICAL FIX: Store toInt() result once to prevent TOCTOU race condition
+                  final index = value.toInt();
+                  if (index >= entries.length) return const Text('');
+                  final date = entries[index].key;
                   // Show day only (e.g., "Mon", "Tue")
                   final dayOfWeek = DateTime.parse(date).weekday;
                   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

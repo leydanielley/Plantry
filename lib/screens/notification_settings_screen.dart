@@ -218,7 +218,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
                 SwitchListTile(
                   title: Text(_t['harvest_reminders']),
-                  subtitle: const Text('Erinnerung 3 Tage vor geschätzter Ernte'),
+                  subtitle: Text(_t['harvest_reminder_subtitle']),
                   value: _settings!.harvestReminders,
                   onChanged: (v) => _saveSettings(_settings!.copyWith(harvestReminders: v)),
                   secondary: const Icon(Icons.agriculture, color: Colors.brown),
@@ -340,9 +340,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
   Future<void> _selectNotificationTime() async {
     final timeParts = _settings!.notificationTime.split(':');
+    // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
     final initialTime = TimeOfDay(
-      hour: int.parse(timeParts[0]),
-      minute: int.parse(timeParts[1]),
+      hour: int.tryParse(timeParts[0]) ?? 10,
+      minute: int.tryParse(timeParts[1]) ?? 0,
     );
 
     final selectedTime = await showTimePicker(

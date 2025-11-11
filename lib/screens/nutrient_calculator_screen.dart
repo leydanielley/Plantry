@@ -141,16 +141,23 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
   void _calculate() {
     if (!_formKey.currentState!.validate()) return;
 
+    // ✅ CRITICAL FIX: Use tryParse instead of parse to prevent crashes on invalid input
     // For batch mix and quick mix, start from 0L and 0 PPM
     final currentVolume = (_calculatorMode == CalculatorMode.batchMix || _calculatorMode == CalculatorMode.quickMix)
         ? 0.0
-        : double.parse(_currentVolumeController.text);
+        : (double.tryParse(_currentVolumeController.text) ?? 0.0);
     final currentPPM = (_calculatorMode == CalculatorMode.batchMix || _calculatorMode == CalculatorMode.quickMix)
         ? 0.0
-        : double.parse(_currentPpmController.text);
-    final targetPPM = double.parse(_targetPpmController.text);
+        : (double.tryParse(_currentPpmController.text) ?? 0.0);
+
+    final targetPPM = double.tryParse(_targetPpmController.text);
+    if (targetPPM == null) {
+      AppLogger.error('NutrientCalculatorScreen', 'Invalid target PPM value');
+      return;
+    }
+
     final targetVolume = _calculatorMode == CalculatorMode.batchMix || _calculatorMode == CalculatorMode.quickMix
-        ? double.parse(_targetVolumeController.text)
+        ? (double.tryParse(_targetVolumeController.text) ?? 0.0)
         : widget.system!.maxCapacity;
 
     NutrientCalculation calculation;
@@ -224,23 +231,35 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
   }
 
   Future<void> _saveAsLog() async {
-    if (_result == null || widget.system == null) return;
+    // ✅ CRITICAL FIX: Extract and validate values upfront to prevent crashes
+    final result = _result;
+    final system = widget.system;
+    if (result == null || system == null || system.id == null) {
+      AppLogger.warning('NutrientCalculatorScreen', 'Cannot save: missing result or system');
+      return;
+    }
+
+    final systemId = system.id!;
 
     setState(() => _isSaving = true);
 
     try {
+      // ✅ CRITICAL FIX: Safe parsing to prevent crashes
+      final levelBefore = double.tryParse(_currentVolumeController.text) ?? 0.0;
+      final currentPpmValue = double.tryParse(_currentPpmController.text) ?? 0.0;
+
       final log = RdwcLog(
-        systemId: widget.system!.id!,
+        systemId: systemId,
         logType: RdwcLogType.addback,
         logDate: DateTime.now(),
-        levelBefore: double.parse(_currentVolumeController.text),
-        waterAdded: _result!.volumeToAdd,
-        levelAfter: _result!.targetVolume,
+        levelBefore: levelBefore,
+        waterAdded: result.volumeToAdd,
+        levelAfter: result.targetVolume,
         ecBefore: UnitConverter.ppmToEc(
-          double.parse(_currentPpmController.text),
+          currentPpmValue,
           _settings.ppmScale,
         ),
-        ecAfter: _result!.targetEC,
+        ecAfter: result.targetEC,
         note: _recipeMode == RecipeMode.recipe && _selectedRecipe != null
             ? '${_calculatorMode.name} calculation using recipe: ${_selectedRecipe!.name}'
             : '${_calculatorMode.name} calculation (manual)',
@@ -250,7 +269,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
 
       // Add SCALED fertilizers if recipe mode
       if (_recipeMode == RecipeMode.recipe && _selectedRecipe != null) {
-        final scalingFactor = _result!.scalingFactor;
+        final scalingFactor = result.scalingFactor;
         for (final recipeFert in _selectedRecipe!.fertilizers) {
           final scaledMlPerLiter = recipeFert.mlPerLiter * scalingFactor;
           final logFert = RdwcLogFertilizer(
@@ -264,7 +283,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
       }
 
       // Update system level
-      await _rdwcRepo.updateSystemLevel(widget.system!.id!, _result!.targetVolume);
+      await _rdwcRepo.updateSystemLevel(systemId, result.targetVolume);
 
       if (mounted) {
         AppMessages.showSuccess(context, _t['log_created']);
@@ -1155,10 +1174,16 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
           ],
           const SizedBox(height: 12),
           ...fertilizers.map((fert) {
-            // ✅ FIX: Add orElse to prevent StateError crash
+            // ✅ CRITICAL FIX: Safe fallback for empty list
             final recipeFert = _selectedRecipe!.fertilizers.firstWhere(
               (rf) => rf.fertilizerId == fert.id,
-              orElse: () => _selectedRecipe!.fertilizers.first,
+              orElse: () => _selectedRecipe!.fertilizers.isNotEmpty
+                  ? _selectedRecipe!.fertilizers.first
+                  : RecipeFertilizer(
+                      recipeId: _selectedRecipe!.id!,
+                      fertilizerId: fert.id!,
+                      mlPerLiter: 0.0,
+                    ),
             );
             final scaledTotalMl = scaledAmounts[fert.id] ?? 0;
             final scaledMlPerLiter = recipeFert.mlPerLiter * scalingFactor;

@@ -144,7 +144,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Löschen'),
+            child: Text(_t['delete']),
           ),
         ],
       ),
@@ -216,7 +216,7 @@ _t['harvest_detail_deleted']);
               ElevatedButton.icon(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.arrow_back),
-                label: const Text('Zurück'),
+                label: Text(_t['back']),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[700],
                   foregroundColor: Colors.white,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
@@ -113,7 +114,9 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
         break;
       case AppLifecycleState.paused:
         AppLogger.info('AppLifecycle', '⏸️ App paused');
-        _handleAppPause();
+        // ✅ FIX: CRITICAL - Use unawaited to prevent data loss when OS kills app
+        // Cannot make didChangeAppLifecycleState async (framework constraint)
+        unawaited(_handleAppPause());
         break;
       case AppLifecycleState.detached:
         AppLogger.info('AppLifecycle', '🔌 App detached');

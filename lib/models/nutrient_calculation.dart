@@ -129,9 +129,15 @@ class NutrientCalculation {
   }
 
   /// Get recipe's original target PPM
+  /// ✅ CRITICAL FIX: Safer null handling to prevent crashes
   double? get recipeTargetPPM {
-    if (recipe == null || recipe!.targetEc == null) return null;
-    return UnitConverter.ecToPpm(recipe!.targetEc!, settings.ppmScale);
+    final currentRecipe = recipe;
+    if (currentRecipe == null) return null;
+
+    final targetEc = currentRecipe.targetEc;
+    if (targetEc == null) return null;
+
+    return UnitConverter.ecToPpm(targetEc, settings.ppmScale);
   }
 
   /// Calculate scaling factor for recipe

@@ -146,7 +146,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                   children: [
                     Icon(Icons.delete, color: Colors.red[700]),
                     const SizedBox(width: 12),
-                    const Text('Löschen'),
+                    Text(_t['delete']),
                   ],
                 ),
               ),
@@ -244,7 +244,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Trotzdem löschen'),
+              child: Text(_t['yes_delete']),
             ),
           ],
         ),
@@ -258,11 +258,11 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
     final finalConfirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.delete_forever, color: Colors.red),
-            SizedBox(width: 12),
-            Text('Wirklich löschen?'),
+            const Icon(Icons.delete_forever, color: Colors.red),
+            const SizedBox(width: 12),
+            Text(_t['delete_confirm']),
           ],
         ),
         content: Text(
@@ -277,7 +277,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Löschen'),
+            child: Text(_t['delete']),
           ),
         ],
       ),
@@ -289,7 +289,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       await _rdwcRepo.deleteSystem(_system.id!);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ System gelöscht')),
+          SnackBar(content: Text('✅ ${_t['deleted_success']}')),
         );
         Navigator.of(context).pop(true); // Return to list
       }

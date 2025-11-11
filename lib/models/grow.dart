@@ -2,6 +2,8 @@
 // GROWLOG - Grow Model (Mehrere Pflanzen zusammenfassen)
 // =============================================
 
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+
 // Sentinel value für copyWith
 const _undefined = Object();
 
@@ -28,22 +30,28 @@ class Grow {
         createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
+  /// ✅ FIX: All DateTime.parse now use safe parsers
   factory Grow.fromMap(Map<String, dynamic> map) {
     return Grow(
       id: map['id'] as int?,
       name: map['name'] as String,
       description: map['description'] as String?,
-      startDate: map['start_date'] != null
-          ? DateTime.parse(map['start_date'] as String)
-          : DateTime.now(),
-      endDate: map['end_date'] != null
-          ? DateTime.parse(map['end_date'] as String)
-          : null,
+      startDate: SafeParsers.parseDateTime(
+        map['start_date'] as String?,
+        fallback: DateTime.now(),
+        context: 'Grow.fromMap.startDate',
+      ),
+      endDate: SafeParsers.parseDateTimeNullable(
+        map['end_date'] as String?,
+        context: 'Grow.fromMap.endDate',
+      ),
       roomId: map['room_id'] as int?,  // NEU
       archived: (map['archived'] as int?) == 1,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'Grow.fromMap.createdAt',
+      ),
     );
   }
 

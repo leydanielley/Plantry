@@ -142,12 +142,14 @@ class HarvestRepository with RepositoryErrorHandler implements IHarvestRepositor
   }
 
   /// Alle Harvests abrufen
+  /// ✅ CRITICAL FIX: Added limit parameter to prevent memory overflow
   @override
-  Future<List<Harvest>> getAllHarvests() async {
+  Future<List<Harvest>> getAllHarvests({int? limit}) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
       'harvests',
       orderBy: 'harvest_date DESC',
+      limit: limit ?? 1000,  // Reasonable default limit
     );
 
     return maps.map((map) => Harvest.fromMap(map)).toList();

@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
+import '../utils/translations.dart';
 import '../models/harvest.dart';
 import '../repositories/interfaces/i_harvest_repository.dart';
 import '../di/service_locator.dart';
@@ -114,14 +115,14 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
-          tabs: const [
+          tabs: [
             Tab(
-              icon: Icon(Icons.science, color: Colors.white),
-              child: Text('Qualität', style: TextStyle(color: Colors.white)),
+              icon: const Icon(Icons.science, color: Colors.white),
+              child: Text(AppTranslations(Localizations.localeOf(context).languageCode)['edit_harvest_tab_quality'], style: const TextStyle(color: Colors.white)),
             ),
             Tab(
-              icon: Icon(Icons.star, color: Colors.white),
-              child: Text('Bewertung', style: TextStyle(color: Colors.white)),
+              icon: const Icon(Icons.star, color: Colors.white),
+              child: Text(AppTranslations(Localizations.localeOf(context).languageCode)['edit_harvest_tab_rating'], style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -306,10 +307,10 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
               children: [
                 Icon(Icons.info_outline, color: Colors.blue[700]),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Laboranalysen sind optional, können aber wertvolle Informationen über die Qualität deiner Ernte liefern.',
-                    style: TextStyle(fontSize: 13),
+                    AppTranslations(Localizations.localeOf(context).languageCode)['edit_harvest_quality_info'],
+                    style: const TextStyle(fontSize: 13),
                   ),
                 ),
               ],

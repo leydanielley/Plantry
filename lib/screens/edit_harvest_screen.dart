@@ -1245,7 +1245,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             ),
             const SizedBox(height: 4),
             Text(
-              date != null ? DateFormat('dd.MM.yyyy').format(date) : 'Nicht gesetzt',
+              date != null ? DateFormat('dd.MM.yyyy').format(date) : _t['edit_harvest_not_set'],
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: date != null ? FontWeight.bold : FontWeight.normal,
@@ -1291,7 +1291,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
       validator: (value) {
         if (value != null && value.isNotEmpty) {
           if (double.tryParse(value) == null) {
-            return 'Bitte gültige Zahl eingeben';
+            return _t['error_invalid_number'];
           }
         }
         return null;

@@ -85,127 +85,133 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
     );
     DateTime selectedStartDate = DateTime.now();
 
-    return await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.inventory_2, color: Colors.purple[700]),
-                const SizedBox(width: 12),
-                const Text('Curing starten'),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+    try {
+      return await showDialog<Map<String, dynamic>>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Row(
                 children: [
-                  // Start Date Picker
-                  InkWell(
-                    onTap: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: selectedStartDate,
-                        firstDate: _harvest!.dryingEndDate ?? _harvest!.harvestDate,
-                        lastDate: DateTime.now().add(const Duration(days: 7)),
-                      );
-                      if (date != null) {
-                        setDialogState(() {
-                          selectedStartDate = date;
-                        });
-                      }
-                    },
-                    child: InputDecorator(
+                  Icon(Icons.inventory_2, color: Colors.purple[700]),
+                  const SizedBox(width: 12),
+                  const Text('Curing starten'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Start Date Picker
+                    InkWell(
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: selectedStartDate,
+                          firstDate: _harvest!.dryingEndDate ?? _harvest!.harvestDate,
+                          lastDate: DateTime.now().add(const Duration(days: 7)),
+                        );
+                        if (date != null) {
+                          setDialogState(() {
+                            selectedStartDate = date;
+                          });
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Curing-Start',
+                          prefixIcon: const Icon(Icons.calendar_today, color: Colors.purple),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          DateFormat('dd.MM.yyyy').format(selectedStartDate),
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Method
+                    TextFormField(
+                      controller: methodController,
                       decoration: InputDecoration(
-                        labelText: 'Curing-Start',
-                        prefixIcon: const Icon(Icons.calendar_today, color: Colors.purple),
+                        labelText: 'Curing-Methode',
+                        hintText: 'z.B. Glass Jars, Grove Bags',
+                        prefixIcon: const Icon(Icons.dashboard, color: Colors.purple),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
-                        DateFormat('dd.MM.yyyy').format(selectedStartDate),
-                        style: const TextStyle(fontSize: 16),
-                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 8),
 
-                  // Method
-                  TextFormField(
-                    controller: methodController,
-                    decoration: InputDecoration(
-                      labelText: 'Curing-Methode',
-                      hintText: 'z.B. Glass Jars, Grove Bags',
-                      prefixIcon: const Icon(Icons.dashboard, color: Colors.purple),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                    // Method Suggestion Chips
+                    Wrap(
+                      spacing: 8,
+                      children: ['Glass Jars', 'Grove Bags', 'CVault', 'Vacuum Sealed']
+                          .map((method) => ActionChip(
+                                label: Text(method, style: const TextStyle(fontSize: 12)),
+                                onPressed: () {
+                                  methodController.text = method;
+                                  setDialogState(() {});
+                                },
+                                backgroundColor: methodController.text == method
+                                    ? Colors.purple[100]
+                                    : null,
+                              ))
+                          .toList(),
                     ),
-                  ),
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 16),
 
-                  // Method Suggestion Chips
-                  Wrap(
-                    spacing: 8,
-                    children: ['Glass Jars', 'Grove Bags', 'CVault', 'Vacuum Sealed']
-                        .map((method) => ActionChip(
-                              label: Text(method, style: const TextStyle(fontSize: 12)),
-                              onPressed: () {
-                                methodController.text = method;
-                                setDialogState(() {});
-                              },
-                              backgroundColor: methodController.text == method
-                                  ? Colors.purple[100]
-                                  : null,
-                            ))
-                        .toList(),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Notes
-                  TextFormField(
-                    controller: notesController,
-                    decoration: InputDecoration(
-                      labelText: 'Notizen (optional)',
-                      hintText: 'Burping Schedule, Besonderheiten...',
-                      prefixIcon: const Icon(Icons.note, color: Colors.purple),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    // Notes
+                    TextFormField(
+                      controller: notesController,
+                      decoration: InputDecoration(
+                        labelText: 'Notizen (optional)',
+                        hintText: 'Burping Schedule, Besonderheiten...',
+                        prefixIcon: const Icon(Icons.note, color: Colors.purple),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
+                      maxLines: 3,
                     ),
-                    maxLines: 3,
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Abbrechen'),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context, {
-                    'startDate': selectedStartDate,
-                    'method': methodController.text.isNotEmpty ? methodController.text : null,
-                    'notes': notesController.text.isNotEmpty ? notesController.text : null,
-                  });
-                },
-                icon: const Icon(Icons.check),
-                label: const Text('Starten'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  foregroundColor: Colors.white,
+                  ],
                 ),
               ),
-            ],
-          );
-        },
-      ),
-    );
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Abbrechen'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context, {
+                      'startDate': selectedStartDate,
+                      'method': methodController.text.isNotEmpty ? methodController.text : null,
+                      'notes': notesController.text.isNotEmpty ? notesController.text : null,
+                    });
+                  },
+                  icon: const Icon(Icons.check),
+                  label: const Text('Starten'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } finally {
+      // ✅ FIX: Dispose controllers to prevent memory leak
+      methodController.dispose();
+      notesController.dispose();
+    }
   }
 
   Future<void> _endCuring() async {

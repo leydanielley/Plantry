@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:synchronized/synchronized.dart';
 import '../../utils/app_logger.dart';
 
 class ImageCacheHelper {
@@ -18,6 +19,9 @@ class ImageCacheHelper {
   // Cache für bereits geladene Thumbnails
   final Map<String, Uint8List> _memoryCache = {};
 
+  // ✅ CRITICAL FIX: Add Lock to prevent race conditions on cache access
+  final _cacheLock = Lock();
+
   // ✅ FIX: Byte-based limit statt count-based (verhindert OOM auf Low-End Devices)
   static const int maxCacheSizeBytes = 50 * 1024 * 1024; // 50 MB max
   int _currentCacheSizeBytes = 0;
@@ -25,7 +29,8 @@ class ImageCacheHelper {
   // Thumbnail-Verzeichnis
   Future<Directory> get _thumbnailDir async {
     final appDir = await getApplicationDocumentsDirectory();
-    final thumbDir = Directory('${appDir.path}/thumbnails');
+    // ✅ FIX: Use path.join instead of string interpolation for cross-platform compatibility
+    final thumbDir = Directory(path.join(appDir.path, 'thumbnails'));
     if (!await thumbDir.exists()) {
       await thumbDir.create(recursive: true);
     }
@@ -37,7 +42,8 @@ class ImageCacheHelper {
     final thumbDir = await _thumbnailDir;
     final fileName = path.basename(originalPath);
     final thumbName = 'thumb_$fileName';
-    return '${thumbDir.path}/$thumbName';
+    // ✅ FIX: Use path.join instead of string interpolation for cross-platform compatibility
+    return path.join(thumbDir.path, thumbName);
   }
 
   /// Thumbnail generieren (nur falls noch nicht existiert)
@@ -109,28 +115,59 @@ class ImageCacheHelper {
   }
 
   /// Zum Memory Cache hinzufügen (mit LRU-Logik)
-  void _addToCache(String key, Uint8List data) {
-    final dataSize = data.length;
+  /// ✅ CRITICAL FIX: Made async and wrapped in Lock to prevent race conditions
+  Future<void> _addToCache(String key, Uint8List data) async {
+    await _cacheLock.synchronized(() {
+      final dataSize = data.length;
 
-    // ✅ FIX: Evict based on byte size, not count
-    // Remove oldest entries until enough space available
-    while (_currentCacheSizeBytes + dataSize > maxCacheSizeBytes &&
-        _memoryCache.isNotEmpty) {
-      final oldestKey = _memoryCache.keys.first;
-      final oldestData = _memoryCache.remove(oldestKey);
-      if (oldestData != null) {
-        _currentCacheSizeBytes -= oldestData.length;
+      // ✅ FIX: Validate byte counter integrity BEFORE loop
+      if (_currentCacheSizeBytes < 0) {
+        AppLogger.error('ImageCacheHelper', 'Byte counter corrupted, clearing cache');
+        clearMemoryCache();
+        return;
       }
-    }
 
-    // Add new entry
-    _memoryCache[key] = data;
-    _currentCacheSizeBytes += dataSize;
+      // ✅ FIX: Validate dataSize is reasonable
+      if (dataSize > maxCacheSizeBytes) {
+        AppLogger.warning('ImageCacheHelper', 'Image too large for cache ($dataSize bytes), skipping');
+        return;
+      }
 
-    AppLogger.info(
-      'ImageCacheHelper',
-      'Cache: ${_memoryCache.length} items, ${(_currentCacheSizeBytes / 1024 / 1024).toStringAsFixed(1)} MB',
-    );
+      // ✅ FIX: Evict based on byte size, not count
+      // ✅ FIX: Add iteration limit to prevent infinite loop if byte tracking is incorrect
+      int evictionCount = 0;
+      const maxEvictions = 1000; // Safety limit
+
+      // Remove oldest entries until enough space available
+      while (_currentCacheSizeBytes + dataSize > maxCacheSizeBytes &&
+          _memoryCache.isNotEmpty &&
+          evictionCount < maxEvictions) {
+        final oldestKey = _memoryCache.keys.first;
+        final oldestData = _memoryCache.remove(oldestKey);
+        if (oldestData != null) {
+          _currentCacheSizeBytes -= oldestData.length;
+        }
+        evictionCount++;
+      }
+
+      // ✅ FIX: If we hit max evictions, clear entire cache and reset tracking
+      if (evictionCount >= maxEvictions) {
+        AppLogger.warning(
+          'ImageCacheHelper',
+          'Hit max eviction limit ($maxEvictions), clearing entire cache',
+        );
+        clearMemoryCache();
+      }
+
+      // Add new entry
+      _memoryCache[key] = data;
+      _currentCacheSizeBytes += dataSize;
+
+      AppLogger.info(
+        'ImageCacheHelper',
+        'Cache: ${_memoryCache.length} items, ${(_currentCacheSizeBytes / 1024 / 1024).toStringAsFixed(1)} MB',
+      );
+    });
   }
 
   /// Cache leeren

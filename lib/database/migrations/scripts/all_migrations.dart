@@ -7,6 +7,8 @@ import 'migration_v8.dart';
 import 'migration_v9.dart';
 import 'migration_v10.dart';
 import 'migration_v11.dart';
+import 'migration_v12.dart';
+import 'migration_v13.dart';
 
 /// All migrations in chronological order
 ///
@@ -35,6 +37,12 @@ final List<Migration> allMigrations = [
 
   // v11: Fertilizer Extension - HydroBuddy import support
   migrationV11,
+
+  // v12: CRITICAL FIX - Add UNIQUE constraints to prevent duplicate data
+  migrationV12,
+
+  // v13: CRITICAL FIX - Database integrity & performance (FK constraints, composite indexes, RDWC CASCADE fix)
+  migrationV13,
 ];
 
 /// Get the latest migration version

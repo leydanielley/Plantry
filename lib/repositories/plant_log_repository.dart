@@ -5,6 +5,7 @@
 import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/plant_log.dart';
+import '../utils/safe_parsers.dart';
 import 'interfaces/i_plant_log_repository.dart';
 import 'photo_repository.dart';
 import 'repository_error_handler.dart';
@@ -98,7 +99,8 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
       // 1. Delete all photos for this log (filesystem + DB)
       //    This must be done BEFORE deleting the log, otherwise
       //    we can't query which photos belong to this log
-      await _photoRepository.deleteByLogId(id);
+      // ✅ MEDIUM FIX: Use transaction-safe method to prevent nested transaction deadlock
+      await _photoRepository.deleteByLogIdInTransaction(txn, id);
 
       // 2. Delete log_fertilizers (handled by DB CASCADE)
 
@@ -152,8 +154,13 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
     
     final seedDateStr = plantMaps.first['seed_date'] as String?;
     if (seedDateStr == null) return 1;
-    
-    final seedDate = DateTime.parse(seedDateStr);
+
+    // ✅ HIGH FIX: Use SafeParsers to prevent crashes from corrupted DB data
+    final seedDate = SafeParsers.parseDateTime(
+      seedDateStr,
+      fallback: DateTime.now(),
+      context: 'PlantLogRepository.getNextDayNumber',
+    );
     final targetDate = forDate ?? DateTime.now();
     
     // ✅ Nur Datums-Teil vergleichen (ohne Uhrzeit!)
@@ -255,7 +262,8 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
       
       // Fertilizer hinzufügen (falls vorhanden)
       if (map['lf_id'] != null) {
-        logsMap[logId]!['fertilizers'].add({
+        // ✅ FIX: Cast to avoid dynamic call error
+        (logsMap[logId]!['fertilizers'] as List<Map<String, dynamic>>).add({
           'id': map['lf_id'],
           'fertilizer_id': map['fertilizer_id'],
           'amount': map['fert_amount'],

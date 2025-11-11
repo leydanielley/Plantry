@@ -5,6 +5,7 @@
 
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'app_logger.dart';
 
 class StorageHelper {
@@ -18,11 +19,21 @@ class StorageHelper {
 
   /// Check if enough storage is available
   /// Returns true if enough space, false otherwise
+  ///
+  /// ⚠️ PLATFORM LIMITATION: iOS doesn't allow df command due to sandboxing
+  /// On iOS, this method returns true (assumes sufficient storage) since we
+  /// can't reliably check available disk space without native platform channels
   static Future<bool> hasEnoughStorage({int? bytesNeeded}) async {
     try {
+      // ✅ MEDIUM FIX: Platform detection - iOS doesn't support df command
+      if (Platform.isIOS) {
+        AppLogger.debug('StorageHelper', 'iOS: Skipping storage check (not supported), assuming sufficient');
+        return true; // Fail open on iOS
+      }
+
       final dir = await getApplicationDocumentsDirectory();
 
-      // Try to get available space using df command
+      // Try to get available space using df command (Android/Linux/macOS/Windows)
       final result = await Process.run('df', [dir.path]);
       if (result.exitCode == 0) {
         final lines = (result.stdout as String).split('\n');
@@ -59,8 +70,17 @@ class StorageHelper {
   }
 
   /// Get available storage in bytes
+  ///
+  /// ⚠️ PLATFORM LIMITATION: iOS doesn't support df command
+  /// Returns minimum required bytes (100MB) on iOS as a safe default
   static Future<int> getAvailableStorage() async {
     try {
+      // ✅ MEDIUM FIX: Platform detection - iOS doesn't support df command
+      if (Platform.isIOS) {
+        AppLogger.debug('StorageHelper', 'iOS: Cannot determine storage, returning safe default');
+        return _minRequiredBytes; // Conservative default for iOS
+      }
+
       final dir = await getApplicationDocumentsDirectory();
       final result = await Process.run('df', [dir.path]);
 
@@ -131,7 +151,8 @@ class StorageHelper {
         AppLogger.info('StorageHelper', 'Storage critical - cleaning up thumbnails');
 
         final appDir = await getApplicationDocumentsDirectory();
-        final thumbDir = Directory('${appDir.path}/thumbnails');
+        // ✅ FIX: Use path.join instead of string interpolation for cross-platform compatibility
+        final thumbDir = Directory(path.join(appDir.path, 'thumbnails'));
 
         if (await thumbDir.exists()) {
           // Delete thumbnails older than 30 days

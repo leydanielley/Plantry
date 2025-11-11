@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/foundation.dart';
+import 'package:synchronized/synchronized.dart';
 import '../models/plant_log.dart';
 import '../repositories/interfaces/i_plant_log_repository.dart';
 import '../utils/app_logger.dart';
@@ -45,6 +46,9 @@ class LogProvider with ChangeNotifier {
   /// ✅ FIX: Track dispose state to prevent notifyListeners after dispose
   bool _disposed = false;
 
+  /// ✅ CRITICAL FIX: Lock to prevent concurrent state modifications
+  final _saveLock = Lock();
+
   /// Logs for a specific plant
   AsyncValue<List<PlantLog>> _logsForPlant = const Loading();
 
@@ -75,6 +79,7 @@ class LogProvider with ChangeNotifier {
   // ═══════════════════════════════════════════
 
   /// Load logs for a specific plant
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent _currentPlantId race conditions
   Future<void> loadLogsForPlant(int plantId, {int? limit, int? offset}) async {
     AppLogger.debug(
       'LogProvider',
@@ -82,22 +87,24 @@ class LogProvider with ChangeNotifier {
       'plantId=$plantId, limit=$limit, offset=$offset',
     );
 
-    _currentPlantId = plantId;
-    _logsForPlant = const Loading();
-    _safeNotifyListeners();
+    await _saveLock.synchronized(() async {
+      _currentPlantId = plantId;
+      _logsForPlant = const Loading();
+      _safeNotifyListeners();
 
-    try {
-      final logs = await _repository.findByPlant(
-        plantId,
-        limit: limit,
-        offset: offset,
-      );
-      _logsForPlant = Success(logs);
-      AppLogger.info('LogProvider', 'Loaded ${logs.length} logs for plant $plantId');
-    } catch (e, stack) {
-      _logsForPlant = Error('Failed to load logs', e, stack);
-      AppLogger.error('LogProvider', 'Failed to load logs', e, stack);
-    }
+      try {
+        final logs = await _repository.findByPlant(
+          plantId,
+          limit: limit,
+          offset: offset,
+        );
+        _logsForPlant = Success(logs);
+        AppLogger.info('LogProvider', 'Loaded ${logs.length} logs for plant $plantId');
+      } catch (e, stack) {
+        _logsForPlant = Error('Failed to load logs', e, stack);
+        AppLogger.error('LogProvider', 'Failed to load logs', e, stack);
+      }
+    });
 
     _safeNotifyListeners();
   }
@@ -167,98 +174,110 @@ class LogProvider with ChangeNotifier {
   }
 
   /// Save a log (create or update)
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent save race conditions
   Future<bool> saveLog(PlantLog log) async {
     AppLogger.debug('LogProvider', 'Saving log', 'day=${log.dayNumber}');
 
-    try {
-      final savedLog = await _repository.save(log);
+    return await _saveLock.synchronized(() async {
+      try {
+        final savedLog = await _repository.save(log);
 
-      // Update current log if it's the same one
-      if (_currentLog case Success(:final data)) {
-        if (data.id == savedLog.id) {
-          _currentLog = Success(savedLog);
+        // Update current log if it's the same one
+        if (_currentLog case Success(:final data)) {
+          if (data.id == savedLog.id) {
+            _currentLog = Success(savedLog);
+          }
         }
-      }
 
-      // Reload logs list if we're viewing the same plant
-      if (_currentPlantId == log.plantId) {
-        await loadLogsForPlant(_currentPlantId!);
-      }
+        // Reload logs list if we're viewing the same plant
+        if (_currentPlantId == log.plantId) {
+          await loadLogsForPlant(_currentPlantId!);
+        }
 
-      AppLogger.info('LogProvider', '✅ Log saved', 'id=${savedLog.id}');
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('LogProvider', 'Failed to save log', e, stack);
-      return false;
-    }
+        AppLogger.info('LogProvider', '✅ Log saved', 'id=${savedLog.id}');
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('LogProvider', 'Failed to save log', e, stack);
+        return false;
+      }
+    });
   }
 
   /// Save multiple logs in a batch
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent batch save race conditions
   Future<bool> saveBatch(List<PlantLog> logs) async {
     AppLogger.debug('LogProvider', 'Saving batch of logs', 'count=${logs.length}');
 
-    try {
-      final ids = await _repository.saveBatch(logs);
+    return await _saveLock.synchronized(() async {
+      try {
+        final ids = await _repository.saveBatch(logs);
 
-      // Reload if any log belongs to current plant
-      if (_currentPlantId != null &&
-          logs.any((log) => log.plantId == _currentPlantId)) {
-        await loadLogsForPlant(_currentPlantId!);
+        // Reload if any log belongs to current plant
+        if (_currentPlantId != null &&
+            logs.any((log) => log.plantId == _currentPlantId)) {
+          await loadLogsForPlant(_currentPlantId!);
+        }
+
+        AppLogger.info('LogProvider', '✅ Batch saved', '${ids.length} logs');
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('LogProvider', 'Failed to save batch', e, stack);
+        return false;
       }
-
-      AppLogger.info('LogProvider', '✅ Batch saved', '${ids.length} logs');
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('LogProvider', 'Failed to save batch', e, stack);
-      return false;
-    }
+    });
   }
 
   /// Delete a log
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent delete race conditions
   Future<bool> deleteLog(int id, {int? plantId}) async {
     AppLogger.debug('LogProvider', 'Deleting log', id);
 
-    try {
-      await _repository.delete(id);
+    return await _saveLock.synchronized(() async {
+      try {
+        await _repository.delete(id);
 
-      // Clear current log if it was deleted
-      if (_currentLog case Success(:final data)) {
-        if (data.id == id) {
-          _currentLog = const Loading();
+        // Clear current log if it was deleted
+        if (_currentLog case Success(:final data)) {
+          if (data.id == id) {
+            _currentLog = const Loading();
+          }
         }
-      }
 
-      // Reload logs list if we know the plant ID
-      if (plantId != null && _currentPlantId == plantId) {
-        await loadLogsForPlant(plantId);
-      }
+        // Reload logs list if we know the plant ID
+        if (plantId != null && _currentPlantId == plantId) {
+          await loadLogsForPlant(plantId);
+        }
 
-      AppLogger.info('LogProvider', '✅ Log deleted', id);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('LogProvider', 'Failed to delete log', e, stack);
-      return false;
-    }
+        AppLogger.info('LogProvider', '✅ Log deleted', id);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('LogProvider', 'Failed to delete log', e, stack);
+        return false;
+      }
+    });
   }
 
   /// Delete multiple logs in a batch
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent batch delete race conditions
   Future<bool> deleteBatch(List<int> logIds, {int? plantId}) async {
     AppLogger.debug('LogProvider', 'Deleting batch of logs', 'count=${logIds.length}');
 
-    try {
-      await _repository.deleteBatch(logIds);
+    return await _saveLock.synchronized(() async {
+      try {
+        await _repository.deleteBatch(logIds);
 
-      // Reload if we know the plant ID
-      if (plantId != null && _currentPlantId == plantId) {
-        await loadLogsForPlant(plantId);
+        // Reload if we know the plant ID
+        if (plantId != null && _currentPlantId == plantId) {
+          await loadLogsForPlant(plantId);
+        }
+
+        AppLogger.info('LogProvider', '✅ Batch deleted', '${logIds.length} logs');
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('LogProvider', 'Failed to delete batch', e, stack);
+        return false;
       }
-
-      AppLogger.info('LogProvider', '✅ Batch deleted', '${logIds.length} logs');
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('LogProvider', 'Failed to delete batch', e, stack);
-      return false;
-    }
+    });
   }
 
   /// Get last log for a plant

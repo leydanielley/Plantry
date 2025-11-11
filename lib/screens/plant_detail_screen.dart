@@ -199,7 +199,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           builder: (context) => AddLogScreen(plant: _currentPlant),
         ),
       );
-      if (result == true) _loadData();
+      // ✅ MEDIUM FIX: Check mounted after async navigation
+      if (result == true && mounted) _loadData();
       return;
     }
 
@@ -300,7 +301,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Löschen'),
+            child: Text(_t['delete']),
           ),
         ],
       ),
@@ -332,7 +333,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       ),
     );
 
-    if (result == true) {
+    // ✅ MEDIUM FIX: Check mounted after async navigation
+    if (result == true && mounted) {
       _loadData();
     }
   }
@@ -388,7 +390,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Löschen'),
+            child: Text(_t['delete']),
           ),
         ],
       ),
@@ -396,11 +398,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
     if (confirm == true) {
       try {
-        final file = File(photo.filePath);
-        if (await file.exists()) {
-          await file.delete();
-        }
-
+        // ✅ CRITICAL FIX: Use repository's safe deletion that handles both file AND DB atomically
+        // Don't manually delete file - repository handles it properly with error handling
         await _photoRepo.deletePhoto(photo.id!);
 
         if (mounted) {
@@ -452,7 +451,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                     builder: (context) => PlantPhotoGalleryScreen(plant: _currentPlant),
                   ),
                 );
-                _loadData();
+                // ✅ MEDIUM FIX: Check mounted after async navigation
+                if (mounted) _loadData();
               },
               tooltip: _t['plant_detail_photo_gallery'], // ✅ i18n
             ),
@@ -499,7 +499,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       builder: (context) => AddHarvestScreen(plant: _currentPlant),
                     ),
                   );
-                  if (result == true) _loadData();
+                  // ✅ MEDIUM FIX: Check mounted after async navigation
+                  if (result == true && mounted) _loadData();
                 },
                 icon: const Icon(Icons.grass),
                 label: Text(_t['plant_detail_harvest']), // ✅ i18n
@@ -620,7 +621,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                     ),
                   ),
                 );
-                _loadData();
+                // ✅ MEDIUM FIX: Check mounted after async navigation
+                if (mounted) _loadData();
               },
               child: Container(
                 padding: const EdgeInsets.all(12),
@@ -923,13 +925,13 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete, color: Colors.red, size: 20),
-                          SizedBox(width: 8),
-                          Text('Löschen', style: TextStyle(color: Colors.red)),
+                          const Icon(Icons.delete, color: Colors.red, size: 20),
+                          const SizedBox(width: 8),
+                          Text(_t['delete'], style: const TextStyle(color: Colors.red)),
                         ],
                       ),
                     ),

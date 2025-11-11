@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import '../utils/device_info_helper.dart';
+import '../utils/translations.dart';
 
 class BatteryOptimizationDialog extends StatelessWidget {
   final int crashCount;
@@ -16,14 +17,15 @@ class BatteryOptimizationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTranslations(Localizations.localeOf(context).languageCode);
     final recommendations = DeviceInfoHelper.getDeviceSpecificRecommendations();
 
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.orange),
-          SizedBox(width: 8),
-          Text('App-Stabilität verbessern'),
+          const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+          const SizedBox(width: 8),
+          Text(t.translate('battery_dialog_title')),
         ],
       ),
       content: SingleChildScrollView(
@@ -32,17 +34,17 @@ class BatteryOptimizationDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Die App wurde $crashCount mal unerwartet beendet.',
+              t.translate('battery_dialog_crashes').replaceAll('{count}', crashCount.toString()),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Dies kann durch aggressive Akku-Optimierung verursacht werden.',
+            Text(
+              t.translate('battery_dialog_reason'),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Empfohlene Einstellungen:',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              t.translate('battery_dialog_recommendations'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             ...recommendations.map((rec) => Padding(
@@ -55,7 +57,7 @@ class BatteryOptimizationDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Verstanden'),
+          child: Text(t.translate('battery_dialog_understood')),
         ),
       ],
     );

@@ -56,10 +56,10 @@ class NotificationConfig {
   /// Notification channel ID
   static const String channelId = 'plantry_reminders';
 
-  /// Notification channel name
+  /// Notification channel name (hardcoded as it's used in native Android code)
   static const String channelName = 'Pflanz-Erinnerungen';
 
-  /// Notification channel description
+  /// Notification channel description (hardcoded as it's used in native Android code)
   static const String channelDescription = 'Erinnerungen für Gießen, Düngen und Pflege';
 
   /// Notification icon

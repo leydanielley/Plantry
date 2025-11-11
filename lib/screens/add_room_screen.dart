@@ -146,7 +146,10 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
           ),
         );
 
-        if (addHardware == true && savedRoom.id != null && mounted) {
+        if (addHardware == true && savedRoom.id != null) {
+          // ✅ CRITICAL FIX: Fresh mounted check before using context
+          if (!mounted) return;
+
           // Navigation zu Add Hardware Screen - bleibt offen für mehrere Einträge!
           await Navigator.of(context).push(
             MaterialPageRoute(

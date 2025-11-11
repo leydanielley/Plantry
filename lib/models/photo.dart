@@ -3,6 +3,8 @@
 // ✅ AUDIT FIX: Null safety for lastIndexOf operations
 // =============================================
 
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+
 class Photo {
   final int? id;
   final int logId;           // Zu welchem Log gehört das Foto
@@ -19,14 +21,17 @@ class Photo {
         createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
+  /// ✅ FIX: DateTime.parse now uses safe parser
   factory Photo.fromMap(Map<String, dynamic> map) {
     return Photo(
       id: map['id'] as int?,
       logId: map['log_id'] as int,
       filePath: map['file_path'] as String,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'Photo.fromMap.createdAt',
+      ),
     );
   }
 

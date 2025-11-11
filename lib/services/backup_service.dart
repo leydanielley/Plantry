@@ -16,6 +16,15 @@ import '../utils/storage_helper.dart';
 import '../config/backup_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
 import 'interfaces/i_backup_service.dart';
 
+// ✅ FIX: Custom exception for security violations
+class SecurityException implements Exception {
+  final String message;
+  SecurityException(this.message);
+
+  @override
+  String toString() => 'SecurityException: $message';
+}
+
 class BackupService implements IBackupService {
 
   /// Export all app data to a ZIP file
@@ -81,12 +90,14 @@ class BackupService implements IBackupService {
       for (final table in tables) {
         try {
           final data = await database.query(table);
-          backup['data'][table] = data;
+          // ✅ FIX: Cast to avoid dynamic call error
+          (backup['data'] as Map<String, dynamic>)[table] = data;
           AppLogger.debug('BackupService', 'Exported table', '$table: ${data.length} rows');
         } catch (e) {
           // Table might not exist yet (e.g., during migration)
           AppLogger.debug('BackupService', 'Skipped table', '$table (table does not exist or is not accessible)');
-          backup['data'][table] = [];
+          // ✅ FIX: Cast to avoid dynamic call error
+          (backup['data'] as Map<String, dynamic>)[table] = [];
         }
       }
 
@@ -100,7 +111,8 @@ class BackupService implements IBackupService {
       AppLogger.info('BackupService', 'JSON data saved');
 
       // ✅ P1 FIX: Parallelize photo copying for better performance
-      final photos = backup['data']['photos'] as List<dynamic>;
+      // ✅ FIX: Cast to avoid dynamic call error
+      final photos = (backup['data'] as Map<String, dynamic>)['photos'] as List<dynamic>;
       int copiedCount = 0;
       int missingCount = 0;
 
@@ -117,7 +129,8 @@ class BackupService implements IBackupService {
 
           final results = await Future.wait(
             batch.map((photo) async {
-              final filePath = photo['file_path'] as String;
+              // ✅ FIX: Cast to avoid dynamic call error
+              final filePath = (photo as Map<String, dynamic>)['file_path'] as String;
               final sourceFile = File(filePath);
 
               if (await sourceFile.exists()) {
@@ -206,8 +219,25 @@ class BackupService implements IBackupService {
       for (final file in archive) {
         final filename = file.name;
         if (file.isFile) {
-          // ✅ P1 FIX: Use path.join instead of string concatenation
-          final outFile = File(path.join(importDir.path, filename));
+          // ✅ CRITICAL FIX: Sanitize filename to prevent path traversal attacks
+          final sanitizedName = path.basename(filename);
+
+          // Skip invalid filenames
+          if (sanitizedName.isEmpty || sanitizedName == '.' || sanitizedName == '..') {
+            AppLogger.warning('BackupService', 'Skipping invalid filename in ZIP: $filename');
+            continue;
+          }
+
+          final outFile = File(path.join(importDir.path, sanitizedName));
+
+          // ✅ CRITICAL FIX: Verify final path is within import directory
+          final canonicalOut = outFile.absolute.path;
+          final canonicalImport = importDir.absolute.path;
+          if (!canonicalOut.startsWith(canonicalImport)) {
+            AppLogger.error('BackupService', 'Path traversal attempt detected: $filename');
+            throw SecurityException('Path traversal attempt detected in backup file');
+          }
+
           await outFile.create(recursive: true);
           await outFile.writeAsBytes(file.content as List<int>);
         }
@@ -228,13 +258,31 @@ class BackupService implements IBackupService {
         );
         if (dataJsonFile is File) {
           final content = await dataJsonFile.readAsString();
-          final backup = jsonDecode(content) as Map<String, dynamic>;
-          await _importBackupData(backup, importDir);
+          // ✅ CRITICAL FIX: Validate JSON before casting
+          try {
+            final decoded = jsonDecode(content);
+            if (decoded is! Map<String, dynamic>) {
+              throw Exception('Invalid backup format: expected JSON object');
+            }
+            final backup = decoded;
+            await _importBackupData(backup, importDir);
+          } on FormatException catch (e) {
+            throw Exception('Backup file is corrupted or invalid: ${e.message}');
+          }
         }
       } else {
         final content = await jsonFile.readAsString();
-        final backup = jsonDecode(content) as Map<String, dynamic>;
-        await _importBackupData(backup, importDir);
+        // ✅ CRITICAL FIX: Validate JSON before casting
+        try {
+          final decoded = jsonDecode(content);
+          if (decoded is! Map<String, dynamic>) {
+            throw Exception('Invalid backup format: expected JSON object');
+          }
+          final backup = decoded;
+          await _importBackupData(backup, importDir);
+        } on FormatException catch (e) {
+          throw Exception('Backup file is corrupted or invalid: ${e.message}');
+        }
       }
 
       AppLogger.info('BackupService', '✅ Import complete');
@@ -274,48 +322,64 @@ class BackupService implements IBackupService {
     final data = backup['data'] as Map<String, dynamic>;
     final db = await DatabaseHelper.instance.database;
 
-    // Clear existing data
-    // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
-    AppLogger.info('BackupService', 'Clearing existing data...');
-    await db.execute('PRAGMA foreign_keys = OFF');
+    // ✅ CRITICAL FIX: Wrap entire import in transaction for atomicity
+    // If anything fails, database rolls back to pre-import state
+    try {
+      await db.transaction((txn) async {
+        // Clear existing data
+        AppLogger.info('BackupService', 'Clearing existing data...');
 
-    const tables = BackupConfig.deletionOrderTables;
+        // ✅ CRITICAL FIX: Keep foreign keys ON during transaction
+        // The deletion order in BackupConfig respects FK constraints
+        // Transaction provides atomicity without disabling FK checks
+        const tables = BackupConfig.deletionOrderTables;
 
-    for (final table in tables) {
-      try {
-        await db.delete(table);
-      } catch (e) {
-        // Table might not exist yet
-        AppLogger.debug('BackupService', 'Skipped deleting table', '$table (table does not exist)');
-      }
+        for (final table in tables) {
+          try {
+            await txn.delete(table);
+          } catch (e) {
+            // Table might not exist yet
+            AppLogger.debug('BackupService', 'Skipped deleting table', '$table (table does not exist)');
+          }
+        }
+
+        AppLogger.info('BackupService', 'Existing data cleared');
+
+        // Import data in correct order (respecting foreign keys)
+        for (final tableName in BackupConfig.importOrderTables) {
+          await _importTableInTransaction(txn, tableName, data[tableName] as List<dynamic>?);
+        }
+
+        // Import photos (DB records only, files imported outside transaction)
+        final photosData = data['photos'] as List<dynamic>?;
+        if (photosData != null) {
+          await _importTableInTransaction(txn, 'photos', photosData);
+        }
+
+        // ✅ CRITICAL FIX: Validate FK integrity BEFORE committing transaction
+        AppLogger.info('BackupService', 'Validating foreign key constraints...');
+        final fkErrors = await txn.rawQuery('PRAGMA foreign_key_check');
+        if (fkErrors.isNotEmpty) {
+          AppLogger.error('BackupService', 'Foreign key constraint violations found', fkErrors);
+          throw Exception('Import failed: ${fkErrors.length} foreign key constraint violations detected');
+        }
+
+        AppLogger.info('BackupService', '✅ Database import validated, committing transaction');
+      });
+
+      // Transaction committed successfully, now restore photo files
+      await _importPhotoFiles(data['photos'] as List<dynamic>?, importDir);
+
+      AppLogger.info('BackupService', '✅ Data import complete and validated');
+    } catch (e) {
+      AppLogger.error('BackupService', 'Import failed, transaction rolled back', e);
+      rethrow;
     }
-
-    AppLogger.info('BackupService', 'Existing data cleared');
-
-    // Import data in correct order (respecting foreign keys)
-    // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
-    for (final tableName in BackupConfig.importOrderTables) {
-      await _importTable(db, tableName, data[tableName] as List<dynamic>?);
-    }
-
-    // Import photos and restore image files
-    await _importPhotos(db, data['photos'] as List<dynamic>?, importDir);
-
-    await db.execute('PRAGMA foreign_keys = ON');
-
-    // ✅ P2 FIX: Validate foreign key constraints after import
-    AppLogger.info('BackupService', 'Validating foreign key constraints...');
-    final fkErrors = await db.rawQuery('PRAGMA foreign_key_check');
-    if (fkErrors.isNotEmpty) {
-      AppLogger.error('BackupService', 'Foreign key constraint violations found', fkErrors);
-      throw Exception('Import failed: ${fkErrors.length} foreign key constraint violations detected');
-    }
-
-    AppLogger.info('BackupService', '✅ Data import complete and validated');
   }
 
-  Future<void> _importTable(
-    dynamic db,
+  /// ✅ CRITICAL FIX: Transaction-safe table import
+  Future<void> _importTableInTransaction(
+    DatabaseExecutor txn,
     String tableName,
     List<dynamic>? rows,
   ) async {
@@ -325,31 +389,29 @@ class BackupService implements IBackupService {
     }
 
     for (final row in rows) {
-      await db.insert(tableName, row as Map<String, dynamic>);
+      await txn.insert(tableName, row as Map<String, dynamic>);
     }
 
     AppLogger.debug('BackupService', 'Imported table', '$tableName: ${rows.length} rows');
   }
 
-  Future<void> _importPhotos(
-    dynamic db,
+  /// ✅ CRITICAL FIX: Import photo files AFTER transaction commits
+  /// This prevents file copies from being mixed with DB transaction
+  Future<void> _importPhotoFiles(
     List<dynamic>? photos,
     Directory importDir,
   ) async {
     if (photos == null || photos.isEmpty) {
-      AppLogger.debug('BackupService', 'Imported photos', '0 rows');
+      AppLogger.debug('BackupService', 'No photo files to import');
       return;
     }
 
     final appDir = await getApplicationDocumentsDirectory();
-    // ✅ P1 FIX: Use path.join instead of string concatenation
-    // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
     final photosDir = Directory(path.join(appDir.path, BackupConfig.photosDirectoryName));
     if (!await photosDir.exists()) {
       await photosDir.create(recursive: true);
     }
 
-    // ✅ P1 FIX: Parallelize photo import for better performance
     int copiedCount = 0;
 
     // Process photos in parallel batches
@@ -359,33 +421,40 @@ class BackupService implements IBackupService {
 
       final results = await Future.wait(
         batch.map((photo) async {
-          final oldPath = photo['file_path'] as String;
+          // ✅ FIX: Cast to avoid dynamic call error
+          final oldPath = (photo as Map<String, dynamic>)['file_path'] as String;
+
+          // ✅ CRITICAL FIX: Validate oldPath
+          if (oldPath.contains('\u0000') || oldPath.contains('..')) {
+            AppLogger.warning('BackupService', 'Invalid photo path', oldPath);
+            return false;
+          }
+
           final fileName = path.basename(oldPath);
 
+          // ✅ CRITICAL FIX: Whitelist file extensions
+          const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic'];
+          if (!allowedExtensions.any((ext) => fileName.toLowerCase().endsWith(ext))) {
+            AppLogger.warning('BackupService', 'Invalid photo extension', fileName);
+            return false;
+          }
+
           // Find photo in import directory
-          // ✅ P1 FIX: Use path.join instead of string concatenation
-          // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
           final importPhotoFile = File(path.join(importDir.path, BackupConfig.photosDirectoryName, fileName));
 
-          if (await importPhotoFile.exists()) {
-            // Copy to app photos directory
-            // ✅ P1 FIX: Use path.join instead of string concatenation
-            final newPath = path.join(photosDir.path, fileName);
-            await importPhotoFile.copy(newPath);
-
-            // Insert photo record with new path
-            // Note: Database inserts must be sequential, so this is still correct
-            await db.insert('photos', {
-              'id': photo['id'],
-              'log_id': photo['log_id'],
-              'file_path': newPath,
-              'created_at': photo['created_at'],
-            });
-
-            return true; // Copied successfully
-          } else {
-            AppLogger.warning('BackupService', 'Photo not found', fileName);
-            return false; // Not found
+          try {
+            if (await importPhotoFile.exists()) {
+              // Copy to app photos directory
+              final newPath = path.join(photosDir.path, fileName);
+              await importPhotoFile.copy(newPath);
+              return true;
+            } else {
+              AppLogger.warning('BackupService', 'Photo not found', fileName);
+              return false;
+            }
+          } catch (e) {
+            AppLogger.warning('BackupService', 'Photo copy failed', e);
+            return false;
           }
         }),
       );
@@ -393,7 +462,7 @@ class BackupService implements IBackupService {
       copiedCount += results.where((r) => r == true).length;
     }
 
-    AppLogger.info('BackupService', 'Photos imported', 'rows=${photos.length}, files=$copiedCount');
+    AppLogger.info('BackupService', 'Photo files copied', '$copiedCount/${photos.length}');
   }
 
   /// Get backup info without importing
@@ -415,7 +484,15 @@ class BackupService implements IBackupService {
       );
 
       final content = utf8.decode(dataFile.content as List<int>);
-      final backup = jsonDecode(content) as Map<String, dynamic>;
+      // ✅ CRITICAL FIX: Validate JSON before casting
+      final decoded = jsonDecode(content);
+      if (decoded is! Map<String, dynamic>) {
+        throw Exception('Invalid backup format: expected JSON object');
+      }
+      final backup = decoded;
+      if (!backup.containsKey('data') || backup['data'] is! Map) {
+        throw Exception('Invalid backup format: missing or invalid data section');
+      }
       final data = backup['data'] as Map<String, dynamic>;
 
       // Count records

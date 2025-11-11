@@ -45,5 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- ✅ FIX: iOS Privacy Permissions - Required for camera and photo library access -->
+	<key>NSCameraUsageDescription</key>
+	<string>Plantry needs camera access to take photos of your plants for tracking their growth progress.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Plantry needs photo library access to attach existing plant photos to your grow logs.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Plantry saves plant photos to your photo library for easy access and backup.</string>
 </dict>
 </plist>

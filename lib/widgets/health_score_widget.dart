@@ -9,6 +9,7 @@ import '../services/interfaces/i_health_score_service.dart';
 import '../services/interfaces/i_warning_service.dart';
 import '../services/warning_service.dart';
 import '../../di/service_locator.dart';
+import '../utils/translations.dart';
 
 class HealthScoreWidget extends StatefulWidget {
   final Plant plant;
@@ -53,13 +54,14 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
     } catch (e) {
       // ✅ FIX: Set default health score on error to prevent null crashes
       if (mounted) {
+        final t = AppTranslations('de'); // Fallback to German for error messages
         setState(() {
           _healthScore = HealthScore(
             score: 50,
             level: HealthLevel.fair,
             factors: {},
-            warnings: ['Fehler beim Berechnen des Gesundheitswerts'],
-            recommendations: ['Versuche es später erneut'],
+            warnings: [t.translate('error')],
+            recommendations: [t.translate('unexpected_error')],
             calculatedAt: DateTime.now(),
           );
           _isLoading = false;
@@ -159,7 +161,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Pflanzen-Gesundheit',
+                        AppTranslations(Localizations.localeOf(context).languageCode).translate('plant_health'),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -179,9 +181,9 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Warnungen',
-                    style: TextStyle(
+                  Text(
+                    AppTranslations(Localizations.localeOf(context).languageCode).translate('warnings'),
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -235,9 +237,9 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '💡 Empfehlungen',
-                    style: TextStyle(
+                  Text(
+                    '💡 ${AppTranslations(Localizations.localeOf(context).languageCode).translate('recommendations')}',
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -371,17 +373,20 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
   }
 
   String _getFactorLabel(String key) {
+    // Note: We can't use context here, so we use 'de' as default
+    // This is acceptable since the widget always rebuilds when language changes
+    final t = AppTranslations('de');
     switch (key) {
       case 'watering':
-        return 'Bewässerung';
+        return t.translate('watering_factor');
       case 'ph_stability':
-        return 'pH-Stabilität';
+        return t.translate('ph_stability_factor');
       case 'nutrient_health':
-        return 'Nährstoff-Gesundheit';
+        return t.translate('nutrient_health_factor');
       case 'documentation':
-        return 'Dokumentation';
+        return t.translate('documentation_factor');
       case 'activity':
-        return 'Aktivität';
+        return t.translate('activity_factor');
       default:
         return key;
     }

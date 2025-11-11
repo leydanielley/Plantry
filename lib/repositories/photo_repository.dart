@@ -3,6 +3,7 @@
 // =============================================
 
 import 'dart:io';
+import 'package:sqflite/sqflite.dart';
 import '../models/photo.dart';
 import '../database/database_helper.dart';
 import '../utils/app_logger.dart';
@@ -139,9 +140,8 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
           await file.delete();
           AppLogger.info('PhotoRepo', '✅ Deleted file', photo.filePath);
         } catch (e) {
-          AppLogger.error('PhotoRepo', 'Failed to delete file', e);
-          // Don't delete DB record if file deletion failed
-          throw Exception('Failed to delete photo file: $e');
+          // ✅ FIX: Log error but don't throw - allow DB cleanup even if file is locked/inaccessible
+          AppLogger.error('PhotoRepo', 'Failed to delete file (will clean up DB anyway)', e);
         }
       } else {
         AppLogger.warning('PhotoRepo', 'File already missing, cleaning up DB record', photo.filePath);
@@ -194,14 +194,35 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
 
   /// Alle Fotos löschen die zu einem Log gehören
   /// ✅ FIX: Only deletes DB records for successfully deleted files
+  /// ✅ MEDIUM FIX: Standalone method that creates its own transaction
   @override
   Future<void> deleteByLogId(int logId) async {
     final db = await _dbHelper.database;
 
-    // 1. Get all photos for this log
-    final photos = await getPhotosByLogId(logId);
+    // Use transaction for atomic deletion
+    await db.transaction((txn) async {
+      await deleteByLogIdInTransaction(txn, logId);
+    });
+  }
 
-    if (photos.isEmpty) return;
+  /// ✅ MEDIUM FIX: Public method that works within an existing transaction
+  /// This prevents nested transaction deadlock when called from other repositories
+  /// that are already inside a transaction (e.g., PlantLogRepository.delete())
+  ///
+  /// Usage:
+  /// - From within a transaction: call this method directly
+  /// - Standalone: use deleteByLogId() which creates its own transaction
+  Future<void> deleteByLogIdInTransaction(DatabaseExecutor txn, int logId) async {
+    // 1. Get all photos for this log
+    final photoMaps = await txn.query(
+      'photos',
+      where: 'log_id = ?',
+      whereArgs: [logId],
+    );
+
+    if (photoMaps.isEmpty) return;
+
+    final photos = photoMaps.map((map) => Photo.fromMap(map)).toList();
 
     // 2. Delete all files and track successes
     final List<int> successfullyDeletedIds = [];
@@ -227,17 +248,15 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
       }
     }
 
-    // 3. Delete DB records only for successfully deleted files
+    // 3. Delete DB records only for successfully deleted files (within existing transaction)
     if (successfullyDeletedIds.isNotEmpty) {
-      await db.transaction((txn) async {
-        for (final photoId in successfullyDeletedIds) {
-          await txn.delete(
-            'photos',
-            where: 'id = ?',
-            whereArgs: [photoId],
-          );
-        }
-      });
+      for (final photoId in successfullyDeletedIds) {
+        await txn.delete(
+          'photos',
+          where: 'id = ?',
+          whereArgs: [photoId],
+        );
+      }
       AppLogger.info('PhotoRepo', 'Deleted ${successfullyDeletedIds.length}/${photos.length} photos from DB');
     }
 

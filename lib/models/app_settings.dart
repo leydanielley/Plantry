@@ -2,6 +2,8 @@
 // GROWLOG - App Settings Model
 // =============================================
 
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+
 /// Measurement unit types
 enum NutrientUnit { ec, ppm }
 enum PpmScale {
@@ -36,25 +38,41 @@ class AppSettings {
     this.volumeUnit = VolumeUnit.liter,
   });
 
+  /// ✅ FIX: All enum parsing now uses SafeParsers
   factory AppSettings.fromMap(Map<String, dynamic> map) {
     return AppSettings(
       language: map['language'] as String? ?? 'de',
       isDarkMode: (map['is_dark_mode'] as int?) == 1,
       isExpertMode: (map['is_expert_mode'] as int?) == 1,
-      nutrientUnit: NutrientUnit.values.byName(
-        map['nutrient_unit'] as String? ?? 'ec'
+      nutrientUnit: SafeParsers.parseEnum<NutrientUnit>(
+        NutrientUnit.values,
+        map['nutrient_unit'] as String?,
+        fallback: NutrientUnit.ec,
+        context: 'AppSettings.fromMap.nutrientUnit',
       ),
-      ppmScale: PpmScale.values.byName(
-        map['ppm_scale'] as String? ?? 'scale700'
+      ppmScale: SafeParsers.parseEnum<PpmScale>(
+        PpmScale.values,
+        map['ppm_scale'] as String?,
+        fallback: PpmScale.scale700,
+        context: 'AppSettings.fromMap.ppmScale',
       ),
-      temperatureUnit: TemperatureUnit.values.byName(
-        map['temperature_unit'] as String? ?? 'celsius'
+      temperatureUnit: SafeParsers.parseEnum<TemperatureUnit>(
+        TemperatureUnit.values,
+        map['temperature_unit'] as String?,
+        fallback: TemperatureUnit.celsius,
+        context: 'AppSettings.fromMap.temperatureUnit',
       ),
-      lengthUnit: LengthUnit.values.byName(
-        map['length_unit'] as String? ?? 'cm'
+      lengthUnit: SafeParsers.parseEnum<LengthUnit>(
+        LengthUnit.values,
+        map['length_unit'] as String?,
+        fallback: LengthUnit.cm,
+        context: 'AppSettings.fromMap.lengthUnit',
       ),
-      volumeUnit: VolumeUnit.values.byName(
-        map['volume_unit'] as String? ?? 'liter'
+      volumeUnit: SafeParsers.parseEnum<VolumeUnit>(
+        VolumeUnit.values,
+        map['volume_unit'] as String?,
+        fallback: VolumeUnit.liter,
+        context: 'AppSettings.fromMap.volumeUnit',
       ),
     );
   }

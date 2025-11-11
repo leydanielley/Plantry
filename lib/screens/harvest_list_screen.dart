@@ -47,6 +47,7 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
   }
 
   Future<void> _loadHarvests() async {
+    if (!mounted) return;  // ✅ FIX: Add mounted check before setState
     setState(() => _isLoading = true);
 
     try {
@@ -54,13 +55,17 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
       final harvests = await _harvestRepo.getAllHarvestsWithPlants();
       AppLogger.info('HarvestListScreen', 'Loaded ${harvests.length} harvests');
 
-      setState(() {
-        _harvests = harvests;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _harvests = harvests;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       AppLogger.error('HarvestListScreen', 'Error: $e');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

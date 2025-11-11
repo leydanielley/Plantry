@@ -4,6 +4,7 @@
 // =============================================
 
 import '../config/rdwc_system_config.dart';
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -76,7 +77,8 @@ class RdwcSystem {
       name: map['name'] as String,
       roomId: map['room_id'] as int?,
       growId: map['grow_id'] as int?,
-      maxCapacity: (map['max_capacity'] as num).toDouble(),
+      // ✅ CRITICAL FIX: Null-safe cast to prevent crash on NULL/corrupted data
+      maxCapacity: (map['max_capacity'] as num?)?.toDouble() ?? 100.0,
       currentLevel: (map['current_level'] as num?)?.toDouble() ?? 0.0,
       bucketCount: (map['bucket_count'] as int?) ?? 4,
       description: map['description'] as String?,
@@ -93,9 +95,11 @@ class RdwcSystem {
       chillerWattage: map['chiller_wattage'] as int?,
       chillerCoolingPower: map['chiller_cooling_power'] as int?,
       accessories: map['accessories'] as String?,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'RdwcSystem.fromMap.createdAt',
+      ),
       archived: (map['archived'] as int?) == 1,
     );
   }

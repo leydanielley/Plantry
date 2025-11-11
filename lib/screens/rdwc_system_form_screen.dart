@@ -153,9 +153,10 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
 
     try {
       final name = _nameController.text.trim();
-      final maxCapacity = double.parse(_maxCapacityController.text);
-      final currentLevel = double.parse(_currentLevelController.text);
-      final bucketCount = int.parse(_bucketCountController.text);
+      // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
+      final maxCapacity = double.tryParse(_maxCapacityController.text) ?? 0.0;
+      final currentLevel = double.tryParse(_currentLevelController.text) ?? 0.0;
+      final bucketCount = int.tryParse(_bucketCountController.text) ?? 4;
       final description = _descriptionController.text.trim();
       final pumpBrand = _pumpBrandController.text.trim();
       final pumpModel = _pumpModelController.text.trim();

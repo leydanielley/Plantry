@@ -110,20 +110,28 @@ class _MultiColorGradientBackgroundState
     _controller = AnimationController(
       vsync: this,
       duration: widget.duration,
-    )..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          setState(() {
-            _currentGradientIndex =
-                (_currentGradientIndex + 1) % widget.gradients.length;
-          });
-          _controller.forward(from: 0.0);
-        }
-      });
+    )..addStatusListener(_handleAnimationStatus);
     _controller.forward();
+  }
+
+  /// ✅ CRITICAL FIX: Extract listener to enable proper cleanup
+  void _handleAnimationStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed) {
+      // ✅ CRITICAL FIX: Check mounted before setState
+      if (mounted) {
+        setState(() {
+          _currentGradientIndex =
+              (_currentGradientIndex + 1) % widget.gradients.length;
+        });
+        _controller.forward(from: 0.0);
+      }
+    }
   }
 
   @override
   void dispose() {
+    // ✅ CRITICAL FIX: Remove listener before disposing to prevent setState after dispose
+    _controller.removeStatusListener(_handleAnimationStatus);
     _controller.dispose();
     super.dispose();
   }

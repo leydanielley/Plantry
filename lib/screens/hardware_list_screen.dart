@@ -57,6 +57,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
   }
 
   Future<void> _loadHardware() async {
+    if (!mounted) return;  // ✅ FIX: Add mounted check before setState
     setState(() => _isLoading = true);
 
     try {
@@ -383,7 +384,8 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
                   builder: (context) => EditHardwareScreen(hardware: hardware),
                 ),
               ).then((result) {
-                if (result == true) _loadHardware();
+                // ✅ CRITICAL FIX: Check mounted before calling setState
+                if (mounted && result == true) _loadHardware();
               });
             } else if (value == 'toggle') {
               _toggleActive(hardware);
@@ -398,7 +400,8 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
               builder: (context) => EditHardwareScreen(hardware: hardware),
             ),
           ).then((result) {
-            if (result == true) _loadHardware();
+            // ✅ CRITICAL FIX: Check mounted before calling setState
+            if (mounted && result == true) _loadHardware();
           });
         },
       ),

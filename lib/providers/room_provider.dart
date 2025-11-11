@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/foundation.dart';
+import 'package:synchronized/synchronized.dart';
 import '../models/room.dart';
 import '../repositories/interfaces/i_room_repository.dart';
 import '../utils/app_logger.dart';
@@ -44,6 +45,9 @@ class RoomProvider with ChangeNotifier {
 
   /// ✅ FIX: Track dispose state to prevent notifyListeners after dispose
   bool _disposed = false;
+
+  /// ✅ CRITICAL FIX: Lock to prevent concurrent state modifications
+  final _saveLock = Lock();
 
   /// List of all rooms
   AsyncValue<List<Room>> _rooms = const Loading();
@@ -105,53 +109,59 @@ class RoomProvider with ChangeNotifier {
   }
 
   /// Save a room (create or update)
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent save race conditions
   Future<bool> saveRoom(Room room) async {
     AppLogger.debug('RoomProvider', 'Saving room', room.name);
 
-    try {
-      final savedRoom = await _repository.save(room);
+    return await _saveLock.synchronized(() async {
+      try {
+        final savedRoom = await _repository.save(room);
 
-      // Update current room if it's the same one
-      if (_currentRoom case Success(:final data)) {
-        if (data.id == savedRoom.id) {
-          _currentRoom = Success(savedRoom);
+        // Update current room if it's the same one
+        if (_currentRoom case Success(:final data)) {
+          if (data.id == savedRoom.id) {
+            _currentRoom = Success(savedRoom);
+          }
         }
+
+        // Reload rooms list to reflect changes
+        await loadRooms();
+
+        AppLogger.info('RoomProvider', '✅ Room saved', savedRoom.name);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('RoomProvider', 'Failed to save room', e, stack);
+        return false;
       }
-
-      // Reload rooms list to reflect changes
-      await loadRooms();
-
-      AppLogger.info('RoomProvider', '✅ Room saved', savedRoom.name);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('RoomProvider', 'Failed to save room', e, stack);
-      return false;
-    }
+    });
   }
 
   /// Delete a room
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent delete race conditions
   Future<bool> deleteRoom(int id) async {
     AppLogger.debug('RoomProvider', 'Deleting room', id);
 
-    try {
-      await _repository.delete(id);
+    return await _saveLock.synchronized(() async {
+      try {
+        await _repository.delete(id);
 
-      // Clear current room if it was deleted
-      if (_currentRoom case Success(:final data)) {
-        if (data.id == id) {
-          _currentRoom = const Loading();
+        // Clear current room if it was deleted
+        if (_currentRoom case Success(:final data)) {
+          if (data.id == id) {
+            _currentRoom = const Loading();
+          }
         }
+
+        // Reload rooms list
+        await loadRooms();
+
+        AppLogger.info('RoomProvider', '✅ Room deleted', id);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('RoomProvider', 'Failed to delete room', e, stack);
+        return false;
       }
-
-      // Reload rooms list
-      await loadRooms();
-
-      AppLogger.info('RoomProvider', '✅ Room deleted', id);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('RoomProvider', 'Failed to delete room', e, stack);
-      return false;
-    }
+    });
   }
 
   /// Refresh all data

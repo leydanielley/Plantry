@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import '../utils/app_logger.dart';
+import '../utils/translations.dart';
 import '../models/plant.dart';
 import '../models/fertilizer.dart';
 import '../models/enums.dart';
@@ -165,7 +166,11 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       if (photo != null) {
         // ✅ FIX: Validate file type to prevent malicious uploads
         final allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
-        final extension = photo.path.toLowerCase().substring(photo.path.lastIndexOf('.'));
+        // ✅ CRITICAL FIX: Check for -1 from lastIndexOf to prevent substring crash
+        final dotIndex = photo.path.lastIndexOf('.');
+        final extension = dotIndex != -1
+            ? photo.path.toLowerCase().substring(dotIndex)
+            : '';
 
         if (!allowedExtensions.contains(extension)) {
           if (mounted) {
@@ -256,12 +261,13 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
 
       if (!hasSpace) {
         AppLogger.error('AddLogScreen', '❌ Insufficient storage for photos');
-        if (mounted) {
+        // ✅ CRITICAL FIX: Check both mounted AND context.mounted to prevent crash
+        if (mounted && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('❌ Nicht genügend Speicherplatz verfügbar'),
+            SnackBar(
+              content: Text('❌ ${AppTranslations(Localizations.localeOf(context).languageCode)['error']}'),
               backgroundColor: Colors.red,
-              duration: Duration(seconds: 4),
+              duration: const Duration(seconds: 4),
             ),
           );
         }
@@ -269,7 +275,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       }
 
       final directory = await getApplicationDocumentsDirectory();
-      final photosDir = Directory('${directory.path}/photos');
+      // ✅ FIX: Use path.join instead of string interpolation for cross-platform compatibility
+      final photosDir = Directory(path.join(directory.path, 'photos'));
 
       if (!await photosDir.exists()) {
         await photosDir.create(recursive: true);
@@ -289,7 +296,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           }
 
           final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(photo.path)}';
-          final filePath = '${photosDir.path}/$fileName';
+          // ✅ CRITICAL FIX: Use path.join() for cross-platform compatibility
+          final filePath = path.join(photosDir.path, fileName);
 
           await file.copy(filePath);
           savedPaths.add(filePath);
@@ -503,7 +511,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
     return await showDialog<PlantPhase>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Phase wählen'),
+        title: Text(AppTranslations(Localizations.localeOf(context).languageCode)['select_phase']),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: PlantPhase.values.map((phase) {
@@ -1000,7 +1008,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             TextButton.icon(
               onPressed: _showPhotoSourceDialog,
               icon: const Icon(Icons.add_a_photo),
-              label: const Text('Hinzufügen'),
+              label: Text(AppTranslations(Localizations.localeOf(context).languageCode)['add_photo']),
             ),
           ],
         ),
@@ -1027,7 +1035,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Tippe auf "Hinzufügen" um Fotos zu diesem Log hinzuzufügen',
+                    AppTranslations(Localizations.localeOf(context).languageCode)['tap_to_add_photos'],
                     style: TextStyle(
                       color: isDark ? Colors.grey[500] : Colors.grey[500],
                       fontSize: 12,
@@ -1136,7 +1144,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             TextButton.icon(
               onPressed: _showAddFertilizerDialog,
               icon: const Icon(Icons.add),
-              label: const Text('Hinzufügen'),
+              label: Text(AppTranslations(Localizations.localeOf(context).languageCode)['add_photo']),
             ),
           ],
         ),
@@ -1205,7 +1213,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Dünger hinzufügen'),
+          title: Text(AppTranslations(Localizations.localeOf(context).languageCode)['add_fertilizer']),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
@@ -1247,7 +1255,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
     );
   }
 
-  void _addFertilizer(Fertilizer fertilizer) {
+  // ✅ FIX: Made async to properly await dialog and dispose controller
+  Future<void> _addFertilizer(Fertilizer fertilizer) async {
     if (fertilizer.id == null) {
       AppMessages.showError(context, 'Fehler: Dünger hat keine gültige ID');
       return;
@@ -1255,44 +1264,51 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
 
     final amountController = TextEditingController(text: '10');
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(fertilizer.name),
-          content: TextFormField(
-            controller: amountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Menge (ml)',
-              border: OutlineInputBorder(),
+    // ✅ FIX: Wrap in try-finally to ensure controller disposal
+    try {
+      await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(fertilizer.name),
+            content: TextFormField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Menge (ml)',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
             ),
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Abbrechen'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final amount = double.tryParse(amountController.text);
-                if (amount != null && amount > 0) {
-                  setState(() {
-                    _selectedFertilizers[fertilizer.id!] = amount;
-                  });
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Hinzufügen'),
-            ),
-          ],
-        );
-      },
-    );
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Abbrechen'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final amount = double.tryParse(amountController.text);
+                  if (amount != null && amount > 0) {
+                    setState(() {
+                      _selectedFertilizers[fertilizer.id!] = amount;
+                    });
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: Text(AppTranslations(Localizations.localeOf(context).languageCode)['add_photo']),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      // ✅ FIX: Dispose controller to prevent memory leak
+      amountController.dispose();
+    }
   }
 
-  void _editFertilizerAmount(int fertilizerId, double currentAmount) {
+  // ✅ FIX: Made async to properly await dialog and dispose controller
+  Future<void> _editFertilizerAmount(int fertilizerId, double currentAmount) async {
     final amountController = TextEditingController(
       text: currentAmount.toStringAsFixed(1),
     );
@@ -1306,41 +1322,47 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       ),
     );
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(fertilizer.name),
-          content: TextFormField(
-            controller: amountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Menge (ml)',
-              border: OutlineInputBorder(),
+    // ✅ FIX: Wrap in try-finally to ensure controller disposal
+    try {
+      await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(fertilizer.name),
+            content: TextFormField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Menge (ml)',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
             ),
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Abbrechen'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final amount = double.tryParse(amountController.text);
-                if (amount != null && amount > 0) {
-                  setState(() {
-                    _selectedFertilizers[fertilizerId] = amount;
-                  });
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Speichern'),
-            ),
-          ],
-        );
-      },
-    );
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Abbrechen'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final amount = double.tryParse(amountController.text);
+                  if (amount != null && amount > 0) {
+                    setState(() {
+                      _selectedFertilizers[fertilizerId] = amount;
+                    });
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text('Speichern'),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      // ✅ FIX: Dispose controller to prevent memory leak
+      amountController.dispose();
+    }
   }
 
   Widget _buildPhEcSection() {
@@ -1429,7 +1451,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         ),
         SwitchListTile(
           title: const Text('Cleanse'),
-          subtitle: const Text('Spülung durchgeführt'),
+          subtitle: Text(AppTranslations(Localizations.localeOf(context).languageCode)['cleanse_subtitle']),
           value: _cleanse,
           onChanged: (value) => setState(() => _cleanse = value),
           activeThumbColor: Colors.blue[600],
@@ -1500,9 +1522,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         TextFormField(
           controller: _noteController,
           maxLines: 4,
-          decoration: const InputDecoration(
-            hintText: 'Beobachtungen, Änderungen, etc...',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: AppTranslations(Localizations.localeOf(context).languageCode)['notes_hint'],
+            border: const OutlineInputBorder(),
           ),
         ),
       ],

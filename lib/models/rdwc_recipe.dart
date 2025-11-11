@@ -3,6 +3,7 @@
 // =============================================
 
 import 'rdwc_log_fertilizer.dart';
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 /// Fertilizer entry in a recipe
 ///
@@ -26,7 +27,8 @@ class RecipeFertilizer {
       id: map['id'] as int?,
       recipeId: map['recipe_id'] as int,
       fertilizerId: map['fertilizer_id'] as int,
-      mlPerLiter: (map['ml_per_liter'] as num).toDouble(),
+      // ✅ CRITICAL FIX: Null-safe cast to prevent crash on NULL/corrupted data
+      mlPerLiter: (map['ml_per_liter'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -116,9 +118,11 @@ class RdwcRecipe {
       description: map['description'] as String?,
       targetEc: (map['target_ec'] as num?)?.toDouble(),
       targetPh: (map['target_ph'] as num?)?.toDouble(),
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'RdwcRecipe.fromMap.createdAt',
+      ),
     );
   }
 

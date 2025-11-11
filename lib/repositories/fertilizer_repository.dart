@@ -16,12 +16,17 @@ class FertilizerRepository with RepositoryErrorHandler implements IFertilizerRep
 
   /// Alle Dünger laden
   /// ✅ PHASE 2: Uses standardized error handling (returns empty list on error)
+  /// ✅ CRITICAL FIX: Added limit parameter to prevent memory overflow
   @override
-  Future<List<Fertilizer>> findAll() async {
+  Future<List<Fertilizer>> findAll({int? limit}) async {
     return handleQuery(
       operation: () async {
         final db = await _dbHelper.database;
-        final maps = await db.query('fertilizers', orderBy: 'name ASC');
+        final maps = await db.query(
+          'fertilizers',
+          orderBy: 'name ASC',
+          limit: limit ?? 1000,  // Reasonable default limit
+        );
         return maps.map((map) => Fertilizer.fromMap(map)).toList();
       },
       operationName: 'findAll',

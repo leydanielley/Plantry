@@ -1,8 +1,9 @@
 // =============================================
-// GROWLOG - Database Helper (✅ BUG FIX #4: SeedType CHECK korrigiert)
+// GROWLOG - Database Helper (✅ BUG FIX: Race Condition Fixed)
 // =============================================
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:synchronized/synchronized.dart';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -13,7 +14,7 @@ import 'database_recovery.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static Completer<Database>? _initCompleter;
+  static final _lock = Lock();  // ✅ CRITICAL FIX: Mutex prevents race condition
 
   DatabaseHelper._init();
 
@@ -24,44 +25,28 @@ class DatabaseHelper {
     _database = db;
   }
 
-  // ✅ FIX: Use Completer instead of busy-wait polling to prevent deadlock
+  // ✅ CRITICAL FIX: Thread-safe database initialization with mutex lock
+  // Prevents multiple threads from initializing database simultaneously
   Future<Database> get database async {
-    // If database is already initialized, return it
+    // Fast path: If already initialized, return immediately
     if (_database != null) return _database!;
 
-    // If initialization is already in progress, wait for it to complete
-    if (_initCompleter != null) {
+    // Slow path: Use lock to ensure only one thread initializes
+    return await _lock.synchronized(() async {
+      // Double-check pattern: Another thread may have initialized while we waited
+      if (_database != null) return _database!;
+
       try {
-        return await _initCompleter!.future.timeout(
-          const Duration(seconds: 15),
-          onTimeout: () {
-            AppLogger.error('DatabaseHelper', 'Database initialization timeout');
-            throw TimeoutException('Database initialization took too long');
-          },
-        );
-      } catch (e) {
-        AppLogger.error('DatabaseHelper', 'Database initialization failed while waiting', e);
+        AppLogger.info('DatabaseHelper', 'Initializing database with mutex lock...');
+        _database = await _initDB('growlog.db');
+        AppLogger.info('DatabaseHelper', '✅ Database initialized successfully');
+        return _database!;
+      } catch (e, stackTrace) {
+        AppLogger.error('DatabaseHelper', 'Database initialization failed', e, stackTrace);
+        _database = null;  // Reset on failure to allow retry
         rethrow;
       }
-    }
-
-    // Start new initialization
-    _initCompleter = Completer<Database>();
-
-    try {
-      _database = await _initDB('growlog.db');
-      _initCompleter!.complete(_database!);
-      return _database!;
-    } catch (e, stackTrace) {
-      AppLogger.error('DatabaseHelper', 'Database initialization failed', e, stackTrace);
-      _initCompleter!.completeError(e, stackTrace);
-      rethrow;
-    } finally {
-      // Clear completer after a delay to allow all waiters to receive the result
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _initCompleter = null;
-      });
-    }
+    });
   }
 
   Future<Database> _initDB(String filePath) async {
@@ -73,7 +58,7 @@ class DatabaseHelper {
     try {
       return await openDatabase(
         path,
-        version: 11,  // ✅ v11: Fertilizer Extension (HydroBuddy import support)
+        version: 13,  // ✅ v13: Database integrity & performance (FK constraints, composite indexes)
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onConfigure: _onConfigure,
@@ -90,7 +75,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 11,
+          version: 13,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onConfigure: _onConfigure,

@@ -16,28 +16,32 @@ class HardwareRepository with RepositoryErrorHandler implements IHardwareReposit
   String get repositoryName => 'HardwareRepository';
 
   /// Alle Hardware-Items für einen Raum laden
+  /// ✅ CRITICAL FIX: Added limit parameter to prevent memory overflow
   @override
-  Future<List<Hardware>> findByRoom(int roomId) async {
+  Future<List<Hardware>> findByRoom(int roomId, {int? limit}) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
       'hardware',
       where: 'room_id = ?',
       whereArgs: [roomId],
       orderBy: 'type ASC, name ASC',
+      limit: limit ?? 500,  // Reasonable default limit per room
     );
 
     return maps.map((map) => Hardware.fromMap(map)).toList();
   }
 
   /// Alle aktiven Hardware-Items für einen Raum laden
+  /// ✅ CRITICAL FIX: Added limit parameter to prevent memory overflow
   @override
-  Future<List<Hardware>> findActiveByRoom(int roomId) async {
+  Future<List<Hardware>> findActiveByRoom(int roomId, {int? limit}) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
       'hardware',
       where: 'room_id = ? AND active = ?',
       whereArgs: [roomId, 1],
       orderBy: 'type ASC, name ASC',
+      limit: limit ?? 500,  // Reasonable default limit per room
     );
 
     return maps.map((map) => Hardware.fromMap(map)).toList();
@@ -59,12 +63,14 @@ class HardwareRepository with RepositoryErrorHandler implements IHardwareReposit
   }
 
   /// Alle Hardware-Items laden (über alle Räume)
+  /// ✅ CRITICAL FIX: Added limit parameter to prevent memory overflow
   @override
-  Future<List<Hardware>> findAll() async {
+  Future<List<Hardware>> findAll({int? limit}) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
       'hardware',
       orderBy: 'room_id ASC, type ASC, name ASC',
+      limit: limit ?? 1000,  // Reasonable default limit
     );
 
     return maps.map((map) => Hardware.fromMap(map)).toList();

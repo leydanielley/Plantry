@@ -13,15 +13,18 @@ class PermissionHelper {
     try {
       final ImagePicker picker = ImagePicker();
 
+      // ✅ HIGH FIX: Use standard try-catch instead of mixing with .catchError()
       // Try to pick an image - this will trigger permission request
-      await picker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1,
-        maxHeight: 1,
-      ).catchError((error) {
+      try {
+        await picker.pickImage(
+          source: ImageSource.camera,
+          maxWidth: 1,
+          maxHeight: 1,
+        );
+      } catch (error) {
         AppLogger.warning('PermissionHelper', 'Camera permission check failed: $error');
-        return null;
-      });
+        // Continue - this might be user cancellation, which is OK
+      }
 
       // If we got here, permission was granted (even if user cancelled)
       return true;
@@ -45,15 +48,18 @@ class PermissionHelper {
     try {
       final ImagePicker picker = ImagePicker();
 
+      // ✅ HIGH FIX: Use standard try-catch instead of mixing with .catchError()
       // Try to pick an image - this will trigger permission request
-      await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1,
-        maxHeight: 1,
-      ).catchError((error) {
+      try {
+        await picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1,
+          maxHeight: 1,
+        );
+      } catch (error) {
         AppLogger.warning('PermissionHelper', 'Photo permission check failed: $error');
-        return null;
-      });
+        // Continue - this might be user cancellation, which is OK
+      }
 
       // If we got here, permission was granted (even if user cancelled)
       return true;

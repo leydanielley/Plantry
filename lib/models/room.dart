@@ -3,6 +3,7 @@
 // =============================================
 
 import 'enums.dart';
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -63,20 +64,26 @@ class Room {
       id: map['id'] as int?,
       name: map['name'] as String,
       description: map['description'] as String?,
-      growType: map['grow_type'] != null
-          ? GrowType.values.byName(map['grow_type'].toString().toLowerCase())
-          : null,
+      growType: SafeParsers.parseEnumNullable<GrowType>(
+        GrowType.values,
+        map['grow_type']?.toString(),
+        context: 'Room.fromMap.growType',
+      ),
       wateringSystem: parseWateringSystem(map['watering_system']?.toString()),
       rdwcSystemId: map['rdwc_system_id'] as int?,
       width: (map['width'] as num?)?.toDouble() ?? 0.0,
       depth: (map['depth'] as num?)?.toDouble() ?? 0.0,
       height: (map['height'] as num?)?.toDouble() ?? 0.0,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
-      updatedAt: map['updated_at'] != null
-          ? DateTime.parse(map['updated_at'] as String)
-          : DateTime.now(),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'Room.fromMap.createdAt',
+      ),
+      updatedAt: SafeParsers.parseDateTime(
+        map['updated_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'Room.fromMap.updatedAt',
+      ),
     );
   }
 

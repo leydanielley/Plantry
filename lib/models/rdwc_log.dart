@@ -3,6 +3,7 @@
 // =============================================
 
 import 'rdwc_log_fertilizer.dart';
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 enum RdwcLogType {
   addback,        // Water addback/refill
@@ -61,15 +62,17 @@ class RdwcLog {
        createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Create from database map
+  /// ✅ FIX: DateTime.parse and enum parsing now safe (no throw on invalid data)
   factory RdwcLog.fromMap(Map<String, dynamic> map) {
-    // Parse logType from database format
+    // ✅ FIX: Parse logType safely with fallback instead of throwing
     RdwcLogType logType;
-    final dbLogType = map['log_type'].toString();
-    switch (dbLogType) {
+    final dbLogType = map['log_type']?.toString() ?? '';
+    switch (dbLogType.toUpperCase()) {
       case 'ADDBACK':
         logType = RdwcLogType.addback;
         break;
       case 'FULLCHANGE':
+      case 'FULL_CHANGE':
         logType = RdwcLogType.fullChange;
         break;
       case 'MAINTENANCE':
@@ -79,13 +82,18 @@ class RdwcLog {
         logType = RdwcLogType.measurement;
         break;
       default:
-        throw ArgumentError('Unknown log_type: $dbLogType');
+        // ✅ FIX: Use fallback instead of throwing
+        logType = RdwcLogType.measurement; // Safe default
     }
 
     return RdwcLog(
       id: map['id'] as int?,
       systemId: map['system_id'] as int,
-      logDate: DateTime.parse(map['log_date'] as String),
+      logDate: SafeParsers.parseDateTime(
+        map['log_date'] as String?,
+        fallback: DateTime.now(),
+        context: 'RdwcLog.fromMap.logDate',
+      ),
       logType: logType,
       levelBefore: (map['level_before'] as num?)?.toDouble(),
       waterAdded: (map['water_added'] as num?)?.toDouble(),
@@ -97,9 +105,11 @@ class RdwcLog {
       ecAfter: (map['ec_after'] as num?)?.toDouble(),
       note: map['note'] as String?,
       loggedBy: map['logged_by'] as String?,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'RdwcLog.fromMap.createdAt',
+      ),
     );
   }
 

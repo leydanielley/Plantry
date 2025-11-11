@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/foundation.dart';
+import 'package:synchronized/synchronized.dart';
 import '../models/grow.dart';
 import '../repositories/interfaces/i_grow_repository.dart';
 import '../utils/app_logger.dart';
@@ -44,6 +45,9 @@ class GrowProvider with ChangeNotifier {
 
   /// ✅ FIX: Track dispose state to prevent notifyListeners after dispose
   bool _disposed = false;
+
+  /// ✅ CRITICAL FIX: Lock to prevent concurrent state modifications
+  final _saveLock = Lock();
 
   /// List of all grows
   AsyncValue<List<Grow>> _grows = const Loading();
@@ -120,112 +124,128 @@ class GrowProvider with ChangeNotifier {
   }
 
   /// Create a new grow
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent create race conditions
   Future<bool> createGrow(Grow grow) async {
     AppLogger.debug('GrowProvider', 'Creating grow', grow.name);
 
-    try {
-      final id = await _repository.create(grow);
-      final createdGrow = grow.copyWith(id: id);
-      _currentGrow = Success(createdGrow);
+    return await _saveLock.synchronized(() async {
+      try {
+        final id = await _repository.create(grow);
+        final createdGrow = grow.copyWith(id: id);
+        _currentGrow = Success(createdGrow);
 
-      // Reload grows list to reflect changes
-      await loadGrows();
+        // Reload grows list to reflect changes
+        await loadGrows();
 
-      AppLogger.info('GrowProvider', '✅ Grow created', grow.name);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('GrowProvider', 'Failed to create grow', e, stack);
-      return false;
-    }
+        AppLogger.info('GrowProvider', '✅ Grow created', grow.name);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('GrowProvider', 'Failed to create grow', e, stack);
+        return false;
+      }
+    });
   }
 
   /// Update an existing grow
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent update race conditions
   Future<bool> updateGrow(Grow grow) async {
     AppLogger.debug('GrowProvider', 'Updating grow', grow.name);
 
-    try {
-      await _repository.update(grow);
+    return await _saveLock.synchronized(() async {
+      try {
+        await _repository.update(grow);
 
-      // Update current grow if it's the same one
-      if (_currentGrow case Success(:final data)) {
-        if (data.id == grow.id) {
-          _currentGrow = Success(grow);
+        // Update current grow if it's the same one
+        if (_currentGrow case Success(:final data)) {
+          if (data.id == grow.id) {
+            _currentGrow = Success(grow);
+          }
         }
+
+        // Reload grows list to reflect changes
+        await loadGrows();
+
+        AppLogger.info('GrowProvider', '✅ Grow updated', grow.name);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('GrowProvider', 'Failed to update grow', e, stack);
+        return false;
       }
-
-      // Reload grows list to reflect changes
-      await loadGrows();
-
-      AppLogger.info('GrowProvider', '✅ Grow updated', grow.name);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('GrowProvider', 'Failed to update grow', e, stack);
-      return false;
-    }
+    });
   }
 
   /// Delete a grow
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent delete race conditions
   Future<bool> deleteGrow(int id) async {
     AppLogger.debug('GrowProvider', 'Deleting grow', id);
 
-    try {
-      await _repository.delete(id);
+    return await _saveLock.synchronized(() async {
+      try {
+        await _repository.delete(id);
 
-      // Clear current grow if it was deleted
-      if (_currentGrow case Success(:final data)) {
-        if (data.id == id) {
-          _currentGrow = const Loading();
+        // Clear current grow if it was deleted
+        if (_currentGrow case Success(:final data)) {
+          if (data.id == id) {
+            _currentGrow = const Loading();
+          }
         }
+
+        // Reload grows list
+        await loadGrows();
+
+        AppLogger.info('GrowProvider', '✅ Grow deleted', id);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('GrowProvider', 'Failed to delete grow', e, stack);
+        return false;
       }
-
-      // Reload grows list
-      await loadGrows();
-
-      AppLogger.info('GrowProvider', '✅ Grow deleted', id);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('GrowProvider', 'Failed to delete grow', e, stack);
-      return false;
-    }
+    });
   }
 
   /// Archive a grow
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent archive race conditions
   Future<bool> archiveGrow(int id) async {
     AppLogger.debug('GrowProvider', 'Archiving grow', id);
 
-    try {
-      await _repository.archive(id);
+    return await _saveLock.synchronized(() async {
+      try {
+        await _repository.archive(id);
 
-      // Reload to reflect changes
-      await loadGrows();
+        // Reload to reflect changes
+        await loadGrows();
 
-      AppLogger.info('GrowProvider', '✅ Grow archived', id);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('GrowProvider', 'Failed to archive grow', e, stack);
-      return false;
-    }
+        AppLogger.info('GrowProvider', '✅ Grow archived', id);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('GrowProvider', 'Failed to archive grow', e, stack);
+        return false;
+      }
+    });
   }
 
   /// Unarchive a grow
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent unarchive race conditions
   Future<bool> unarchiveGrow(int id) async {
     AppLogger.debug('GrowProvider', 'Unarchiving grow', id);
 
-    try {
-      await _repository.unarchive(id);
+    return await _saveLock.synchronized(() async {
+      try {
+        await _repository.unarchive(id);
 
-      // Reload to reflect changes
-      await loadGrows();
+        // Reload to reflect changes
+        await loadGrows();
 
-      AppLogger.info('GrowProvider', '✅ Grow unarchived', id);
-      return true;
-    } catch (e, stack) {
-      AppLogger.error('GrowProvider', 'Failed to unarchive grow', e, stack);
-      return false;
-    }
+        AppLogger.info('GrowProvider', '✅ Grow unarchived', id);
+        return true;
+      } catch (e, stack) {
+        AppLogger.error('GrowProvider', 'Failed to unarchive grow', e, stack);
+        return false;
+      }
+    });
   }
 
   /// Update phase for all plants in a grow
+  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent update race conditions
   Future<bool> updatePhaseForAllPlants(int growId, String newPhase) async {
     AppLogger.debug(
       'GrowProvider',
@@ -233,31 +253,33 @@ class GrowProvider with ChangeNotifier {
       'growId=$growId, phase=$newPhase',
     );
 
-    try {
-      await _repository.updatePhaseForAllPlants(growId, newPhase);
+    return await _saveLock.synchronized(() async {
+      try {
+        await _repository.updatePhaseForAllPlants(growId, newPhase);
 
-      // Reload current grow if it matches
-      if (_currentGrow case Success(:final data)) {
-        if (data.id == growId) {
-          await loadGrow(growId);
+        // Reload current grow if it matches
+        if (_currentGrow case Success(:final data)) {
+          if (data.id == growId) {
+            await loadGrow(growId);
+          }
         }
-      }
 
-      AppLogger.info(
-        'GrowProvider',
-        '✅ Updated phase for all plants in grow',
-        newPhase,
-      );
-      return true;
-    } catch (e, stack) {
-      AppLogger.error(
-        'GrowProvider',
-        'Failed to update phase for plants',
-        e,
-        stack,
-      );
-      return false;
-    }
+        AppLogger.info(
+          'GrowProvider',
+          '✅ Updated phase for all plants in grow',
+          newPhase,
+        );
+        return true;
+      } catch (e, stack) {
+        AppLogger.error(
+          'GrowProvider',
+          'Failed to update phase for plants',
+          e,
+          stack,
+        );
+        return false;
+      }
+    });
   }
 
   /// Get plant count for a specific grow

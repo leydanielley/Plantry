@@ -186,17 +186,60 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
   }
 
   /// Delete RDWC system (and all its logs via CASCADE)
+  ///
+  /// ⚠️ WICHTIGES VERHALTEN: Pflanzen und Räume im System werden NICHT gelöscht!
+  ///
+  /// Architektonische Entscheidung:
+  /// - RDWC System ist ein Container-Objekt (wie Grow, Room)
+  /// - Beim Löschen wird `plants.rdwc_system_id` und `rooms.rdwc_system_id` auf NULL gesetzt
+  /// - Pflanzen und Räume bleiben mit allen Daten erhalten
+  ///
+  /// Vorteile dieses Designs:
+  /// ✅ Datensicherheit: Versehentliches Löschen ist umkehrbar
+  /// ✅ Flexibilität: Pflanzen/Räume können später neu zugeordnet werden
+  /// ✅ Konsistenz: Gleiches Verhalten wie Grow/Room
+  /// ✅ Historienschutz: Wertvolle Wachstumsdaten bleiben erhalten
+  ///
+  /// ✅ MEDIUM FIX: Use transaction to prevent race condition and ensure atomicity
   @override
   Future<int> deleteSystem(int systemId) async {
     try {
       final db = await _dbHelper.database;
-      final count = await db.delete(
-        'rdwc_systems',
-        where: 'id = ?',
-        whereArgs: [systemId],
-      );
-      AppLogger.info('RdwcRepository', 'Deleted RDWC system and its logs', 'ID: $systemId');
-      return count;
+
+      return await db.transaction((txn) async {
+        // 1. First, detach all plants from this RDWC system
+        await txn.update(
+          'plants',
+          {'rdwc_system_id': null, 'bucket_number': null},
+          where: 'rdwc_system_id = ?',
+          whereArgs: [systemId],
+        );
+
+        // 2. Detach all rooms from this RDWC system
+        await txn.update(
+          'rooms',
+          {'rdwc_system_id': null},
+          where: 'rdwc_system_id = ?',
+          whereArgs: [systemId],
+        );
+
+        // 3. Delete all logs (if not handled by CASCADE)
+        await txn.delete(
+          'rdwc_logs',
+          where: 'system_id = ?',
+          whereArgs: [systemId],
+        );
+
+        // 4. Finally, delete the system itself
+        final count = await txn.delete(
+          'rdwc_systems',
+          where: 'id = ?',
+          whereArgs: [systemId],
+        );
+
+        AppLogger.info('RdwcRepository', 'Deleted RDWC system and detached plants/rooms', 'ID: $systemId');
+        return count;
+      });
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error deleting RDWC system', e);
       rethrow;
@@ -621,11 +664,13 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
       // Convert to RdwcLog objects
       final logs = <RdwcLog>[];
       for (final logId in logMap.keys.take(limit)) {
-        final logData = logMap[logId]!;
+        final logData = logMap[logId];
+        if (logData == null) continue;  // ✅ FIX: Skip if logData is null
+
         final log = RdwcLog.fromMap(logData);
 
         // Convert fertilizer maps to RdwcLogFertilizer objects
-        final fertilizers = fertilizerMap[logId]!
+        final fertilizers = (fertilizerMap[logId] ?? [])  // ✅ FIX: Use ?? [] for safety
             .map((fMap) => RdwcLogFertilizer.fromMap(fMap))
             .toList();
 
@@ -644,22 +689,53 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
   // ==========================================
 
   /// Get all RDWC recipes
+  /// ✅ CRITICAL FIX: Rewritten to eliminate N+1 query problem
+  /// Old: 1 recipe query + N fertilizer queries (100 recipes = 101 queries!)
+  /// New: 1 recipe query + 1 JOIN query (100 recipes = 2 queries)
   @override
   Future<List<RdwcRecipe>> getAllRecipes() async {
     try {
       final db = await _dbHelper.database;
-      final maps = await db.query(
+
+      // Step 1: Load all recipes
+      final recipeMaps = await db.query(
         'rdwc_recipes',
         orderBy: 'created_at DESC',
       );
 
+      if (recipeMaps.isEmpty) return [];
+
+      // Step 2: Load ALL recipe fertilizers in ONE query using IN clause
+      final recipeIds = recipeMaps.map((m) => m['id']).toList();
+      final placeholders = List.filled(recipeIds.length, '?').join(',');
+
+      final fertilizerMaps = await db.rawQuery('''
+        SELECT * FROM rdwc_recipe_fertilizers
+        WHERE recipe_id IN ($placeholders)
+        ORDER BY recipe_id, id ASC
+      ''', recipeIds);
+
+      // Step 3: Group fertilizers by recipe_id
+      final fertilizersMap = <int, List<RecipeFertilizer>>{};
+      for (final map in fertilizerMaps) {
+        final recipeId = map['recipe_id'] as int;
+        final fertilizer = RecipeFertilizer.fromMap(map);
+
+        if (!fertilizersMap.containsKey(recipeId)) {
+          fertilizersMap[recipeId] = [];
+        }
+        fertilizersMap[recipeId]!.add(fertilizer);
+      }
+
+      // Step 4: Combine recipes with their fertilizers
       final recipes = <RdwcRecipe>[];
-      for (final map in maps) {
+      for (final map in recipeMaps) {
         final recipe = RdwcRecipe.fromMap(map);
-        final fertilizers = await getRecipeFertilizers(recipe.id!);
+        final fertilizers = fertilizersMap[recipe.id] ?? [];
         recipes.add(recipe.copyWith(fertilizers: fertilizers));
       }
 
+      AppLogger.info('RdwcRepository', 'Loaded ${recipes.length} recipes with fertilizers (2 queries)');
       return recipes;
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error loading recipes', e);

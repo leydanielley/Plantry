@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
+import '../utils/translations.dart';
 import 'package:intl/intl.dart';
 import '../models/harvest.dart';
 import '../repositories/interfaces/i_harvest_repository.dart';
@@ -350,7 +351,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                     ),
                   ),
                   Text(
-                    date != null ? DateFormat('dd.MM.yyyy').format(date) : 'Nicht gesetzt',
+                    date != null ? DateFormat('dd.MM.yyyy').format(date) : AppTranslations(Localizations.localeOf(context).languageCode)['edit_harvest_not_set'],
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: date != null ? FontWeight.bold : FontWeight.normal,

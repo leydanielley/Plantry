@@ -113,11 +113,19 @@ class WarningService implements IWarningService {
         // ✅ FIX: Store recentWaterLogs to avoid multiple evaluations and prevent division by zero
         final recentWaterLogs = waterLogs.take(WarningConfig.recentWaterLogsCount).toList();
         if (recentWaterLogs.isNotEmpty) {
-          final waterAmounts = recentWaterLogs.map((l) => l.waterAmount!).toList();
-          final avgWater = waterAmounts.reduce((a, b) => a + b) / waterAmounts.length;
-          final lastWater = waterLogs.first.waterAmount!;
+          // ✅ FIX: Filter out null waterAmount values
+          final waterAmounts = recentWaterLogs
+              .where((l) => l.waterAmount != null)
+              .map((l) => l.waterAmount!)
+              .toList();
 
-          if (lastWater > avgWater * WarningConfig.waterAmountAbnormalityMultiplier) {
+          if (waterAmounts.isEmpty) return warnings;  // ✅ FIX: No data to analyze
+
+          final avgWater = waterAmounts.reduce((a, b) => a + b) / waterAmounts.length;
+          final lastWater = waterLogs.first.waterAmount;
+
+          // ✅ FIX: Check if lastWater is not null before comparison
+          if (lastWater != null && lastWater > avgWater * WarningConfig.waterAmountAbnormalityMultiplier) {
             warnings.add(PlantWarning(
               message: 'Letztes Gießen ungewöhnlich hoch (${lastWater.toStringAsFixed(1)}L)',
               level: WarningLevel.info,
@@ -145,7 +153,10 @@ class WarningService implements IWarningService {
       final phLogs = logs.where((l) => l.phIn != null).toList();
       if (phLogs.isNotEmpty) {
         phLogs.sort((a, b) => b.logDate.compareTo(a.logDate));
-        final latestPh = phLogs.first.phIn!;
+        final latestPh = phLogs.first.phIn;
+
+        // ✅ FIX: Check if pH is not null before using
+        if (latestPh == null) return warnings;
 
         if (WarningConfig.isPhCritical(latestPh)) {
           warnings.add(PlantWarning(
@@ -165,7 +176,18 @@ class WarningService implements IWarningService {
 
         // Check pH fluctuation
         if (phLogs.length >= WarningConfig.minPhLogsForFluctuation) {
-          final recentPh = phLogs.take(WarningConfig.recentPhLogsCount).map((l) => l.phIn!).toList();
+          // ✅ FIX: Filter out null pH values before mapping to prevent crash
+          final recentPh = phLogs
+              .take(WarningConfig.recentPhLogsCount)
+              .where((l) => l.phIn != null)
+              .map((l) => l.phIn!)
+              .toList();
+
+          // ✅ FIX: Check if we have data after filtering
+          if (recentPh.isEmpty) {
+            return warnings;
+          }
+
           final minPh = recentPh.reduce((a, b) => a < b ? a : b);
           final maxPh = recentPh.reduce((a, b) => a > b ? a : b);
           final range = maxPh - minPh;
@@ -186,7 +208,10 @@ class WarningService implements IWarningService {
       final ecLogs = logs.where((l) => l.ecIn != null).toList();
       if (ecLogs.isNotEmpty) {
         ecLogs.sort((a, b) => b.logDate.compareTo(a.logDate));
-        final latestEc = ecLogs.first.ecIn!;
+        final latestEc = ecLogs.first.ecIn;
+
+        // ✅ FIX: Check if EC is not null before using
+        if (latestEc == null) return warnings;
 
         if (WarningConfig.isEcCritical(latestEc)) {
           warnings.add(PlantWarning(
@@ -215,7 +240,18 @@ class WarningService implements IWarningService {
 
         // Check EC trend
         if (ecLogs.length >= WarningConfig.minEcLogsForTrend) {
-          final recentEc = ecLogs.take(WarningConfig.recentEcLogsCount).map((l) => l.ecIn!).toList();
+          // ✅ FIX: Filter out null EC values before mapping to prevent crash
+          final recentEc = ecLogs
+              .take(WarningConfig.recentEcLogsCount)
+              .where((l) => l.ecIn != null)
+              .map((l) => l.ecIn!)
+              .toList();
+
+          // ✅ FIX: Check if we have at least 2 values for trend analysis
+          if (recentEc.length < 2) {
+            return warnings;
+          }
+
           final isIncreasing = recentEc.first > recentEc.last;
           final change = (recentEc.first - recentEc.last).abs();
 

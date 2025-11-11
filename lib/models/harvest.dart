@@ -2,6 +2,8 @@
 // GROWLOG - Harvest Model (Ernte-Tracking)
 // =============================================
 
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
 
@@ -72,29 +74,38 @@ class Harvest {
   }) : createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
+  /// ✅ FIX: All 7 DateTime.parse now use safe parsers
   factory Harvest.fromMap(Map<String, dynamic> map) {
     return Harvest(
       id: map['id'] as int?,
       plantId: map['plant_id'] as int,
-      harvestDate: DateTime.parse(map['harvest_date'] as String),
+      harvestDate: SafeParsers.parseDateTime(
+        map['harvest_date'] as String?,
+        fallback: DateTime.now(),
+        context: 'Harvest.fromMap.harvestDate',
+      ),
       wetWeight: (map['wet_weight'] as num?)?.toDouble(),
       dryWeight: (map['dry_weight'] as num?)?.toDouble(),
-      dryingStartDate: map['drying_start_date'] != null
-          ? DateTime.parse(map['drying_start_date'] as String)
-          : null,
-      dryingEndDate: map['drying_end_date'] != null
-          ? DateTime.parse(map['drying_end_date'] as String)
-          : null,
+      dryingStartDate: SafeParsers.parseDateTimeNullable(
+        map['drying_start_date'] as String?,
+        context: 'Harvest.fromMap.dryingStartDate',
+      ),
+      dryingEndDate: SafeParsers.parseDateTimeNullable(
+        map['drying_end_date'] as String?,
+        context: 'Harvest.fromMap.dryingEndDate',
+      ),
       dryingDays: map['drying_days'] as int?,
       dryingMethod: map['drying_method'] as String?,
       dryingTemperature: (map['drying_temperature'] as num?)?.toDouble(),
       dryingHumidity: (map['drying_humidity'] as num?)?.toDouble(),
-      curingStartDate: map['curing_start_date'] != null
-          ? DateTime.parse(map['curing_start_date'] as String)
-          : null,
-      curingEndDate: map['curing_end_date'] != null
-          ? DateTime.parse(map['curing_end_date'] as String)
-          : null,
+      curingStartDate: SafeParsers.parseDateTimeNullable(
+        map['curing_start_date'] as String?,
+        context: 'Harvest.fromMap.curingStartDate',
+      ),
+      curingEndDate: SafeParsers.parseDateTimeNullable(
+        map['curing_end_date'] as String?,
+        context: 'Harvest.fromMap.curingEndDate',
+      ),
       curingDays: map['curing_days'] as int?,
       curingMethod: map['curing_method'] as String?,
       curingNotes: map['curing_notes'] as String?,
@@ -105,12 +116,15 @@ class Harvest {
       tasteNotes: map['taste_notes'] as String?,
       effectNotes: map['effect_notes'] as String?,
       overallNotes: map['overall_notes'] as String?,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
-      updatedAt: map['updated_at'] != null
-          ? DateTime.parse(map['updated_at'] as String)
-          : null,
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'Harvest.fromMap.createdAt',
+      ),
+      updatedAt: SafeParsers.parseDateTimeNullable(
+        map['updated_at'] as String?,
+        context: 'Harvest.fromMap.updatedAt',
+      ),
     );
   }
 
@@ -244,14 +258,20 @@ class Harvest {
   /// Gewichtsverlust in Prozent
   /// ✅ FIX: Prevent negative percentages when dryWeight > wetWeight
   double? get weightLossPercentage {
-    if (wetWeight != null && dryWeight != null && wetWeight! > 0) {
-      // Validate that dry weight is not greater than wet weight
-      if (dryWeight! > wetWeight!) {
-        return 0.0; // Invalid data, return 0 instead of negative
-      }
-      return ((wetWeight! - dryWeight!) / wetWeight!) * 100;
+    final wet = wetWeight;
+    final dry = dryWeight;
+
+    // ✅ FIX: Check all conditions and avoid force unwraps
+    if (wet == null || dry == null || wet <= 0) {
+      return null;
     }
-    return null;
+
+    // Validate that dry weight is not greater than wet weight
+    if (dry > wet) {
+      return 0.0; // Invalid data, return 0 instead of negative
+    }
+
+    return ((wet - dry) / wet) * 100;
   }
 
   /// Ist komplett fertig?

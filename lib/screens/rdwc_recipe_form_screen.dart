@@ -168,7 +168,8 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
 
       // Add new fertilizers
       for (final entry in _addedFertilizers) {
-        final amount = double.parse(entry.mlPerLiterController.text);
+        // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
+        final amount = double.tryParse(entry.mlPerLiterController.text) ?? 0.0;
         final recipeFert = RecipeFertilizer(
           recipeId: recipeId,
           fertilizerId: entry.fertilizer.id!,

@@ -12,6 +12,8 @@ import '../models/photo.dart';
 import '../models/enums.dart';
 import '../repositories/interfaces/i_plant_repository.dart';
 import '../utils/validators.dart';
+import '../utils/app_logger.dart';
+import '../utils/safe_parsers.dart';
 import 'interfaces/i_log_service.dart';
 
 // Service-Layer für alle Log-Operationen
@@ -108,17 +110,28 @@ class LogService implements ILogService {
   }
   
   /// Validiert Photo-Pfade
+  /// ✅ HIGH FIX: Added try-catch to handle TOCTOU race (file deleted between checks)
   Future<void> _validatePhotos(List<String> photoPaths) async {
     for (final path in photoPaths) {
       final file = File(path);
-      if (!await file.exists()) {
-        throw ArgumentError('Foto-Datei existiert nicht: $path');
-      }
-      
-      // Prüfe Dateigröße (max 50MB)
-      final size = await file.length();
-      if (size > 50 * 1024 * 1024) {
-        throw ArgumentError('Foto zu groß (max 50MB): $path');
+
+      try {
+        // ✅ FIX: Combined existence check and size check to minimize TOCTOU window
+        if (!await file.exists()) {
+          throw ArgumentError('Foto-Datei existiert nicht: $path');
+        }
+
+        // Prüfe Dateigröße (max 50MB)
+        final size = await file.length();
+        if (size > 50 * 1024 * 1024) {
+          throw ArgumentError('Foto zu groß (max 50MB): $path');
+        }
+      } catch (e) {
+        // ✅ FIX: Handle TOCTOU race - file could be deleted between exists() and length()
+        if (e is FileSystemException) {
+          throw ArgumentError('Foto-Datei nicht zugänglich oder wurde gelöscht: $path');
+        }
+        rethrow;
       }
     }
   }
@@ -323,7 +336,12 @@ class LogService implements ILogService {
 
           final seedDateStr = plantMap['seed_date'] as String?;
           if (seedDateStr != null) {
-            plantSeedDates[plantId] = DateTime.parse(seedDateStr);
+            // ✅ HIGH FIX: Use SafeParsers to prevent crashes from corrupted DB data
+            plantSeedDates[plantId] = SafeParsers.parseDateTime(
+              seedDateStr,
+              fallback: DateTime.now(),
+              context: 'PlantSeedDate',
+            );
           }
         }
 
@@ -375,15 +393,32 @@ class LogService implements ILogService {
             // ✅ Nur Datums-Teil vergleichen (ohne Uhrzeit!)
             final logDay = DateTime(logDate.year, logDate.month, logDate.day);
             final seedDay = DateTime(seedDate.year, seedDate.month, seedDate.day);
-            
+
             dayNumber = logDay.difference(seedDay).inDays + 1;
-            if (dayNumber < 1) dayNumber = 1;
+
+            // ✅ CRITICAL FIX: Enforce reasonable bounds (10 years max grow cycle)
+            const maxReasonableDays = 3650;  // 10 years
+            if (dayNumber < 1) {
+              AppLogger.warning('LogService', 'Log date before seed date, clamping to day 1');
+              dayNumber = 1;
+            } else if (dayNumber > maxReasonableDays) {
+              AppLogger.error('LogService',
+                'Day number too large ($dayNumber). Check seed date (${seedDate.toIso8601String()}) vs log date (${logDate.toIso8601String()})');
+              throw ArgumentError(
+                'Day number too large ($dayNumber). Please check seed date vs log date.'
+              );
+            }
           }
           
           // ✅ v13: phaseDayNumber berechnen
           int? phaseDayNumber;
           if (phaseStartDateStr != null) {
-            final phaseStartDate = DateTime.parse(phaseStartDateStr);
+            // ✅ HIGH FIX: Use SafeParsers to prevent crashes from corrupted DB data
+            final phaseStartDate = SafeParsers.parseDateTime(
+              phaseStartDateStr,
+              fallback: logDate,
+              context: 'PhaseStartDate',
+            );
             phaseDayNumber = Validators.calculateDayNumber(logDate, phaseStartDate);
           }
           

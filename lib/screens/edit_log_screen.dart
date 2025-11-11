@@ -23,6 +23,8 @@ import '../repositories/interfaces/i_log_fertilizer_repository.dart';
 import '../repositories/interfaces/i_photo_repository.dart';
 import '../utils/validators.dart';
 import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
+import '../utils/storage_helper.dart';
+import '../utils/app_logger.dart';
 import '../di/service_locator.dart';
 
 class EditLogScreen extends StatefulWidget {
@@ -164,7 +166,11 @@ class _EditLogScreenState extends State<EditLogScreen> {
       if (photo != null) {
         // ✅ FIX: Validate file type to prevent malicious uploads
         final allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
-        final extension = photo.path.toLowerCase().substring(photo.path.lastIndexOf('.'));
+        // ✅ CRITICAL FIX: Check for -1 from lastIndexOf to prevent substring crash
+        final dotIndex = photo.path.lastIndexOf('.');
+        final extension = dotIndex != -1
+            ? photo.path.toLowerCase().substring(dotIndex)
+            : '';
 
         if (!allowedExtensions.contains(extension)) {
           if (mounted) {
@@ -244,24 +250,51 @@ class _EditLogScreenState extends State<EditLogScreen> {
 
   Future<List<String>> _saveNewPhotos() async {
     final List<String> savedPaths = [];
-    
+
     try {
+      // ✅ CRITICAL FIX: Check storage before saving photos
+      final totalSize = _newPhotos.fold<int>(0, (sum, photo) {
+        try {
+          return sum + File(photo.path).lengthSync();
+        } catch (e) {
+          return sum;
+        }
+      });
+
+      // Check if we have enough storage (photos + 50MB buffer)
+      final hasSpace = await StorageHelper.hasEnoughStorage(bytesNeeded: totalSize + 50 * 1024 * 1024);
+      if (!hasSpace) {
+        AppLogger.error('EditLogScreen', '❌ Insufficient storage for photos');
+        throw Exception('Insufficient storage');
+      }
+
       final directory = await getApplicationDocumentsDirectory();
-      final photosDir = Directory('${directory.path}/photos');
-      
+      // ✅ FIX: Use path.join for cross-platform compatibility
+      final photosDir = Directory(path.join(directory.path, 'photos'));
+
       if (!await photosDir.exists()) {
         await photosDir.create(recursive: true);
       }
 
       for (var photo in _newPhotos) {
+        // ✅ FIX: Validate file size (max 10MB per photo)
+        final fileSize = await File(photo.path).length();
+        if (fileSize > 10 * 1024 * 1024) {
+          AppLogger.warning('EditLogScreen', 'Photo too large, skipping: ${photo.path}');
+          continue;
+        }
+
         final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(photo.path)}';
-        final filePath = '${photosDir.path}/$fileName';
-        
+        // ✅ FIX: Use path.join for cross-platform compatibility
+        final filePath = path.join(photosDir.path, fileName);
+
         await File(photo.path).copy(filePath);
         savedPaths.add(filePath);
       }
     } catch (e) {
-      // Error saving photos
+      AppLogger.error('EditLogScreen', 'Error saving photos', e);
+      // Re-throw to notify caller of failure
+      rethrow;
     }
 
     return savedPaths;

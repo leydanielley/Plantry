@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
+import '../utils/translations.dart';
 import '../models/harvest.dart';
 import '../repositories/interfaces/i_harvest_repository.dart';
 import 'edit_harvest_quality_screen.dart';
@@ -402,7 +403,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
           Navigator.popUntil(context, (route) => route.isFirst);
         },
         icon: const Icon(Icons.check_circle),
-        label: const Text('Ernte abschließen'),
+        label: Text(AppTranslations(Localizations.localeOf(context).languageCode)['complete_harvest']),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,

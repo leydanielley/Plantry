@@ -57,6 +57,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;  // ✅ FIX: Add mounted check before setState
     setState(() => _isLoading = true);
 
     try {
@@ -231,9 +232,10 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
   }
 
   Widget _buildEcDriftTab(bool isDark) {
-    final avgDrift = _ecDrift?['average'] ?? 0.0;
-    final maxDrift = _ecDrift?['max'] ?? 0.0;
-    final minDrift = _ecDrift?['min'] ?? 0.0;
+    // ✅ FIX: Cast to avoid dynamic call error
+    final avgDrift = (_ecDrift?['average'] as num?) ?? 0.0;
+    final maxDrift = (_ecDrift?['max'] as num?) ?? 0.0;
+    final minDrift = (_ecDrift?['min'] as num?) ?? 0.0;
     final trend = _ecDrift?['trend']?.toString() ?? 'stable';
 
     // Build drift data points from logs
@@ -325,9 +327,10 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
   }
 
   Widget _buildPhDriftTab(bool isDark) {
-    final avgDrift = _phDrift?['average'] ?? 0.0;
-    final maxDrift = _phDrift?['max'] ?? 0.0;
-    final minDrift = _phDrift?['min'] ?? 0.0;
+    // ✅ FIX: Cast to avoid dynamic call error
+    final avgDrift = (_phDrift?['average'] as num?) ?? 0.0;
+    final maxDrift = (_phDrift?['max'] as num?) ?? 0.0;
+    final minDrift = (_phDrift?['min'] as num?) ?? 0.0;
     final trend = _phDrift?['trend']?.toString() ?? 'stable';
 
     // Build drift data points from logs

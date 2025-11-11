@@ -23,7 +23,8 @@ class LogFertilizer {
       id: map['id'] as int?,
       logId: map['log_id'] as int,
       fertilizerId: map['fertilizer_id'] as int,
-      amount: (map['amount'] as num).toDouble(),
+      // ✅ CRITICAL FIX: Null-safe cast to prevent crash on NULL/corrupted data
+      amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
       unit: map['unit'] as String? ?? 'ml',
     );
   }

@@ -54,10 +54,12 @@ class DriftChart extends StatelessWidget {
                 reservedSize: 30,
                 getTitlesWidget: (value, meta) {
                   final allData = mode == 'ec' ? ecData : (mode == 'ph' ? phData : ecData);
-                  if (allData.isEmpty || value.toInt() >= allData.length) {
+                  // ✅ CRITICAL FIX: Store toInt() result once to prevent TOCTOU race condition
+                  final index = value.toInt();
+                  if (allData.isEmpty || index >= allData.length) {
                     return const Text('');
                   }
-                  final date = allData[value.toInt()].date;
+                  final date = allData[index].date;
                   final dayOfWeek = date.weekday;
                   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                   return Padding(
@@ -154,9 +156,11 @@ class DriftChart extends StatelessWidget {
                 return touchedSpots.map((spot) {
                   final isEc = spot.barIndex == 0 && (mode == 'ec' || mode == 'both');
                   final data = isEc ? ecData : phData;
-                  if (spot.x.toInt() >= data.length) return null;
+                  // ✅ CRITICAL FIX: Store toInt() result once to prevent TOCTOU race condition
+                  final index = spot.x.toInt();
+                  if (index >= data.length) return null;
 
-                  final point = data[spot.x.toInt()];
+                  final point = data[index];
                   final label = isEc ? 'EC' : 'pH';
                   final value = point.value.toStringAsFixed(2);
 

@@ -2,6 +2,8 @@
 // GROWLOG - Fertilizer Model
 // =============================================
 
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
 
@@ -110,9 +112,11 @@ class Fertilizer {
       na: (map['na'] as num?)?.toDouble(),
       si: (map['si'] as num?)?.toDouble(),
       cl: (map['cl'] as num?)?.toDouble(),
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'Fertilizer.fromMap.createdAt',
+      ),
     );
   }
 
@@ -221,45 +225,30 @@ class Fertilizer {
   }
 
   /// Get N value from NPK string
+  /// ✅ CRITICAL FIX: Use tryParse instead of parse to prevent crashes
   double get nValue {
     if (npk == null || npk!.isEmpty) return 0.0;
-    try {
-      final parts = npk!.split('-');
-      if (parts.isNotEmpty) {
-        return double.parse(parts[0].trim());
-      }
-    } catch (e) {
-      // Invalid format
-    }
-    return 0.0;
+    final parts = npk!.split('-');
+    if (parts.isEmpty) return 0.0;
+    return double.tryParse(parts[0].trim()) ?? 0.0;
   }
 
   /// Get P value from NPK string
+  /// ✅ CRITICAL FIX: Use tryParse instead of parse to prevent crashes
   double get pValue {
     if (npk == null || npk!.isEmpty) return 0.0;
-    try {
-      final parts = npk!.split('-');
-      if (parts.length > 1) {
-        return double.parse(parts[1].trim());
-      }
-    } catch (e) {
-      // Invalid format
-    }
-    return 0.0;
+    final parts = npk!.split('-');
+    if (parts.length <= 1) return 0.0;
+    return double.tryParse(parts[1].trim()) ?? 0.0;
   }
 
   /// Get K value from NPK string
+  /// ✅ CRITICAL FIX: Use tryParse instead of parse to prevent crashes
   double get kValue {
     if (npk == null || npk!.isEmpty) return 0.0;
-    try {
-      final parts = npk!.split('-');
-      if (parts.length > 2) {
-        return double.parse(parts[2].trim());
-      }
-    } catch (e) {
-      // Invalid format
-    }
-    return 0.0;
+    final parts = npk!.split('-');
+    if (parts.length <= 2) return 0.0;
+    return double.tryParse(parts[2].trim()) ?? 0.0;
   }
 
   /// Calculate NPK ratio

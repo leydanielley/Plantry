@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../utils/app_messages.dart';
 import '../utils/app_logger.dart';
+import '../utils/translations.dart';
 import 'package:intl/intl.dart';
 import '../models/plant.dart';
 import '../models/photo.dart';
@@ -196,8 +197,8 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Foto löschen?'),
-        content: const Text('Möchtest du dieses Foto wirklich löschen?'),
+        title: Text(AppTranslations(Localizations.localeOf(context).languageCode)['plant_detail_delete_photo_title']),
+        content: Text(AppTranslations(Localizations.localeOf(context).languageCode)['plant_detail_delete_photo_confirm']),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -206,7 +207,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Löschen'),
+            child: Text(AppTranslations(Localizations.localeOf(context).languageCode)['delete']),
           ),
         ],
       ),
@@ -214,11 +215,8 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
 
     if (confirm == true) {
       try {
-        final file = File(photo.filePath);
-        if (await file.exists()) {
-          await file.delete();
-        }
-        
+        // ✅ CRITICAL FIX: Use repository's safe deletion that handles both file AND DB atomically
+        // Don't manually delete file - repository handles it properly with error handling
         await _photoRepo.deletePhoto(photo.id!);
         
         if (mounted) {
@@ -256,12 +254,12 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
   }
 
   /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
-  /// NOTE: Hardcoded German strings to be migrated in future i18n cleanup
   Widget _buildEmptyState() {
-    return const EmptyStateWidget(
+    final t = AppTranslations(Localizations.localeOf(context).languageCode);
+    return EmptyStateWidget(
       icon: Icons.photo_library_outlined,
-      title: 'Noch keine Fotos',
-      subtitle: 'Füge Fotos zu deinen Logs hinzu!',
+      title: t['no_photos_yet'],
+      subtitle: t['add_photos_to_logs'],
     );
   }
 

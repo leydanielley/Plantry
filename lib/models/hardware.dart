@@ -3,6 +3,7 @@
 // =============================================
 
 import 'enums.dart';
+import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -181,15 +182,18 @@ class Hardware {
       outputCount: map['output_count'] as int?,
       controllerFunctions: map['controller_functions'] as String?,
       specifications: map['specifications'] as String?,
-      purchaseDate: map['purchase_date'] != null 
-          ? DateTime.parse(map['purchase_date'] as String) 
-          : null,
+      purchaseDate: SafeParsers.parseDateTimeNullable(
+        map['purchase_date'] as String?,
+        context: 'Hardware.fromMap.purchaseDate',
+      ),
       purchasePrice: (map['purchase_price'] as num?)?.toDouble(),
       notes: map['notes'] as String?,
       active: map['active'] != null ? (map['active'] as int) == 1 : true,
-      createdAt: map['created_at'] != null 
-          ? DateTime.parse(map['created_at'] as String) 
-          : DateTime.now(),
+      createdAt: SafeParsers.parseDateTime(
+        map['created_at'] as String?,
+        fallback: DateTime.now(),
+        context: 'Hardware.fromMap.createdAt',
+      ),
     );
   }
 

@@ -17,11 +17,16 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
   String get repositoryName => 'RoomRepository';
 
   /// Alle Räume laden
+  /// ✅ CRITICAL FIX: Added limit parameter to prevent memory overflow
   @override
-  Future<List<Room>> findAll() async {
+  Future<List<Room>> findAll({int? limit}) async {
     try {
       final db = await _dbHelper.database;
-      final maps = await db.query('rooms', orderBy: 'name ASC');
+      final maps = await db.query(
+        'rooms',
+        orderBy: 'name ASC',
+        limit: limit ?? 1000,  // Reasonable default limit
+      );
       return maps.map((map) => Room.fromMap(map)).toList();
     } catch (e, stackTrace) {
       AppLogger.error('RoomRepository', 'Failed to load rooms', e, stackTrace);

@@ -56,6 +56,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;  // ✅ FIX: Add mounted check before setState
     setState(() => _isLoading = true);
 
     try {

@@ -73,9 +73,10 @@ class _RdwcQuickMeasurementScreenState extends State<RdwcQuickMeasurementScreen>
     setState(() => _isSaving = true);
 
     try {
-      final level = double.parse(_levelController.text);
-      final ph = _phController.text.isNotEmpty ? double.parse(_phController.text) : null;
-      final ec = _ecController.text.isNotEmpty ? double.parse(_ecController.text) : null;
+      // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
+      final level = double.tryParse(_levelController.text) ?? 0.0;
+      final ph = _phController.text.isNotEmpty ? double.tryParse(_phController.text) : null;
+      final ec = _ecController.text.isNotEmpty ? double.tryParse(_ecController.text) : null;
 
       final log = RdwcLog(
         systemId: widget.system.id!,

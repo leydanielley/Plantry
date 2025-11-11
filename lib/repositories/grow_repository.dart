@@ -7,6 +7,7 @@ import '../models/grow.dart';
 import '../database/database_helper.dart';
 import '../utils/validators.dart';
 import '../utils/app_logger.dart';
+import '../utils/safe_parsers.dart';
 import 'interfaces/i_grow_repository.dart';
 import 'repository_error_handler.dart';
 
@@ -19,20 +20,26 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
 
 
   /// Alle Grows abrufen (nicht archiviert)
+  /// ✅ CRITICAL FIX: Added limit parameter to prevent memory overflow
   @override
-  Future<List<Grow>> getAll({bool includeArchived = false}) async {
+  Future<List<Grow>> getAll({bool includeArchived = false, int? limit}) async {
     try {
       final db = await _dbHelper.database;
       final List<Map<String, dynamic>> maps;
 
       if (includeArchived) {
-        maps = await db.query('grows', orderBy: 'start_date DESC');
+        maps = await db.query(
+          'grows',
+          orderBy: 'start_date DESC',
+          limit: limit ?? 1000,  // Reasonable default limit
+        );
       } else {
         maps = await db.query(
           'grows',
           where: 'archived = ?',
           whereArgs: [0],
           orderBy: 'start_date DESC',
+          limit: limit ?? 1000,  // Reasonable default limit
         );
       }
 
@@ -215,7 +222,12 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
   Future<void> updatePhaseForAllPlants(int growId, String newPhase) async {
     final db = await _dbHelper.database;
     final newPhaseStartDate = DateTime.now().toIso8601String().split('T')[0];
-    final phaseStartDate = DateTime.parse(newPhaseStartDate);
+    // ✅ HIGH FIX: Use SafeParsers to prevent crashes from invalid date strings
+    final phaseStartDate = SafeParsers.parseDateTime(
+      newPhaseStartDate,
+      fallback: DateTime.now(),
+      context: 'GrowRepository.updatePhaseForAllPlants',
+    );
 
     AppLogger.debug('GrowRepo', 'Updating phase for all plants', 'growId=$growId, newPhase=$newPhase');
 
@@ -278,7 +290,12 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
 
     for (final log in logs) {
       final logDateStr = log['log_date'] as String;
-      final logDate = DateTime.parse(logDateStr);
+      // ✅ HIGH FIX: Use SafeParsers to prevent crashes from corrupted DB data
+      final logDate = SafeParsers.parseDateTime(
+        logDateStr,
+        fallback: DateTime.now(),
+        context: 'GrowRepository.updatePhaseForAllPlants.logDate',
+      );
 
       // Only update logs that are on or after phase start date
       final logDay = DateTime(logDate.year, logDate.month, logDate.day);
