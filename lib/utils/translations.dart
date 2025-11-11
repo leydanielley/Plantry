@@ -715,6 +715,17 @@ class AppTranslations {
       'add_hardware_notes_hint':
           'Zusätzliche Informationen, Wartungshinweise, etc...',
       'add_hardware_add_button': 'Hardware hinzufügen',
+      'add_hardware_wattage_validation': 'Wattage muss eine positive Zahl sein',
+      'add_hardware_airflow_validation': 'Airflow muss eine positive Zahl sein',
+
+      // ✅ AUDIT FIX: i18n extraction - Edit Hardware Screen
+      'edit_hardware_title': 'Hardware bearbeiten',
+
+      // ✅ AUDIT FIX: i18n extraction - Deleted Fertilizer
+      'deleted_fertilizer_id': 'Gelöschter Dünger #{id}',
+
+      // ✅ AUDIT FIX: i18n extraction - Drying Method Default
+      'drying_method_hanging': 'Hängend',
 
       // ✅ AUDIT FIX: i18n extraction - Add Plant Screen
       'add_plant_title': 'Neue Pflanze',
@@ -1600,6 +1611,17 @@ class AppTranslations {
       'add_hardware_notes_hint':
           'Additional information, maintenance notes, etc...',
       'add_hardware_add_button': 'Add Hardware',
+      'add_hardware_wattage_validation': 'Wattage must be a positive number',
+      'add_hardware_airflow_validation': 'Airflow must be a positive number',
+
+      // ✅ AUDIT FIX: i18n extraction - Edit Hardware Screen
+      'edit_hardware_title': 'Edit Hardware',
+
+      // ✅ AUDIT FIX: i18n extraction - Deleted Fertilizer
+      'deleted_fertilizer_id': 'Deleted Fertilizer #{id}',
+
+      // ✅ AUDIT FIX: i18n extraction - Drying Method Default
+      'drying_method_hanging': 'Hanging',
 
       // ✅ AUDIT FIX: i18n extraction - Add Plant Screen
       'add_plant_title': 'New Plant',

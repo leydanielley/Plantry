@@ -219,6 +219,8 @@ class HarvestRepository
       'SELECT SUM(dry_weight) as total FROM harvests WHERE dry_weight IS NOT NULL',
     );
 
+    // ✅ LOW PRIORITY BUG FIX: Added defensive check for empty result set
+    if (result.isEmpty) return 0.0;
     final total = result.first['total'];
     return total != null ? (total as num).toDouble() : 0.0;
   }
@@ -231,6 +233,8 @@ class HarvestRepository
       'SELECT AVG(dry_weight) as average FROM harvests WHERE dry_weight IS NOT NULL',
     );
 
+    // ✅ LOW PRIORITY BUG FIX: Added defensive check for empty result set
+    if (result.isEmpty) return 0.0;
     final average = result.first['average'];
     return average != null ? (average as num).toDouble() : 0.0;
   }

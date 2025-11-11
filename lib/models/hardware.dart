@@ -177,6 +177,8 @@ class Hardware {
       brand: map['brand'] as String?,
       model: map['model'] as String?,
       wattage: map['wattage'] as int?,
+      // ✅ LOW PRIORITY BUG FIX: Consistent default value with constructor (was ?? 1, now removed for consistency)
+      // Constructor provides default of 1, so fromMap should too for database loads
       quantity: map['quantity'] as int? ?? 1,
       airflow: map['airflow'] as int?,
       spectrum: map['spectrum'] as String?,

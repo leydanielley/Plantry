@@ -1246,11 +1246,12 @@ class _EditLogScreenState extends State<EditLogScreen> {
     );
 
     // ✅ HIGH PRIORITY FIX: Handle deleted fertilizer gracefully instead of throwing
+    // ✅ BUG FIX: Replace hardcoded German string with i18n
     final fertilizer = _availableFertilizers.firstWhere(
       (f) => f.id == fertilizerId,
       orElse: () => Fertilizer(
         id: fertilizerId,
-        name: 'Gelöschter Dünger #$fertilizerId',
+        name: _t['deleted_fertilizer_id'].replaceAll('{id}', '$fertilizerId'),
       ),
     );
 
