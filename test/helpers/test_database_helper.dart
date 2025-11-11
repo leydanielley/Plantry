@@ -134,15 +134,38 @@ class TestDatabaseHelper {
       )
     ''');
 
-    // Fertilizers table
+    // Fertilizers table - UPDATED to match production schema
     await db.execute('''
       CREATE TABLE fertilizers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         brand TEXT,
-        type TEXT NOT NULL,
         npk TEXT,
-        unit TEXT DEFAULT 'ml',
+        type TEXT,
+        description TEXT,
+        ec_value REAL,
+        ppm_value REAL,
+        formula TEXT,
+        source TEXT,
+        purity REAL,
+        is_liquid INTEGER DEFAULT 1,
+        density REAL,
+        n_no3 REAL,
+        n_nh4 REAL,
+        p REAL,
+        k REAL,
+        mg REAL,
+        ca REAL,
+        s REAL,
+        b REAL,
+        fe REAL,
+        zn REAL,
+        cu REAL,
+        mn REAL,
+        mo REAL,
+        na REAL,
+        si REAL,
+        cl REAL,
         created_at TEXT DEFAULT (datetime('now'))
       )
     ''');
