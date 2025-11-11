@@ -84,7 +84,9 @@ class _EditHardwareScreenState extends State<EditHardwareScreen>
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ BUG FIX: Initialize translations
+    _t = AppTranslations(
+      Localizations.localeOf(context).languageCode,
+    ); // ✅ BUG FIX: Initialize translations
 
     // Initialize controllers with existing hardware data
     _nameController = TextEditingController(text: widget.hardware.name);

@@ -1215,8 +1215,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
               (f) => f.id == entry.key,
               orElse: () => Fertilizer(
                 id: entry.key,
-                name: AppTranslations(Localizations.localeOf(context).languageCode)['deleted_fertilizer_id']
-                    .replaceAll('{id}', '${entry.key}'),
+                name: AppTranslations(
+                  Localizations.localeOf(context).languageCode,
+                )['deleted_fertilizer_id'].replaceAll('{id}', '${entry.key}'),
               ),
             );
             return Card(
@@ -1384,8 +1385,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       (f) => f.id == fertilizerId,
       orElse: () => Fertilizer(
         id: fertilizerId,
-        name: AppTranslations(Localizations.localeOf(context).languageCode)['deleted_fertilizer_id']
-            .replaceAll('{id}', '$fertilizerId'),
+        name: AppTranslations(
+          Localizations.localeOf(context).languageCode,
+        )['deleted_fertilizer_id'].replaceAll('{id}', '$fertilizerId'),
       ),
     );
 

@@ -49,9 +49,13 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ BUG FIX: Initialize translations
+    _t = AppTranslations(
+      Localizations.localeOf(context).languageCode,
+    ); // ✅ BUG FIX: Initialize translations
     // ✅ BUG FIX: Initialize with i18n default value instead of hardcoded "Hängend"
-    _dryingMethodController = TextEditingController(text: _t['drying_method_hanging']);
+    _dryingMethodController = TextEditingController(
+      text: _t['drying_method_hanging'],
+    );
   }
 
   @override

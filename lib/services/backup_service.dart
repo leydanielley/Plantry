@@ -293,17 +293,8 @@ class BackupService implements IBackupService {
           }
 
           await outFile.create(recursive: true);
-          // ✅ HIGH PRIORITY FIX: Null-safe cast with validation
-          final content = file.content;
-          if (content == null) {
-            AppLogger.warning(
-              'BackupService',
-              'Null content in archive entry',
-              file.name,
-            );
-            continue;
-          }
-          await outFile.writeAsBytes(content as List<int>);
+          // ✅ FIXED: content is non-nullable in archive 4.x
+          await outFile.writeAsBytes(file.content);
         }
       }
 
