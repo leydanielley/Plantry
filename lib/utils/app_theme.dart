@@ -7,27 +7,51 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // ✅ WCAG-konforme monochrome Farbpalette für Light Mode (60-30-10 Regel)
-  static const Color lightBackground = Color(0xFFF8F9FA);      // 60% - Haupthintergrund (fast weiß)
-  static const Color lightSurface = Color(0xFFFFFFFF);         // 30% - Karten/Container (weiß)
-  static const Color lightSurfaceVariant = Color(0xFFE9ECEF);  // 10% - Sekundäre Flächen (helles Grau)
-  static const Color lightBorder = Color(0xFFDEE2E6);          // Borders/Dividers
-  static const Color lightTextPrimary = Color(0xFF212529);     // Haupttext (dunkel, WCAG AAA)
-  static const Color lightTextSecondary = Color(0xFF495057);   // Sekundärtext (WCAG AA)
-  static const Color lightTextTertiary = Color(0xFF6C757D);    // Tertiärtext (dezent)
-  
+  static const Color lightBackground = Color(
+    0xFFF8F9FA,
+  ); // 60% - Haupthintergrund (fast weiß)
+  static const Color lightSurface = Color(
+    0xFFFFFFFF,
+  ); // 30% - Karten/Container (weiß)
+  static const Color lightSurfaceVariant = Color(
+    0xFFE9ECEF,
+  ); // 10% - Sekundäre Flächen (helles Grau)
+  static const Color lightBorder = Color(0xFFDEE2E6); // Borders/Dividers
+  static const Color lightTextPrimary = Color(
+    0xFF212529,
+  ); // Haupttext (dunkel, WCAG AAA)
+  static const Color lightTextSecondary = Color(
+    0xFF495057,
+  ); // Sekundärtext (WCAG AA)
+  static const Color lightTextTertiary = Color(
+    0xFF6C757D,
+  ); // Tertiärtext (dezent)
+
   // ✅ WCAG-konforme monochrome Farbpalette für Dark Mode
-  static const Color darkBackground = Color(0xFF121212);       // Haupthintergrund
-  static const Color darkSurface = Color(0xFF1E1E1E);          // Karten/Container
-  static const Color darkSurfaceVariant = Color(0xFF2C2C2C);   // Sekundäre Flächen
-  static const Color darkBorder = Color(0xFF3A3A3A);           // Borders/Dividers
-  static const Color darkTextPrimary = Color(0xFFE9ECEF);      // Haupttext (hell, WCAG AAA)
-  static const Color darkTextSecondary = Color(0xFFCED4DA);    // Sekundärtext (WCAG AA)
-  static const Color darkTextTertiary = Color(0xFFADB5BD);     // Tertiärtext (dezent)
-  
+  static const Color darkBackground = Color(0xFF121212); // Haupthintergrund
+  static const Color darkSurface = Color(0xFF1E1E1E); // Karten/Container
+  static const Color darkSurfaceVariant = Color(
+    0xFF2C2C2C,
+  ); // Sekundäre Flächen
+  static const Color darkBorder = Color(0xFF3A3A3A); // Borders/Dividers
+  static const Color darkTextPrimary = Color(
+    0xFFE9ECEF,
+  ); // Haupttext (hell, WCAG AAA)
+  static const Color darkTextSecondary = Color(
+    0xFFCED4DA,
+  ); // Sekundärtext (WCAG AA)
+  static const Color darkTextTertiary = Color(
+    0xFFADB5BD,
+  ); // Tertiärtext (dezent)
+
   // ✅ Grün nur als Akzentfarbe (WCAG AA konform)
-  static final Color primaryGreen = Colors.green[700] ?? const Color(0xFF388E3C);        // #388E3C - Header & wichtige CTAs
-  static final Color primaryGreenLight = Colors.green[400] ?? const Color(0xFF66BB6A);   // Dark Mode Akzent
-  static final Color primaryGreenDark = Colors.green[800] ?? const Color(0xFF2E7D32);    // Hover/Active States
+  static final Color primaryGreen =
+      Colors.green[700] ??
+      const Color(0xFF388E3C); // #388E3C - Header & wichtige CTAs
+  static final Color primaryGreenLight =
+      Colors.green[400] ?? const Color(0xFF66BB6A); // Dark Mode Akzent
+  static final Color primaryGreenDark =
+      Colors.green[800] ?? const Color(0xFF2E7D32); // Hover/Active States
 
   // 🎨 Custom Color Palette - Additional Colors
   static const Color successColor = Color(0xFF28A745);
@@ -40,26 +64,135 @@ class AppTheme {
   /// ==========================================
 
   /// Uses Roboto font (built-in with Material Design, no network required)
-  static TextTheme _buildTextTheme(Color primaryColor, Color secondaryColor, Color tertiaryColor) {
+  static TextTheme _buildTextTheme(
+    Color primaryColor,
+    Color secondaryColor,
+    Color tertiaryColor,
+  ) {
     // Using Roboto font family (available offline in Android/iOS)
     const String fontFamily = 'Roboto';
 
     return TextTheme(
-      displayLarge: TextStyle(fontFamily: fontFamily, fontSize: 57, fontWeight: FontWeight.w700, color: primaryColor, letterSpacing: -0.25, height: 1.12),
-      displayMedium: TextStyle(fontFamily: fontFamily, fontSize: 45, fontWeight: FontWeight.w700, color: primaryColor, letterSpacing: 0, height: 1.16),
-      displaySmall: TextStyle(fontFamily: fontFamily, fontSize: 36, fontWeight: FontWeight.w600, color: primaryColor, letterSpacing: 0, height: 1.22),
-      headlineLarge: TextStyle(fontFamily: fontFamily, fontSize: 32, fontWeight: FontWeight.w700, color: primaryColor, letterSpacing: -0.5, height: 1.25),
-      headlineMedium: TextStyle(fontFamily: fontFamily, fontSize: 28, fontWeight: FontWeight.w600, color: primaryColor, letterSpacing: 0, height: 1.29),
-      headlineSmall: TextStyle(fontFamily: fontFamily, fontSize: 24, fontWeight: FontWeight.w600, color: primaryColor, letterSpacing: 0, height: 1.33),
-      titleLarge: TextStyle(fontFamily: fontFamily, fontSize: 22, fontWeight: FontWeight.w600, color: primaryColor, letterSpacing: 0, height: 1.27),
-      titleMedium: TextStyle(fontFamily: fontFamily, fontSize: 16, fontWeight: FontWeight.w600, color: primaryColor, letterSpacing: 0.15, height: 1.5),
-      titleSmall: TextStyle(fontFamily: fontFamily, fontSize: 14, fontWeight: FontWeight.w600, color: primaryColor, letterSpacing: 0.1, height: 1.43),
-      bodyLarge: TextStyle(fontFamily: fontFamily, fontSize: 16, fontWeight: FontWeight.w400, color: primaryColor, letterSpacing: 0.5, height: 1.5),
-      bodyMedium: TextStyle(fontFamily: fontFamily, fontSize: 14, fontWeight: FontWeight.w400, color: secondaryColor, letterSpacing: 0.25, height: 1.43),
-      bodySmall: TextStyle(fontFamily: fontFamily, fontSize: 12, fontWeight: FontWeight.w400, color: tertiaryColor, letterSpacing: 0.4, height: 1.33),
-      labelLarge: TextStyle(fontFamily: fontFamily, fontSize: 14, fontWeight: FontWeight.w500, color: primaryColor, letterSpacing: 0.1, height: 1.43),
-      labelMedium: TextStyle(fontFamily: fontFamily, fontSize: 12, fontWeight: FontWeight.w500, color: secondaryColor, letterSpacing: 0.5, height: 1.33),
-      labelSmall: TextStyle(fontFamily: fontFamily, fontSize: 11, fontWeight: FontWeight.w500, color: tertiaryColor, letterSpacing: 0.5, height: 1.45),
+      displayLarge: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 57,
+        fontWeight: FontWeight.w700,
+        color: primaryColor,
+        letterSpacing: -0.25,
+        height: 1.12,
+      ),
+      displayMedium: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 45,
+        fontWeight: FontWeight.w700,
+        color: primaryColor,
+        letterSpacing: 0,
+        height: 1.16,
+      ),
+      displaySmall: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 36,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        letterSpacing: 0,
+        height: 1.22,
+      ),
+      headlineLarge: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 32,
+        fontWeight: FontWeight.w700,
+        color: primaryColor,
+        letterSpacing: -0.5,
+        height: 1.25,
+      ),
+      headlineMedium: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 28,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        letterSpacing: 0,
+        height: 1.29,
+      ),
+      headlineSmall: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        letterSpacing: 0,
+        height: 1.33,
+      ),
+      titleLarge: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        letterSpacing: 0,
+        height: 1.27,
+      ),
+      titleMedium: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        letterSpacing: 0.15,
+        height: 1.5,
+      ),
+      titleSmall: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        letterSpacing: 0.1,
+        height: 1.43,
+      ),
+      bodyLarge: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: primaryColor,
+        letterSpacing: 0.5,
+        height: 1.5,
+      ),
+      bodyMedium: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: secondaryColor,
+        letterSpacing: 0.25,
+        height: 1.43,
+      ),
+      bodySmall: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: tertiaryColor,
+        letterSpacing: 0.4,
+        height: 1.33,
+      ),
+      labelLarge: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: primaryColor,
+        letterSpacing: 0.1,
+        height: 1.43,
+      ),
+      labelMedium: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: secondaryColor,
+        letterSpacing: 0.5,
+        height: 1.33,
+      ),
+      labelSmall: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: tertiaryColor,
+        letterSpacing: 0.5,
+        height: 1.45,
+      ),
     );
   }
 
@@ -112,15 +245,17 @@ class AppTheme {
         titleTextStyle: textTheme.titleLarge?.copyWith(
           color: isDarkMode ? textPrimary : onPrimaryAccent,
         ),
-        iconTheme: IconThemeData(color: isDarkMode ? textPrimary : onPrimaryAccent),
+        iconTheme: IconThemeData(
+          color: isDarkMode ? textPrimary : onPrimaryAccent,
+        ),
       ),
-      
+
       cardTheme: CardThemeData(
         elevation: isDarkMode ? 3 : 2,
         color: surfaceColor.withValues(alpha: 0.95),
         shadowColor: isDarkMode
-          ? Colors.black.withValues(alpha: 0.3)
-          : textTertiary.withValues(alpha: 0.1),
+            ? Colors.black.withValues(alpha: 0.3)
+            : textTertiary.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: borderColor.withValues(alpha: 0.5), width: 1),
@@ -131,7 +266,9 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         tileColor: surfaceColor,
-        selectedTileColor: primaryAccent.withValues(alpha: isDarkMode ? 0.15 : 0.1),
+        selectedTileColor: primaryAccent.withValues(
+          alpha: isDarkMode ? 0.15 : 0.1,
+        ),
         iconColor: textSecondary,
         textColor: textPrimary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -139,7 +276,9 @@ class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: (isDarkMode ? surfaceVariant : surfaceColor).withValues(alpha: 0.8),
+        fillColor: (isDarkMode ? surfaceVariant : surfaceColor).withValues(
+          alpha: 0.8,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: borderColor.withValues(alpha: 0.5)),
@@ -162,9 +301,11 @@ class AppTheme {
         ),
         labelStyle: textTheme.bodyMedium?.copyWith(color: textSecondary),
         hintStyle: textTheme.bodySmall?.copyWith(color: textTertiary),
-        floatingLabelStyle: textTheme.bodyMedium?.copyWith(color: primaryAccent),
+        floatingLabelStyle: textTheme.bodyMedium?.copyWith(
+          color: primaryAccent,
+        ),
       ),
-      
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryAccent,
@@ -172,8 +313,12 @@ class AppTheme {
           elevation: isDarkMode ? 4 : 3,
           shadowColor: primaryAccent.withValues(alpha: isDarkMode ? 0.3 : 0.4),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
 
@@ -181,7 +326,9 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: primaryAccent,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
 
@@ -190,8 +337,12 @@ class AppTheme {
           foregroundColor: textPrimary,
           side: BorderSide(color: borderColor, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
 
@@ -203,7 +354,8 @@ class AppTheme {
       ),
 
       dialogTheme: DialogThemeData(
-        backgroundColor: (isDarkMode ? surfaceVariant : surfaceColor).withValues(alpha: 0.98),
+        backgroundColor: (isDarkMode ? surfaceVariant : surfaceColor)
+            .withValues(alpha: 0.98),
         elevation: 12,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -234,8 +386,12 @@ class AppTheme {
         unselectedItemColor: textTertiary,
         elevation: 8,
         type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w400),
+        selectedLabelStyle: textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.w400,
+        ),
       ),
 
       snackBarTheme: SnackBarThemeData(
@@ -250,21 +406,21 @@ class AppTheme {
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-            ? onPrimaryAccent
-            : textTertiary,
+              ? onPrimaryAccent
+              : textTertiary,
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-            ? primaryAccent
-            : borderColor,
+              ? primaryAccent
+              : borderColor,
         ),
       ),
 
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-            ? primaryAccent
-            : Colors.transparent,
+              ? primaryAccent
+              : Colors.transparent,
         ),
         checkColor: WidgetStateProperty.all(onPrimaryAccent),
         side: BorderSide(color: borderColor, width: 2),
@@ -274,8 +430,8 @@ class AppTheme {
       radioTheme: RadioThemeData(
         fillColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-            ? primaryAccent
-            : textTertiary,
+              ? primaryAccent
+              : textTertiary,
         ),
       ),
     );
@@ -320,26 +476,32 @@ class AppTheme {
   /// ==========================================
   /// HELPER METHODS
   /// ==========================================
-  
+
   static Color getContrastColor(Color backgroundColor) {
     final luminance = backgroundColor.computeLuminance();
     return luminance > 0.5 ? Colors.black : Colors.white;
   }
 
-  static double getOpacity(BuildContext context, double lightOpacity, double darkOpacity) {
-    return Theme.of(context).brightness == Brightness.dark ? darkOpacity : lightOpacity;
+  static double getOpacity(
+    BuildContext context,
+    double lightOpacity,
+    double darkOpacity,
+  ) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? darkOpacity
+        : lightOpacity;
   }
-  
+
   static bool isDark(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark;
   }
-  
+
   static Color getGlassColor(BuildContext context, {double opacity = 0.1}) {
     return isDark(context)
         ? Colors.white.withValues(alpha: opacity)
         : Colors.white.withValues(alpha: opacity + 0.1);
   }
-  
+
   static Color getBorderColor(BuildContext context, {double opacity = 1.0}) {
     return isDark(context)
         ? darkBorder.withValues(alpha: opacity)

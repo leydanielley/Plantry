@@ -9,20 +9,20 @@ class HealthConfig {
   // HEALTH SCORE WEIGHTS (Must sum to 1.0)
   // ============================================================
 
-  static const double wateringWeight = 0.30;        // 30% - Most important factor
-  static const double phStabilityWeight = 0.25;     // 25% - pH balance critical
-  static const double nutrientHealthWeight = 0.20;  // 20% - EC/PPM levels
-  static const double documentationWeight = 0.15;   // 15% - Photo tracking
-  static const double activityWeight = 0.10;        // 10% - Log frequency
+  static const double wateringWeight = 0.30; // 30% - Most important factor
+  static const double phStabilityWeight = 0.25; // 25% - pH balance critical
+  static const double nutrientHealthWeight = 0.20; // 20% - EC/PPM levels
+  static const double documentationWeight = 0.15; // 15% - Photo tracking
+  static const double activityWeight = 0.10; // 10% - Log frequency
 
   // ============================================================
   // HEALTH LEVEL THRESHOLDS (0-100)
   // ============================================================
 
-  static const int excellentThreshold = 90;  // 90-100
-  static const int goodThreshold = 70;       // 70-89
-  static const int fairThreshold = 50;       // 50-69
-  static const int poorThreshold = 30;       // 30-49
+  static const int excellentThreshold = 90; // 90-100
+  static const int goodThreshold = 70; // 70-89
+  static const int fairThreshold = 50; // 50-69
+  static const int poorThreshold = 30; // 30-49
   // Below 30 = critical
 
   // ============================================================
@@ -82,37 +82,41 @@ class HealthConfig {
   static const double phCriticalMax = 7.5;
 
   // pH Stability ranges
-  static const double phStabilityWarning = 1.0;   // pH fluctuation > 1.0 = warning
-  static const double phStabilityCritical = 2.0;  // pH fluctuation > 2.0 = critical
+  static const double phStabilityWarning =
+      1.0; // pH fluctuation > 1.0 = warning
+  static const double phStabilityCritical =
+      2.0; // pH fluctuation > 2.0 = critical
 
   // ============================================================
   // PHOTO DOCUMENTATION THRESHOLDS
   // ============================================================
 
-  static const int photoWarningDays = 7;           // 7 days without photo = warning
-  static const int photoCriticalDays = 14;         // 14 days without photo = critical
-  static const int photoCountBonus = 5;            // 5+ photos = bonus score
+  static const int photoWarningDays = 7; // 7 days without photo = warning
+  static const int photoCriticalDays = 14; // 14 days without photo = critical
+  static const int photoCountBonus = 5; // 5+ photos = bonus score
 
   // ============================================================
   // ACTIVITY/LOGGING THRESHOLDS
   // ============================================================
 
-  static const int activityWarningDays = 3;        // 3 days without log = warning
-  static const int activityCriticalDays = 7;       // 7 days without log = critical
-  static const int activityCountBonus = 10;        // 10+ logs = bonus score
+  static const int activityWarningDays = 3; // 3 days without log = warning
+  static const int activityCriticalDays = 7; // 7 days without log = critical
+  static const int activityCountBonus = 10; // 10+ logs = bonus score
 
   // ============================================================
   // SCORE CALCULATION PARAMETERS
   // ============================================================
 
   // Watering consistency
-  static const double wateringStdDevThreshold = 2.0;  // Standard deviation > 2.0 = inconsistent
+  static const double wateringStdDevThreshold =
+      2.0; // Standard deviation > 2.0 = inconsistent
 
   // EC trend detection
-  static const double ecTrendChangeThreshold = 0.5;   // EC change > 0.5 = significant trend
+  static const double ecTrendChangeThreshold =
+      0.5; // EC change > 0.5 = significant trend
 
   // Number of recent values to analyze
-  static const int recentValuesCount = 10;            // Use last 10 logs for calculations
+  static const int recentValuesCount = 10; // Use last 10 logs for calculations
 
   // ============================================================
   // SCORE PENALTIES (negative adjustments)

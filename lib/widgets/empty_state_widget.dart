@@ -113,16 +113,14 @@ class EmptyStateWidget extends StatelessWidget {
               subtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: subtitleFontSize ?? AppConstants.emptyStateSubtitleFontSize,
+                fontSize:
+                    subtitleFontSize ?? AppConstants.emptyStateSubtitleFontSize,
                 color: subtitleColor ?? defaultSubtitleColor,
               ),
             ),
 
             // Optional action button
-            if (action != null) ...[
-              const SizedBox(height: 24),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 24), action!],
           ],
         ),
       ),

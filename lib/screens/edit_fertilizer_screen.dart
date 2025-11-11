@@ -24,7 +24,8 @@ class EditFertilizerScreen extends StatefulWidget {
 }
 
 // ✅ FIX: Added MountedStateMixin to prevent setState after dispose
-class _EditFertilizerScreenState extends State<EditFertilizerScreen> with MountedStateMixin {
+class _EditFertilizerScreenState extends State<EditFertilizerScreen>
+    with MountedStateMixin {
   final _formKey = GlobalKey<FormState>();
   final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
@@ -45,17 +46,23 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> with Mounte
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.fertilizer.name);
-    _brandController = TextEditingController(text: widget.fertilizer.brand ?? '');
+    _brandController = TextEditingController(
+      text: widget.fertilizer.brand ?? '',
+    );
     _npkController = TextEditingController(text: widget.fertilizer.npk ?? '');
     _typeController = TextEditingController(text: widget.fertilizer.type ?? '');
     _descriptionController = TextEditingController(
       text: widget.fertilizer.description ?? '',
     );
     _ecValueController = TextEditingController(
-      text: widget.fertilizer.ecValue != null ? widget.fertilizer.ecValue.toString() : '',
+      text: widget.fertilizer.ecValue != null
+          ? widget.fertilizer.ecValue.toString()
+          : '',
     );
     _ppmValueController = TextEditingController(
-      text: widget.fertilizer.ppmValue != null ? widget.fertilizer.ppmValue.toString() : '',
+      text: widget.fertilizer.ppmValue != null
+          ? widget.fertilizer.ppmValue.toString()
+          : '',
     );
     _loadSettings();
   }

@@ -90,10 +90,11 @@ class MigrationManager {
     }
 
     // Step 2: Get migrations that need to run
-    final migrationsToRun = migrations
-        .where((m) => m.version > oldVersion && m.version <= newVersion)
-        .toList()
-      ..sort((a, b) => a.version.compareTo(b.version));
+    final migrationsToRun =
+        migrations
+            .where((m) => m.version > oldVersion && m.version <= newVersion)
+            .toList()
+          ..sort((a, b) => a.version.compareTo(b.version));
 
     if (migrationsToRun.isEmpty) {
       AppLogger.warning(
@@ -112,58 +113,64 @@ class MigrationManager {
 
     // Step 3: Run migrations sequentially inside a transaction (with timeout)
     try {
-      await db.transaction((txn) async {
-        int currentStep = 0;
-        final totalSteps = migrationsToRun.length;
+      await db
+          .transaction((txn) async {
+            int currentStep = 0;
+            final totalSteps = migrationsToRun.length;
 
-        for (final migration in migrationsToRun) {
-          currentStep++;
-          final progress = '[$currentStep/$totalSteps]';
+            for (final migration in migrationsToRun) {
+              currentStep++;
+              final progress = '[$currentStep/$totalSteps]';
 
-          AppLogger.info(
-            'MigrationManager',
-            '⏳ $progress Running migration v${migration.version}',
-            migration.description,
-          );
+              AppLogger.info(
+                'MigrationManager',
+                '⏳ $progress Running migration v${migration.version}',
+                migration.description,
+              );
 
-          try {
-            // Run migration with timeout
-            await migration.up(txn).timeout(
-              timeout,
-              onTimeout: () {
+              try {
+                // Run migration with timeout
+                await migration
+                    .up(txn)
+                    .timeout(
+                      timeout,
+                      onTimeout: () {
+                        AppLogger.error(
+                          'MigrationManager',
+                          '⏱️ Migration v${migration.version} timeout after ${timeout.inMinutes}min',
+                        );
+                        throw TimeoutException(
+                          'Migration v${migration.version} took too long',
+                          timeout,
+                        );
+                      },
+                    );
+
+                AppLogger.info(
+                  'MigrationManager',
+                  '✅ $progress Migration v${migration.version} completed',
+                );
+              } catch (e, stack) {
                 AppLogger.error(
                   'MigrationManager',
-                  '⏱️ Migration v${migration.version} timeout after ${timeout.inMinutes}min',
+                  '❌ $progress Migration v${migration.version} failed',
+                  e,
+                  stack,
                 );
-                throw TimeoutException(
-                  'Migration v${migration.version} took too long',
-                  timeout,
-                );
-              },
-            );
-
-            AppLogger.info(
-              'MigrationManager',
-              '✅ $progress Migration v${migration.version} completed',
-            );
-          } catch (e, stack) {
-            AppLogger.error(
-              'MigrationManager',
-              '❌ $progress Migration v${migration.version} failed',
-              e,
-              stack,
-            );
-            // Transaction will auto-rollback on error
-            rethrow;
-          }
-        }
-      }).timeout(
-        timeout * migrationsToRun.length, // Total timeout = per-migration timeout * count
-        onTimeout: () {
-          AppLogger.error('MigrationManager', '⏱️ Total migration timeout');
-          throw TimeoutException('Overall migration timeout');
-        },
-      );
+                // Transaction will auto-rollback on error
+                rethrow;
+              }
+            }
+          })
+          .timeout(
+            timeout *
+                migrationsToRun
+                    .length, // Total timeout = per-migration timeout * count
+            onTimeout: () {
+              AppLogger.error('MigrationManager', '⏱️ Total migration timeout');
+              throw TimeoutException('Overall migration timeout');
+            },
+          );
 
       AppLogger.info(
         'MigrationManager',

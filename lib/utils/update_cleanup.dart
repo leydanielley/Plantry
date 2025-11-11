@@ -41,8 +41,14 @@ class UpdateCleanup {
   static Future<void> _versionSpecificCleanup(UpdateInfo updateInfo) async {
     try {
       // Example: Clear thumbnails on major version upgrade
-      if (_isMajorVersionUpdate(updateInfo.previousVersion, updateInfo.currentVersion)) {
-        AppLogger.info('UpdateCleanup', 'Major version update - clearing caches');
+      if (_isMajorVersionUpdate(
+        updateInfo.previousVersion,
+        updateInfo.currentVersion,
+      )) {
+        AppLogger.info(
+          'UpdateCleanup',
+          'Major version update - clearing caches',
+        );
         await ImageCacheHelper().clearDiskCache();
       }
 
@@ -146,7 +152,10 @@ class UpdateCleanup {
       }
 
       if (deletedCount > 0) {
-        AppLogger.info('UpdateCleanup', 'Deleted $deletedCount temp files/dirs');
+        AppLogger.info(
+          'UpdateCleanup',
+          'Deleted $deletedCount temp files/dirs',
+        );
       }
     } catch (e) {
       AppLogger.error('UpdateCleanup', 'Failed to cleanup temp files', e);
@@ -161,7 +170,9 @@ class UpdateCleanup {
       // Find all backup ZIP files
       final backups = <FileSystemEntity>[];
       await for (final entity in appDir.list()) {
-        if (entity is File && entity.path.endsWith('.zip') && entity.path.contains('plantry_backup_')) {
+        if (entity is File &&
+            entity.path.endsWith('.zip') &&
+            entity.path.contains('plantry_backup_')) {
           backups.add(entity);
         }
       }
@@ -189,7 +200,10 @@ class UpdateCleanup {
       }
 
       if (deletedCount > 0) {
-        AppLogger.info('UpdateCleanup', 'Deleted $deletedCount old backups (kept 5 most recent)');
+        AppLogger.info(
+          'UpdateCleanup',
+          'Deleted $deletedCount old backups (kept 5 most recent)',
+        );
       }
     } catch (e) {
       AppLogger.error('UpdateCleanup', 'Failed to cleanup old backups', e);

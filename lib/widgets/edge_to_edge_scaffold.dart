@@ -68,8 +68,11 @@ class EdgeToEdgeScaffold extends StatelessWidget {
       statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
 
       // Navigation Bar (bottom)
-      systemNavigationBarColor: Colors.transparent, // Transparent for edge-to-edge
-      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor:
+          Colors.transparent, // Transparent for edge-to-edge
+      systemNavigationBarIconBrightness: isDark
+          ? Brightness.light
+          : Brightness.dark,
       systemNavigationBarDividerColor: Colors.transparent,
 
       // System Gestures (Android 10+)

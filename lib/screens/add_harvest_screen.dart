@@ -27,19 +27,22 @@ class AddHarvestScreen extends StatefulWidget {
 class _AddHarvestScreenState extends State<AddHarvestScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
-  
+
   int _currentStep = 0;
-  
+
   // Step 1: Basic Harvest Data
   final DateTime _harvestDate = DateTime.now();
   final TextEditingController _wetWeightController = TextEditingController();
-  
+
   // Step 2: Drying Data
   final DateTime _dryingStartDate = DateTime.now();
-  final TextEditingController _dryingMethodController = TextEditingController(text: 'Hängend');
+  final TextEditingController _dryingMethodController = TextEditingController(
+    text: 'Hängend',
+  );
   final TextEditingController _dryingTempController = TextEditingController();
-  final TextEditingController _dryingHumidityController = TextEditingController();
-  
+  final TextEditingController _dryingHumidityController =
+      TextEditingController();
+
   // Step 3: Optional
   final TextEditingController _notesController = TextEditingController();
 
@@ -58,7 +61,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
 
     AppLogger.info('AddHarvestScreen', '🟢 Starting to save harvest...');
 
-    try{
+    try {
       // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
       final harvest = Harvest(
         plantId: widget.plant.id!,
@@ -170,7 +173,9 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                     decoration: BoxDecoration(
                       color: Colors.green[50],
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green[200] ?? Colors.green),
+                      border: Border.all(
+                        color: Colors.green[200] ?? Colors.green,
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -201,13 +206,15 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300] ?? Colors.grey),
+                      border: Border.all(
+                        color: Colors.grey[300] ?? Colors.grey,
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -236,7 +243,10 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.green[100],
                             borderRadius: BorderRadius.circular(12),
@@ -254,7 +264,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // ✅ BUG #9 FIX: Validierung hinzugefügt!
                   TextFormField(
                     controller: _wetWeightController,
@@ -266,20 +276,21 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                       border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
-                    validator: (value) => Validators.validatePositiveNumber(value, min: 1.0, max: 10000.0),
+                    validator: (value) => Validators.validatePositiveNumber(
+                      value,
+                      min: 1.0,
+                      max: 10000.0,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Das Gewicht direkt nach der Ernte',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
               ),
             ),
-            
+
             Step(
               title: const Text('Trocknung'),
               isActive: _currentStep >= 1,
@@ -292,7 +303,9 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300] ?? Colors.grey),
+                      border: Border.all(
+                        color: Colors.grey[300] ?? Colors.grey,
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -311,7 +324,9 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                DateFormat('dd.MM.yyyy').format(_dryingStartDate),
+                                DateFormat(
+                                  'dd.MM.yyyy',
+                                ).format(_dryingStartDate),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -321,7 +336,10 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.orange[100],
                             borderRadius: BorderRadius.circular(12),
@@ -339,18 +357,21 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   TextFormField(
                     controller: _dryingMethodController,
                     decoration: InputDecoration(
                       labelText: 'Trocknungs-Methode',
                       hintText: 'z.B. Hängend, Netz, Box',
-                      prefixIcon: Icon(Icons.dry_cleaning, color: Colors.orange[700]),
+                      prefixIcon: Icon(
+                        Icons.dry_cleaning,
+                        color: Colors.orange[700],
+                      ),
                       border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // ✅ BUG #9 FIX: Validierung hinzugefügt!
                   TextFormField(
                     controller: _dryingTempController,
@@ -358,14 +379,17 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                       labelText: 'Temperatur (optional)',
                       hintText: 'z.B. 18',
                       suffixText: '°C',
-                      prefixIcon: Icon(Icons.thermostat, color: Colors.orange[700]),
+                      prefixIcon: Icon(
+                        Icons.thermostat,
+                        color: Colors.orange[700],
+                      ),
                       border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) => Validators.validateTemperature(value),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // ✅ BUG #9 FIX: Validierung hinzugefügt!
                   TextFormField(
                     controller: _dryingHumidityController,
@@ -373,7 +397,10 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                       labelText: 'Luftfeuchtigkeit (optional)',
                       hintText: 'z.B. 55',
                       suffixText: '%',
-                      prefixIcon: Icon(Icons.water_drop, color: Colors.orange[700]),
+                      prefixIcon: Icon(
+                        Icons.water_drop,
+                        color: Colors.orange[700],
+                      ),
                       border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
@@ -382,7 +409,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                 ],
               ),
             ),
-            
+
             Step(
               title: const Text('Notizen'),
               isActive: _currentStep >= 2,

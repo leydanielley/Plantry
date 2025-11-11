@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// 🎯 Bouncy Button Widget
-/// 
+///
 /// Animated button with bouncy scale effect on tap
 /// Perfect for CTAs and interactive elements
 class BouncyButton extends StatefulWidget {
@@ -46,19 +46,11 @@ class _BouncyButtonState extends State<BouncyButton>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: widget.scaleFactor,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -95,23 +87,27 @@ class _BouncyButtonState extends State<BouncyButton>
         child: Container(
           width: widget.width,
           height: widget.height,
-          padding: widget.padding ?? const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 12,
-          ),
+          padding:
+              widget.padding ??
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           decoration: BoxDecoration(
             color: widget.onPressed == null
                 ? defaultBackgroundColor.withValues(alpha: 0.5)
                 : defaultBackgroundColor,
             borderRadius: BorderRadius.circular(widget.borderRadius),
-            border: widget.border != null ? Border.fromBorderSide(widget.border!) : null,
-            boxShadow: widget.onPressed == null ? null : (widget.boxShadow ?? [
-              BoxShadow(
-                color: defaultBackgroundColor.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ]),
+            border: widget.border != null
+                ? Border.fromBorderSide(widget.border!)
+                : null,
+            boxShadow: widget.onPressed == null
+                ? null
+                : (widget.boxShadow ??
+                      [
+                        BoxShadow(
+                          color: defaultBackgroundColor.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]),
           ),
           child: DefaultTextStyle(
             style: TextStyle(
@@ -161,19 +157,11 @@ class _BouncyIconButtonState extends State<BouncyIconButton>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: widget.scaleFactor,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

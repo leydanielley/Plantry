@@ -9,7 +9,9 @@ import 'package:growlog_app/repositories/interfaces/i_notification_repository.da
 import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
-class NotificationRepository with RepositoryErrorHandler implements INotificationRepository {
+class NotificationRepository
+    with RepositoryErrorHandler
+    implements INotificationRepository {
   @override
   String get repositoryName => 'NotificationRepository';
 
@@ -19,7 +21,8 @@ class NotificationRepository with RepositoryErrorHandler implements INotificatio
   static const String _keyPhotoReminders = 'notifications_photo';
   static const String _keyHarvestReminders = 'notifications_harvest';
   static const String _keyWateringInterval = 'notifications_watering_interval';
-  static const String _keyFertilizingInterval = 'notifications_fertilizing_interval';
+  static const String _keyFertilizingInterval =
+      'notifications_fertilizing_interval';
   static const String _keyPhotoInterval = 'notifications_photo_interval';
   static const String _keyNotificationTime = 'notifications_time';
 
@@ -54,11 +57,17 @@ class NotificationRepository with RepositoryErrorHandler implements INotificatio
 
       await prefs.setBool(_keyEnabled, settings.enabled);
       await prefs.setBool(_keyWateringReminders, settings.wateringReminders);
-      await prefs.setBool(_keyFertilizingReminders, settings.fertilizingReminders);
+      await prefs.setBool(
+        _keyFertilizingReminders,
+        settings.fertilizingReminders,
+      );
       await prefs.setBool(_keyPhotoReminders, settings.photoReminders);
       await prefs.setBool(_keyHarvestReminders, settings.harvestReminders);
       await prefs.setInt(_keyWateringInterval, settings.wateringIntervalDays);
-      await prefs.setInt(_keyFertilizingInterval, settings.fertilizingIntervalDays);
+      await prefs.setInt(
+        _keyFertilizingInterval,
+        settings.fertilizingIntervalDays,
+      );
       await prefs.setInt(_keyPhotoInterval, settings.photoIntervalDays);
       await prefs.setString(_keyNotificationTime, settings.notificationTime);
 

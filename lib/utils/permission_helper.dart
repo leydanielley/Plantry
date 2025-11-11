@@ -22,7 +22,10 @@ class PermissionHelper {
           maxHeight: 1,
         );
       } catch (error) {
-        AppLogger.warning('PermissionHelper', 'Camera permission check failed: $error');
+        AppLogger.warning(
+          'PermissionHelper',
+          'Camera permission check failed: $error',
+        );
         // Continue - this might be user cancellation, which is OK
       }
 
@@ -57,7 +60,10 @@ class PermissionHelper {
           maxHeight: 1,
         );
       } catch (error) {
-        AppLogger.warning('PermissionHelper', 'Photo permission check failed: $error');
+        AppLogger.warning(
+          'PermissionHelper',
+          'Photo permission check failed: $error',
+        );
         // Continue - this might be user cancellation, which is OK
       }
 
@@ -121,7 +127,10 @@ class PermissionHelper {
     try {
       // For Flutter, notification permissions are handled by the plugin
       // We'll just log and return true for now
-      AppLogger.info('PermissionHelper', 'Notification permission check - handled by plugin');
+      AppLogger.info(
+        'PermissionHelper',
+        'Notification permission check - handled by plugin',
+      );
       return true;
     } catch (e) {
       AppLogger.error('PermissionHelper', 'Notification permission error', e);

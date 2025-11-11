@@ -6,7 +6,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Helper class for setting up test databases
 class TestDatabaseHelper {
-  static const int currentVersion = 10; // Should match DatabaseHelper.currentVersion
+  static const int currentVersion =
+      10; // Should match DatabaseHelper.currentVersion
 
   /// Initialize sqflite_ffi for tests
   static void initFfi() {

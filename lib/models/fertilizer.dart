@@ -2,7 +2,7 @@
 // GROWLOG - Fertilizer Model
 // =============================================
 
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -14,35 +14,35 @@ class Fertilizer {
   final String? npk;
   final String? type;
   final String? description;
-  final double? ecValue;    // v8: EC contribution per ml (for RDWC calculations)
-  final double? ppmValue;   // v8: PPM contribution per ml (for RDWC calculations)
+  final double? ecValue; // v8: EC contribution per ml (for RDWC calculations)
+  final double? ppmValue; // v8: PPM contribution per ml (for RDWC calculations)
 
   // v0.9.1: HydroBuddy-compatible detailed composition
-  final String? formula;      // Chemical formula (e.g. "KNO3", "Ca(NO3)2")
-  final String? source;       // Source URL or reference
-  final double? purity;       // Purity (0.0 - 1.0)
-  final bool? isLiquid;       // Is liquid fertilizer
-  final double? density;      // Density for liquid (g/ml)
+  final String? formula; // Chemical formula (e.g. "KNO3", "Ca(NO3)2")
+  final String? source; // Source URL or reference
+  final double? purity; // Purity (0.0 - 1.0)
+  final bool? isLiquid; // Is liquid fertilizer
+  final double? density; // Density for liquid (g/ml)
 
   // Macronutrients (as percentages)
-  final double? nNO3;         // N as Nitrate (NO3-)
-  final double? nNH4;         // N as Ammonium (NH4+)
-  final double? p;            // Phosphorus (P)
-  final double? k;            // Potassium (K)
-  final double? mg;           // Magnesium (Mg)
-  final double? ca;           // Calcium (Ca)
-  final double? s;            // Sulfur (S)
+  final double? nNO3; // N as Nitrate (NO3-)
+  final double? nNH4; // N as Ammonium (NH4+)
+  final double? p; // Phosphorus (P)
+  final double? k; // Potassium (K)
+  final double? mg; // Magnesium (Mg)
+  final double? ca; // Calcium (Ca)
+  final double? s; // Sulfur (S)
 
   // Micronutrients (as percentages)
-  final double? b;            // Boron (B)
-  final double? fe;           // Iron (Fe)
-  final double? zn;           // Zinc (Zn)
-  final double? cu;           // Copper (Cu)
-  final double? mn;           // Manganese (Mn)
-  final double? mo;           // Molybdenum (Mo)
-  final double? na;           // Sodium (Na)
-  final double? si;           // Silicon (Si)
-  final double? cl;           // Chlorine (Cl)
+  final double? b; // Boron (B)
+  final double? fe; // Iron (Fe)
+  final double? zn; // Zinc (Zn)
+  final double? cu; // Copper (Cu)
+  final double? mn; // Manganese (Mn)
+  final double? mo; // Molybdenum (Mo)
+  final double? na; // Sodium (Na)
+  final double? si; // Silicon (Si)
+  final double? cl; // Chlorine (Cl)
 
   final DateTime createdAt;
 
@@ -78,7 +78,7 @@ class Fertilizer {
     this.cl,
     DateTime? createdAt,
   }) : assert(name.isNotEmpty, 'Name cannot be empty'),
-        createdAt = createdAt ?? DateTime.now();
+       createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
   factory Fertilizer.fromMap(Map<String, dynamic> map) {
@@ -94,7 +94,9 @@ class Fertilizer {
       formula: map['formula'] as String?,
       source: map['source'] as String?,
       purity: (map['purity'] as num?)?.toDouble(),
-      isLiquid: map['is_liquid'] == 1 ? true : (map['is_liquid'] == 0 ? false : null),
+      isLiquid: map['is_liquid'] == 1
+          ? true
+          : (map['is_liquid'] == 0 ? false : null),
       density: (map['density'] as num?)?.toDouble(),
       nNO3: (map['n_no3'] as num?)?.toDouble(),
       nNH4: (map['n_nh4'] as num?)?.toDouble(),
@@ -196,7 +198,9 @@ class Fertilizer {
       brand: brand == _undefined ? this.brand : brand as String?,
       npk: npk == _undefined ? this.npk : npk as String?,
       type: type == _undefined ? this.type : type as String?,
-      description: description == _undefined ? this.description : description as String?,
+      description: description == _undefined
+          ? this.description
+          : description as String?,
       ecValue: ecValue == _undefined ? this.ecValue : ecValue as double?,
       ppmValue: ppmValue == _undefined ? this.ppmValue : ppmValue as double?,
       formula: formula == _undefined ? this.formula : formula as String?,
@@ -254,17 +258,23 @@ class Fertilizer {
   /// Calculate NPK ratio
   String get npkRatio {
     if (npk == null || npk!.isEmpty) return '';
-    
+
     final n = nValue;
     final p = pValue;
     final k = kValue;
-    
+
     if (n == 0 && p == 0 && k == 0) return '0:0:0';
-    
+
     // Find GCD to simplify ratio
-    final minValue = [n, p, k].where((v) => v > 0).fold<double?>(null, 
-      (min, v) => min == null || v < min ? v : min) ?? 1;
-    
+    final minValue =
+        [n, p, k]
+            .where((v) => v > 0)
+            .fold<double?>(
+              null,
+              (min, v) => min == null || v < min ? v : min,
+            ) ??
+        1;
+
     return '${(n / minValue).round()}:${(p / minValue).round()}:${(k / minValue).round()}';
   }
 
@@ -273,7 +283,7 @@ class Fertilizer {
     final n = nValue;
     final p = pValue;
     final k = kValue;
-    
+
     if (n == 0 && p == 0 && k == 0) return 'Supplement';
     if (n > p && n > k) return 'Growth';
     if (p > n && p >= k) return 'Bloom';
@@ -293,9 +303,7 @@ class Fertilizer {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Fertilizer &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is Fertilizer && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

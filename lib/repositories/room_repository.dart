@@ -25,7 +25,7 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
       final maps = await db.query(
         'rooms',
         orderBy: 'name ASC',
-        limit: limit ?? 1000,  // Reasonable default limit
+        limit: limit ?? 1000, // Reasonable default limit
       );
       return maps.map((map) => Room.fromMap(map)).toList();
     } catch (e, stackTrace) {
@@ -49,7 +49,12 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
       if (maps.isEmpty) return null;
       return Room.fromMap(maps.first);
     } catch (e, stackTrace) {
-      AppLogger.error('RoomRepository', 'Failed to load room by id', e, stackTrace);
+      AppLogger.error(
+        'RoomRepository',
+        'Failed to load room by id',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }
@@ -87,40 +92,52 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
       final db = await _dbHelper.database;
 
       // Check plants
-      final plantCount = Sqflite.firstIntValue(
-        await db.rawQuery(
-          'SELECT COUNT(*) FROM plants WHERE room_id = ?',
-          [id],
-        ),
-      ) ?? 0;
+      final plantCount =
+          Sqflite.firstIntValue(
+            await db.rawQuery('SELECT COUNT(*) FROM plants WHERE room_id = ?', [
+              id,
+            ]),
+          ) ??
+          0;
 
       // Check grows (indirekt über plants in grows)
-      final growCount = Sqflite.firstIntValue(
-        await db.rawQuery(
-          'SELECT COUNT(DISTINCT grow_id) FROM plants WHERE room_id = ? AND grow_id IS NOT NULL',
-          [id],
-        ),
-      ) ?? 0;
+      final growCount =
+          Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(DISTINCT grow_id) FROM plants WHERE room_id = ? AND grow_id IS NOT NULL',
+              [id],
+            ),
+          ) ??
+          0;
 
       // Check hardware
-      final hardwareCount = Sqflite.firstIntValue(
-        await db.rawQuery(
-          'SELECT COUNT(*) FROM hardware WHERE room_id = ?',
-          [id],
-        ),
-      ) ?? 0;
+      final hardwareCount =
+          Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM hardware WHERE room_id = ?',
+              [id],
+            ),
+          ) ??
+          0;
 
       // Check RDWC systems
-      final systemCount = Sqflite.firstIntValue(
-        await db.rawQuery(
-          'SELECT COUNT(*) FROM rdwc_systems WHERE room_id = ?',
-          [id],
-        ),
-      ) ?? 0;
+      final systemCount =
+          Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM rdwc_systems WHERE room_id = ?',
+              [id],
+            ),
+          ) ??
+          0;
 
       return (plantCount + growCount + hardwareCount + systemCount) > 0;
     } catch (e, stackTrace) {
-      AppLogger.error('RoomRepository', 'Failed to check room usage', e, stackTrace);
+      AppLogger.error(
+        'RoomRepository',
+        'Failed to check room usage',
+        e,
+        stackTrace,
+      );
       return false;
     }
   }
@@ -132,33 +149,46 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
       final db = await _dbHelper.database;
 
       return {
-        'plants': Sqflite.firstIntValue(
-          await db.rawQuery(
-            'SELECT COUNT(*) FROM plants WHERE room_id = ?',
-            [id],
-          ),
-        ) ?? 0,
-        'grows': Sqflite.firstIntValue(
-          await db.rawQuery(
-            'SELECT COUNT(DISTINCT grow_id) FROM plants WHERE room_id = ? AND grow_id IS NOT NULL',
-            [id],
-          ),
-        ) ?? 0,
-        'hardware': Sqflite.firstIntValue(
-          await db.rawQuery(
-            'SELECT COUNT(*) FROM hardware WHERE room_id = ?',
-            [id],
-          ),
-        ) ?? 0,
-        'rdwc_systems': Sqflite.firstIntValue(
-          await db.rawQuery(
-            'SELECT COUNT(*) FROM rdwc_systems WHERE room_id = ?',
-            [id],
-          ),
-        ) ?? 0,
+        'plants':
+            Sqflite.firstIntValue(
+              await db.rawQuery(
+                'SELECT COUNT(*) FROM plants WHERE room_id = ?',
+                [id],
+              ),
+            ) ??
+            0,
+        'grows':
+            Sqflite.firstIntValue(
+              await db.rawQuery(
+                'SELECT COUNT(DISTINCT grow_id) FROM plants WHERE room_id = ? AND grow_id IS NOT NULL',
+                [id],
+              ),
+            ) ??
+            0,
+        'hardware':
+            Sqflite.firstIntValue(
+              await db.rawQuery(
+                'SELECT COUNT(*) FROM hardware WHERE room_id = ?',
+                [id],
+              ),
+            ) ??
+            0,
+        'rdwc_systems':
+            Sqflite.firstIntValue(
+              await db.rawQuery(
+                'SELECT COUNT(*) FROM rdwc_systems WHERE room_id = ?',
+                [id],
+              ),
+            ) ??
+            0,
       };
     } catch (e, stackTrace) {
-      AppLogger.error('RoomRepository', 'Failed to get room usage details', e, stackTrace);
+      AppLogger.error(
+        'RoomRepository',
+        'Failed to get room usage details',
+        e,
+        stackTrace,
+      );
       return {'plants': 0, 'grows': 0, 'hardware': 0, 'rdwc_systems': 0};
     }
   }
@@ -192,16 +222,24 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
         // Build helpful error message
         final parts = <String>[];
         if (usageDetails['plants']! > 0) {
-          parts.add('${usageDetails['plants']} Pflanze${usageDetails['plants']! > 1 ? 'n' : ''}');
+          parts.add(
+            '${usageDetails['plants']} Pflanze${usageDetails['plants']! > 1 ? 'n' : ''}',
+          );
         }
         if (usageDetails['grows']! > 0) {
-          parts.add('${usageDetails['grows']} Grow${usageDetails['grows']! > 1 ? 's' : ''}');
+          parts.add(
+            '${usageDetails['grows']} Grow${usageDetails['grows']! > 1 ? 's' : ''}',
+          );
         }
         if (usageDetails['hardware']! > 0) {
-          parts.add('${usageDetails['hardware']} Hardware-Gerät${usageDetails['hardware']! > 1 ? 'e' : ''}');
+          parts.add(
+            '${usageDetails['hardware']} Hardware-Gerät${usageDetails['hardware']! > 1 ? 'e' : ''}',
+          );
         }
         if (usageDetails['rdwc_systems']! > 0) {
-          parts.add('${usageDetails['rdwc_systems']} RDWC-System${usageDetails['rdwc_systems']! > 1 ? 'e' : ''}');
+          parts.add(
+            '${usageDetails['rdwc_systems']} RDWC-System${usageDetails['rdwc_systems']! > 1 ? 'e' : ''}',
+          );
         }
 
         throw RepositoryException.conflict(
@@ -212,11 +250,7 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
       }
 
       // Safe to delete
-      return await db.delete(
-        'rooms',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      return await db.delete('rooms', where: 'id = ?', whereArgs: [id]);
     } catch (e, stackTrace) {
       AppLogger.error('RoomRepository', 'Failed to delete room', e, stackTrace);
       rethrow;

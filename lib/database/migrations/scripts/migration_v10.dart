@@ -65,7 +65,10 @@ final Migration migrationV10 = Migration(
     // STEP 2: Intelligent reconstruction from logs
     // ================================================================
 
-    AppLogger.info('Migration_v10', '2/4: Reconstructing phase history from logs...');
+    AppLogger.info(
+      'Migration_v10',
+      '2/4: Reconstructing phase history from logs...',
+    );
 
     // Get all plants
     final plants = await txn.query('plants');
@@ -78,7 +81,10 @@ final Migration migrationV10 = Migration(
       final currentPhase = plant['phase'] as String?;
       final phaseStartDate = plant['phase_start_date'] as String?;
 
-      AppLogger.debug('Migration_v10', 'Processing plant $plantId (phase: $currentPhase)');
+      AppLogger.debug(
+        'Migration_v10',
+        'Processing plant $plantId (phase: $currentPhase)',
+      );
 
       // Get all logs for this plant, ordered chronologically
       final logs = await txn.query(
@@ -117,15 +123,24 @@ final Migration migrationV10 = Migration(
         // Store reconstructed dates
         if (firstVeg != null) {
           updates['veg_date'] = firstVeg.toIso8601String();
-          AppLogger.debug('Migration_v10', '  → Reconstructed veg_date: $firstVeg');
+          AppLogger.debug(
+            'Migration_v10',
+            '  → Reconstructed veg_date: $firstVeg',
+          );
         }
         if (firstBloom != null) {
           updates['bloom_date'] = firstBloom.toIso8601String();
-          AppLogger.debug('Migration_v10', '  → Reconstructed bloom_date: $firstBloom');
+          AppLogger.debug(
+            'Migration_v10',
+            '  → Reconstructed bloom_date: $firstBloom',
+          );
         }
         if (firstHarvest != null) {
           updates['harvest_date'] = firstHarvest.toIso8601String();
-          AppLogger.debug('Migration_v10', '  → Reconstructed harvest_date: $firstHarvest');
+          AppLogger.debug(
+            'Migration_v10',
+            '  → Reconstructed harvest_date: $firstHarvest',
+          );
         }
       }
 
@@ -136,15 +151,24 @@ final Migration migrationV10 = Migration(
         switch (currentPhase.toUpperCase()) {
           case 'VEG':
             updates['veg_date'] = phaseStartDate;
-            AppLogger.debug('Migration_v10', '  → Fallback: veg_date from phaseStartDate');
+            AppLogger.debug(
+              'Migration_v10',
+              '  → Fallback: veg_date from phaseStartDate',
+            );
             break;
           case 'BLOOM':
             updates['bloom_date'] = phaseStartDate;
-            AppLogger.debug('Migration_v10', '  → Fallback: bloom_date from phaseStartDate');
+            AppLogger.debug(
+              'Migration_v10',
+              '  → Fallback: bloom_date from phaseStartDate',
+            );
             break;
           case 'HARVEST':
             updates['harvest_date'] = phaseStartDate;
-            AppLogger.debug('Migration_v10', '  → Fallback: harvest_date from phaseStartDate');
+            AppLogger.debug(
+              'Migration_v10',
+              '  → Fallback: harvest_date from phaseStartDate',
+            );
             break;
         }
       }
@@ -163,8 +187,14 @@ final Migration migrationV10 = Migration(
 
     AppLogger.info('Migration_v10', '✅ Phase history reconstructed:');
     AppLogger.info('Migration_v10', '  - Total plants: ${plants.length}');
-    AppLogger.info('Migration_v10', '  - Updated with log data: $plantsWithLogs');
-    AppLogger.info('Migration_v10', '  - Updated with phaseStartDate: $plantsWithPhaseStartDate');
+    AppLogger.info(
+      'Migration_v10',
+      '  - Updated with log data: $plantsWithLogs',
+    );
+    AppLogger.info(
+      'Migration_v10',
+      '  - Updated with phaseStartDate: $plantsWithPhaseStartDate',
+    );
     AppLogger.info('Migration_v10', '  - Total updated: $plantsUpdated');
 
     // ================================================================
@@ -192,20 +222,35 @@ final Migration migrationV10 = Migration(
     AppLogger.info('Migration_v10', '4/4: Verifying migration...');
 
     // Count plants with each phase date
-    final vegCount = Sqflite.firstIntValue(
-      await txn.rawQuery('SELECT COUNT(*) FROM plants WHERE veg_date IS NOT NULL'),
-    ) ?? 0;
-    final bloomCount = Sqflite.firstIntValue(
-      await txn.rawQuery('SELECT COUNT(*) FROM plants WHERE bloom_date IS NOT NULL'),
-    ) ?? 0;
-    final harvestCount = Sqflite.firstIntValue(
-      await txn.rawQuery('SELECT COUNT(*) FROM plants WHERE harvest_date IS NOT NULL'),
-    ) ?? 0;
+    final vegCount =
+        Sqflite.firstIntValue(
+          await txn.rawQuery(
+            'SELECT COUNT(*) FROM plants WHERE veg_date IS NOT NULL',
+          ),
+        ) ??
+        0;
+    final bloomCount =
+        Sqflite.firstIntValue(
+          await txn.rawQuery(
+            'SELECT COUNT(*) FROM plants WHERE bloom_date IS NOT NULL',
+          ),
+        ) ??
+        0;
+    final harvestCount =
+        Sqflite.firstIntValue(
+          await txn.rawQuery(
+            'SELECT COUNT(*) FROM plants WHERE harvest_date IS NOT NULL',
+          ),
+        ) ??
+        0;
 
     AppLogger.info('Migration_v10', '📊 Final statistics:');
     AppLogger.info('Migration_v10', '  - Plants with veg_date: $vegCount');
     AppLogger.info('Migration_v10', '  - Plants with bloom_date: $bloomCount');
-    AppLogger.info('Migration_v10', '  - Plants with harvest_date: $harvestCount');
+    AppLogger.info(
+      'Migration_v10',
+      '  - Plants with harvest_date: $harvestCount',
+    );
 
     // Sample verification: Get one plant with phase dates
     final samplePlants = await txn.query(
@@ -219,9 +264,18 @@ final Migration migrationV10 = Migration(
       AppLogger.info('Migration_v10', '🔍 Sample plant verification:');
       AppLogger.info('Migration_v10', '  - ID: ${sample['id']}');
       AppLogger.info('Migration_v10', '  - veg_date: ${sample['veg_date']}');
-      AppLogger.info('Migration_v10', '  - bloom_date: ${sample['bloom_date']}');
-      AppLogger.info('Migration_v10', '  - harvest_date: ${sample['harvest_date']}');
-      AppLogger.info('Migration_v10', '  - phase_start_date (old): ${sample['phase_start_date']}');
+      AppLogger.info(
+        'Migration_v10',
+        '  - bloom_date: ${sample['bloom_date']}',
+      );
+      AppLogger.info(
+        'Migration_v10',
+        '  - harvest_date: ${sample['harvest_date']}',
+      );
+      AppLogger.info(
+        'Migration_v10',
+        '  - phase_start_date (old): ${sample['phase_start_date']}',
+      );
     }
 
     AppLogger.info(

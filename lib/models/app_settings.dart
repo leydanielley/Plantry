@@ -2,21 +2,25 @@
 // GROWLOG - App Settings Model
 // =============================================
 
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Measurement unit types
 enum NutrientUnit { ec, ppm }
+
 enum PpmScale {
-  scale500,  // USA Standard (Hanna) - EC × 500
-  scale700,  // Europa Standard (Eutech) - EC × 700
-  scale640,  // Truncheon - EC × 640
+  scale500, // USA Standard (Hanna) - EC × 500
+  scale700, // Europa Standard (Eutech) - EC × 700
+  scale640, // Truncheon - EC × 640
 }
+
 enum TemperatureUnit { celsius, fahrenheit }
+
 enum LengthUnit { cm, inch }
+
 enum VolumeUnit { liter, gallon }
 
 class AppSettings {
-  final String language;      // 'de' oder 'en'
+  final String language; // 'de' oder 'en'
   final bool isDarkMode;
   final bool isExpertMode;
 
@@ -32,7 +36,7 @@ class AppSettings {
     this.isDarkMode = false,
     this.isExpertMode = false,
     this.nutrientUnit = NutrientUnit.ec,
-    this.ppmScale = PpmScale.scale700,  // Europa Standard
+    this.ppmScale = PpmScale.scale700, // Europa Standard
     this.temperatureUnit = TemperatureUnit.celsius,
     this.lengthUnit = LengthUnit.cm,
     this.volumeUnit = VolumeUnit.liter,

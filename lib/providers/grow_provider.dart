@@ -82,7 +82,9 @@ class GrowProvider with ChangeNotifier {
     _safeNotifyListeners();
 
     try {
-      final growList = await _repository.getAll(includeArchived: includeArchived);
+      final growList = await _repository.getAll(
+        includeArchived: includeArchived,
+      );
       _grows = Success(growList);
 
       // Load plant counts for all grows

@@ -24,11 +24,13 @@ class EditGrowScreen extends StatefulWidget {
 }
 
 // ✅ FIX: Added MountedStateMixin to prevent setState after dispose
-class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin {
+class _EditGrowScreenState extends State<EditGrowScreen>
+    with MountedStateMixin {
   final _formKey = GlobalKey<FormState>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
-  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
+  final ISettingsRepository _settingsRepo =
+      getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
 
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
@@ -44,7 +46,9 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.grow.name);
-    _descriptionController = TextEditingController(text: widget.grow.description ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.grow.description ?? '',
+    );
     _startDate = widget.grow.startDate;
     _selectedRoomId = widget.grow.roomId;
     _initTranslations(); // ✅ AUDIT FIX: i18n
@@ -165,7 +169,8 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
             prefixIcon: Icon(Icons.eco, color: Colors.green[700]),
             border: const OutlineInputBorder(),
           ),
-          validator: (value) => Validators.validateNotEmpty(value, fieldName: 'Name'),
+          validator: (value) =>
+              Validators.validateNotEmpty(value, fieldName: 'Name'),
           autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         const SizedBox(height: 12),
@@ -207,12 +212,12 @@ class _EditGrowScreenState extends State<EditGrowScreen> with MountedStateMixin 
               helperText: _t['add_grow_room_helper'],
             ),
             items: [
-              DropdownMenuItem(value: null, child: Text(_t['add_grow_no_room'])),
+              DropdownMenuItem(
+                value: null,
+                child: Text(_t['add_grow_no_room']),
+              ),
               ..._rooms.map((room) {
-                return DropdownMenuItem(
-                  value: room.id,
-                  child: Text(room.name),
-                );
+                return DropdownMenuItem(value: room.id, child: Text(room.name));
               }),
             ],
             onChanged: (value) => setState(() => _selectedRoomId = value),

@@ -28,7 +28,7 @@ class FertilizerListScreen extends StatefulWidget {
 class _FertilizerListScreenState extends State<FertilizerListScreen> {
   final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
-  
+
   List<Fertilizer> _fertilizers = [];
   bool _isLoading = true;
   late AppTranslations _t = AppTranslations('de');
@@ -129,10 +129,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
               const SizedBox(height: 16),
               Text(
                 _t['fertilizer_remove_first'],
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[700],
-                ),
+                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
               ),
             ],
           ),
@@ -154,7 +151,9 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(_t['delete_fertilizer_title']),
-        content: Text('${_t['delete_confirm'].replaceAll('?', '')} "${fertilizer.name}"?'),
+        content: Text(
+          '${_t['delete_confirm'].replaceAll('?', '')} "${fertilizer.name}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -235,7 +234,8 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
 
       // Pick file (Android can't filter .dbf, so we show all files)
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.any, // Changed from custom to any, since Android doesn't support .dbf filtering
+        type: FileType
+            .any, // Changed from custom to any, since Android doesn't support .dbf filtering
         dialogTitle: 'Select substances_win.dbf',
       );
 
@@ -310,8 +310,8 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _fertilizers.isEmpty
-              ? _buildEmptyState()
-              : _buildFertilizerList(),
+          ? _buildEmptyState()
+          : _buildFertilizerList(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final result = await Navigator.of(context).push(
@@ -352,143 +352,155 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
     // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
     return RepaintBoundary(
       child: Card(
-        key: ValueKey(fertilizer.id), // ✅ PERFORMANCE: Key for efficient updates
+        key: ValueKey(
+          fertilizer.id,
+        ), // ✅ PERFORMANCE: Key for efficient updates
         margin: AppConstants.cardMarginVertical,
         child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: _getTypeColor(fertilizer.type),
-          child: const Icon(
-            Icons.science,
-            color: Colors.white,
-            size: AppConstants.iconSizeLarge,
+          leading: CircleAvatar(
+            backgroundColor: _getTypeColor(fertilizer.type),
+            child: const Icon(
+              Icons.science,
+              color: Colors.white,
+              size: AppConstants.iconSizeLarge,
+            ),
           ),
-        ),
-        title: Text(
-          fertilizer.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: AppConstants.fontSizeBody,
+          title: Text(
+            fertilizer.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: AppConstants.fontSizeBody,
+            ),
           ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (fertilizer.brand != null) ...[
-              const SizedBox(height: AppConstants.spacingXs),
-              Text(
-                fertilizer.brand!,
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            ],
-            if (fertilizer.npk != null) ...[
-              const SizedBox(height: AppConstants.spacingXs),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppConstants.chipPaddingHorizontal,
-                      vertical: AppConstants.chipPaddingVertical,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green[100],
-                      borderRadius: BorderRadius.circular(AppConstants.badgeBorderRadius),
-                    ),
-                    child: Text(
-                      'NPK: ${fertilizer.npk}',
-                      style: TextStyle(
-                        fontSize: AppConstants.badgeFontSizeMedium,
-                        color: Colors.green[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  if (fertilizer.type != null) ...[
-                    const SizedBox(width: AppConstants.spacingSmall),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (fertilizer.brand != null) ...[
+                const SizedBox(height: AppConstants.spacingXs),
+                Text(
+                  fertilizer.brand!,
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ],
+              if (fertilizer.npk != null) ...[
+                const SizedBox(height: AppConstants.spacingXs),
+                Row(
+                  children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppConstants.chipPaddingHorizontal,
                         vertical: AppConstants.chipPaddingVertical,
                       ),
                       decoration: BoxDecoration(
-                        color: _getTypeColor(fertilizer.type)?.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(AppConstants.badgeBorderRadius),
+                        color: Colors.green[100],
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.badgeBorderRadius,
+                        ),
                       ),
                       child: Text(
-                        fertilizer.type!,
+                        'NPK: ${fertilizer.npk}',
                         style: TextStyle(
                           fontSize: AppConstants.badgeFontSizeMedium,
-                          color: _getTypeColor(fertilizer.type),
+                          color: Colors.green[700],
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
+                    if (fertilizer.type != null) ...[
+                      const SizedBox(width: AppConstants.spacingSmall),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppConstants.chipPaddingHorizontal,
+                          vertical: AppConstants.chipPaddingVertical,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getTypeColor(
+                            fertilizer.type,
+                          )?.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.badgeBorderRadius,
+                          ),
+                        ),
+                        child: Text(
+                          fertilizer.type!,
+                          style: TextStyle(
+                            fontSize: AppConstants.badgeFontSizeMedium,
+                            color: _getTypeColor(fertilizer.type),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
+              ],
+            ],
+          ),
+          trailing: PopupMenuButton(
+            icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.edit,
+                      size: AppConstants.popupMenuIconSize,
+                    ),
+                    const SizedBox(width: AppConstants.spacingSmall),
+                    Text(_t['edit']),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.delete,
+                      color: Colors.red,
+                      size: AppConstants.popupMenuIconSize,
+                    ),
+                    const SizedBox(width: AppConstants.spacingSmall),
+                    Text(
+                      _t['delete'],
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ],
+                ),
               ),
             ],
-          ],
-        ),
-        trailing: PopupMenuButton(
-          icon: Icon(Icons.more_vert, color: Colors.grey[600]),
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  const Icon(Icons.edit, size: AppConstants.popupMenuIconSize),
-                  const SizedBox(width: AppConstants.spacingSmall),
-                  Text(_t['edit']),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.delete, 
-                    color: Colors.red, 
-                    size: AppConstants.popupMenuIconSize
+            onSelected: (value) async {
+              if (value == 'edit') {
+                final result = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        EditFertilizerScreen(fertilizer: fertilizer),
                   ),
-                  const SizedBox(width: AppConstants.spacingSmall),
-                  Text(_t['delete'], style: const TextStyle(color: Colors.red)),
-                ],
+                );
+                if (result == true) _loadFertilizers();
+              } else if (value == 'delete') {
+                _deleteFertilizer(fertilizer);
+              }
+            },
+          ),
+          onTap: () async {
+            final result = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>
+                    EditFertilizerScreen(fertilizer: fertilizer),
               ),
-            ),
-          ],
-          onSelected: (value) async {
-            if (value == 'edit') {
-              final result = await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => EditFertilizerScreen(
-                    fertilizer: fertilizer,
-                  ),
-                ),
-              );
-              if (result == true) _loadFertilizers();
-            } else if (value == 'delete') {
-              _deleteFertilizer(fertilizer);
-            }
+            );
+            if (result == true) _loadFertilizers();
           },
         ),
-        onTap: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => EditFertilizerScreen(
-                fertilizer: fertilizer,
-              ),
-            ),
-          );
-          if (result == true) _loadFertilizers();
-        },
-      ),
       ),
     );
   }
 
   Color? _getTypeColor(String? type) {
     if (type == null) return Colors.grey[600];
-    
+
     final typeUpper = type.toUpperCase();
     if (typeUpper.contains('BLOOM') || typeUpper.contains('BLÜTE')) {
       return Colors.purple[600];

@@ -15,7 +15,8 @@ class AppStateRecovery {
   static const String _keyCrashCount = 'crash_count';
 
   // Timeout constants
-  static const int _recentActivityMinutes = 5; // Consider app recently active if within 5 minutes
+  static const int _recentActivityMinutes =
+      5; // Consider app recently active if within 5 minutes
   static const int _crashLoopThreshold = 3; // 3+ crashes = crash loop
 
   /// Save current app state
@@ -27,7 +28,10 @@ class AppStateRecovery {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      await prefs.setInt(_keyLastActiveTimestamp, DateTime.now().millisecondsSinceEpoch);
+      await prefs.setInt(
+        _keyLastActiveTimestamp,
+        DateTime.now().millisecondsSinceEpoch,
+      );
       await prefs.setString(_keyLastActiveScreen, currentScreen);
       await prefs.setBool(_keyHasUnsavedChanges, hasUnsavedChanges);
 
@@ -53,14 +57,20 @@ class AppStateRecovery {
         return false; // First launch
       }
 
-      final lastActive = DateTime.fromMillisecondsSinceEpoch(lastActiveTimestamp);
+      final lastActive = DateTime.fromMillisecondsSinceEpoch(
+        lastActiveTimestamp,
+      );
       final timeSinceActive = DateTime.now().difference(lastActive);
 
       // If app was active within last N minutes and had unsaved changes, likely killed
-      final wasRecentlyActive = timeSinceActive.inMinutes < _recentActivityMinutes;
+      final wasRecentlyActive =
+          timeSinceActive.inMinutes < _recentActivityMinutes;
 
       if (wasRecentlyActive && hasUnsavedChanges) {
-        AppLogger.warning('AppStateRecovery', 'App may have been killed unexpectedly');
+        AppLogger.warning(
+          'AppStateRecovery',
+          'App may have been killed unexpectedly',
+        );
         return true;
       }
 
@@ -113,7 +123,10 @@ class AppStateRecovery {
       final prefs = await SharedPreferences.getInstance();
 
       await prefs.setBool(_keyHasUnsavedChanges, false);
-      await prefs.setInt(_keyLastActiveTimestamp, DateTime.now().millisecondsSinceEpoch);
+      await prefs.setInt(
+        _keyLastActiveTimestamp,
+        DateTime.now().millisecondsSinceEpoch,
+      );
 
       AppLogger.debug('AppStateRecovery', 'Clean exit marked');
     } catch (e) {
@@ -206,5 +219,6 @@ class RecoveryInfo {
     required this.inCrashLoop,
   });
 
-  bool get hasRecoverableData => wasKilled && (lastScreen != null || unsavedData != null);
+  bool get hasRecoverableData =>
+      wasKilled && (lastScreen != null || unsavedData != null);
 }

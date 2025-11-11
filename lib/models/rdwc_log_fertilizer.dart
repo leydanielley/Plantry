@@ -2,7 +2,7 @@
 // GROWLOG - RDWC Log Fertilizer Model
 // =============================================
 
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Type of fertilizer amount entry
 enum FertilizerAmountType {
@@ -23,8 +23,8 @@ class RdwcLogFertilizer {
   final int? id;
   final int rdwcLogId;
   final int fertilizerId;
-  final double amount;                    // Amount in ml or g
-  final FertilizerAmountType amountType;  // How amount is specified
+  final double amount; // Amount in ml or g
+  final FertilizerAmountType amountType; // How amount is specified
   final DateTime createdAt;
 
   RdwcLogFertilizer({
@@ -139,7 +139,9 @@ class RdwcLogFertilizer {
 
   @override
   String toString() {
-    final typeStr = amountType == FertilizerAmountType.perLiter ? 'ml/L' : 'ml total';
+    final typeStr = amountType == FertilizerAmountType.perLiter
+        ? 'ml/L'
+        : 'ml total';
     return 'RdwcLogFertilizer{id: $id, fertilizerId: $fertilizerId, amount: $amount $typeStr}';
   }
 

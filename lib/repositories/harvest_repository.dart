@@ -9,7 +9,9 @@ import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
-class HarvestRepository with RepositoryErrorHandler implements IHarvestRepository {
+class HarvestRepository
+    with RepositoryErrorHandler
+    implements IHarvestRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   @override
@@ -115,11 +117,7 @@ class HarvestRepository with RepositoryErrorHandler implements IHarvestRepositor
   @override
   Future<Harvest?> getHarvestById(int id) async {
     final db = await _dbHelper.database;
-    final maps = await db.query(
-      'harvests',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final maps = await db.query('harvests', where: 'id = ?', whereArgs: [id]);
 
     if (maps.isEmpty) return null;
     return Harvest.fromMap(maps.first);
@@ -149,7 +147,7 @@ class HarvestRepository with RepositoryErrorHandler implements IHarvestRepositor
     final maps = await db.query(
       'harvests',
       orderBy: 'harvest_date DESC',
-      limit: limit ?? 1000,  // Reasonable default limit
+      limit: limit ?? 1000, // Reasonable default limit
     );
 
     return maps.map((map) => Harvest.fromMap(map)).toList();
@@ -160,12 +158,15 @@ class HarvestRepository with RepositoryErrorHandler implements IHarvestRepositor
   Future<List<Harvest>> getHarvestsByGrowId(int growId) async {
     final db = await _dbHelper.database;
 
-    final maps = await db.rawQuery('''
+    final maps = await db.rawQuery(
+      '''
       SELECT h.* FROM harvests h
       INNER JOIN plants p ON h.plant_id = p.id
       WHERE p.grow_id = ?
       ORDER BY h.harvest_date DESC
-    ''', [growId]);
+    ''',
+      [growId],
+    );
 
     return maps.map((map) => Harvest.fromMap(map)).toList();
   }
@@ -202,7 +203,8 @@ class HarvestRepository with RepositoryErrorHandler implements IHarvestRepositor
     final db = await _dbHelper.database;
     final maps = await db.query(
       'harvests',
-      where: 'dry_weight IS NOT NULL AND drying_end_date IS NOT NULL AND curing_end_date IS NOT NULL',
+      where:
+          'dry_weight IS NOT NULL AND drying_end_date IS NOT NULL AND curing_end_date IS NOT NULL',
       orderBy: 'harvest_date DESC',
     );
 
@@ -246,7 +248,8 @@ class HarvestRepository with RepositoryErrorHandler implements IHarvestRepositor
   Future<Map<String, dynamic>?> getHarvestWithPlant(int harvestId) async {
     final db = await _dbHelper.database;
 
-    final maps = await db.rawQuery('''
+    final maps = await db.rawQuery(
+      '''
       SELECT
         h.*,
         p.name as plant_name,
@@ -255,7 +258,9 @@ class HarvestRepository with RepositoryErrorHandler implements IHarvestRepositor
       FROM harvests h
       INNER JOIN plants p ON h.plant_id = p.id
       WHERE h.id = ?
-    ''', [harvestId]);
+    ''',
+      [harvestId],
+    );
 
     if (maps.isEmpty) return null;
     return maps.first;
@@ -265,7 +270,7 @@ class HarvestRepository with RepositoryErrorHandler implements IHarvestRepositor
   @override
   Future<List<Map<String, dynamic>>> getAllHarvestsWithPlants() async {
     final db = await _dbHelper.database;
-    
+
     final maps = await db.rawQuery('''
       SELECT 
         h.*,

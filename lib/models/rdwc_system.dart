@@ -4,7 +4,7 @@
 // =============================================
 
 import 'package:growlog_app/config/rdwc_system_config.dart';
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -12,28 +12,28 @@ const Object _undefined = Object();
 class RdwcSystem {
   final int? id;
   final String name;
-  final int? roomId;              // Optional: which room/tent
-  final int? growId;              // Optional: which grow cycle
-  final double maxCapacity;       // Maximum reservoir capacity in liters
-  final double currentLevel;      // Current water level in liters
-  final int bucketCount;          // Number of buckets/plant sites
+  final int? roomId; // Optional: which room/tent
+  final int? growId; // Optional: which grow cycle
+  final double maxCapacity; // Maximum reservoir capacity in liters
+  final double currentLevel; // Current water level in liters
+  final int bucketCount; // Number of buckets/plant sites
   final String? description;
   // Hardware Specifications - Water Pump
-  final String? pumpBrand;        // Pump manufacturer
-  final String? pumpModel;        // Pump model name/number
-  final int? pumpWattage;         // Pump power consumption in watts
-  final double? pumpFlowRate;     // Pump flow rate in liters/hour
+  final String? pumpBrand; // Pump manufacturer
+  final String? pumpModel; // Pump model name/number
+  final int? pumpWattage; // Pump power consumption in watts
+  final double? pumpFlowRate; // Pump flow rate in liters/hour
   // Hardware Specifications - Air Pump
-  final String? airPumpBrand;     // Air pump manufacturer
-  final String? airPumpModel;     // Air pump model name/number
-  final int? airPumpWattage;      // Air pump power consumption in watts
-  final double? airPumpFlowRate;  // Air pump flow rate in liters/hour
+  final String? airPumpBrand; // Air pump manufacturer
+  final String? airPumpModel; // Air pump model name/number
+  final int? airPumpWattage; // Air pump power consumption in watts
+  final double? airPumpFlowRate; // Air pump flow rate in liters/hour
   // Hardware Specifications - Chiller
-  final String? chillerBrand;     // Chiller manufacturer
-  final String? chillerModel;     // Chiller model name/number
-  final int? chillerWattage;      // Chiller power consumption in watts
+  final String? chillerBrand; // Chiller manufacturer
+  final String? chillerModel; // Chiller model name/number
+  final int? chillerWattage; // Chiller power consumption in watts
   final int? chillerCoolingPower; // Chiller cooling power in watts
-  final String? accessories;      // Additional equipment
+  final String? accessories; // Additional equipment
   final DateTime createdAt;
   final bool archived;
 
@@ -45,7 +45,7 @@ class RdwcSystem {
     this.growId,
     required double maxCapacity,
     double currentLevel = 0.0,
-    int bucketCount = 4,           // Default: 4 buckets
+    int bucketCount = 4, // Default: 4 buckets
     this.description,
     this.pumpBrand,
     this.pumpModel,
@@ -62,8 +62,7 @@ class RdwcSystem {
     this.accessories,
     DateTime? createdAt,
     this.archived = false,
-  }) :
-       // ✅ AUDIT FIX: Use config constants for validation
+  }) : // ✅ AUDIT FIX: Use config constants for validation
        name = RdwcSystemConfig.validateName(name),
        maxCapacity = RdwcSystemConfig.validateCapacity(maxCapacity),
        currentLevel = RdwcSystemConfig.validateLevel(currentLevel, maxCapacity),
@@ -168,20 +167,48 @@ class RdwcSystem {
       maxCapacity: maxCapacity ?? this.maxCapacity,
       currentLevel: currentLevel ?? this.currentLevel,
       bucketCount: bucketCount ?? this.bucketCount,
-      description: description == _undefined ? this.description : description as String?,
-      pumpBrand: pumpBrand == _undefined ? this.pumpBrand : pumpBrand as String?,
-      pumpModel: pumpModel == _undefined ? this.pumpModel : pumpModel as String?,
-      pumpWattage: pumpWattage == _undefined ? this.pumpWattage : pumpWattage as int?,
-      pumpFlowRate: pumpFlowRate == _undefined ? this.pumpFlowRate : pumpFlowRate as double?,
-      airPumpBrand: airPumpBrand == _undefined ? this.airPumpBrand : airPumpBrand as String?,
-      airPumpModel: airPumpModel == _undefined ? this.airPumpModel : airPumpModel as String?,
-      airPumpWattage: airPumpWattage == _undefined ? this.airPumpWattage : airPumpWattage as int?,
-      airPumpFlowRate: airPumpFlowRate == _undefined ? this.airPumpFlowRate : airPumpFlowRate as double?,
-      chillerBrand: chillerBrand == _undefined ? this.chillerBrand : chillerBrand as String?,
-      chillerModel: chillerModel == _undefined ? this.chillerModel : chillerModel as String?,
-      chillerWattage: chillerWattage == _undefined ? this.chillerWattage : chillerWattage as int?,
-      chillerCoolingPower: chillerCoolingPower == _undefined ? this.chillerCoolingPower : chillerCoolingPower as int?,
-      accessories: accessories == _undefined ? this.accessories : accessories as String?,
+      description: description == _undefined
+          ? this.description
+          : description as String?,
+      pumpBrand: pumpBrand == _undefined
+          ? this.pumpBrand
+          : pumpBrand as String?,
+      pumpModel: pumpModel == _undefined
+          ? this.pumpModel
+          : pumpModel as String?,
+      pumpWattage: pumpWattage == _undefined
+          ? this.pumpWattage
+          : pumpWattage as int?,
+      pumpFlowRate: pumpFlowRate == _undefined
+          ? this.pumpFlowRate
+          : pumpFlowRate as double?,
+      airPumpBrand: airPumpBrand == _undefined
+          ? this.airPumpBrand
+          : airPumpBrand as String?,
+      airPumpModel: airPumpModel == _undefined
+          ? this.airPumpModel
+          : airPumpModel as String?,
+      airPumpWattage: airPumpWattage == _undefined
+          ? this.airPumpWattage
+          : airPumpWattage as int?,
+      airPumpFlowRate: airPumpFlowRate == _undefined
+          ? this.airPumpFlowRate
+          : airPumpFlowRate as double?,
+      chillerBrand: chillerBrand == _undefined
+          ? this.chillerBrand
+          : chillerBrand as String?,
+      chillerModel: chillerModel == _undefined
+          ? this.chillerModel
+          : chillerModel as String?,
+      chillerWattage: chillerWattage == _undefined
+          ? this.chillerWattage
+          : chillerWattage as int?,
+      chillerCoolingPower: chillerCoolingPower == _undefined
+          ? this.chillerCoolingPower
+          : chillerCoolingPower as int?,
+      accessories: accessories == _undefined
+          ? this.accessories
+          : accessories as String?,
       createdAt: createdAt ?? this.createdAt,
       archived: archived ?? this.archived,
     );
@@ -219,9 +246,7 @@ class RdwcSystem {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is RdwcSystem &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is RdwcSystem && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

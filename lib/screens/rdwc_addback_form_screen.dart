@@ -13,7 +13,7 @@ import 'package:growlog_app/models/rdwc_recipe.dart';
 import 'package:growlog_app/models/fertilizer.dart';
 import 'package:growlog_app/models/app_settings.dart';
 import 'package:growlog_app/utils/translations.dart';
-import 'package:growlog_app/database/database_helper.dart';  // ✅ FIX: For transaction support
+import 'package:growlog_app/database/database_helper.dart'; // ✅ FIX: For transaction support
 import 'package:growlog_app/utils/unit_converter.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
@@ -33,8 +33,6 @@ class RdwcAddbackFormScreen extends StatefulWidget {
   State<RdwcAddbackFormScreen> createState() => _RdwcAddbackFormScreenState();
 }
 
-
-
 class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
@@ -50,8 +48,8 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   late TextEditingController _ecAfterController;
   late TextEditingController _noteController;
   late TextEditingController _currentLevelController; // For measurement
-  late TextEditingController _currentPhController;     // For measurement
-  late TextEditingController _currentEcController;     // For measurement
+  late TextEditingController _currentPhController; // For measurement
+  late TextEditingController _currentEcController; // For measurement
 
   RdwcLogType _logType = RdwcLogType.addback;
 
@@ -108,7 +106,8 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         _loadExistingLogData();
       } else {
         // Pre-fill current level as "level before"
-        _levelBeforeController.text = widget.system.currentLevel.toStringAsFixed(1);
+        _levelBeforeController.text = widget.system.currentLevel
+            .toStringAsFixed(1);
       }
     }
   }
@@ -160,11 +159,13 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         final amountController = TextEditingController(
           text: logFert.amount.toString(),
         );
-        _addedFertilizers.add(_FertilizerEntry(
-          fertilizer: fertilizer,
-          amountController: amountController,
-          amountType: logFert.amountType,
-        ));
+        _addedFertilizers.add(
+          _FertilizerEntry(
+            fertilizer: fertilizer,
+            amountController: amountController,
+            amountType: logFert.amountType,
+          ),
+        );
       }
     }
   }
@@ -204,11 +205,13 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   // v8: Add fertilizer to the list
   void _addFertilizer(Fertilizer fertilizer) {
     setState(() {
-      _addedFertilizers.add(_FertilizerEntry(
-        fertilizer: fertilizer,
-        amountController: TextEditingController(),
-        amountType: FertilizerAmountType.perLiter,
-      ));
+      _addedFertilizers.add(
+        _FertilizerEntry(
+          fertilizer: fertilizer,
+          amountController: TextEditingController(),
+          amountType: FertilizerAmountType.perLiter,
+        ),
+      );
     });
   }
 
@@ -247,7 +250,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
     final levelAfter = double.tryParse(_levelAfterController.text);
     final amount = double.tryParse(entry.amountController.text);
 
-    if (levelAfter == null || levelAfter <= 0 || amount == null || amount <= 0) {
+    if (levelAfter == null ||
+        levelAfter <= 0 ||
+        amount == null ||
+        amount <= 0) {
       return '';
     }
 
@@ -260,15 +266,22 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       if (_settings.nutrientUnit == NutrientUnit.ec) {
         return '→ ${ecContribution.toStringAsFixed(2)} mS/cm';
       } else {
-        final ppmContribution = UnitConverter.ecToPpm(ecContribution, _settings.ppmScale);
+        final ppmContribution = UnitConverter.ecToPpm(
+          ecContribution,
+          _settings.ppmScale,
+        );
         return '→ ${ppmContribution.toStringAsFixed(0)} PPM';
       }
-    } else if (entry.fertilizer.ppmValue != null && entry.fertilizer.ppmValue! > 0) {
+    } else if (entry.fertilizer.ppmValue != null &&
+        entry.fertilizer.ppmValue! > 0) {
       final ppmContribution = perLiterAmount * entry.fertilizer.ppmValue!;
       if (_settings.nutrientUnit == NutrientUnit.ppm) {
         return '→ ${ppmContribution.toStringAsFixed(0)} PPM';
       } else {
-        final ecContribution = UnitConverter.ppmToEc(ppmContribution, _settings.ppmScale);
+        final ecContribution = UnitConverter.ppmToEc(
+          ppmContribution,
+          _settings.ppmScale,
+        );
         return '→ ${ecContribution.toStringAsFixed(2)} mS/cm';
       }
     }
@@ -289,25 +302,33 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         case RdwcLogType.measurement:
           // Simple measurement: just current values
           await _saveMeasurement();
-          successMessage = isEditing ? 'Measurement updated!' : 'Measurement logged successfully!';
+          successMessage = isEditing
+              ? 'Measurement updated!'
+              : 'Measurement logged successfully!';
           break;
 
         case RdwcLogType.fullChange:
           // Full reservoir change with new fertilizers
           await _saveFullChange();
-          successMessage = isEditing ? 'Full change updated!' : 'Full change logged successfully!';
+          successMessage = isEditing
+              ? 'Full change updated!'
+              : 'Full change logged successfully!';
           break;
 
         case RdwcLogType.maintenance:
           // Maintenance with checklist
           await _saveMaintenance();
-          successMessage = isEditing ? 'Maintenance updated!' : 'Maintenance logged successfully!';
+          successMessage = isEditing
+              ? 'Maintenance updated!'
+              : 'Maintenance logged successfully!';
           break;
 
         case RdwcLogType.addback:
           // Water addback with fertilizers
           await _saveAddback();
-          successMessage = isEditing ? 'Addback updated!' : 'Addback logged successfully!';
+          successMessage = isEditing
+              ? 'Addback updated!'
+              : 'Addback logged successfully!';
           break;
       }
 
@@ -427,7 +448,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       ecBefore: ecBefore,
       phAfter: phAfter,
       ecAfter: ecAfter,
-      note: noteBuilder.toString().trim().isNotEmpty ? noteBuilder.toString().trim() : null,
+      note: noteBuilder.toString().trim().isNotEmpty
+          ? noteBuilder.toString().trim()
+          : null,
     );
 
     final logId = await _saveOrUpdateLog(log);
@@ -517,9 +540,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         children: [
           Text(
             _t['nutrients'],
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           if (_loadedRecipe == null)
@@ -570,7 +593,8 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                         fontSize: 13,
                       ),
                     ),
-                    if (_loadedRecipe!.targetEc != null || _loadedRecipe!.targetPh != null)
+                    if (_loadedRecipe!.targetEc != null ||
+                        _loadedRecipe!.targetPh != null)
                       Text(
                         [
                           if (_loadedRecipe!.targetEc != null)
@@ -578,7 +602,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                           if (_loadedRecipe!.targetPh != null)
                             'pH: ${_loadedRecipe!.targetPh!.toStringAsFixed(1)}',
                         ].join(' | '),
-                        style: const TextStyle(fontSize: 11, color: Colors.green),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.green,
+                        ),
                       ),
                   ],
                 ),
@@ -630,8 +657,11 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                           suffixText: 'ml',
                           isDense: true,
                         ),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        onChanged: (_) => setState(() {}), // Trigger rebuild for contribution
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        onChanged: (_) =>
+                            setState(() {}), // Trigger rebuild for contribution
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -641,17 +671,26 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                         segments: [
                           ButtonSegment<FertilizerAmountType>(
                             value: FertilizerAmountType.perLiter,
-                            label: Text(_t['per_liter'], style: const TextStyle(fontSize: 11)),
+                            label: Text(
+                              _t['per_liter'],
+                              style: const TextStyle(fontSize: 11),
+                            ),
                           ),
                           ButtonSegment<FertilizerAmountType>(
                             value: FertilizerAmountType.total,
-                            label: Text(_t['total_amount'], style: const TextStyle(fontSize: 11)),
+                            label: Text(
+                              _t['total_amount'],
+                              style: const TextStyle(fontSize: 11),
+                            ),
                           ),
                         ],
                         selected: {entry.amountType},
-                        onSelectionChanged: (Set<FertilizerAmountType> newSelection) {
-                          setState(() => entry.amountType = newSelection.first);
-                        },
+                        onSelectionChanged:
+                            (Set<FertilizerAmountType> newSelection) {
+                              setState(
+                                () => entry.amountType = newSelection.first,
+                              );
+                            },
                       ),
                     ),
                   ],
@@ -660,7 +699,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                 if (contribution.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
@@ -671,7 +713,11 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.analytics, size: 16, color: Colors.blue),
+                        const Icon(
+                          Icons.analytics,
+                          size: 16,
+                          color: Colors.blue,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           contribution,
@@ -783,9 +829,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
     return [
       Text(
         'Quick Measurement',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 12),
       TextFormField(
@@ -809,7 +855,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.science),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -817,12 +865,18 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
             child: TextFormField(
               controller: _currentEcController,
               decoration: InputDecoration(
-                labelText: _settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM',
+                labelText: _settings.nutrientUnit == NutrientUnit.ec
+                    ? 'EC'
+                    : 'PPM',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science),
-                suffixText: _settings.nutrientUnit == NutrientUnit.ec ? 'mS/cm' : 'PPM',
+                suffixText: _settings.nutrientUnit == NutrientUnit.ec
+                    ? 'mS/cm'
+                    : 'PPM',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
         ],
@@ -835,9 +889,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
     return [
       Text(
         'Maintenance Checklist',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
       CheckboxListTile(
@@ -861,21 +915,23 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       CheckboxListTile(
         title: const Text('Reservoir cleaned'),
         value: _cleanedReservoir,
-        onChanged: (value) => setState(() => _cleanedReservoir = value ?? false),
+        onChanged: (value) =>
+            setState(() => _cleanedReservoir = value ?? false),
         dense: true,
       ),
       CheckboxListTile(
         title: const Text('Airstones cleaned'),
         value: _cleanedAirstones,
-        onChanged: (value) => setState(() => _cleanedAirstones = value ?? false),
+        onChanged: (value) =>
+            setState(() => _cleanedAirstones = value ?? false),
         dense: true,
       ),
       const SizedBox(height: 16),
       Text(
         'pH / EC (optional)',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
       Row(
@@ -888,7 +944,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science_outlined),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -896,12 +954,17 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
             child: TextFormField(
               controller: _ecBeforeController,
               decoration: InputDecoration(
-                labelText: '${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'} ${_t['level_before']}',
+                labelText:
+                    '${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'} ${_t['level_before']}',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science_outlined),
-                suffixText: _settings.nutrientUnit == NutrientUnit.ec ? 'mS/cm' : 'PPM',
+                suffixText: _settings.nutrientUnit == NutrientUnit.ec
+                    ? 'mS/cm'
+                    : 'PPM',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
         ],
@@ -917,7 +980,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -925,12 +990,17 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
             child: TextFormField(
               controller: _ecAfterController,
               decoration: InputDecoration(
-                labelText: '${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'} ${_t['level_after']}',
+                labelText:
+                    '${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'} ${_t['level_after']}',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science),
-                suffixText: _settings.nutrientUnit == NutrientUnit.ec ? 'mS/cm' : 'PPM',
+                suffixText: _settings.nutrientUnit == NutrientUnit.ec
+                    ? 'mS/cm'
+                    : 'PPM',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
         ],
@@ -943,9 +1013,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
     return [
       Text(
         'Old Water',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
       Row(
@@ -958,7 +1028,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.science_outlined),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -966,12 +1038,17 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
             child: TextFormField(
               controller: _ecBeforeController,
               decoration: InputDecoration(
-                labelText: 'Old ${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'}',
+                labelText:
+                    'Old ${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'}',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science_outlined),
-                suffixText: _settings.nutrientUnit == NutrientUnit.ec ? 'mS/cm' : 'PPM',
+                suffixText: _settings.nutrientUnit == NutrientUnit.ec
+                    ? 'mS/cm'
+                    : 'PPM',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
         ],
@@ -979,9 +1056,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       const SizedBox(height: 16),
       Text(
         'New Water',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
       TextFormField(
@@ -1016,7 +1093,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.science),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -1024,12 +1103,17 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
             child: TextFormField(
               controller: _ecAfterController,
               decoration: InputDecoration(
-                labelText: 'New ${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'}',
+                labelText:
+                    'New ${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'}',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science),
-                suffixText: _settings.nutrientUnit == NutrientUnit.ec ? 'mS/cm' : 'PPM',
+                suffixText: _settings.nutrientUnit == NutrientUnit.ec
+                    ? 'mS/cm'
+                    : 'PPM',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
         ],
@@ -1038,7 +1122,8 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       CheckboxListTile(
         title: const Text('Reservoir cleaned during change'),
         value: _reservoirCleanedOnChange,
-        onChanged: (value) => setState(() => _reservoirCleanedOnChange = value ?? false),
+        onChanged: (value) =>
+            setState(() => _reservoirCleanedOnChange = value ?? false),
       ),
     ];
   }
@@ -1048,9 +1133,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
     return [
       Text(
         'Water',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
       TextFormField(
@@ -1101,9 +1186,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       const SizedBox(height: 16),
       Text(
         'pH / EC',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
       Row(
@@ -1116,7 +1201,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science_outlined),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -1124,12 +1211,17 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
             child: TextFormField(
               controller: _ecBeforeController,
               decoration: InputDecoration(
-                labelText: '${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'} ${_t['level_before']}',
+                labelText:
+                    '${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'} ${_t['level_before']}',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science_outlined),
-                suffixText: _settings.nutrientUnit == NutrientUnit.ec ? 'mS/cm' : 'PPM',
+                suffixText: _settings.nutrientUnit == NutrientUnit.ec
+                    ? 'mS/cm'
+                    : 'PPM',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
         ],
@@ -1145,7 +1237,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -1153,12 +1247,17 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
             child: TextFormField(
               controller: _ecAfterController,
               decoration: InputDecoration(
-                labelText: '${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'} ${_t['level_after']}',
+                labelText:
+                    '${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'} ${_t['level_after']}',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.science),
-                suffixText: _settings.nutrientUnit == NutrientUnit.ec ? 'mS/cm' : 'PPM',
+                suffixText: _settings.nutrientUnit == NutrientUnit.ec
+                    ? 'mS/cm'
+                    : 'PPM',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ),
         ],
@@ -1192,9 +1291,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_getTitle()),
-      ),
+      appBar: AppBar(title: Text(_getTitle())),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -1215,9 +1312,8 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                         children: [
                           Text(
                             widget.system.name,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
                             '${_t['current_level']}: ${UnitConverter.formatVolume(widget.system.currentLevel, _settings.volumeUnit)}',
@@ -1250,7 +1346,11 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                       value: RdwcLogType.addback,
                       child: Row(
                         children: [
-                          const Icon(Icons.add_circle, color: Colors.green, size: 20),
+                          const Icon(
+                            Icons.add_circle,
+                            color: Colors.green,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(_t['water_addback']),
                         ],
@@ -1270,7 +1370,11 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                       value: RdwcLogType.maintenance,
                       child: Row(
                         children: [
-                          const Icon(Icons.build, color: Colors.orange, size: 20),
+                          const Icon(
+                            Icons.build,
+                            color: Colors.orange,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(_t['maintenance']),
                         ],
@@ -1280,7 +1384,11 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                       value: RdwcLogType.measurement,
                       child: Row(
                         children: [
-                          const Icon(Icons.science, color: Colors.purple, size: 20),
+                          const Icon(
+                            Icons.science,
+                            color: Colors.purple,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(_t['measurement']),
                         ],
@@ -1324,7 +1432,9 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
             const SizedBox(height: 16),
 
             // v8: Fertilizer section (Expert Mode, only for addback and fullChange)
-            if (_settings.isExpertMode && (_logType == RdwcLogType.addback || _logType == RdwcLogType.fullChange))
+            if (_settings.isExpertMode &&
+                (_logType == RdwcLogType.addback ||
+                    _logType == RdwcLogType.fullChange))
               ..._buildFertilizerSection(),
 
             const SizedBox(height: 24),
@@ -1378,14 +1488,21 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                 return ListTile(
                   leading: const Icon(Icons.science),
                   title: Text(recipe.name),
-                  subtitle: [
-                    if (recipe.targetEc != null) 'EC: ${recipe.targetEc!.toStringAsFixed(1)}',
-                    if (recipe.targetPh != null) 'pH: ${recipe.targetPh!.toStringAsFixed(1)}',
-                  ].isNotEmpty
-                      ? Text([
-                          if (recipe.targetEc != null) 'EC: ${recipe.targetEc!.toStringAsFixed(1)}',
-                          if (recipe.targetPh != null) 'pH: ${recipe.targetPh!.toStringAsFixed(1)}',
-                        ].join(' | '))
+                  subtitle:
+                      [
+                        if (recipe.targetEc != null)
+                          'EC: ${recipe.targetEc!.toStringAsFixed(1)}',
+                        if (recipe.targetPh != null)
+                          'pH: ${recipe.targetPh!.toStringAsFixed(1)}',
+                      ].isNotEmpty
+                      ? Text(
+                          [
+                            if (recipe.targetEc != null)
+                              'EC: ${recipe.targetEc!.toStringAsFixed(1)}',
+                            if (recipe.targetPh != null)
+                              'pH: ${recipe.targetPh!.toStringAsFixed(1)}',
+                          ].join(' | '),
+                        )
                       : null,
                   onTap: () => Navigator.pop(context, recipe),
                 );
@@ -1429,11 +1546,15 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       for (final rf in recipeFerts) {
         final fert = await _fertilizerRepo.findById(rf.fertilizerId);
         if (fert != null) {
-          _addedFertilizers.add(_FertilizerEntry(
-            fertilizer: fert,
-            amountController: TextEditingController(text: rf.mlPerLiter.toString()),
-            amountType: FertilizerAmountType.perLiter,
-          ));
+          _addedFertilizers.add(
+            _FertilizerEntry(
+              fertilizer: fert,
+              amountController: TextEditingController(
+                text: rf.mlPerLiter.toString(),
+              ),
+              amountType: FertilizerAmountType.perLiter,
+            ),
+          );
         }
       }
 
@@ -1450,7 +1571,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       });
 
       if (mounted) {
-        AppMessages.showSuccess(context, '${_t['recipe_loaded']}: ${recipe.name}');
+        AppMessages.showSuccess(
+          context,
+          '${_t['recipe_loaded']}: ${recipe.name}',
+        );
       }
     } catch (e) {
       AppLogger.error('RdwcAddbackFormScreen', 'Error applying recipe', e);

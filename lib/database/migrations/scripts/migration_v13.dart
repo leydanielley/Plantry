@@ -41,7 +41,10 @@ final Migration migrationV13 = Migration(
     // STEP 1: Add missing FK constraint - plants.rdwc_system_id
     // ================================================================
 
-    AppLogger.info('Migration_v13', '1/10: Adding FK constraint to plants.rdwc_system_id...');
+    AppLogger.info(
+      'Migration_v13',
+      '1/10: Adding FK constraint to plants.rdwc_system_id...',
+    );
 
     // SQLite doesn't support adding FK to existing table, need to recreate
     // First, check if any plants reference non-existent systems (orphaned records)
@@ -53,7 +56,10 @@ final Migration migrationV13 = Migration(
 
     final orphanedCount = Sqflite.firstIntValue(orphanedPlants) ?? 0;
     if (orphanedCount > 0) {
-      AppLogger.warning('Migration_v13', 'Found $orphanedCount orphaned plant records');
+      AppLogger.warning(
+        'Migration_v13',
+        'Found $orphanedCount orphaned plant records',
+      );
       // Clean up orphaned references
       await txn.execute('''
         UPDATE plants SET rdwc_system_id = NULL
@@ -147,7 +153,10 @@ final Migration migrationV13 = Migration(
     // STEP 4: Add DEFAULT to fertilizers.is_liquid
     // ================================================================
 
-    AppLogger.info('Migration_v13', '4/10: Adding DEFAULT to fertilizers.is_liquid...');
+    AppLogger.info(
+      'Migration_v13',
+      '4/10: Adding DEFAULT to fertilizers.is_liquid...',
+    );
 
     // SQLite doesn't support ALTER COLUMN, but we can set default for NULL values
     await txn.execute('''
@@ -169,23 +178,32 @@ final Migration migrationV13 = Migration(
     ''');
 
     if (duplicateRooms.isNotEmpty) {
-      AppLogger.warning('Migration_v13', 'Found ${duplicateRooms.length} duplicate room names');
+      AppLogger.warning(
+        'Migration_v13',
+        'Found ${duplicateRooms.length} duplicate room names',
+      );
 
       // Rename duplicates by appending ID
       for (final row in duplicateRooms) {
         final name = row['name'] as String;
 
         // Get all room IDs with this name
-        final rooms = await txn.rawQuery('''
+        final rooms = await txn.rawQuery(
+          '''
           SELECT id FROM rooms WHERE name = ? ORDER BY id
-        ''', [name]);
+        ''',
+          [name],
+        );
 
         // Keep first, rename rest
         for (int i = 1; i < rooms.length; i++) {
           final id = rooms[i]['id'] as int;
-          await txn.execute('''
+          await txn.execute(
+            '''
             UPDATE rooms SET name = ? WHERE id = ?
-          ''', ['$name ($id)', id]);
+          ''',
+            ['$name ($id)', id],
+          );
         }
       }
     }
@@ -196,7 +214,10 @@ final Migration migrationV13 = Migration(
       CREATE UNIQUE INDEX idx_rooms_name_unique ON rooms(name)
     ''');
 
-    AppLogger.info('Migration_v13', '✅ Room names deduplicated and UNIQUE constraint applied');
+    AppLogger.info(
+      'Migration_v13',
+      '✅ Room names deduplicated and UNIQUE constraint applied',
+    );
 
     // ================================================================
     // STEP 6: Fix UNIQUE constraint - deduplicate fertilizers
@@ -210,25 +231,34 @@ final Migration migrationV13 = Migration(
     ''');
 
     if (duplicateFerts.isNotEmpty) {
-      AppLogger.warning('Migration_v13', 'Found ${duplicateFerts.length} duplicate fertilizers');
+      AppLogger.warning(
+        'Migration_v13',
+        'Found ${duplicateFerts.length} duplicate fertilizers',
+      );
 
       for (final row in duplicateFerts) {
         final name = row['name'] as String;
         final brand = row['brand'] as String?;
 
         // Get all IDs with this name+brand combo
-        final ferts = await txn.rawQuery('''
+        final ferts = await txn.rawQuery(
+          '''
           SELECT id FROM fertilizers
           WHERE name = ? AND (brand = ? OR (brand IS NULL AND ? IS NULL))
           ORDER BY id
-        ''', [name, brand, brand]);
+        ''',
+          [name, brand, brand],
+        );
 
         // Keep first, rename rest
         for (int i = 1; i < ferts.length; i++) {
           final id = ferts[i]['id'] as int;
-          await txn.execute('''
+          await txn.execute(
+            '''
             UPDATE fertilizers SET name = ? WHERE id = ?
-          ''', ['$name ($id)', id]);
+          ''',
+            ['$name ($id)', id],
+          );
         }
       }
     }
@@ -240,7 +270,10 @@ final Migration migrationV13 = Migration(
       ON fertilizers(name, brand)
     ''');
 
-    AppLogger.info('Migration_v13', '✅ Fertilizers deduplicated and UNIQUE constraint applied');
+    AppLogger.info(
+      'Migration_v13',
+      '✅ Fertilizers deduplicated and UNIQUE constraint applied',
+    );
 
     // ================================================================
     // STEP 7: Fix UNIQUE constraint - deduplicate hardware
@@ -254,43 +287,60 @@ final Migration migrationV13 = Migration(
     ''');
 
     if (duplicateHardware.isNotEmpty) {
-      AppLogger.warning('Migration_v13', 'Found ${duplicateHardware.length} duplicate hardware');
+      AppLogger.warning(
+        'Migration_v13',
+        'Found ${duplicateHardware.length} duplicate hardware',
+      );
 
       for (final row in duplicateHardware) {
         final roomId = row['room_id'] as int;
         final name = row['name'] as String;
         final type = row['type'] as String;
 
-        final items = await txn.rawQuery('''
+        final items = await txn.rawQuery(
+          '''
           SELECT id FROM hardware
           WHERE room_id = ? AND name = ? AND type = ?
           ORDER BY id
-        ''', [roomId, name, type]);
+        ''',
+          [roomId, name, type],
+        );
 
         // Keep first, rename rest
         for (int i = 1; i < items.length; i++) {
           final id = items[i]['id'] as int;
-          await txn.execute('''
+          await txn.execute(
+            '''
             UPDATE hardware SET name = ? WHERE id = ?
-          ''', ['$name (#${i+1})', id]);
+          ''',
+            ['$name (#${i + 1})', id],
+          );
         }
       }
     }
 
     // Drop old index and create UNIQUE
-    await txn.execute('DROP INDEX IF EXISTS idx_hardware_room_name_type_unique');
+    await txn.execute(
+      'DROP INDEX IF EXISTS idx_hardware_room_name_type_unique',
+    );
     await txn.execute('''
       CREATE UNIQUE INDEX idx_hardware_room_name_type_unique
       ON hardware(room_id, name, type)
     ''');
 
-    AppLogger.info('Migration_v13', '✅ Hardware deduplicated and UNIQUE constraint applied');
+    AppLogger.info(
+      'Migration_v13',
+      '✅ Hardware deduplicated and UNIQUE constraint applied',
+    );
 
     // ================================================================
     // STEP 8: Additional indexes for optimization
     // ================================================================
 
-    AppLogger.info('Migration_v13', '8/10: Adding additional optimization indexes...');
+    AppLogger.info(
+      'Migration_v13',
+      '8/10: Adding additional optimization indexes...',
+    );
 
     // harvests(plant_id, harvest_date DESC) for sorted queries
     await txn.execute('''
@@ -327,7 +377,10 @@ final Migration migrationV13 = Migration(
     final totalDeduped = roomsDeduped + fertsDeduped + hardwareDeduped;
 
     if (totalDeduped > 0) {
-      AppLogger.info('Migration_v13', '  - Records deduplicated: $totalDeduped');
+      AppLogger.info(
+        'Migration_v13',
+        '  - Records deduplicated: $totalDeduped',
+      );
       AppLogger.info('Migration_v13', '    · Rooms: $roomsDeduped');
       AppLogger.info('Migration_v13', '    · Fertilizers: $fertsDeduped');
       AppLogger.info('Migration_v13', '    · Hardware: $hardwareDeduped');
@@ -344,7 +397,10 @@ final Migration migrationV13 = Migration(
     );
 
     AppLogger.info('Migration_v13', 'Performance improvements:');
-    AppLogger.info('Migration_v13', '  ✅ Multi-column queries now use composite indexes');
+    AppLogger.info(
+      'Migration_v13',
+      '  ✅ Multi-column queries now use composite indexes',
+    );
     AppLogger.info('Migration_v13', '  ✅ Orphaned records cleaned up');
     AppLogger.info('Migration_v13', '  ✅ UNIQUE constraints enforced');
     AppLogger.info('Migration_v13', '  ✅ Default values set');

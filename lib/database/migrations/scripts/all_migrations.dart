@@ -54,9 +54,7 @@ int get latestMigrationVersion {
     return 2; // Current base version
   }
 
-  return allMigrations
-      .map((m) => m.version)
-      .reduce((a, b) => a > b ? a : b);
+  return allMigrations.map((m) => m.version).reduce((a, b) => a > b ? a : b);
 }
 
 /// Get the oldest migration version
@@ -65,9 +63,7 @@ int get oldestMigrationVersion {
     return 2;
   }
 
-  return allMigrations
-      .map((m) => m.version)
-      .reduce((a, b) => a < b ? a : b);
+  return allMigrations.map((m) => m.version).reduce((a, b) => a < b ? a : b);
 }
 
 /// Check if migrations exist for a specific upgrade path

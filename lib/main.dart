@@ -42,18 +42,10 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => PlantProvider(getIt()),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => GrowProvider(getIt()),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => RoomProvider(getIt()),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => LogProvider(getIt()),
-        ),
+        ChangeNotifierProvider(create: (_) => PlantProvider(getIt())),
+        ChangeNotifierProvider(create: (_) => GrowProvider(getIt())),
+        ChangeNotifierProvider(create: (_) => RoomProvider(getIt())),
+        ChangeNotifierProvider(create: (_) => LogProvider(getIt())),
       ],
       child: const GrowLogApp(),
     ),
@@ -144,7 +136,10 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
       final settings = await _settingsRepo.getSettings().timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          AppLogger.warning('Main', 'Settings loading timeout - using defaults');
+          AppLogger.warning(
+            'Main',
+            'Settings loading timeout - using defaults',
+          );
           // Fallback auf Default-Settings
           return AppSettings(
             language: 'de',
@@ -202,9 +197,7 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
       return MaterialApp(
         home: Scaffold(
           body: Center(
-            child: CircularProgressIndicator(
-              color: Colors.green[700],
-            ),
+            child: CircularProgressIndicator(color: Colors.green[700]),
           ),
         ),
       );
@@ -221,9 +214,7 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
       home: const SplashScreen(),
 
       // Named routes for deep linking
-      routes: {
-        '/privacy-policy': (context) => const PrivacyPolicyScreen(),
-      },
+      routes: {'/privacy-policy': (context) => const PrivacyPolicyScreen()},
     );
   }
 }

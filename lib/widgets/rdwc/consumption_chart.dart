@@ -31,7 +31,9 @@ class ConsumptionChart extends StatelessWidget {
 
     // ✅ FIX: Compute max value once to avoid multiple reduce calls and prevent crashes
     final values = entries.map((e) => e.value as double).toList();
-    final maxValue = values.isEmpty ? 1.0 : values.reduce((a, b) => a > b ? a : b);
+    final maxValue = values.isEmpty
+        ? 1.0
+        : values.reduce((a, b) => a > b ? a : b);
     final chartMaxY = maxValue * 1.2;
 
     return Container(
@@ -48,7 +50,10 @@ class ConsumptionChart extends StatelessWidget {
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 final date = entries[groupIndex].key;
                 final value = entries[groupIndex].value;
-                final formatted = UnitConverter.formatVolume(value, settings.volumeUnit);
+                final formatted = UnitConverter.formatVolume(
+                  value,
+                  settings.volumeUnit,
+                );
                 return BarTooltipItem(
                   '$date\n$formatted',
                   const TextStyle(
@@ -72,7 +77,15 @@ class ConsumptionChart extends StatelessWidget {
                   final date = entries[index].key;
                   // Show day only (e.g., "Mon", "Tue")
                   final dayOfWeek = DateTime.parse(date).weekday;
-                  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                  const days = [
+                    'Mon',
+                    'Tue',
+                    'Wed',
+                    'Thu',
+                    'Fri',
+                    'Sat',
+                    'Sun',
+                  ];
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
@@ -101,8 +114,12 @@ class ConsumptionChart extends StatelessWidget {
                 },
               ),
             ),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: FlGridData(
             show: true,
@@ -111,7 +128,9 @@ class ConsumptionChart extends StatelessWidget {
             getDrawingHorizontalLine: (value) {
               return FlLine(
                 // ✅ FIX: Replace force unwrap with null-aware operator
-                color: isDark ? (Colors.grey[800] ?? Colors.grey) : (Colors.grey[300] ?? Colors.grey),
+                color: isDark
+                    ? (Colors.grey[800] ?? Colors.grey)
+                    : (Colors.grey[300] ?? Colors.grey),
                 strokeWidth: 1,
               );
             },
@@ -127,12 +146,16 @@ class ConsumptionChart extends StatelessWidget {
                   toY: consumption,
                   color: Colors.blue,
                   width: 16,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(4),
+                  ),
                   backDrawRodData: BackgroundBarChartRodData(
                     show: true,
                     toY: chartMaxY,
                     // ✅ FIX: Replace force unwrap with null-aware operator
-                    color: isDark ? (Colors.grey[800] ?? Colors.grey) : (Colors.grey[200] ?? Colors.grey),
+                    color: isDark
+                        ? (Colors.grey[800] ?? Colors.grey)
+                        : (Colors.grey[200] ?? Colors.grey),
                   ),
                 ),
               ],
@@ -148,7 +171,8 @@ class ConsumptionChart extends StatelessWidget {
                 dashArray: [5, 5],
                 label: HorizontalLineLabel(
                   show: true,
-                  labelResolver: (line) => 'Avg: ${UnitConverter.formatVolume(averageConsumption, settings.volumeUnit)}',
+                  labelResolver: (line) =>
+                      'Avg: ${UnitConverter.formatVolume(averageConsumption, settings.volumeUnit)}',
                   style: const TextStyle(
                     color: Colors.orange,
                     fontWeight: FontWeight.bold,
@@ -175,10 +199,7 @@ class ConsumptionChart extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'No consumption data yet',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
         ),

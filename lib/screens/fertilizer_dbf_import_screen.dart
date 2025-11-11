@@ -15,13 +15,11 @@ import 'package:growlog_app/di/service_locator.dart';
 class FertilizerDbfImportScreen extends StatefulWidget {
   final File dbfFile;
 
-  const FertilizerDbfImportScreen({
-    super.key,
-    required this.dbfFile,
-  });
+  const FertilizerDbfImportScreen({super.key, required this.dbfFile});
 
   @override
-  State<FertilizerDbfImportScreen> createState() => _FertilizerDbfImportScreenState();
+  State<FertilizerDbfImportScreen> createState() =>
+      _FertilizerDbfImportScreenState();
 }
 
 class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
@@ -78,14 +76,19 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
     });
 
     try {
-      AppLogger.info('FertilizerDbfImportScreen', 'Parsing DBF file: ${widget.dbfFile.path}');
+      AppLogger.info(
+        'FertilizerDbfImportScreen',
+        'Parsing DBF file: ${widget.dbfFile.path}',
+      );
 
       // Parse DBF file
       final fertilizers = await DbfImportService.importFromDbf(widget.dbfFile);
 
       // Check for duplicates
       final existingFertilizers = await _fertilizerRepo.findAll();
-      final existingNames = existingFertilizers.map((f) => f.name.toLowerCase()).toSet();
+      final existingNames = existingFertilizers
+          .map((f) => f.name.toLowerCase())
+          .toSet();
       final duplicates = fertilizers
           .where((f) => existingNames.contains(f.name.toLowerCase()))
           .map((f) => f.name)
@@ -139,17 +142,35 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
     filtered.sort((a, b) {
       final aInvalid = FertilizerValidator.isInvalid(a);
       final bInvalid = FertilizerValidator.isInvalid(b);
-      if (aInvalid && !bInvalid) return 1; // a is invalid, b is valid -> b comes first
-      if (!aInvalid && bInvalid) return -1; // a is valid, b is invalid -> a comes first
+      if (aInvalid && !bInvalid)
+        return 1; // a is invalid, b is valid -> b comes first
+      if (!aInvalid && bInvalid)
+        return -1; // a is valid, b is invalid -> a comes first
       return 0; // both same validity -> keep original order
     });
 
     // Calculate statistics
-    final invalidCount = _parsedFertilizers.where((f) => FertilizerValidator.isInvalid(f)).length;
-    final incompleteCount = _parsedFertilizers.where((f) => !FertilizerValidator.isInvalid(f) && FertilizerValidator.isIncomplete(f)).length;
-    final validFertilizers = _parsedFertilizers.where((f) => !FertilizerValidator.isInvalid(f) && !FertilizerValidator.isIncomplete(f));
-    final substanceCount = validFertilizers.where((f) => !FertilizerValidator.isLikelyRecipe(f)).length;
-    final recipeCount = validFertilizers.where((f) => FertilizerValidator.isLikelyRecipe(f)).length;
+    final invalidCount = _parsedFertilizers
+        .where((f) => FertilizerValidator.isInvalid(f))
+        .length;
+    final incompleteCount = _parsedFertilizers
+        .where(
+          (f) =>
+              !FertilizerValidator.isInvalid(f) &&
+              FertilizerValidator.isIncomplete(f),
+        )
+        .length;
+    final validFertilizers = _parsedFertilizers.where(
+      (f) =>
+          !FertilizerValidator.isInvalid(f) &&
+          !FertilizerValidator.isIncomplete(f),
+    );
+    final substanceCount = validFertilizers
+        .where((f) => !FertilizerValidator.isLikelyRecipe(f))
+        .length;
+    final recipeCount = validFertilizers
+        .where((f) => FertilizerValidator.isLikelyRecipe(f))
+        .length;
 
     // Update cached values
     _cachedFilteredFertilizers = filtered;
@@ -200,10 +221,16 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
           context,
           'Imported $imported fertilizers${skipped > 0 ? ' ($skipped skipped)' : ''}',
         );
-        Navigator.of(context).pop(true); // Return true to refresh fertilizer list
+        Navigator.of(
+          context,
+        ).pop(true); // Return true to refresh fertilizer list
       }
     } catch (e) {
-      AppLogger.error('FertilizerDbfImportScreen', 'Error importing fertilizers', e);
+      AppLogger.error(
+        'FertilizerDbfImportScreen',
+        'Error importing fertilizers',
+        e,
+      );
       if (mounted) {
         setState(() {
           _isImporting = false;
@@ -217,20 +244,14 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Import Fertilizers'),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        appBar: AppBar(title: const Text('Import Fertilizers')),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_errorMessage != null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Import Fertilizers'),
-        ),
+        appBar: AppBar(title: const Text('Import Fertilizers')),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -275,9 +296,7 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
           _buildSummaryCard(isDark),
 
           // Fertilizer Preview List
-          Expanded(
-            child: _buildFertilizerList(isDark),
-          ),
+          Expanded(child: _buildFertilizerList(isDark)),
 
           // Import Buttons
           _buildImportButtons(isDark),
@@ -367,16 +386,22 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
           // Filter Buttons
           Row(
             children: [
+              Expanded(child: _buildFilterButton('All', 'all', Icons.list)),
+              const SizedBox(width: 8),
               Expanded(
-                child: _buildFilterButton('All', 'all', Icons.list),
+                child: _buildFilterButton(
+                  'Substances',
+                  'substances',
+                  Icons.science,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _buildFilterButton('Substances', 'substances', Icons.science),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildFilterButton('Recipes', 'recipes', Icons.auto_awesome),
+                child: _buildFilterButton(
+                  'Recipes',
+                  'recipes',
+                  Icons.auto_awesome,
+                ),
               ),
             ],
           ),
@@ -484,43 +509,52 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
 
   Widget _buildFertilizerList(bool isDark) {
     if (_parsedFertilizers.isEmpty) {
-      return const Center(
-        child: Text('No fertilizers found in file'),
-      );
+      return const Center(child: Text('No fertilizers found in file'));
     }
 
     final filteredFertilizers = _getFilteredFertilizers();
 
     if (filteredFertilizers.isEmpty) {
-      return const Center(
-        child: Text('No items in this filter'),
-      );
+      return const Center(child: Text('No items in this filter'));
     }
 
     // Separate valid and invalid entries
-    final validEntries = filteredFertilizers.where((f) => !FertilizerValidator.isInvalid(f)).toList();
-    final invalidEntries = filteredFertilizers.where((f) => FertilizerValidator.isInvalid(f)).toList();
+    final validEntries = filteredFertilizers
+        .where((f) => !FertilizerValidator.isInvalid(f))
+        .toList();
+    final invalidEntries = filteredFertilizers
+        .where((f) => FertilizerValidator.isInvalid(f))
+        .toList();
 
     // Build display list: valid entries + limited invalid entries
     final displayList = <Fertilizer>[];
     displayList.addAll(validEntries);
 
-    final invalidToShow = _showAllInvalid ? invalidEntries : invalidEntries.take(2).toList();
+    final invalidToShow = _showAllInvalid
+        ? invalidEntries
+        : invalidEntries.take(2).toList();
     displayList.addAll(invalidToShow);
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: displayList.length + (invalidEntries.length > 2 && !_showAllInvalid ? 1 : 0), // +1 for expand button
+      itemCount:
+          displayList.length +
+          (invalidEntries.length > 2 && !_showAllInvalid
+              ? 1
+              : 0), // +1 for expand button
       itemBuilder: (context, displayIndex) {
         // Check if this is the expand button position
-        if (displayIndex == displayList.length && invalidEntries.length > 2 && !_showAllInvalid) {
+        if (displayIndex == displayList.length &&
+            invalidEntries.length > 2 &&
+            !_showAllInvalid) {
           return _buildExpandInvalidButton(invalidEntries.length - 2, isDark);
         }
 
         final fertilizer = displayList[displayIndex];
         final isDuplicate = _duplicateNames.contains(fertilizer.name);
         final isInvalid = FertilizerValidator.isInvalid(fertilizer);
-        final isIncomplete = !isInvalid && FertilizerValidator.isIncomplete(fertilizer);
+        final isIncomplete =
+            !isInvalid && FertilizerValidator.isIncomplete(fertilizer);
         final isRecipe = FertilizerValidator.isLikelyRecipe(fertilizer);
         final isSelected = _selectedItems.contains(fertilizer.name);
 
@@ -534,33 +568,39 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
           color: isInvalid
               ? (isDark ? Colors.red[900] : Colors.red[50])
               : (isIncomplete
-                  ? (isDark ? Colors.orange[900] : Colors.orange[50])
-                  : (isDuplicate
-                      ? (isDark ? Colors.yellow[900] : Colors.yellow[50])
-                      : (isDark ? Colors.green[900]?.withValues(alpha: 0.2) : Colors.green[50]))),
+                    ? (isDark ? Colors.orange[900] : Colors.orange[50])
+                    : (isDuplicate
+                          ? (isDark ? Colors.yellow[900] : Colors.yellow[50])
+                          : (isDark
+                                ? Colors.green[900]?.withValues(alpha: 0.2)
+                                : Colors.green[50]))),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: BorderSide(
               color: isInvalid
                   ? Colors.red[300] ?? Colors.red
                   : (isIncomplete
-                      ? Colors.orange[300] ?? Colors.orange
-                      : (isDuplicate ? Colors.yellow[700] ?? Colors.yellow : Colors.green[300] ?? Colors.green)),
+                        ? Colors.orange[300] ?? Colors.orange
+                        : (isDuplicate
+                              ? Colors.yellow[700] ?? Colors.yellow
+                              : Colors.green[300] ?? Colors.green)),
               width: 1.5,
             ),
           ),
           child: ListTile(
             leading: Checkbox(
               value: isSelected,
-              onChanged: (isDuplicate || isInvalid) ? null : (value) {
-                setState(() {
-                  if (value == true) {
-                    _selectedItems.add(fertilizer.name);
-                  } else {
-                    _selectedItems.remove(fertilizer.name);
-                  }
-                });
-              },
+              onChanged: (isDuplicate || isInvalid)
+                  ? null
+                  : (value) {
+                      setState(() {
+                        if (value == true) {
+                          _selectedItems.add(fertilizer.name);
+                        } else {
+                          _selectedItems.remove(fertilizer.name);
+                        }
+                      });
+                    },
             ),
             title: Row(
               children: [
@@ -579,7 +619,10 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
                 ),
                 if (isInvalid)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.red[100],
                       borderRadius: BorderRadius.circular(4),
@@ -595,7 +638,10 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
                   ),
                 if (!isInvalid && isIncomplete)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange[100],
                       borderRadius: BorderRadius.circular(4),
@@ -611,7 +657,10 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
                   ),
                 if (!isInvalid && !isIncomplete && isRecipe)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.purple[100],
                       borderRadius: BorderRadius.circular(4),
@@ -680,31 +729,37 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
               isInvalid
                   ? Icons.error
                   : (isIncomplete
-                      ? Icons.warning
-                      : (isDuplicate
-                          ? Icons.warning_amber
-                          : (isRecipe ? Icons.auto_awesome : Icons.science))),
+                        ? Icons.warning
+                        : (isDuplicate
+                              ? Icons.warning_amber
+                              : (isRecipe
+                                    ? Icons.auto_awesome
+                                    : Icons.science))),
               color: isInvalid
                   ? Colors.red[700]
                   : (isIncomplete
-                      ? Colors.orange[700]
-                      : (isDuplicate
-                          ? Colors.orange[700]
-                          : (isRecipe ? Colors.purple[700] : Colors.green[700]))),
+                        ? Colors.orange[700]
+                        : (isDuplicate
+                              ? Colors.orange[700]
+                              : (isRecipe
+                                    ? Colors.purple[700]
+                                    : Colors.green[700]))),
             ),
-            onTap: (isDuplicate || isInvalid) ? null : () {
-              AppLogger.debug(
-                'FertilizerDbfImport',
-                'Tapped: ${fertilizer.name} (was=$isSelected, now=${!isSelected})',
-              );
-              setState(() {
-                if (isSelected) {
-                  _selectedItems.remove(fertilizer.name);
-                } else {
-                  _selectedItems.add(fertilizer.name);
-                }
-              });
-            },
+            onTap: (isDuplicate || isInvalid)
+                ? null
+                : () {
+                    AppLogger.debug(
+                      'FertilizerDbfImport',
+                      'Tapped: ${fertilizer.name} (was=$isSelected, now=${!isSelected})',
+                    );
+                    setState(() {
+                      if (isSelected) {
+                        _selectedItems.remove(fertilizer.name);
+                      } else {
+                        _selectedItems.add(fertilizer.name);
+                      }
+                    });
+                  },
           ),
         );
       },
@@ -784,10 +839,7 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
                   Expanded(
                     child: Text(
                       '${_duplicateNames.length} duplicate(s) will be skipped',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.orange[700],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.orange[700]),
                     ),
                   ),
                 ],
@@ -797,7 +849,9 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _isImporting ? null : () => Navigator.of(context).pop(),
+                  onPressed: _isImporting
+                      ? null
+                      : () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.cancel),
                   label: const Text('Cancel'),
                   style: OutlinedButton.styleFrom(
@@ -822,7 +876,11 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
                           ),
                         )
                       : const Icon(Icons.upload),
-                  label: Text(_isImporting ? 'Importing...' : 'Import (${_getSelectedCount()})'),
+                  label: Text(
+                    _isImporting
+                        ? 'Importing...'
+                        : 'Import (${_getSelectedCount()})',
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[700],
                     foregroundColor: Colors.white,

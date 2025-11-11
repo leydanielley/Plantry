@@ -64,10 +64,17 @@ class DatabaseRecovery {
 
       await file.copy(backupPath);
 
-      AppLogger.info('DatabaseRecovery', 'Corrupted database backed up to: $backupPath');
+      AppLogger.info(
+        'DatabaseRecovery',
+        'Corrupted database backed up to: $backupPath',
+      );
       return true;
     } catch (e) {
-      AppLogger.error('DatabaseRecovery', 'Failed to backup corrupted database', e);
+      AppLogger.error(
+        'DatabaseRecovery',
+        'Failed to backup corrupted database',
+        e,
+      );
       return false;
     }
   }
@@ -79,14 +86,20 @@ class DatabaseRecovery {
       final backupCreated = await backupCorruptedDatabase(dbPath);
 
       if (!backupCreated) {
-        AppLogger.error('DatabaseRecovery', '❌ Backup creation failed - REFUSING to delete original DB!');
+        AppLogger.error(
+          'DatabaseRecovery',
+          '❌ Backup creation failed - REFUSING to delete original DB!',
+        );
         return false; // Do NOT delete if backup failed
       }
 
       final file = File(dbPath);
       if (await file.exists()) {
         await file.delete();
-        AppLogger.info('DatabaseRecovery', 'Corrupted database deleted (backup exists)');
+        AppLogger.info(
+          'DatabaseRecovery',
+          'Corrupted database deleted (backup exists)',
+        );
       }
 
       // Also delete any journal/wal files
@@ -102,14 +115,21 @@ class DatabaseRecovery {
 
       return true;
     } catch (e) {
-      AppLogger.error('DatabaseRecovery', 'Failed to delete corrupted database', e);
+      AppLogger.error(
+        'DatabaseRecovery',
+        'Failed to delete corrupted database',
+        e,
+      );
       return false;
     }
   }
 
   /// Full recovery process
   static Future<DatabaseRecoveryResult> performRecovery(String dbPath) async {
-    AppLogger.warning('DatabaseRecovery', '🔧 Starting database recovery process...');
+    AppLogger.warning(
+      'DatabaseRecovery',
+      '🔧 Starting database recovery process...',
+    );
 
     // Step 1: Check if database is actually corrupted
     final isCorrupted = await isDatabaseCorrupted(dbPath);
@@ -131,7 +151,10 @@ class DatabaseRecovery {
     }
 
     // Step 3: Emergency JSON export (last resort before deletion)
-    AppLogger.warning('DatabaseRecovery', 'Step 2: Repair failed, attempting emergency data export...');
+    AppLogger.warning(
+      'DatabaseRecovery',
+      'Step 2: Repair failed, attempting emergency data export...',
+    );
     String? emergencyBackupPath;
 
     try {
@@ -140,7 +163,11 @@ class DatabaseRecovery {
       emergencyBackupPath = await exportToJSON(corruptedDb);
       await corruptedDb.close();
     } catch (e) {
-      AppLogger.warning('DatabaseRecovery', 'Emergency export not possible (DB cannot be opened)', e);
+      AppLogger.warning(
+        'DatabaseRecovery',
+        'Emergency export not possible (DB cannot be opened)',
+        e,
+      );
       // Continue with deletion even if export fails
     }
 
@@ -149,14 +176,20 @@ class DatabaseRecovery {
     final deleted = await deleteCorruptedDatabase(dbPath);
 
     if (deleted) {
-      String message = 'Corrupted database removed. A fresh database will be created.';
+      String message =
+          'Corrupted database removed. A fresh database will be created.';
 
       if (emergencyBackupPath != null) {
-        message += '\n\n✅ Emergency backup saved to:\n$emergencyBackupPath\n\n'
+        message +=
+            '\n\n✅ Emergency backup saved to:\n$emergencyBackupPath\n\n'
             'You can manually recover data from this JSON file if needed.';
-        AppLogger.info('DatabaseRecovery', '✅ Emergency backup available at: $emergencyBackupPath');
+        AppLogger.info(
+          'DatabaseRecovery',
+          '✅ Emergency backup available at: $emergencyBackupPath',
+        );
       } else {
-        message += '\n\nNote: Previous data may be lost. Check backups if available.';
+        message +=
+            '\n\nNote: Previous data may be lost. Check backups if available.';
       }
 
       AppLogger.info('DatabaseRecovery', '✅ Fresh database will be created');
@@ -176,7 +209,10 @@ class DatabaseRecovery {
   /// Returns the path to the exported JSON file, or null if export failed.
   static Future<String?> exportToJSON(Database db) async {
     try {
-      AppLogger.warning('DatabaseRecovery', '🚨 Attempting emergency JSON export...');
+      AppLogger.warning(
+        'DatabaseRecovery',
+        '🚨 Attempting emergency JSON export...',
+      );
 
       // Create emergency backup directory
       final documentsDir = await getApplicationDocumentsDirectory();
@@ -273,8 +309,4 @@ class DatabaseRecoveryResult {
   bool get hasFailed => status == DatabaseRecoveryStatus.failed;
 }
 
-enum DatabaseRecoveryStatus {
-  success,
-  recreated,
-  failed,
-}
+enum DatabaseRecoveryStatus { success, recreated, failed }

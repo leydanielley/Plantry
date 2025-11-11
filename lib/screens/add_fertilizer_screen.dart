@@ -152,10 +152,7 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
           Expanded(
             child: Text(
               _t['add_fertilizer_info_text'],
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.blue[700],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.blue[700]),
             ),
           ),
         ],

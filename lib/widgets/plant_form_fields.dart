@@ -83,9 +83,7 @@ class PlantFormFields extends StatelessWidget {
   });
 
   bool get _isHydroSystem =>
-      medium == Medium.dwc ||
-      medium == Medium.rdwc ||
-      medium == Medium.aero;
+      medium == Medium.dwc || medium == Medium.rdwc || medium == Medium.aero;
 
   @override
   Widget build(BuildContext context) {
@@ -112,9 +110,9 @@ class PlantFormFields extends StatelessWidget {
       children: [
         Text(
           t.translate('add_plant_basic_info'),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         TextFormField(
@@ -145,9 +143,9 @@ class PlantFormFields extends StatelessWidget {
       children: [
         Text(
           t.translate('add_plant_genetics'),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         TextFormField(
@@ -220,9 +218,9 @@ class PlantFormFields extends StatelessWidget {
       children: [
         Text(
           t.translate('add_plant_grow_setup'),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         if (loadingGrows)
@@ -270,10 +268,7 @@ class PlantFormFields extends StatelessWidget {
               prefixIcon: const Icon(Icons.home),
             ),
             items: rooms.map((room) {
-              return DropdownMenuItem(
-                value: room.id,
-                child: Text(room.name),
-              );
+              return DropdownMenuItem(value: room.id, child: Text(room.name));
             }).toList(),
             onChanged: onRoomSelected,
           ),
@@ -287,10 +282,14 @@ class PlantFormFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          t.translate(_isHydroSystem ? 'add_plant_system_info' : 'add_plant_container_info'),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+          t.translate(
+            _isHydroSystem
+                ? 'add_plant_system_info'
+                : 'add_plant_container_info',
           ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         if (_isHydroSystem)
@@ -332,9 +331,9 @@ class PlantFormFields extends StatelessWidget {
       children: [
         Text(
           t.translate('add_plant_seed_date'),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         ListTile(

@@ -4,7 +4,7 @@ import 'package:growlog_app/widgets/widgets.dart';
 import 'package:growlog_app/utils/app_theme.dart';
 
 /// 🎨 Design Showcase Screen
-/// 
+///
 /// Demonstriert alle neuen Design-Komponenten
 class DesignShowcaseScreen extends StatelessWidget {
   const DesignShowcaseScreen({super.key});
@@ -12,14 +12,18 @@ class DesignShowcaseScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Design Showcase'),
-      ),
+      appBar: AppBar(title: const Text('Design Showcase')),
       body: MultiColorGradientBackground(
         gradients: [
           [Colors.green[100] ?? Colors.green, Colors.blue[100] ?? Colors.blue],
-          [Colors.blue[100] ?? Colors.blue, Colors.purple[100] ?? Colors.purple],
-          [Colors.purple[100] ?? Colors.purple, Colors.pink[100] ?? Colors.pink],
+          [
+            Colors.blue[100] ?? Colors.blue,
+            Colors.purple[100] ?? Colors.purple,
+          ],
+          [
+            Colors.purple[100] ?? Colors.purple,
+            Colors.pink[100] ?? Colors.pink,
+          ],
           [Colors.pink[100] ?? Colors.pink, Colors.green[100] ?? Colors.green],
         ],
         duration: const Duration(seconds: 5),
@@ -55,25 +59,20 @@ class DesignShowcaseScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     GlassGradientCard(
-                      gradientColors: [
-                        AppTheme.primaryGreen,
-                        Colors.teal,
-                      ],
+                      gradientColors: [AppTheme.primaryGreen, Colors.teal],
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Glass Gradient Card',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(color: Colors.white),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Glass card with custom gradient colors.',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.white70,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.white70),
                           ),
                         ],
                       ),
@@ -92,8 +91,10 @@ class DesignShowcaseScreen extends StatelessWidget {
                   children: [
                     BouncyButton(
                       onPressed: () {
-                        AppMessages.showSuccess(context,
-                            'Primary Button Pressed!');
+                        AppMessages.showSuccess(
+                          context,
+                          'Primary Button Pressed!',
+                        );
                       },
                       child: const Text('Primary Button'),
                     ),
@@ -102,7 +103,10 @@ class DesignShowcaseScreen extends StatelessWidget {
                       onPressed: () {},
                       backgroundColor: Colors.white,
                       foregroundColor: AppTheme.primaryGreen,
-                      border: BorderSide(color: AppTheme.primaryGreen, width: 2),
+                      border: BorderSide(
+                        color: AppTheme.primaryGreen,
+                        width: 2,
+                      ),
                       child: const Text('Outlined Button'),
                     ),
                     const SizedBox(height: 12),
@@ -218,9 +222,21 @@ class DesignShowcaseScreen extends StatelessWidget {
                 child: GlassCard(
                   child: Column(
                     children: [
-                      _buildColorChip(context, 'Primary Green', AppTheme.primaryGreen),
-                      _buildColorChip(context, 'Success', AppTheme.successColor),
-                      _buildColorChip(context, 'Warning', AppTheme.warningColor),
+                      _buildColorChip(
+                        context,
+                        'Primary Green',
+                        AppTheme.primaryGreen,
+                      ),
+                      _buildColorChip(
+                        context,
+                        'Success',
+                        AppTheme.successColor,
+                      ),
+                      _buildColorChip(
+                        context,
+                        'Warning',
+                        AppTheme.warningColor,
+                      ),
                       _buildColorChip(context, 'Error', AppTheme.errorColor),
                       _buildColorChip(context, 'Info', AppTheme.infoColor),
                     ],
@@ -234,16 +250,17 @@ class DesignShowcaseScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSection(BuildContext context, {required String title, required Widget child}) {
+  Widget _buildSection(
+    BuildContext context, {
+    required String title,
+    required Widget child,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          child: Text(title, style: Theme.of(context).textTheme.headlineSmall),
         ),
         child,
       ],
@@ -268,10 +285,7 @@ class DesignShowcaseScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          Text(label, style: Theme.of(context).textTheme.bodyLarge),
         ],
       ),
     );
@@ -285,9 +299,7 @@ class _HeroDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Hero Detail'),
-      ),
+      appBar: AppBar(title: const Text('Hero Detail')),
       body: Center(
         child: HeroCard(
           tag: 'demo-card',

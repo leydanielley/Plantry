@@ -33,15 +33,8 @@ class AccessibilityHelper {
   }
 
   /// Wrap image with description for screen readers
-  static Widget semanticImage({
-    required String label,
-    required Widget child,
-  }) {
-    return Semantics(
-      label: label,
-      image: true,
-      child: child,
-    );
+  static Widget semanticImage({required String label, required Widget child}) {
+    return Semantics(label: label, image: true, child: child);
   }
 
   /// Wrap text with heading semantics
@@ -49,11 +42,7 @@ class AccessibilityHelper {
     required String label,
     required Widget child,
   }) {
-    return Semantics(
-      label: label,
-      header: true,
-      child: child,
-    );
+    return Semantics(label: label, header: true, child: child);
   }
 
   /// Check if text scale is large (accessibility setting)
@@ -63,7 +52,10 @@ class AccessibilityHelper {
   }
 
   /// Get accessible font size based on text scale
-  static double getAccessibleFontSize(BuildContext context, double baseFontSize) {
+  static double getAccessibleFontSize(
+    BuildContext context,
+    double baseFontSize,
+  ) {
     final textScaler = MediaQuery.of(context).textScaler;
     final scaleFactor = textScaler.scale(1.0);
 
@@ -97,11 +89,7 @@ class AccessibleContainer extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
 
-  const AccessibleContainer({
-    super.key,
-    required this.child,
-    this.padding,
-  });
+  const AccessibleContainer({super.key, required this.child, this.padding});
 
   @override
   Widget build(BuildContext context) {
@@ -114,10 +102,7 @@ class AccessibleContainer extends StatelessWidget {
         ? EdgeInsets.all(basePadding.horizontal * 1.2)
         : basePadding;
 
-    return Container(
-      padding: scaledPadding,
-      child: child,
-    );
+    return Container(padding: scaledPadding, child: child);
   }
 }
 
@@ -147,7 +132,8 @@ class AccessibleText extends StatelessWidget {
 
     return Text(
       text,
-      style: style?.copyWith(fontSize: clampedFontSize) ??
+      style:
+          style?.copyWith(fontSize: clampedFontSize) ??
           TextStyle(fontSize: clampedFontSize),
     );
   }

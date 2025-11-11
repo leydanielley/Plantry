@@ -44,7 +44,7 @@ class LogService implements ILogService {
       throw ArgumentError(
         'Pflanze "${plant.name}" ist archiviert. '
         'Logs können nicht zu archivierten Pflanzen hinzugefügt werden. '
-        'Bitte reaktiviere die Pflanze zuerst.'
+        'Bitte reaktiviere die Pflanze zuerst.',
       );
     }
 
@@ -57,7 +57,7 @@ class LogService implements ILogService {
     if (dateError != null) {
       throw ArgumentError(dateError);
     }
-    
+
     // Validiere pH Werte
     if (log.phIn != null && (log.phIn! < 0 || log.phIn! > 14)) {
       throw ArgumentError('pH In außerhalb Bereich: ${log.phIn}');
@@ -65,7 +65,7 @@ class LogService implements ILogService {
     if (log.phOut != null && (log.phOut! < 0 || log.phOut! > 14)) {
       throw ArgumentError('pH Out außerhalb Bereich: ${log.phOut}');
     }
-    
+
     // Validiere EC Werte
     if (log.ecIn != null && (log.ecIn! < 0 || log.ecIn! > 10)) {
       throw ArgumentError('EC In außerhalb Bereich: ${log.ecIn}');
@@ -73,27 +73,36 @@ class LogService implements ILogService {
     if (log.ecOut != null && (log.ecOut! < 0 || log.ecOut! > 10)) {
       throw ArgumentError('EC Out außerhalb Bereich: ${log.ecOut}');
     }
-    
+
     // Validiere Umgebungswerte
-    if (log.temperature != null && (log.temperature! < -50 || log.temperature! > 100)) {
+    if (log.temperature != null &&
+        (log.temperature! < -50 || log.temperature! > 100)) {
       throw ArgumentError('Temperatur außerhalb Bereich: ${log.temperature}');
     }
     if (log.humidity != null && (log.humidity! < 0 || log.humidity! > 100)) {
-      throw ArgumentError('Luftfeuchtigkeit außerhalb Bereich: ${log.humidity}');
+      throw ArgumentError(
+        'Luftfeuchtigkeit außerhalb Bereich: ${log.humidity}',
+      );
     }
-    
+
     // Validiere Container-Werte
     if (log.containerSize != null && log.containerSize! <= 0) {
-      throw ArgumentError('Container-Größe muss positiv sein: ${log.containerSize}');
+      throw ArgumentError(
+        'Container-Größe muss positiv sein: ${log.containerSize}',
+      );
     }
     if (log.systemReservoirSize != null && log.systemReservoirSize! <= 0) {
-      throw ArgumentError('Reservoir-Größe muss positiv sein: ${log.systemReservoirSize}');
+      throw ArgumentError(
+        'Reservoir-Größe muss positiv sein: ${log.systemReservoirSize}',
+      );
     }
     if (log.systemBucketCount != null && log.systemBucketCount! <= 0) {
-      throw ArgumentError('Bucket-Anzahl muss positiv sein: ${log.systemBucketCount}');
+      throw ArgumentError(
+        'Bucket-Anzahl muss positiv sein: ${log.systemBucketCount}',
+      );
     }
   }
-  
+
   /// Validiert Fertilizer-Daten
   void _validateFertilizers(Map<int, double> fertilizers) {
     for (final entry in fertilizers.entries) {
@@ -104,11 +113,13 @@ class LogService implements ILogService {
         throw ArgumentError('Fertilizer-Menge muss >= 0 sein: ${entry.value}');
       }
       if (entry.value > 10000) {
-        throw ArgumentError('Fertilizer-Menge zu groß (max 10000ml): ${entry.value}');
+        throw ArgumentError(
+          'Fertilizer-Menge zu groß (max 10000ml): ${entry.value}',
+        );
       }
     }
   }
-  
+
   /// Validiert Photo-Pfade
   /// ✅ HIGH FIX: Added try-catch to handle TOCTOU race (file deleted between checks)
   Future<void> _validatePhotos(List<String> photoPaths) async {
@@ -129,7 +140,9 @@ class LogService implements ILogService {
       } catch (e) {
         // ✅ FIX: Handle TOCTOU race - file could be deleted between exists() and length()
         if (e is FileSystemException) {
-          throw ArgumentError('Foto-Datei nicht zugänglich oder wurde gelöscht: $path');
+          throw ArgumentError(
+            'Foto-Datei nicht zugänglich oder wurde gelöscht: $path',
+          );
         }
         rethrow;
       }
@@ -150,9 +163,12 @@ class LogService implements ILogService {
     // ✅ BUG FIX #7b: dayNumber automatisch berechnen für Sicherheit!
     int correctedDayNumber = log.dayNumber;
     if (plant.seedDate != null) {
-      correctedDayNumber = Validators.calculateDayNumber(log.logDate, plant.seedDate!);
+      correctedDayNumber = Validators.calculateDayNumber(
+        log.logDate,
+        plant.seedDate!,
+      );
     }
-    
+
     // ✅ v13: phase & phaseDayNumber berechnen
     int? phaseDayNumber;
     // Use phase-specific date instead of deprecated phaseStartDate
@@ -173,30 +189,33 @@ class LogService implements ILogService {
         break;
     }
     if (phaseStartDate != null) {
-      phaseDayNumber = Validators.calculateDayNumber(log.logDate, phaseStartDate);
+      phaseDayNumber = Validators.calculateDayNumber(
+        log.logDate,
+        phaseStartDate,
+      );
     }
-    
+
     // Korrigierter Log mit richtigem dayNumber & phase
     final correctedLog = log.copyWith(
       dayNumber: correctedDayNumber,
       phase: plant.phase,
       phaseDayNumber: phaseDayNumber,
     );
-    
+
     // Input-Validierung
     _validateLog(correctedLog, plant);
     _validateFertilizers(fertilizers);
     if (photoPaths.isNotEmpty) {
       await _validatePhotos(photoPaths);
     }
-    
+
     final db = await _dbHelper.database;
-    
+
     // ALLES in einer Transaction = ACID garantiert
     try {
       return await db.transaction((txn) async {
         PlantLog savedLog = correctedLog;
-        
+
         // 1. Log speichern
         if (correctedLog.id == null) {
           final id = await txn.insert('plant_logs', correctedLog.toMap());
@@ -209,16 +228,20 @@ class LogService implements ILogService {
             whereArgs: [correctedLog.id],
           );
         }
-        
+
         final logId = savedLog.id!;
-        
+
         // 2. Fertilizers speichern (Batch)
         if (fertilizers.isNotEmpty) {
           final batch = txn.batch();
-          
+
           // Alte löschen
-          batch.delete('log_fertilizers', where: 'log_id = ?', whereArgs: [logId]);
-          
+          batch.delete(
+            'log_fertilizers',
+            where: 'log_id = ?',
+            whereArgs: [logId],
+          );
+
           // Neue einfügen
           for (final entry in fertilizers.entries) {
             final logFert = LogFertilizer(
@@ -229,23 +252,20 @@ class LogService implements ILogService {
             );
             batch.insert('log_fertilizers', logFert.toMap());
           }
-          
+
           await batch.commit(noResult: true);
         }
-        
+
         // 3. Photos speichern (Batch)
         if (photoPaths.isNotEmpty) {
           final batch = txn.batch();
           for (final photoPath in photoPaths) {
-            final photo = Photo(
-              logId: logId,
-              filePath: photoPath,
-            );
+            final photo = Photo(logId: logId, filePath: photoPath);
             batch.insert('photos', photo.toMap());
           }
           await batch.commit(noResult: true);
         }
-        
+
         // 4. Plant Updates (bei TRANSPLANT oder PHASE_CHANGE)
         if (correctedLog.actionType == ActionType.transplant) {
           final updatedPlant = plant.copyWith(
@@ -259,8 +279,9 @@ class LogService implements ILogService {
             whereArgs: [plant.id],
           );
         }
-        
-        if (correctedLog.actionType == ActionType.phaseChange && newPhase != null) {
+
+        if (correctedLog.actionType == ActionType.phaseChange &&
+            newPhase != null) {
           final updatedPlant = plant.copyWith(
             phase: newPhase,
             phaseStartDate: correctedLog.logDate,
@@ -272,7 +293,7 @@ class LogService implements ILogService {
             whereArgs: [plant.id],
           );
         }
-        
+
         return savedLog;
       });
     } catch (e) {
@@ -306,16 +327,16 @@ class LogService implements ILogService {
     if (plantIds.isEmpty) {
       throw ArgumentError('Keine Plant IDs angegeben');
     }
-    
+
     // Validierung
     _validateFertilizers(fertilizers);
     if (photoPaths.isNotEmpty) {
       await _validatePhotos(photoPaths);
     }
-    
+
     final db = await _dbHelper.database;
     final createdLogIds = <int>[];
-    
+
     try {
       await db.transaction((txn) async {
         final logBatch = txn.batch();
@@ -354,7 +375,7 @@ class LogService implements ILogService {
           if (phase.toUpperCase() == 'ARCHIVED') {
             throw ArgumentError(
               'Pflanze "$plantName" ist archiviert. '
-              'Logs können nicht zu archivierten Pflanzen hinzugefügt werden.'
+              'Logs können nicht zu archivierten Pflanzen hinzugefügt werden.',
             );
           }
         }
@@ -364,15 +385,19 @@ class LogService implements ILogService {
         for (final entry in plantSeedDates.entries) {
           final plantId = entry.key;
           final plantName = plantNames[plantId] ?? 'Unknown';
-          final seedDay = DateTime(entry.value.year, entry.value.month, entry.value.day);
+          final seedDay = DateTime(
+            entry.value.year,
+            entry.value.month,
+            entry.value.day,
+          );
 
           if (logDay.isBefore(seedDay)) {
             throw ArgumentError(
-              'Log-Datum liegt vor dem Pflanz-Datum für Pflanze "$plantName" (#$plantId)'
+              'Log-Datum liegt vor dem Pflanz-Datum für Pflanze "$plantName" (#$plantId)',
             );
           }
         }
-        
+
         // 1. Logs für alle Pflanzen erstellen (Batch)
         for (final plantId in plantIds) {
           // Lade Pflanze für Phase-Info
@@ -382,34 +407,43 @@ class LogService implements ILogService {
             orElse: () => throw Exception('Plant not found: $plantId'),
           );
           final plantPhase = PlantPhase.values.byName(
-            plantMap['phase'].toString().toLowerCase()
+            plantMap['phase'].toString().toLowerCase(),
           );
           final phaseStartDateStr = plantMap['phase_start_date'] as String?;
-          
+
           // ✅ FIX: Berechne dayNumber individuell pro Pflanze!
           int dayNumber = 1;
           final seedDate = plantSeedDates[plantId];
           if (seedDate != null) {
             // ✅ Nur Datums-Teil vergleichen (ohne Uhrzeit!)
             final logDay = DateTime(logDate.year, logDate.month, logDate.day);
-            final seedDay = DateTime(seedDate.year, seedDate.month, seedDate.day);
+            final seedDay = DateTime(
+              seedDate.year,
+              seedDate.month,
+              seedDate.day,
+            );
 
             dayNumber = logDay.difference(seedDay).inDays + 1;
 
             // ✅ CRITICAL FIX: Enforce reasonable bounds (10 years max grow cycle)
-            const maxReasonableDays = 3650;  // 10 years
+            const maxReasonableDays = 3650; // 10 years
             if (dayNumber < 1) {
-              AppLogger.warning('LogService', 'Log date before seed date, clamping to day 1');
+              AppLogger.warning(
+                'LogService',
+                'Log date before seed date, clamping to day 1',
+              );
               dayNumber = 1;
             } else if (dayNumber > maxReasonableDays) {
-              AppLogger.error('LogService',
-                'Day number too large ($dayNumber). Check seed date (${seedDate.toIso8601String()}) vs log date (${logDate.toIso8601String()})');
+              AppLogger.error(
+                'LogService',
+                'Day number too large ($dayNumber). Check seed date (${seedDate.toIso8601String()}) vs log date (${logDate.toIso8601String()})',
+              );
               throw ArgumentError(
-                'Day number too large ($dayNumber). Please check seed date vs log date.'
+                'Day number too large ($dayNumber). Please check seed date vs log date.',
               );
             }
           }
-          
+
           // ✅ v13: phaseDayNumber berechnen
           int? phaseDayNumber;
           if (phaseStartDateStr != null) {
@@ -419,16 +453,19 @@ class LogService implements ILogService {
               fallback: logDate,
               context: 'PhaseStartDate',
             );
-            phaseDayNumber = Validators.calculateDayNumber(logDate, phaseStartDate);
+            phaseDayNumber = Validators.calculateDayNumber(
+              logDate,
+              phaseStartDate,
+            );
           }
-          
+
           final log = PlantLog(
             plantId: plantId,
-            dayNumber: dayNumber,  // ✅ Individuell berechnet!
+            dayNumber: dayNumber, // ✅ Individuell berechnet!
             logDate: logDate,
             actionType: actionType,
-            phase: plantPhase,  // ✅ v13
-            phaseDayNumber: phaseDayNumber,  // ✅ v13
+            phase: plantPhase, // ✅ v13
+            phaseDayNumber: phaseDayNumber, // ✅ v13
             waterAmount: waterAmount,
             phIn: phIn,
             ecIn: ecIn,
@@ -442,20 +479,20 @@ class LogService implements ILogService {
           );
           logBatch.insert('plant_logs', log.toMap());
         }
-        
+
         final logResults = await logBatch.commit();
-        
+
         // IDs sammeln
         for (var result in logResults) {
           if (result is int) {
             createdLogIds.add(result);
           }
         }
-        
+
         // 2. Fertilizers für alle Logs (Batch)
         if (fertilizers.isNotEmpty && createdLogIds.isNotEmpty) {
           final fertBatch = txn.batch();
-          
+
           for (final logId in createdLogIds) {
             for (final entry in fertilizers.entries) {
               final logFert = LogFertilizer(
@@ -467,42 +504,39 @@ class LogService implements ILogService {
               fertBatch.insert('log_fertilizers', logFert.toMap());
             }
           }
-          
+
           await fertBatch.commit(noResult: true);
         }
-        
+
         // 3. Photos für alle Logs (Batch)
         if (photoPaths.isNotEmpty && createdLogIds.isNotEmpty) {
           final photoBatch = txn.batch();
-          
+
           for (final logId in createdLogIds) {
             for (final photoPath in photoPaths) {
-              final photo = Photo(
-                logId: logId,
-                filePath: photoPath,
-              );
+              final photo = Photo(logId: logId, filePath: photoPath);
               photoBatch.insert('photos', photo.toMap());
             }
           }
-          
+
           await photoBatch.commit(noResult: true);
         }
-        
+
         // 4. Phase Change für alle Pflanzen
         if (actionType == ActionType.phaseChange && newPhase != null) {
           final plantBatch = txn.batch();
-          
+
           for (final plantId in plantIds) {
             plantBatch.rawUpdate(
               'UPDATE plants SET phase = ?, phase_start_date = ? WHERE id = ?',
               [newPhase.name, logDate.toIso8601String(), plantId],
             );
           }
-          
+
           await plantBatch.commit(noResult: true);
         }
       });
-      
+
       return createdLogIds;
     } catch (e) {
       throw Exception('Fehler beim Bulk-Speichern: $e');
@@ -515,7 +549,7 @@ class LogService implements ILogService {
   Future<Map<String, dynamic>?> getLogWithDetails(int logId) async {
     try {
       final db = await _dbHelper.database;
-      
+
       // JOIN Query für Log + Fertilizers + Photos
       const query = '''
         SELECT 
@@ -537,20 +571,20 @@ class LogService implements ILogService {
         WHERE pl.id = ?
         ORDER BY lf.id, p.id
       ''';
-      
+
       final maps = await db.rawQuery(query, [logId]);
-      
+
       if (maps.isEmpty) return null;
-      
+
       // Erste Row = Log Daten
       final log = PlantLog.fromMap(maps.first);
-      
+
       final fertilizers = <Map<String, dynamic>>[];
       final photos = <Map<String, dynamic>>[];
-      
+
       final seenFertIds = <int>{};
       final seenPhotoIds = <int>{};
-      
+
       for (final map in maps) {
         // Fertilizer sammeln (ohne Duplikate)
         if (map['lf_id'] != null) {
@@ -568,7 +602,7 @@ class LogService implements ILogService {
             });
           }
         }
-        
+
         // Photos sammeln (ohne Duplikate)
         if (map['photo_id'] != null) {
           final photoId = map['photo_id'] as int;
@@ -583,12 +617,8 @@ class LogService implements ILogService {
           }
         }
       }
-      
-      return {
-        'log': log,
-        'fertilizers': fertilizers,
-        'photos': photos,
-      };
+
+      return {'log': log, 'fertilizers': fertilizers, 'photos': photos};
     } catch (e) {
       throw Exception('Fehler beim Laden des Logs: $e');
     }
@@ -600,40 +630,44 @@ class LogService implements ILogService {
   Future<PlantLog?> copyLog({
     required int sourceLogId,
     required int targetPlantId,
-    required DateTime newDate,  // ✅ dayNumber wird berechnet!
+    required DateTime newDate, // ✅ dayNumber wird berechnet!
   }) async {
     try {
       final sourceData = await getLogWithDetails(sourceLogId);
-      
+
       if (sourceData == null) return null;
-      
+
       final sourceLog = sourceData['log'] as PlantLog;
-      final sourceFertilizers = sourceData['fertilizers'] as List<Map<String, dynamic>>;
-      
+      final sourceFertilizers =
+          sourceData['fertilizers'] as List<Map<String, dynamic>>;
+
       // ✅ Plant laden um seedDate zu bekommen
       final plant = await _plantRepo.findById(targetPlantId);
       if (plant == null) return null;
-      
+
       // ✅ dayNumber berechnen basierend auf newDate!
       int dayNumber = 1;
       if (plant.seedDate != null) {
         dayNumber = Validators.calculateDayNumber(newDate, plant.seedDate!);
       }
-      
+
       // ✅ v13: phaseDayNumber berechnen
       int? phaseDayNumber;
       if (plant.phaseStartDate != null) {
-        phaseDayNumber = Validators.calculateDayNumber(newDate, plant.phaseStartDate!);
+        phaseDayNumber = Validators.calculateDayNumber(
+          newDate,
+          plant.phaseStartDate!,
+        );
       }
-      
+
       // Neuer Log mit kopierten Daten
       final newLog = PlantLog(
         plantId: targetPlantId,
-        dayNumber: dayNumber,  // ✅ Berechnet!
+        dayNumber: dayNumber, // ✅ Berechnet!
         logDate: newDate,
         actionType: sourceLog.actionType,
-        phase: plant.phase,  // ✅ v13
-        phaseDayNumber: phaseDayNumber,  // ✅ v13
+        phase: plant.phase, // ✅ v13
+        phaseDayNumber: phaseDayNumber, // ✅ v13
         waterAmount: sourceLog.waterAmount,
         phIn: sourceLog.phIn,
         ecIn: sourceLog.ecIn,
@@ -652,16 +686,17 @@ class LogService implements ILogService {
         systemBucketCount: sourceLog.systemBucketCount,
         systemBucketSize: sourceLog.systemBucketSize,
       );
-      
+
       // Fertilizers Map erstellen
       final fertilizersMap = <int, double>{};
       for (final fert in sourceFertilizers) {
-        fertilizersMap[fert['fertilizer_id'] as int] = (fert['amount'] as num).toDouble();
+        fertilizersMap[fert['fertilizer_id'] as int] = (fert['amount'] as num)
+            .toDouble();
       }
-      
+
       // Photos werden NICHT kopiert (macht keinen Sinn)
       // ✅ plant bereits geladen oben!
-      
+
       return await saveSingleLog(
         plant: plant,
         log: newLog,
@@ -679,7 +714,7 @@ class LogService implements ILogService {
   Future<void> deleteLog(int logId) async {
     try {
       final db = await _dbHelper.database;
-      
+
       await db.transaction((txn) async {
         // Foreign Keys löschen automatisch:
         // - log_fertilizers (ON DELETE CASCADE)
@@ -695,11 +730,11 @@ class LogService implements ILogService {
   @override
   Future<void> deleteLogs(List<int> logIds) async {
     if (logIds.isEmpty) return;
-    
+
     try {
       final db = await _dbHelper.database;
       final placeholders = List.filled(logIds.length, '?').join(',');
-      
+
       await db.transaction((txn) async {
         await txn.delete(
           'plant_logs',

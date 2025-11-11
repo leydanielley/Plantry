@@ -23,7 +23,7 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   String _status = 'Wird geladen...';
   bool _hasError = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -58,7 +58,10 @@ class _SplashScreenState extends State<SplashScreen> {
       final recoveryInfo = await AppStateRecovery.checkRecovery();
 
       if (recoveryInfo.inCrashLoop) {
-        AppLogger.error('SplashScreen', '❌ App in crash loop! Count: ${recoveryInfo.crashCount}');
+        AppLogger.error(
+          'SplashScreen',
+          '❌ App in crash loop! Count: ${recoveryInfo.crashCount}',
+        );
         setState(() {
           _hasError = true;
           _status = 'App-Wiederherstellung läuft...';
@@ -70,14 +73,20 @@ class _SplashScreenState extends State<SplashScreen> {
       } else if (recoveryInfo.wasKilled && kDebugMode) {
         AppLogger.warning('SplashScreen', '⚠️ App was killed unexpectedly');
         if (recoveryInfo.lastScreen != null) {
-          AppLogger.info('SplashScreen', 'Last screen: ${recoveryInfo.lastScreen}');
+          AppLogger.info(
+            'SplashScreen',
+            'Last screen: ${recoveryInfo.lastScreen}',
+          );
         }
       }
 
       // WICHTIG: sqflite MUSS im Main Thread laufen!
       // Isolates (compute) funktionieren NICHT mit sqflite
       if (kDebugMode) {
-        AppLogger.info('SplashScreen', '🚀 Starting database initialization...');
+        AppLogger.info(
+          'SplashScreen',
+          '🚀 Starting database initialization...',
+        );
       }
 
       if (updateInfo.isUpdate) {
@@ -90,7 +99,10 @@ class _SplashScreenState extends State<SplashScreen> {
       final db = await DatabaseHelper.instance.database.timeout(
         const Duration(seconds: 30),
         onTimeout: () {
-          AppLogger.error('SplashScreen', '⏱️ Database initialization timeout!');
+          AppLogger.error(
+            'SplashScreen',
+            '⏱️ Database initialization timeout!',
+          );
           throw TimeoutException('Database initialization took too long');
         },
       );
@@ -98,7 +110,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (kDebugMode) {
         AppLogger.info('SplashScreen', '✅ Database initialized: $dbPath');
-        AppLogger.info('SplashScreen', '⏱️  Initialization took: ${stopwatch.elapsedMilliseconds}ms');
+        AppLogger.info(
+          'SplashScreen',
+          '⏱️  Initialization took: ${stopwatch.elapsedMilliseconds}ms',
+        );
       }
 
       // Mark successful initialization
@@ -114,18 +129,22 @@ class _SplashScreenState extends State<SplashScreen> {
 
       // Fix 2 Sekunden Splash
       if (stopwatch.elapsedMilliseconds < 2000) {
-        await Future.delayed(Duration(milliseconds: 2000 - stopwatch.elapsedMilliseconds));
+        await Future.delayed(
+          Duration(milliseconds: 2000 - stopwatch.elapsedMilliseconds),
+        );
       }
 
       if (mounted) {
         // OPTIMIERUNG 3: Direkt navigieren ohne weitere Delays
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const DashboardScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              // Smooth Fade Transition
-              return FadeTransition(opacity: animation, child: child);
-            },
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const DashboardScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  // Smooth Fade Transition
+                  return FadeTransition(opacity: animation, child: child);
+                },
             transitionDuration: const Duration(milliseconds: 300),
           ),
         );
@@ -162,9 +181,11 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFF004225),
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFF004225),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -175,10 +196,7 @@ class _SplashScreenState extends State<SplashScreen> {
               duration: const Duration(milliseconds: 600),
               curve: Curves.easeOutBack,
               builder: (context, value, child) {
-                return Transform.scale(
-                  scale: value,
-                  child: child,
-                );
+                return Transform.scale(scale: value, child: child);
               },
               child: Container(
                 padding: const EdgeInsets.all(30),
@@ -199,7 +217,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Welcome Text
             const Text(
               'Welcome',
@@ -211,17 +229,14 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            
+
             // Greeting
             Text(
               _getGreeting(),
-              style: const TextStyle(
-                fontSize: 18,
-                color: Colors.white70,
-              ),
+              style: const TextStyle(fontSize: 18, color: Colors.white70),
             ),
             const SizedBox(height: 64),
-            
+
             // Loading Indicator
             if (!_hasError)
               const SizedBox(
@@ -233,14 +248,10 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               )
             else
-              const Icon(
-                Icons.error_outline,
-                color: Colors.orange,
-                size: 40,
-              ),
-            
+              const Icon(Icons.error_outline, color: Colors.orange, size: 40),
+
             const SizedBox(height: 16),
-            
+
             // Status Text
             Text(
               _status,
@@ -250,12 +261,15 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             // Debug Info (nur im Debug Mode)
             if (kDebugMode) ...[
               const SizedBox(height: 24),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black26,
                   borderRadius: BorderRadius.circular(8),

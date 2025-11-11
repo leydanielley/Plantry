@@ -3,7 +3,7 @@
 // =============================================
 
 import 'package:growlog_app/models/enums.dart';
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -14,7 +14,7 @@ class Room {
   final String? description;
   final GrowType? growType;
   final WateringSystem? wateringSystem;
-  final int? rdwcSystemId;  // Link to RDWC System
+  final int? rdwcSystemId; // Link to RDWC System
   final double width;
   final double depth;
   final double height;
@@ -34,8 +34,8 @@ class Room {
     this.height = 0.0,
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
   factory Room.fromMap(Map<String, dynamic> map) {
@@ -140,10 +140,16 @@ class Room {
     return Room(
       id: id ?? this.id,
       name: name ?? this.name,
-      description: description == _undefined ? this.description : description as String?,
+      description: description == _undefined
+          ? this.description
+          : description as String?,
       growType: growType == _undefined ? this.growType : growType as GrowType?,
-      wateringSystem: wateringSystem == _undefined ? this.wateringSystem : wateringSystem as WateringSystem?,
-      rdwcSystemId: rdwcSystemId == _undefined ? this.rdwcSystemId : rdwcSystemId as int?,
+      wateringSystem: wateringSystem == _undefined
+          ? this.wateringSystem
+          : wateringSystem as WateringSystem?,
+      rdwcSystemId: rdwcSystemId == _undefined
+          ? this.rdwcSystemId
+          : rdwcSystemId as int?,
       width: width ?? this.width,
       depth: depth ?? this.depth,
       height: height ?? this.height,

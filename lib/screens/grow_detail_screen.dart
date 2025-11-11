@@ -29,7 +29,8 @@ class GrowDetailScreen extends StatefulWidget {
 
 class _GrowDetailScreenState extends State<GrowDetailScreen> {
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
-  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
+  final ISettingsRepository _settingsRepo =
+      getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
   List<Plant> _plants = [];
   late AppTranslations _t; // ✅ AUDIT FIX: i18n
   bool _isLoading = true;
@@ -58,15 +59,29 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
 
     try {
       final allPlants = await _plantRepo.findAll();
-      AppLogger.debug('GrowDetailScreen', 'Total plants in DB: ${allPlants.length}');
-      AppLogger.debug('GrowDetailScreen', 'Looking for plants with growId: ${widget.grow.id}');
+      AppLogger.debug(
+        'GrowDetailScreen',
+        'Total plants in DB: ${allPlants.length}',
+      );
+      AppLogger.debug(
+        'GrowDetailScreen',
+        'Looking for plants with growId: ${widget.grow.id}',
+      );
 
       for (var plant in allPlants) {
-        AppLogger.debug('GrowDetailScreen', 'Plant "${plant.name}" has growId: ${plant.growId}');
+        AppLogger.debug(
+          'GrowDetailScreen',
+          'Plant "${plant.name}" has growId: ${plant.growId}',
+        );
       }
 
-      final growPlants = allPlants.where((p) => p.growId == widget.grow.id).toList();
-      AppLogger.info('GrowDetailScreen', 'Found ${growPlants.length} plants for this grow');
+      final growPlants = allPlants
+          .where((p) => p.growId == widget.grow.id)
+          .toList();
+      AppLogger.info(
+        'GrowDetailScreen',
+        'Found ${growPlants.length} plants for this grow',
+      );
 
       if (mounted) {
         setState(() {
@@ -107,9 +122,8 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
       // Neue Pflanze erstellen
       final result = await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => AddPlantScreen(
-            preselectedGrowId: widget.grow.id,
-          ),
+          builder: (context) =>
+              AddPlantScreen(preselectedGrowId: widget.grow.id),
         ),
       );
       if (result == true && mounted) _loadPlants();
@@ -122,7 +136,9 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
   Future<void> _showAssignExistingPlant() async {
     // Lade alle Pflanzen die NICHT in diesem Grow sind
     final allPlants = await _plantRepo.findAll();
-    final availablePlants = allPlants.where((p) => p.growId != widget.grow.id).toList();
+    final availablePlants = allPlants
+        .where((p) => p.growId != widget.grow.id)
+        .toList();
 
     if (availablePlants.isEmpty) {
       if (mounted) {
@@ -186,11 +202,14 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
       final updatedPlant = selectedPlant.copyWith(growId: widget.grow.id);
       await _plantRepo.save(updatedPlant);
       _loadPlants();
-      
+
       if (mounted) {
         AppMessages.showSuccess(
           context,
-          _t['grow_detail_plant_assigned'].replaceAll('{name}', selectedPlant.name),
+          _t['grow_detail_plant_assigned'].replaceAll(
+            '{name}',
+            selectedPlant.name,
+          ),
         );
       }
     } catch (e) {
@@ -222,7 +241,10 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
     if (result == true) {
       _loadPlants();
       if (mounted) {
-        AppMessages.showSuccess(context, '${_plants.length} Pflanzen geloggt! 📝');
+        AppMessages.showSuccess(
+          context,
+          '${_plants.length} Pflanzen geloggt! 📝',
+        );
       }
     }
   }
@@ -273,12 +295,10 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
       children: [
         // Grow Info Card
         _buildGrowInfoCard(),
-        
+
         // Pflanzen Liste
         Expanded(
-          child: _plants.isEmpty
-              ? _buildEmptyState()
-              : _buildPlantList(),
+          child: _plants.isEmpty ? _buildEmptyState() : _buildPlantList(),
         ),
       ],
     );
@@ -293,33 +313,31 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-            children: [
-            Icon(Icons.eco, size: 24, color: Colors.green[700]),
-            const SizedBox(width: 12),
-            Expanded(
-            child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-            Text(
-                widget.grow.name,
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+              children: [
+                Icon(Icons.eco, size: 24, color: Colors.green[700]),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.grow.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        widget.grow.status,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                    ],
+                  ),
                 ),
-              Text(
-                widget.grow.status,
-              style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
+              ],
             ),
-            ),
-            ],
-            ),
-            ),
-            ],
-            ),
-            if (widget.grow.description != null && widget.grow.description!.isNotEmpty) ...[
+            if (widget.grow.description != null &&
+                widget.grow.description!.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
                 widget.grow.description!,
@@ -330,8 +348,14 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildInfoItem(Icons.calendar_today, 'Tag ${widget.grow.totalDays}'),
-                _buildInfoItem(Icons.spa, '${_plants.length} Pflanze${_plants.length == 1 ? '' : 'n'}'),
+                _buildInfoItem(
+                  Icons.calendar_today,
+                  'Tag ${widget.grow.totalDays}',
+                ),
+                _buildInfoItem(
+                  Icons.spa,
+                  '${_plants.length} Pflanze${_plants.length == 1 ? '' : 'n'}',
+                ),
               ],
             ),
           ],
@@ -384,35 +408,39 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
       child: Card(
         margin: const EdgeInsets.only(bottom: 8),
         child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey[800] : Colors.grey[200],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            _getPhaseEmoji(plant.phase),
-            style: const TextStyle(fontSize: 24),
-          ),
-        ),
-        title: Text(
-          plant.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          '${plant.strain ?? 'Unknown'} • Tag ${plant.totalDays}',
-          style: TextStyle(color: Colors.grey[600], fontSize: 12),
-        ),
-        trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-        onTap: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => PlantDetailScreen(plant: plant),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey[800] : Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
             ),
-          );
-          if (result == true) _loadPlants();
-        },
-      ),
+            child: Text(
+              _getPhaseEmoji(plant.phase),
+              style: const TextStyle(fontSize: 24),
+            ),
+          ),
+          title: Text(
+            plant.name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            '${plant.strain ?? 'Unknown'} • Tag ${plant.totalDays}',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: Colors.grey[400],
+          ),
+          onTap: () async {
+            final result = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => PlantDetailScreen(plant: plant),
+              ),
+            );
+            if (result == true) _loadPlants();
+          },
+        ),
       ),
     );
   }

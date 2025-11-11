@@ -2,7 +2,7 @@
 // GROWLOG - Grow Model (Mehrere Pflanzen zusammenfassen)
 // =============================================
 
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 // Sentinel value für copyWith
 const _undefined = Object();
@@ -13,7 +13,7 @@ class Grow {
   final String? description;
   final DateTime startDate;
   final DateTime? endDate;
-  final int? roomId;  // NEU: Standard-Raum für diesen Grow
+  final int? roomId; // NEU: Standard-Raum für diesen Grow
   final bool archived;
   final DateTime createdAt;
 
@@ -23,11 +23,11 @@ class Grow {
     this.description,
     DateTime? startDate,
     this.endDate,
-    this.roomId,  // NEU
+    this.roomId, // NEU
     this.archived = false,
     DateTime? createdAt,
-  })  : startDate = startDate ?? DateTime.now(),
-        createdAt = createdAt ?? DateTime.now();
+  }) : startDate = startDate ?? DateTime.now(),
+       createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
   /// ✅ FIX: All DateTime.parse now use safe parsers
@@ -45,7 +45,7 @@ class Grow {
         map['end_date'] as String?,
         context: 'Grow.fromMap.endDate',
       ),
-      roomId: map['room_id'] as int?,  // NEU
+      roomId: map['room_id'] as int?, // NEU
       archived: (map['archived'] as int?) == 1,
       createdAt: SafeParsers.parseDateTime(
         map['created_at'] as String?,
@@ -63,7 +63,7 @@ class Grow {
       'description': description,
       'start_date': startDate.toIso8601String().split('T')[0],
       'end_date': endDate?.toIso8601String().split('T')[0],
-      'room_id': roomId,  // NEU
+      'room_id': roomId, // NEU
       'archived': archived ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
     };
@@ -76,7 +76,8 @@ class Grow {
     String? description,
     DateTime? startDate,
     DateTime? endDate,
-    Object? roomId = _undefined,  // NEU: Object statt int? für null-Unterstützung
+    Object? roomId =
+        _undefined, // NEU: Object statt int? für null-Unterstützung
     bool? archived,
     DateTime? createdAt,
   }) {
@@ -86,7 +87,9 @@ class Grow {
       description: description ?? this.description,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
-      roomId: roomId == _undefined ? this.roomId : roomId as int?,  // NEU: Explizite Prüfung
+      roomId: roomId == _undefined
+          ? this.roomId
+          : roomId as int?, // NEU: Explizite Prüfung
       archived: archived ?? this.archived,
       createdAt: createdAt ?? this.createdAt,
     );

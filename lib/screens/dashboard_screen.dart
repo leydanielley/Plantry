@@ -26,7 +26,8 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   AppTranslations _t = AppTranslations('de');
   bool _isLoading = true;
@@ -81,9 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: Colors.grey),
-        ),
+        body: Center(child: CircularProgressIndicator(color: Colors.grey)),
       );
     }
 
@@ -96,9 +95,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => SettingsScreen(
-                    onSettingsChanged: _onSettingsChanged,
-                  ),
+                  builder: (context) =>
+                      SettingsScreen(onSettingsChanged: _onSettingsChanged),
                 ),
               );
             },
@@ -130,10 +128,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               _t['plants'],
               _t['dashboard_plants_subtitle'], // ✅ i18n
               isDark,
-                  () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const PlantsScreen(),
-                ),
+              () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const PlantsScreen()),
               ),
             ),
             const SizedBox(height: 12),
@@ -143,10 +139,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               _t['grows'],
               _t['dashboard_grows_subtitle'], // ✅ i18n
               isDark,
-                  () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const GrowListScreen(),
-                ),
+              () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const GrowListScreen()),
               ),
             ),
             const SizedBox(height: 12),
@@ -156,10 +150,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               _t['rooms'],
               _t['dashboard_rooms_subtitle'], // ✅ i18n
               isDark,
-                  () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const RoomListScreen(),
-                ),
+              () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const RoomListScreen()),
               ),
             ),
             const SizedBox(height: 12),
@@ -169,7 +161,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               _t['fertilizers'],
               _t['dashboard_fertilizers_subtitle'], // ✅ i18n
               isDark,
-                  () => Navigator.of(context).push(
+              () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const FertilizerListScreen(),
                 ),
@@ -182,7 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               _t['dashboard_harvests_title'], // ✅ i18n
               _t['dashboard_harvests_subtitle'], // ✅ i18n
               isDark,
-                  () => Navigator.of(context).push(
+              () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const HarvestListScreen(),
                 ),
@@ -197,7 +189,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 _t['rdwc_systems'],
                 _t['dashboard_rdwc_subtitle'], // ✅ i18n
                 isDark,
-                    () => Navigator.of(context).push(
+                () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => const RdwcSystemsScreen(),
                   ),
@@ -209,7 +201,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 _t['dashboard_nutrient_calculator'], // ✅ i18n
                 _t['dashboard_nutrient_calculator_subtitle'], // ✅ i18n
                 isDark,
-                    () => Navigator.of(context).push(
+                () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => const NutrientCalculatorScreen(),
                   ),
@@ -240,17 +232,15 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   }
 
   Widget _buildActionCard(
-      String iconPath,
-      String title,
-      String subtitle,
-      bool isDark,
-      VoidCallback onTap,
-      ) {
+    String iconPath,
+    String title,
+    String subtitle,
+    bool isDark,
+    VoidCallback onTap,
+  ) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF1E1E1E)
-            : const Color(0xFFE0E0E0),
+        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE0E0E0),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Material(
@@ -287,9 +277,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -324,5 +313,4 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       ),
     );
   }
-
 }

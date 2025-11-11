@@ -54,7 +54,10 @@ class _GrowListScreenState extends State<GrowListScreen> {
 
     try {
       final grows = await _growRepo.getAll(includeArchived: _showArchived);
-      final growIds = grows.where((g) => g.id != null).map((g) => g.id!).toList();
+      final growIds = grows
+          .where((g) => g.id != null)
+          .map((g) => g.id!)
+          .toList();
       final counts = await _growRepo.getPlantCountsForGrows(growIds);
 
       setState(() {
@@ -73,11 +76,9 @@ class _GrowListScreenState extends State<GrowListScreen> {
   }
 
   Future<void> _editGrow(Grow grow) async {
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => EditGrowScreen(grow: grow),
-      ),
-    );
+    final result = await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => EditGrowScreen(grow: grow)));
     if (result == true) _loadGrows();
   }
 
@@ -102,7 +103,10 @@ class _GrowListScreenState extends State<GrowListScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _t['delete_grow_with_plants'].replaceAll('{count}', plantCount.toString()),
+                _t['delete_grow_with_plants'].replaceAll(
+                  '{count}',
+                  plantCount.toString(),
+                ),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
@@ -118,7 +122,11 @@ class _GrowListScreenState extends State<GrowListScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.check_circle_outline, size: 20, color: Colors.blue[700]),
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 20,
+                          color: Colors.blue[700],
+                        ),
                         const SizedBox(width: 8),
                         const Expanded(
                           child: Text(
@@ -171,7 +179,9 @@ class _GrowListScreenState extends State<GrowListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(_t['delete_grow_title']),
-        content: Text('${_t['delete_confirm'].replaceAll('?', '')} "${grow.name}"?'),
+        content: Text(
+          '${_t['delete_confirm'].replaceAll('?', '')} "${grow.name}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -233,7 +243,9 @@ class _GrowListScreenState extends State<GrowListScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: Icon(_showArchived ? Icons.inventory_2 : Icons.inventory_2_outlined),
+            icon: Icon(
+              _showArchived ? Icons.inventory_2 : Icons.inventory_2_outlined,
+            ),
             tooltip: _showArchived ? _t['hide_archived'] : _t['show_archived'],
             onPressed: () {
               setState(() {
@@ -267,7 +279,9 @@ class _GrowListScreenState extends State<GrowListScreen> {
     return EmptyStateWidget(
       icon: Icons.eco,
       title: _showArchived ? _t['no_archived_grows'] : _t['no_grows'],
-      subtitle: _showArchived ? _t['archive_grow_to_see'] : _t['create_first_grow'],
+      subtitle: _showArchived
+          ? _t['archive_grow_to_see']
+          : _t['create_first_grow'],
     );
   }
 
@@ -295,151 +309,153 @@ class _GrowListScreenState extends State<GrowListScreen> {
         key: ValueKey(grow.id), // ✅ PERFORMANCE: Key for efficient updates
         margin: AppConstants.cardMarginVertical,
         child: ListTile(
-        leading: CircleAvatar(
-          radius: 24,
-          backgroundColor: grow.archived 
-              ? (isDark ? Colors.grey[700] : Colors.grey[400])
-              : Colors.green[700],
-          child: const Icon(
-            Icons.eco,
-            color: Colors.white,
-            size: 28,
+          leading: CircleAvatar(
+            radius: 24,
+            backgroundColor: grow.archived
+                ? (isDark ? Colors.grey[700] : Colors.grey[400])
+                : Colors.green[700],
+            child: const Icon(Icons.eco, color: Colors.white, size: 28),
           ),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                grow.name,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: grow.archived ? Colors.grey[600] : null,
-                ),
-              ),
-            ),
-            if (grow.archived)
-              Container(
-                padding: AppConstants.badgePadding,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(AppConstants.badgeBorderRadius),
-                ),
+          title: Row(
+            children: [
+              Expanded(
                 child: Text(
-                  _t['archived_badge'],
+                  grow.name,
                   style: TextStyle(
-                    fontSize: AppConstants.badgeFontSize,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
+                    color: grow.archived ? Colors.grey[600] : null,
                   ),
                 ),
               ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (grow.description != null && grow.description!.isNotEmpty)
-              Text(
-                grow.description!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: grow.archived ? Colors.grey[500] : null),
-              ),
-            const SizedBox(height: AppConstants.spacingXs),
-            Row(
-              children: [
-                Icon(Icons.calendar_today,
-                    size: AppConstants.listItemIconSize,
-                    color: Colors.grey[600]
+              if (grow.archived)
+                Container(
+                  padding: AppConstants.badgePadding,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.badgeBorderRadius,
+                    ),
+                  ),
+                  child: Text(
+                    _t['archived_badge'],
+                    style: TextStyle(
+                      fontSize: AppConstants.badgeFontSize,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[700],
+                    ),
+                  ),
                 ),
-                const SizedBox(width: AppConstants.listItemIconSpacing),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (grow.description != null && grow.description!.isNotEmpty)
                 Text(
-                  '${_t['day_short']} ${grow.totalDays} • ${grow.status}',
+                  grow.description!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: AppConstants.fontSizeSmall
+                    color: grow.archived ? Colors.grey[500] : null,
                   ),
                 ),
-                const Spacer(),
-                Icon(Icons.spa,
-                    size: AppConstants.listItemIconSize,
-                    color: Colors.grey[600]
-                ),
-                const SizedBox(width: AppConstants.listItemIconSpacing),
-                Text(
-                  '$plantCount ${_t['plants_short']}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: AppConstants.fontSizeSmall,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        trailing: PopupMenuButton(
-          icon: Icon(Icons.more_vert, color: Colors.grey[600]),
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit, color: Colors.blue[700]),
-                  const SizedBox(width: AppConstants.spacingSmall),
-                  Text(
-                    _t['edit'],
-                    style: TextStyle(color: Colors.blue[700]),
-                  ),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'archive',
-              child: Row(
+              const SizedBox(height: AppConstants.spacingXs),
+              Row(
                 children: [
                   Icon(
-                    grow.archived ? Icons.unarchive : Icons.archive,
-                    color: Colors.orange,
+                    Icons.calendar_today,
+                    size: AppConstants.listItemIconSize,
+                    color: Colors.grey[600],
                   ),
-                  const SizedBox(width: AppConstants.spacingSmall),
+                  const SizedBox(width: AppConstants.listItemIconSpacing),
                   Text(
-                    grow.archived ? _t['unarchive'] : _t['archive'],
-                    style: const TextStyle(color: Colors.orange),
+                    '${_t['day_short']} ${grow.totalDays} • ${grow.status}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: AppConstants.fontSizeSmall,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.spa,
+                    size: AppConstants.listItemIconSize,
+                    color: Colors.grey[600],
+                  ),
+                  const SizedBox(width: AppConstants.listItemIconSpacing),
+                  Text(
+                    '$plantCount ${_t['plants_short']}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: AppConstants.fontSizeSmall,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
-            ),
-            PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  const Icon(Icons.delete, color: Colors.red),
-                  const SizedBox(width: AppConstants.spacingSmall),
-                  Text(_t['delete'], style: const TextStyle(color: Colors.red)),
-                ],
+            ],
+          ),
+          trailing: PopupMenuButton(
+            icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, color: Colors.blue[700]),
+                    const SizedBox(width: AppConstants.spacingSmall),
+                    Text(_t['edit'], style: TextStyle(color: Colors.blue[700])),
+                  ],
+                ),
               ),
-            ),
-          ],
-          onSelected: (value) {
-            if (value == 'edit') {
-              _editGrow(grow);
-            } else if (value == 'delete') {
-              _deleteGrow(grow);
-            } else if (value == 'archive') {
-              _toggleArchive(grow);
-            }
+              PopupMenuItem(
+                value: 'archive',
+                child: Row(
+                  children: [
+                    Icon(
+                      grow.archived ? Icons.unarchive : Icons.archive,
+                      color: Colors.orange,
+                    ),
+                    const SizedBox(width: AppConstants.spacingSmall),
+                    Text(
+                      grow.archived ? _t['unarchive'] : _t['archive'],
+                      style: const TextStyle(color: Colors.orange),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete, color: Colors.red),
+                    const SizedBox(width: AppConstants.spacingSmall),
+                    Text(
+                      _t['delete'],
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            onSelected: (value) {
+              if (value == 'edit') {
+                _editGrow(grow);
+              } else if (value == 'delete') {
+                _deleteGrow(grow);
+              } else if (value == 'archive') {
+                _toggleArchive(grow);
+              }
+            },
+          ),
+          onTap: () async {
+            final result = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => GrowDetailScreen(grow: grow),
+              ),
+            );
+            if (result == true) _loadGrows();
           },
         ),
-        onTap: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => GrowDetailScreen(grow: grow),
-            ),
-          );
-          if (result == true) _loadGrows();
-        },
-      ),
       ),
     );
   }

@@ -31,7 +31,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
-  
+
   List<Plant> _allPlants = [];
   List<Grow> _allGrows = [];
   Map<int, Room> _roomsById = {};
@@ -56,7 +56,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
   }
 
   Future<void> _loadData() async {
-    if (!mounted) return;  // ✅ FIX: Add mounted check before setState
+    if (!mounted) return; // ✅ FIX: Add mounted check before setState
     setState(() => _isLoading = true);
 
     try {
@@ -75,7 +75,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
       // Group plants by growId
       final Map<int?, List<Plant>> grouped = {};
-      
+
       for (var plant in plants) {
         if (!grouped.containsKey(plant.growId)) {
           grouped[plant.growId] = [];
@@ -102,15 +102,12 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
   String _getGrowName(int? growId) {
     if (growId == null) return _t['without_grow'];
-    
+
     final grow = _allGrows.firstWhere(
       (g) => g.id == growId,
-      orElse: () => Grow(
-        name: _t['unknown_grow'],
-        startDate: DateTime.now(),
-      ),
+      orElse: () => Grow(name: _t['unknown_grow'], startDate: DateTime.now()),
     );
-    
+
     return grow.name;
   }
 
@@ -128,9 +125,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const AddPlantScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const AddPlantScreen()),
           );
           if (result == true) _loadData();
         },
@@ -171,7 +166,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
     // Sort grows: first with grow, then without grow
     final sortedGrowIds = _plantsByGrow.keys.toList()
       ..sort((a, b) {
-        if (a == null) return 1;  // null (without grow) comes last
+        if (a == null) return 1; // null (without grow) comes last
         if (b == null) return -1;
         return 0;
       });
@@ -196,22 +191,27 @@ class _PlantsScreenState extends State<PlantsScreen> {
   Widget _buildGrowHeader(int? growId, int plantCount) {
     final growName = _getGrowName(growId);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Get room icon from grow
-    IconData headerIcon = Icons.park;  // Default: Outdoor
+    IconData headerIcon = Icons.park; // Default: Outdoor
     Color? iconColor = Colors.green[600];
-    
+
     if (growId != null) {
       final grow = _allGrows.firstWhere(
         (g) => g.id == growId,
         orElse: () => Grow(name: '', startDate: DateTime.now()),
       );
 
-
-      AppLogger.debug('PlantsScreen', 'Grow "${grow.name}" has roomId: ${grow.roomId}');
+      AppLogger.debug(
+        'PlantsScreen',
+        'Grow "${grow.name}" has roomId: ${grow.roomId}',
+      );
       if (grow.roomId != null && _roomsById.containsKey(grow.roomId)) {
         final room = _roomsById[grow.roomId];
-        AppLogger.debug('PlantsScreen', 'Found room: ${room?.name} with type: ${room?.growType}');
+        AppLogger.debug(
+          'PlantsScreen',
+          'Found room: ${room?.name} with type: ${room?.growType}',
+        );
         if (room != null && room.growType != null) {
           switch (room.growType!) {
             case GrowType.indoor:
@@ -234,15 +234,19 @@ class _PlantsScreenState extends State<PlantsScreen> {
         iconColor = Colors.green[600];
       }
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppConstants.growHeaderPaddingHorizontal,
         vertical: AppConstants.growHeaderPaddingVertical,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppConstants.darkModePrimary : AppConstants.lightModePrimary,
-        borderRadius: BorderRadius.circular(AppConstants.growHeaderBorderRadius),
+        color: isDark
+            ? AppConstants.darkModePrimary
+            : AppConstants.lightModePrimary,
+        borderRadius: BorderRadius.circular(
+          AppConstants.growHeaderBorderRadius,
+        ),
       ),
       child: Row(
         children: [
@@ -252,9 +256,9 @@ class _PlantsScreenState extends State<PlantsScreen> {
             size: AppConstants.growHeaderEmojiSize,
             color: iconColor,
           ),
-          
+
           const SizedBox(width: AppConstants.growHeaderSpacing),
-          
+
           // Grow Name
           Expanded(
             child: Column(
@@ -262,9 +266,9 @@ class _PlantsScreenState extends State<PlantsScreen> {
               children: [
                 Text(
                   growName,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 Text(
                   '$plantCount ${plantCount == 1 ? _t['plant'] : _t['plants_count']}',
@@ -275,12 +279,14 @@ class _PlantsScreenState extends State<PlantsScreen> {
               ],
             ),
           ),
-          
+
           // Arrow
           Container(
             padding: const EdgeInsets.all(AppConstants.plantCardArrowPadding),
             decoration: BoxDecoration(
-              color: isDark ? AppConstants.darkModeSecondary : AppConstants.lightModeSecondary,
+              color: isDark
+                  ? AppConstants.darkModeSecondary
+                  : AppConstants.lightModeSecondary,
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -301,123 +307,155 @@ class _PlantsScreenState extends State<PlantsScreen> {
     return RepaintBoundary(
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? AppConstants.darkModePrimary : AppConstants.lightModePrimary,
-          borderRadius: BorderRadius.circular(AppConstants.plantCardBorderRadius),
+          color: isDark
+              ? AppConstants.darkModePrimary
+              : AppConstants.lightModePrimary,
+          borderRadius: BorderRadius.circular(
+            AppConstants.plantCardBorderRadius,
+          ),
         ),
         child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppConstants.plantCardBorderRadius),
-          onTap: () async {
-            final result = await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => PlantDetailScreen(plant: plant),
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(
+              AppConstants.plantCardBorderRadius,
+            ),
+            onTap: () async {
+              final result = await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => PlantDetailScreen(plant: plant),
+                ),
+              );
+              if (result == true) {
+                _loadData();
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(AppConstants.plantCardPadding),
+              child: Row(
+                children: [
+                  // Phase Emoji Container
+                  Container(
+                    padding: const EdgeInsets.all(
+                      AppConstants.plantCardEmojiBgPadding,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppConstants.darkModeSecondary
+                          : AppConstants.lightModeSecondary,
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.plantCardEmojiBgRadius,
+                      ),
+                    ),
+                    child: Text(
+                      _getPhaseEmoji(plant.phase),
+                      style: const TextStyle(
+                        fontSize: AppConstants.plantCardEmojiSize,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: AppConstants.spacingMedium),
+
+                  // Plant Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          plant.name,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: AppConstants.spacingXs),
+                        Text(
+                          plant.strain ?? _t['unknown_strain'],
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: isDark
+                                    ? Colors.grey[500]
+                                    : Colors.grey[600],
+                              ),
+                        ),
+                        const SizedBox(height: AppConstants.spacingSmall),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              size: AppConstants.listItemIconSize,
+                              color: isDark
+                                  ? Colors.grey[500]
+                                  : Colors.grey[500],
+                            ),
+                            const SizedBox(
+                              width: AppConstants.listItemIconSpacing,
+                            ),
+                            Text(
+                              '${_t['day']} ${plant.totalDays}',
+                              style: TextStyle(
+                                color: isDark
+                                    ? Colors.grey[500]
+                                    : Colors.grey[600],
+                                fontSize: AppConstants.fontSizeSmall,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: AppConstants.spacingMedium),
+                            Icon(
+                              Icons.label,
+                              size: AppConstants.listItemIconSize,
+                              color: isDark
+                                  ? Colors.grey[500]
+                                  : Colors.grey[500],
+                            ),
+                            const SizedBox(
+                              width: AppConstants.listItemIconSpacing,
+                            ),
+                            Text(
+                              _getPhaseName(plant.phase),
+                              style: TextStyle(
+                                color: isDark
+                                    ? Colors.grey[500]
+                                    : Colors.grey[600],
+                                fontSize: AppConstants.fontSizeSmall,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Arrow
+                  Container(
+                    padding: const EdgeInsets.all(
+                      AppConstants.plantCardArrowPadding,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppConstants.darkModeSecondary
+                          : AppConstants.lightModeSecondary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      size: AppConstants.plantCardArrowSize,
+                      color: isDark ? Colors.grey[500] : Colors.grey[600],
+                    ),
+                  ),
+                ],
               ),
-            );
-            if (result == true) {
-              _loadData();
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(AppConstants.plantCardPadding),
-            child: Row(
-              children: [
-                // Phase Emoji Container
-                Container(
-                  padding: const EdgeInsets.all(AppConstants.plantCardEmojiBgPadding),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppConstants.darkModeSecondary : AppConstants.lightModeSecondary,
-                    borderRadius: BorderRadius.circular(AppConstants.plantCardEmojiBgRadius),
-                  ),
-                  child: Text(
-                    _getPhaseEmoji(plant.phase),
-                    style: const TextStyle(fontSize: AppConstants.plantCardEmojiSize),
-                  ),
-                ),
-                
-                const SizedBox(width: AppConstants.spacingMedium),
-                
-                // Plant Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        plant.name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: AppConstants.spacingXs),
-                      Text(
-                        plant.strain ?? _t['unknown_strain'],
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDark ? Colors.grey[500] : Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: AppConstants.spacingSmall),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            size: AppConstants.listItemIconSize,
-                            color: isDark ? Colors.grey[500] : Colors.grey[500],
-                          ),
-                          const SizedBox(width: AppConstants.listItemIconSpacing),
-                          Text(
-                            '${_t['day']} ${plant.totalDays}',
-                            style: TextStyle(
-                              color: isDark ? Colors.grey[500] : Colors.grey[600],
-                              fontSize: AppConstants.fontSizeSmall,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(width: AppConstants.spacingMedium),
-                          Icon(
-                            Icons.label,
-                            size: AppConstants.listItemIconSize,
-                            color: isDark ? Colors.grey[500] : Colors.grey[500],
-                          ),
-                          const SizedBox(width: AppConstants.listItemIconSpacing),
-                          Text(
-                            _getPhaseName(plant.phase),
-                            style: TextStyle(
-                              color: isDark ? Colors.grey[500] : Colors.grey[600],
-                              fontSize: AppConstants.fontSizeSmall,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Arrow
-                Container(
-                  padding: const EdgeInsets.all(AppConstants.plantCardArrowPadding),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppConstants.darkModeSecondary : AppConstants.lightModeSecondary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    size: AppConstants.plantCardArrowSize,
-                    color: isDark ? Colors.grey[500] : Colors.grey[600],
-                  ),
-                ),
-              ],
             ),
           ),
         ),
-      ),
       ),
     );
   }
 
   Widget _buildEmptyState() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

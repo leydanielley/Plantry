@@ -38,7 +38,10 @@ final Migration migrationV12 = Migration(
     // STEP 1: Add UNIQUE constraint to rooms.name
     // ================================================================
 
-    AppLogger.info('Migration_v12', '1/3: Adding UNIQUE constraint to rooms.name...');
+    AppLogger.info(
+      'Migration_v12',
+      '1/3: Adding UNIQUE constraint to rooms.name...',
+    );
 
     try {
       // Create unique index - allows NULL values for backward compatibility
@@ -48,7 +51,11 @@ final Migration migrationV12 = Migration(
       ''');
       AppLogger.info('Migration_v12', '✅ Rooms UNIQUE constraint added');
     } catch (e) {
-      AppLogger.warning('Migration_v12', 'Duplicate room names exist - constraint not added', e);
+      AppLogger.warning(
+        'Migration_v12',
+        'Duplicate room names exist - constraint not added',
+        e,
+      );
       // Continue anyway - constraint will prevent future duplicates
     }
 
@@ -56,7 +63,10 @@ final Migration migrationV12 = Migration(
     // STEP 2: Add UNIQUE constraint to fertilizers(name, brand)
     // ================================================================
 
-    AppLogger.info('Migration_v12', '2/3: Adding UNIQUE constraint to fertilizers...');
+    AppLogger.info(
+      'Migration_v12',
+      '2/3: Adding UNIQUE constraint to fertilizers...',
+    );
 
     try {
       // Create composite unique index on (name, brand)
@@ -67,14 +77,21 @@ final Migration migrationV12 = Migration(
       ''');
       AppLogger.info('Migration_v12', '✅ Fertilizers UNIQUE constraint added');
     } catch (e) {
-      AppLogger.warning('Migration_v12', 'Duplicate fertilizers exist - constraint not added', e);
+      AppLogger.warning(
+        'Migration_v12',
+        'Duplicate fertilizers exist - constraint not added',
+        e,
+      );
     }
 
     // ================================================================
     // STEP 3: Add UNIQUE constraint to hardware(room_id, name, type)
     // ================================================================
 
-    AppLogger.info('Migration_v12', '3/3: Adding UNIQUE constraint to hardware...');
+    AppLogger.info(
+      'Migration_v12',
+      '3/3: Adding UNIQUE constraint to hardware...',
+    );
 
     try {
       // Create composite unique index on (room_id, name, type)
@@ -85,7 +102,11 @@ final Migration migrationV12 = Migration(
       ''');
       AppLogger.info('Migration_v12', '✅ Hardware UNIQUE constraint added');
     } catch (e) {
-      AppLogger.warning('Migration_v12', 'Duplicate hardware exists - constraint not added', e);
+      AppLogger.warning(
+        'Migration_v12',
+        'Duplicate hardware exists - constraint not added',
+        e,
+      );
     }
 
     // ================================================================
@@ -107,10 +128,16 @@ final Migration migrationV12 = Migration(
     ''');
 
     AppLogger.info('Migration_v12', '📊 Statistics:');
-    AppLogger.info('Migration_v12', '  - UNIQUE indexes created: ${indexes.length}/3');
+    AppLogger.info(
+      'Migration_v12',
+      '  - UNIQUE indexes created: ${indexes.length}/3',
+    );
 
     for (final idx in indexes) {
-      AppLogger.info('Migration_v12', '  ✅ ${idx['name']} on ${idx['tbl_name']}');
+      AppLogger.info(
+        'Migration_v12',
+        '  ✅ ${idx['name']} on ${idx['tbl_name']}',
+      );
     }
 
     if (indexes.length < 3) {

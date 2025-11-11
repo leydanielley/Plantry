@@ -3,12 +3,12 @@
 // ✅ AUDIT FIX: Null safety for lastIndexOf operations
 // =============================================
 
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 class Photo {
   final int? id;
-  final int logId;           // Zu welchem Log gehört das Foto
-  final String filePath;     // Pfad zum gespeicherten Foto
+  final int logId; // Zu welchem Log gehört das Foto
+  final String filePath; // Pfad zum gespeicherten Foto
   final DateTime createdAt;
 
   Photo({
@@ -17,8 +17,8 @@ class Photo {
     required this.filePath,
     DateTime? createdAt,
   }) : assert(logId > 0, 'Log ID must be greater than 0'),
-        assert(filePath.isNotEmpty, 'File path cannot be empty'),
-        createdAt = createdAt ?? DateTime.now();
+       assert(filePath.isNotEmpty, 'File path cannot be empty'),
+       createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
   /// ✅ FIX: DateTime.parse now uses safe parser
@@ -38,14 +38,15 @@ class Photo {
   /// Zu Map konvertieren (für Datenbank)
   Map<String, dynamic> toMap() {
     // Format: '2024-01-15 10:30:00.000'
-    final formattedDate = '${createdAt.year.toString().padLeft(4, '0')}-'
+    final formattedDate =
+        '${createdAt.year.toString().padLeft(4, '0')}-'
         '${createdAt.month.toString().padLeft(2, '0')}-'
         '${createdAt.day.toString().padLeft(2, '0')} '
         '${createdAt.hour.toString().padLeft(2, '0')}:'
         '${createdAt.minute.toString().padLeft(2, '0')}:'
         '${createdAt.second.toString().padLeft(2, '0')}.'
         '${createdAt.millisecond.toString().padLeft(3, '0')}';
-    
+
     return {
       'id': id,
       'log_id': logId,
@@ -55,12 +56,7 @@ class Photo {
   }
 
   /// Copy mit Änderungen
-  Photo copyWith({
-    int? id,
-    int? logId,
-    String? filePath,
-    DateTime? createdAt,
-  }) {
+  Photo copyWith({int? id, int? logId, String? filePath, DateTime? createdAt}) {
     return Photo(
       id: id ?? this.id,
       logId: logId ?? this.logId,
@@ -88,7 +84,20 @@ class Photo {
 
   /// Format creation date
   String get formattedDate {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${createdAt.day} ${months[createdAt.month - 1]} ${createdAt.year}';
   }
 
@@ -107,7 +116,9 @@ class Photo {
         ? fileName.substring(0, lastDotIndex)
         : fileName; // Use full filename if no extension
 
-    final ext = fileExtension.isNotEmpty ? fileExtension : 'jpg'; // Default to jpg
+    final ext = fileExtension.isNotEmpty
+        ? fileExtension
+        : 'jpg'; // Default to jpg
 
     return '$dir/thumbs/${name}_thumb.$ext';
   }
@@ -115,9 +126,7 @@ class Photo {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Photo &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is Photo && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

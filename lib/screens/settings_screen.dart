@@ -20,10 +20,7 @@ import 'package:growlog_app/di/service_locator.dart';
 class SettingsScreen extends StatefulWidget {
   final Function(AppSettings)? onSettingsChanged;
 
-  const SettingsScreen({
-    super.key,
-    this.onSettingsChanged,
-  });
+  const SettingsScreen({super.key, this.onSettingsChanged});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -84,9 +81,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     GrowLogApp.of(context)?.updateSettings(newSettings);
     widget.onSettingsChanged?.call(newSettings);
 
-    AppMessages.showSuccess(context,
-          value ? _t['dark_mode_enabled'] : _t['light_mode_enabled'],
-        );
+    AppMessages.showSuccess(
+      context,
+      value ? _t['dark_mode_enabled'] : _t['light_mode_enabled'],
+    );
   }
 
   Future<void> _toggleExpertMode(bool value) async {
@@ -127,7 +125,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
 
-      if (confirm != true) return; // User cancelled or chose to stay in normal mode
+      if (confirm != true)
+        return; // User cancelled or chose to stay in normal mode
     }
 
     final newSettings = _settings.copyWith(isExpertMode: value);
@@ -141,9 +140,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     GrowLogApp.of(context)?.updateSettings(newSettings);
     widget.onSettingsChanged?.call(newSettings);
 
-    AppMessages.showSuccess(context,
-          value ? _t['expert_mode_enabled'] : _t['expert_mode_disabled'],
-        );
+    AppMessages.showSuccess(
+      context,
+      value ? _t['expert_mode_enabled'] : _t['expert_mode_disabled'],
+    );
   }
 
   Future<void> _changeNutrientUnit(NutrientUnit unit) async {
@@ -194,20 +194,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Settings'),
-        ),
+        appBar: AppBar(title: const Text('Settings')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_t['settings']),
-      ),
+      appBar: AppBar(title: Text(_t['settings'])),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -222,7 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 24),
 
           // Backup & Restore Section
@@ -298,10 +294,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: Text(_t['nutrient_unit']),
                   trailing: SegmentedButton<NutrientUnit>(
                     segments: const [
-                      ButtonSegment(
-                        value: NutrientUnit.ec,
-                        label: Text('EC'),
-                      ),
+                      ButtonSegment(value: NutrientUnit.ec, label: Text('EC')),
                       ButtonSegment(
                         value: NutrientUnit.ppm,
                         label: Text('PPM'),
@@ -374,10 +367,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: Text(_t['length_unit']),
                   trailing: SegmentedButton<LengthUnit>(
                     segments: const [
-                      ButtonSegment(
-                        value: LengthUnit.cm,
-                        label: Text('cm'),
-                      ),
+                      ButtonSegment(value: LengthUnit.cm, label: Text('cm')),
                       ButtonSegment(
                         value: LengthUnit.inch,
                         label: Text('inch'),
@@ -397,10 +387,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: Text(_t['volume_unit']),
                   trailing: SegmentedButton<VolumeUnit>(
                     segments: const [
-                      ButtonSegment(
-                        value: VolumeUnit.liter,
-                        label: Text('L'),
-                      ),
+                      ButtonSegment(value: VolumeUnit.liter, label: Text('L')),
                       ButtonSegment(
                         value: VolumeUnit.gallon,
                         label: Text('gal'),
@@ -431,7 +418,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => PrivacyPolicyScreen(language: _settings.language),
+                        builder: (context) =>
+                            PrivacyPolicyScreen(language: _settings.language),
                       ),
                     );
                   },
@@ -481,7 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: Text(_t['settings_debug_info']),
               subtitle: Text(
                 '${_t['settings_debug_theme'].replaceAll('{theme}', isDark ? _t['dark_mode'] : _t['light_mode'])}\n'
-                '${_t['settings_debug_expert'].replaceAll('{status}', _settings.isExpertMode ? _t['expert_mode_enabled'] : _t['expert_mode_disabled'])}'
+                '${_t['settings_debug_expert'].replaceAll('{status}', _settings.isExpertMode ? _t['expert_mode_enabled'] : _t['expert_mode_disabled'])}',
               ),
             ),
           ),
@@ -767,10 +755,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             final file = File(photo['file_path'] as String);
             if (await file.exists()) {
               await file.delete();
-              AppLogger.debug('SettingsScreen', 'Deleted photo file', 'path=${photo['file_path']}');
+              AppLogger.debug(
+                'SettingsScreen',
+                'Deleted photo file',
+                'path=${photo['file_path']}',
+              );
             }
           } catch (e) {
-            AppLogger.warning('SettingsScreen', 'Failed to delete photo file', e);
+            AppLogger.warning(
+              'SettingsScreen',
+              'Failed to delete photo file',
+              e,
+            );
             // Continue with DB deletion even if file deletion fails
           }
         }
@@ -865,7 +861,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
       }
     } catch (e, stackTrace) {
-      AppLogger.error('SettingsScreen', 'Error resetting database: $e', e, stackTrace);
+      AppLogger.error(
+        'SettingsScreen',
+        'Error resetting database: $e',
+        e,
+        stackTrace,
+      );
       if (mounted && _showingDialog) {
         Navigator.of(context).pop(); // Close loading dialog
         _showingDialog = false;
@@ -890,14 +891,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildLanguageTile(String code, String name, String flag, bool isDark) {
+  Widget _buildLanguageTile(
+    String code,
+    String name,
+    String flag,
+    bool isDark,
+  ) {
     final isSelected = _settings.language == code;
-    
+
     return ListTile(
-      leading: Text(
-        flag,
-        style: const TextStyle(fontSize: 28),
-      ),
+      leading: Text(flag, style: const TextStyle(fontSize: 28)),
       title: Text(
         name,
         style: TextStyle(

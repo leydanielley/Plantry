@@ -128,17 +128,12 @@ void main() {
 
     test('Updating grow end date - should mark as complete', () async {
       // Arrange
-      final grow = Grow(
-        name: 'Ongoing Grow',
-        startDate: DateTime(2025, 1, 1),
-      );
+      final grow = Grow(name: 'Ongoing Grow', startDate: DateTime(2025, 1, 1));
       final id = await growRepository.create(grow);
       final savedGrow = await growRepository.getById(id);
 
       // Act
-      final completedGrow = savedGrow!.copyWith(
-        endDate: DateTime(2025, 2, 1),
-      );
+      final completedGrow = savedGrow!.copyWith(endDate: DateTime(2025, 2, 1));
       await growRepository.update(completedGrow);
 
       // Assert
@@ -151,10 +146,7 @@ void main() {
   group('GrowRepository - getById()', () {
     test('Finding existing grow - should return grow', () async {
       // Arrange
-      final grow = Grow(
-        name: 'Findable Grow',
-        startDate: DateTime(2025, 1, 1),
-      );
+      final grow = Grow(name: 'Findable Grow', startDate: DateTime(2025, 1, 1));
       final id = await growRepository.create(grow);
 
       // Act
@@ -193,40 +185,78 @@ void main() {
   });
 
   group('GrowRepository - getAll()', () {
-    test('Getting all grows - should return only non-archived grows by default', () async {
-      // Arrange
-      await growRepository.create(Grow(name: 'Grow 1', startDate: DateTime(2025, 1, 1)));
-      await growRepository.create(Grow(name: 'Grow 2', startDate: DateTime(2025, 2, 1)));
-      await growRepository.create(Grow(name: 'Archived', startDate: DateTime(2025, 3, 1), archived: true));
+    test(
+      'Getting all grows - should return only non-archived grows by default',
+      () async {
+        // Arrange
+        await growRepository.create(
+          Grow(name: 'Grow 1', startDate: DateTime(2025, 1, 1)),
+        );
+        await growRepository.create(
+          Grow(name: 'Grow 2', startDate: DateTime(2025, 2, 1)),
+        );
+        await growRepository.create(
+          Grow(
+            name: 'Archived',
+            startDate: DateTime(2025, 3, 1),
+            archived: true,
+          ),
+        );
 
-      // Act
-      final grows = await growRepository.getAll();
+        // Act
+        final grows = await growRepository.getAll();
 
-      // Assert
-      expect(grows.length, equals(2), reason: 'Should only return non-archived grows');
-      expect(grows.any((g) => g.name == 'Grow 1'), isTrue);
-      expect(grows.any((g) => g.name == 'Grow 2'), isTrue);
-      expect(grows.any((g) => g.name == 'Archived'), isFalse);
-    });
+        // Assert
+        expect(
+          grows.length,
+          equals(2),
+          reason: 'Should only return non-archived grows',
+        );
+        expect(grows.any((g) => g.name == 'Grow 1'), isTrue);
+        expect(grows.any((g) => g.name == 'Grow 2'), isTrue);
+        expect(grows.any((g) => g.name == 'Archived'), isFalse);
+      },
+    );
 
-    test('Getting all grows with includeArchived=true - should return all grows', () async {
-      // Arrange
-      await growRepository.create(Grow(name: 'Grow 1', startDate: DateTime(2025, 1, 1)));
-      await growRepository.create(Grow(name: 'Archived', startDate: DateTime(2025, 2, 1), archived: true));
+    test(
+      'Getting all grows with includeArchived=true - should return all grows',
+      () async {
+        // Arrange
+        await growRepository.create(
+          Grow(name: 'Grow 1', startDate: DateTime(2025, 1, 1)),
+        );
+        await growRepository.create(
+          Grow(
+            name: 'Archived',
+            startDate: DateTime(2025, 2, 1),
+            archived: true,
+          ),
+        );
 
-      // Act
-      final grows = await growRepository.getAll(includeArchived: true);
+        // Act
+        final grows = await growRepository.getAll(includeArchived: true);
 
-      // Assert
-      expect(grows.length, equals(3), reason: 'Should include Test Grow from seed data + 2 new grows');
-      expect(grows.any((g) => g.name == 'Archived'), isTrue);
-    });
+        // Assert
+        expect(
+          grows.length,
+          equals(3),
+          reason: 'Should include Test Grow from seed data + 2 new grows',
+        );
+        expect(grows.any((g) => g.name == 'Archived'), isTrue);
+      },
+    );
 
     test('Getting all grows - should order by start_date DESC', () async {
       // Arrange - Create grows in non-chronological order
-      await growRepository.create(Grow(name: 'Middle', startDate: DateTime(2025, 2, 1)));
-      await growRepository.create(Grow(name: 'Latest', startDate: DateTime(2025, 3, 1)));
-      await growRepository.create(Grow(name: 'Earliest', startDate: DateTime(2025, 1, 1)));
+      await growRepository.create(
+        Grow(name: 'Middle', startDate: DateTime(2025, 2, 1)),
+      );
+      await growRepository.create(
+        Grow(name: 'Latest', startDate: DateTime(2025, 3, 1)),
+      );
+      await growRepository.create(
+        Grow(name: 'Earliest', startDate: DateTime(2025, 1, 1)),
+      );
 
       // Act
       final grows = await growRepository.getAll();
@@ -239,14 +269,17 @@ void main() {
       expect(ourGrows[2].name, equals('Earliest'));
     });
 
-    test('Getting all grows when database is empty - should return seeded data', () async {
-      // Act - Only seed data exists (Test Grow)
-      final grows = await growRepository.getAll();
+    test(
+      'Getting all grows when database is empty - should return seeded data',
+      () async {
+        // Act - Only seed data exists (Test Grow)
+        final grows = await growRepository.getAll();
 
-      // Assert - Should have Test Grow from seed data
-      expect(grows.length, equals(1));
-      expect(grows.first.name, equals('Test Grow'));
-    });
+        // Assert - Should have Test Grow from seed data
+        expect(grows.length, equals(1));
+        expect(grows.first.name, equals('Test Grow'));
+      },
+    );
   });
 
   group('GrowRepository - delete()', () {
@@ -265,27 +298,37 @@ void main() {
       expect(found, isNull, reason: 'Grow should no longer exist');
     });
 
-    test('Deleting grow with plants - should detach plants from grow', () async {
-      // Arrange - Create grow with plants
-      final grow = Grow(name: 'Grow With Plants', startDate: DateTime(2025, 1, 1));
-      final growId = await growRepository.create(grow);
+    test(
+      'Deleting grow with plants - should detach plants from grow',
+      () async {
+        // Arrange - Create grow with plants
+        final grow = Grow(
+          name: 'Grow With Plants',
+          startDate: DateTime(2025, 1, 1),
+        );
+        final growId = await growRepository.create(grow);
 
-      final plant = Plant(
-        name: 'Plant in Grow',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        growId: growId,
-      );
-      final savedPlant = await plantRepository.save(plant);
+        final plant = Plant(
+          name: 'Plant in Grow',
+          seedType: SeedType.photo,
+          medium: Medium.erde,
+          growId: growId,
+        );
+        final savedPlant = await plantRepository.save(plant);
 
-      // Act
-      await growRepository.delete(growId);
+        // Act
+        await growRepository.delete(growId);
 
-      // Assert - Plant should still exist but with null grow_id
-      final updatedPlant = await plantRepository.findById(savedPlant.id!);
-      expect(updatedPlant, isNotNull, reason: 'Plant should still exist');
-      expect(updatedPlant!.growId, isNull, reason: 'Plant should be detached from grow');
-    });
+        // Assert - Plant should still exist but with null grow_id
+        final updatedPlant = await plantRepository.findById(savedPlant.id!);
+        expect(updatedPlant, isNotNull, reason: 'Plant should still exist');
+        expect(
+          updatedPlant!.growId,
+          isNull,
+          reason: 'Plant should be detached from grow',
+        );
+      },
+    );
 
     test('Deleting non-existent grow - should return 0', () async {
       // Act
@@ -325,24 +368,31 @@ void main() {
       expect(grows.any((g) => g.id == id), isFalse);
     });
 
-    test('Archived grow - should appear in getAll(includeArchived: true)', () async {
-      // Arrange
-      final grow = Grow(name: 'To Archive', startDate: DateTime(2025, 1, 1));
-      final id = await growRepository.create(grow);
-      await growRepository.archive(id);
+    test(
+      'Archived grow - should appear in getAll(includeArchived: true)',
+      () async {
+        // Arrange
+        final grow = Grow(name: 'To Archive', startDate: DateTime(2025, 1, 1));
+        final id = await growRepository.create(grow);
+        await growRepository.archive(id);
 
-      // Act
-      final grows = await growRepository.getAll(includeArchived: true);
+        // Act
+        final grows = await growRepository.getAll(includeArchived: true);
 
-      // Assert
-      expect(grows.any((g) => g.id == id && g.archived), isTrue);
-    });
+        // Assert
+        expect(grows.any((g) => g.id == id && g.archived), isTrue);
+      },
+    );
   });
 
   group('GrowRepository - unarchive()', () {
     test('Unarchiving grow - should clear archived flag', () async {
       // Arrange
-      final grow = Grow(name: 'To Unarchive', startDate: DateTime(2025, 1, 1), archived: true);
+      final grow = Grow(
+        name: 'To Unarchive',
+        startDate: DateTime(2025, 1, 1),
+        archived: true,
+      );
       final id = await growRepository.create(grow);
 
       // Act
@@ -357,7 +407,11 @@ void main() {
 
     test('Unarchived grow - should appear in getAll()', () async {
       // Arrange
-      final grow = Grow(name: 'To Unarchive', startDate: DateTime(2025, 1, 1), archived: true);
+      final grow = Grow(
+        name: 'To Unarchive',
+        startDate: DateTime(2025, 1, 1),
+        archived: true,
+      );
       final id = await growRepository.create(grow);
 
       // Act
@@ -370,149 +424,241 @@ void main() {
   });
 
   group('GrowRepository - getPlantCount()', () {
-    test('Getting plant count for grow with plants - should return correct count', () async {
-      // Arrange
-      final grow = Grow(name: 'Grow With Plants', startDate: DateTime(2025, 1, 1));
-      final growId = await growRepository.create(grow);
+    test(
+      'Getting plant count for grow with plants - should return correct count',
+      () async {
+        // Arrange
+        final grow = Grow(
+          name: 'Grow With Plants',
+          startDate: DateTime(2025, 1, 1),
+        );
+        final growId = await growRepository.create(grow);
 
-      // Create 3 plants in this grow
-      for (int i = 1; i <= 3; i++) {
-        await plantRepository.save(Plant(
-          name: 'Plant $i',
-          seedType: SeedType.photo,
-          medium: Medium.erde,
-          growId: growId,
-        ));
-      }
+        // Create 3 plants in this grow
+        for (int i = 1; i <= 3; i++) {
+          await plantRepository.save(
+            Plant(
+              name: 'Plant $i',
+              seedType: SeedType.photo,
+              medium: Medium.erde,
+              growId: growId,
+            ),
+          );
+        }
 
-      // Act
-      final count = await growRepository.getPlantCount(growId);
+        // Act
+        final count = await growRepository.getPlantCount(growId);
 
-      // Assert
-      expect(count, equals(3));
-    });
+        // Assert
+        expect(count, equals(3));
+      },
+    );
 
-    test('Getting plant count for grow without plants - should return 0', () async {
-      // Arrange
-      final grow = Grow(name: 'Empty Grow', startDate: DateTime(2025, 1, 1));
-      final growId = await growRepository.create(grow);
+    test(
+      'Getting plant count for grow without plants - should return 0',
+      () async {
+        // Arrange
+        final grow = Grow(name: 'Empty Grow', startDate: DateTime(2025, 1, 1));
+        final growId = await growRepository.create(grow);
 
-      // Act
-      final count = await growRepository.getPlantCount(growId);
+        // Act
+        final count = await growRepository.getPlantCount(growId);
 
-      // Assert
-      expect(count, equals(0));
-    });
+        // Assert
+        expect(count, equals(0));
+      },
+    );
 
-    test('Getting plant count for non-existent grow - should return 0', () async {
-      // Act
-      final count = await growRepository.getPlantCount(99999);
+    test(
+      'Getting plant count for non-existent grow - should return 0',
+      () async {
+        // Act
+        final count = await growRepository.getPlantCount(99999);
 
-      // Assert
-      expect(count, equals(0));
-    });
+        // Assert
+        expect(count, equals(0));
+      },
+    );
   });
 
   group('GrowRepository - getPlantCountsForGrows()', () {
-    test('Getting plant counts for multiple grows - should return map with counts', () async {
-      // Arrange - Create multiple grows with different plant counts
-      final grow1Id = await growRepository.create(Grow(name: 'Grow 1', startDate: DateTime(2025, 1, 1)));
-      final grow2Id = await growRepository.create(Grow(name: 'Grow 2', startDate: DateTime(2025, 2, 1)));
+    test(
+      'Getting plant counts for multiple grows - should return map with counts',
+      () async {
+        // Arrange - Create multiple grows with different plant counts
+        final grow1Id = await growRepository.create(
+          Grow(name: 'Grow 1', startDate: DateTime(2025, 1, 1)),
+        );
+        final grow2Id = await growRepository.create(
+          Grow(name: 'Grow 2', startDate: DateTime(2025, 2, 1)),
+        );
 
-      // Grow 1: 2 plants
-      await plantRepository.save(Plant(name: 'Plant 1A', seedType: SeedType.photo, medium: Medium.erde, growId: grow1Id));
-      await plantRepository.save(Plant(name: 'Plant 1B', seedType: SeedType.photo, medium: Medium.erde, growId: grow1Id));
+        // Grow 1: 2 plants
+        await plantRepository.save(
+          Plant(
+            name: 'Plant 1A',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            growId: grow1Id,
+          ),
+        );
+        await plantRepository.save(
+          Plant(
+            name: 'Plant 1B',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            growId: grow1Id,
+          ),
+        );
 
-      // Grow 2: 3 plants
-      await plantRepository.save(Plant(name: 'Plant 2A', seedType: SeedType.photo, medium: Medium.erde, growId: grow2Id));
-      await plantRepository.save(Plant(name: 'Plant 2B', seedType: SeedType.photo, medium: Medium.erde, growId: grow2Id));
-      await plantRepository.save(Plant(name: 'Plant 2C', seedType: SeedType.photo, medium: Medium.erde, growId: grow2Id));
+        // Grow 2: 3 plants
+        await plantRepository.save(
+          Plant(
+            name: 'Plant 2A',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            growId: grow2Id,
+          ),
+        );
+        await plantRepository.save(
+          Plant(
+            name: 'Plant 2B',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            growId: grow2Id,
+          ),
+        );
+        await plantRepository.save(
+          Plant(
+            name: 'Plant 2C',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            growId: grow2Id,
+          ),
+        );
 
-      // Act
-      final counts = await growRepository.getPlantCountsForGrows([grow1Id, grow2Id]);
+        // Act
+        final counts = await growRepository.getPlantCountsForGrows([
+          grow1Id,
+          grow2Id,
+        ]);
 
-      // Assert
-      expect(counts.length, equals(2));
-      expect(counts[grow1Id], equals(2));
-      expect(counts[grow2Id], equals(3));
-    });
+        // Assert
+        expect(counts.length, equals(2));
+        expect(counts[grow1Id], equals(2));
+        expect(counts[grow2Id], equals(3));
+      },
+    );
 
-    test('Getting plant counts with empty list - should return empty map', () async {
-      // Act
-      final counts = await growRepository.getPlantCountsForGrows([]);
+    test(
+      'Getting plant counts with empty list - should return empty map',
+      () async {
+        // Act
+        final counts = await growRepository.getPlantCountsForGrows([]);
 
-      // Assert
-      expect(counts, isEmpty);
-    });
+        // Assert
+        expect(counts, isEmpty);
+      },
+    );
 
-    test('Getting plant counts for grows without plants - should not include in result', () async {
-      // Arrange
-      final grow1Id = await growRepository.create(Grow(name: 'Empty Grow', startDate: DateTime(2025, 1, 1)));
-      final grow2Id = await growRepository.create(Grow(name: 'Grow With Plant', startDate: DateTime(2025, 2, 1)));
+    test(
+      'Getting plant counts for grows without plants - should not include in result',
+      () async {
+        // Arrange
+        final grow1Id = await growRepository.create(
+          Grow(name: 'Empty Grow', startDate: DateTime(2025, 1, 1)),
+        );
+        final grow2Id = await growRepository.create(
+          Grow(name: 'Grow With Plant', startDate: DateTime(2025, 2, 1)),
+        );
 
-      await plantRepository.save(Plant(name: 'Plant', seedType: SeedType.photo, medium: Medium.erde, growId: grow2Id));
+        await plantRepository.save(
+          Plant(
+            name: 'Plant',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            growId: grow2Id,
+          ),
+        );
 
-      // Act
-      final counts = await growRepository.getPlantCountsForGrows([grow1Id, grow2Id]);
+        // Act
+        final counts = await growRepository.getPlantCountsForGrows([
+          grow1Id,
+          grow2Id,
+        ]);
 
-      // Assert
-      expect(counts.length, equals(1), reason: 'Should only include grows with plants');
-      expect(counts[grow2Id], equals(1));
-      expect(counts.containsKey(grow1Id), isFalse);
-    });
+        // Assert
+        expect(
+          counts.length,
+          equals(1),
+          reason: 'Should only include grows with plants',
+        );
+        expect(counts[grow2Id], equals(1));
+        expect(counts.containsKey(grow1Id), isFalse);
+      },
+    );
   });
 
   group('GrowRepository - updatePhaseForAllPlants()', () {
-    test('Updating phase for all plants in grow - should update all plants', () async {
-      // Arrange
-      final grow = Grow(name: 'Grow', startDate: DateTime(2025, 1, 1));
-      final growId = await growRepository.create(grow);
+    test(
+      'Updating phase for all plants in grow - should update all plants',
+      () async {
+        // Arrange
+        final grow = Grow(name: 'Grow', startDate: DateTime(2025, 1, 1));
+        final growId = await growRepository.create(grow);
 
-      final plant1 = await plantRepository.save(Plant(
-        name: 'Plant 1',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.seedling,
-        growId: growId,
-        seedDate: DateTime(2025, 1, 1),
-      ));
+        final plant1 = await plantRepository.save(
+          Plant(
+            name: 'Plant 1',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            phase: PlantPhase.seedling,
+            growId: growId,
+            seedDate: DateTime(2025, 1, 1),
+          ),
+        );
 
-      final plant2 = await plantRepository.save(Plant(
-        name: 'Plant 2',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.seedling,
-        growId: growId,
-        seedDate: DateTime(2025, 1, 1),
-      ));
+        final plant2 = await plantRepository.save(
+          Plant(
+            name: 'Plant 2',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            phase: PlantPhase.seedling,
+            growId: growId,
+            seedDate: DateTime(2025, 1, 1),
+          ),
+        );
 
-      // Act
-      await growRepository.updatePhaseForAllPlants(growId, 'VEG');
+        // Act
+        await growRepository.updatePhaseForAllPlants(growId, 'VEG');
 
-      // Assert - Both plants should be updated
-      final updatedPlant1 = await plantRepository.findById(plant1.id!);
-      final updatedPlant2 = await plantRepository.findById(plant2.id!);
+        // Assert - Both plants should be updated
+        final updatedPlant1 = await plantRepository.findById(plant1.id!);
+        final updatedPlant2 = await plantRepository.findById(plant2.id!);
 
-      expect(updatedPlant1!.phase, equals(PlantPhase.veg));
-      expect(updatedPlant2!.phase, equals(PlantPhase.veg));
-      expect(updatedPlant1.phaseStartDate, isNotNull);
-      expect(updatedPlant2.phaseStartDate, isNotNull);
-    });
+        expect(updatedPlant1!.phase, equals(PlantPhase.veg));
+        expect(updatedPlant2!.phase, equals(PlantPhase.veg));
+        expect(updatedPlant1.phaseStartDate, isNotNull);
+        expect(updatedPlant2.phaseStartDate, isNotNull);
+      },
+    );
 
     test('Updating phase should recalculate phase day numbers in logs', () async {
       // Arrange
       final grow = Grow(name: 'Grow', startDate: DateTime(2025, 1, 1));
       final growId = await growRepository.create(grow);
 
-      final plant = await plantRepository.save(Plant(
-        name: 'Plant',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.seedling,
-        growId: growId,
-        seedDate: DateTime(2025, 1, 1),
-        phaseStartDate: DateTime(2025, 1, 1),
-      ));
+      final plant = await plantRepository.save(
+        Plant(
+          name: 'Plant',
+          seedType: SeedType.photo,
+          medium: Medium.erde,
+          phase: PlantPhase.seedling,
+          growId: growId,
+          seedDate: DateTime(2025, 1, 1),
+          phaseStartDate: DateTime(2025, 1, 1),
+        ),
+      );
 
       // Create a log before phase change
       final log = PlantLog(
@@ -528,33 +674,43 @@ void main() {
       await growRepository.updatePhaseForAllPlants(growId, 'VEG');
 
       // Assert - Phase day number should be recalculated if log is after new phase start
-      final logs = await testDb.query('plant_logs', where: 'plant_id = ?', whereArgs: [plant.id]);
+      final logs = await testDb.query(
+        'plant_logs',
+        where: 'plant_id = ?',
+        whereArgs: [plant.id],
+      );
       expect(logs.length, equals(1));
       // The phase_day_number might be recalculated based on new phase_start_date
       expect(logs.first['phase_day_number'], isNotNull);
     });
 
-    test('Updating phase for grow with no plants - should not throw error', () async {
-      // Arrange
-      final grow = Grow(name: 'Empty Grow', startDate: DateTime(2025, 1, 1));
-      final growId = await growRepository.create(grow);
+    test(
+      'Updating phase for grow with no plants - should not throw error',
+      () async {
+        // Arrange
+        final grow = Grow(name: 'Empty Grow', startDate: DateTime(2025, 1, 1));
+        final growId = await growRepository.create(grow);
 
-      // Act & Assert - Should not throw
-      await growRepository.updatePhaseForAllPlants(growId, 'VEG');
-    });
+        // Act & Assert - Should not throw
+        await growRepository.updatePhaseForAllPlants(growId, 'VEG');
+      },
+    );
   });
 
   group('GrowRepository - Error Handling', () {
-    test('Getting all grows with database error - should return empty list', () async {
-      // Arrange - Close database to simulate error
-      await testDb.close();
+    test(
+      'Getting all grows with database error - should return empty list',
+      () async {
+        // Arrange - Close database to simulate error
+        await testDb.close();
 
-      // Act
-      final grows = await growRepository.getAll();
+        // Act
+        final grows = await growRepository.getAll();
 
-      // Assert
-      expect(grows, isEmpty, reason: 'Should return empty list on error');
-    });
+        // Assert
+        expect(grows, isEmpty, reason: 'Should return empty list on error');
+      },
+    );
 
     test('Getting by ID with database error - should return null', () async {
       // Arrange - Close database to simulate error

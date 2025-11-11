@@ -3,7 +3,7 @@
 // =============================================
 
 import 'package:growlog_app/models/rdwc_log_fertilizer.dart';
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Fertilizer entry in a recipe
 ///
@@ -12,7 +12,7 @@ class RecipeFertilizer {
   final int? id;
   final int recipeId;
   final int fertilizerId;
-  final double mlPerLiter;  // Dosage in ml per liter
+  final double mlPerLiter; // Dosage in ml per liter
 
   RecipeFertilizer({
     this.id,
@@ -43,7 +43,8 @@ class RecipeFertilizer {
   }
 
   @override
-  String toString() => 'RecipeFertilizer{fertilizerId: $fertilizerId, mlPerLiter: $mlPerLiter}';
+  String toString() =>
+      'RecipeFertilizer{fertilizerId: $fertilizerId, mlPerLiter: $mlPerLiter}';
 }
 
 /// RDWC Fertilizer Recipe
@@ -63,11 +64,11 @@ const Object _undefined = Object();
 
 class RdwcRecipe {
   final int? id;
-  final String name;                       // e.g., "Bloom Week 3"
-  final String? description;               // Optional notes
+  final String name; // e.g., "Bloom Week 3"
+  final String? description; // Optional notes
   final List<RecipeFertilizer> fertilizers; // Fertilizers in this recipe
-  final double? targetEc;                  // Desired EC after application
-  final double? targetPh;                  // Desired pH after application
+  final double? targetEc; // Desired EC after application
+  final double? targetPh; // Desired pH after application
   final DateTime createdAt;
 
   RdwcRecipe({
@@ -88,7 +89,10 @@ class RdwcRecipe {
   /// [systemVolumeLiters] The current volume of the RDWC system in liters
   ///
   /// Returns a list of RdwcLogFertilizer entries with perLiter amount type.
-  List<RdwcLogFertilizer> applyToVolume(double systemVolumeLiters, {required int rdwcLogId}) {
+  List<RdwcLogFertilizer> applyToVolume(
+    double systemVolumeLiters, {
+    required int rdwcLogId,
+  }) {
     return fertilizers.map((recipeFert) {
       return RdwcLogFertilizer(
         rdwcLogId: rdwcLogId,
@@ -152,7 +156,9 @@ class RdwcRecipe {
     return RdwcRecipe(
       id: id ?? this.id,
       name: name ?? this.name,
-      description: description == _undefined ? this.description : description as String?,
+      description: description == _undefined
+          ? this.description
+          : description as String?,
       fertilizers: fertilizers ?? this.fertilizers,
       targetEc: targetEc == _undefined ? this.targetEc : targetEc as double?,
       targetPh: targetPh == _undefined ? this.targetPh : targetPh as double?,
@@ -168,9 +174,7 @@ class RdwcRecipe {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is RdwcRecipe &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is RdwcRecipe && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

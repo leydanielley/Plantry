@@ -16,19 +16,20 @@ class EditHarvestDryingScreen extends StatefulWidget {
   const EditHarvestDryingScreen({super.key, required this.harvest});
 
   @override
-  State<EditHarvestDryingScreen> createState() => _EditHarvestDryingScreenState();
+  State<EditHarvestDryingScreen> createState() =>
+      _EditHarvestDryingScreenState();
 }
 
 class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
-  
+
   DateTime? _dryingStartDate;
   DateTime? _dryingEndDate;
   final TextEditingController _methodController = TextEditingController();
   final TextEditingController _temperatureController = TextEditingController();
   final TextEditingController _humidityController = TextEditingController();
-  
+
   bool _isSaving = false;
 
   @override
@@ -41,7 +42,8 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
     _dryingStartDate = widget.harvest.dryingStartDate;
     _dryingEndDate = widget.harvest.dryingEndDate;
     _methodController.text = widget.harvest.dryingMethod ?? '';
-    _temperatureController.text = widget.harvest.dryingTemperature?.toString() ?? '';
+    _temperatureController.text =
+        widget.harvest.dryingTemperature?.toString() ?? '';
     _humidityController.text = widget.harvest.dryingHumidity?.toString() ?? '';
   }
 
@@ -69,7 +71,9 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
         dryingStartDate: _dryingStartDate,
         dryingEndDate: _dryingEndDate,
         dryingDays: dryingDays,
-        dryingMethod: _methodController.text.isNotEmpty ? _methodController.text : null,
+        dryingMethod: _methodController.text.isNotEmpty
+            ? _methodController.text
+            : null,
         dryingTemperature: double.tryParse(_temperatureController.text),
         dryingHumidity: double.tryParse(_humidityController.text),
         updatedAt: DateTime.now(),
@@ -84,8 +88,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        AppMessages.showError(context, 
-'Fehler: $e');
+        AppMessages.showError(context, 'Fehler: $e');
       }
     }
   }
@@ -99,10 +102,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
         foregroundColor: Colors.white,
         actions: [
           if (!_isSaving)
-            IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: _save,
-            ),
+            IconButton(icon: const Icon(Icons.check), onPressed: _save),
         ],
       ),
       body: Form(
@@ -118,7 +118,9 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 decoration: BoxDecoration(
                   color: Colors.orange[50],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange[200] ?? Colors.orange),
+                  border: Border.all(
+                    color: Colors.orange[200] ?? Colors.orange,
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -137,7 +139,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Start Date
               _buildDateField(
                 label: 'Start-Datum',
@@ -158,7 +160,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 onClear: () => setState(() => _dryingStartDate = null),
               ),
               const SizedBox(height: 16),
-              
+
               // End Date
               _buildDateField(
                 label: 'End-Datum',
@@ -179,7 +181,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 onClear: () => setState(() => _dryingEndDate = null),
               ),
               const SizedBox(height: 20),
-              
+
               // Duration Info
               if (_dryingStartDate != null && _dryingEndDate != null)
                 Container(
@@ -204,7 +206,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                   ),
                 ),
               const SizedBox(height: 20),
-              
+
               // Method
               TextFormField(
                 controller: _methodController,
@@ -218,7 +220,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               // Method Suggestions
               Wrap(
                 spacing: 8,
@@ -230,7 +232,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 }).toList(),
               ),
               const SizedBox(height: 20),
-              
+
               // Temperature & Humidity
               Row(
                 children: [
@@ -246,7 +248,9 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -262,27 +266,34 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Tips
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.orange[50],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange[200] ?? Colors.orange),
+                  border: Border.all(
+                    color: Colors.orange[200] ?? Colors.orange,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.lightbulb_outline, color: Colors.orange[700]),
+                        Icon(
+                          Icons.lightbulb_outline,
+                          color: Colors.orange[700],
+                        ),
                         const SizedBox(width: 8),
                         const Text(
                           'Tipps',
@@ -296,16 +307,27 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                       'Luftfeuchtigkeit: 50-60%',
                       'Dauer: 7-14 Tage typisch',
                       'Dunkel und gut belüftet',
-                    ].map((tip) => Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.check, size: 16, color: Colors.green),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(tip, style: const TextStyle(fontSize: 13))),
-                        ],
+                    ].map(
+                      (tip) => Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check,
+                              size: 16,
+                              color: Colors.green,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                tip,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    )),
+                    ),
                   ],
                 ),
               ),
@@ -384,18 +406,19 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   Text(
                     date != null
                         ? DateFormat('dd.MM.yyyy').format(date)
-                        : AppTranslations(Localizations.localeOf(context).languageCode)['edit_harvest_not_set'],
+                        : AppTranslations(
+                            Localizations.localeOf(context).languageCode,
+                          )['edit_harvest_not_set'],
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: date != null ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: date != null
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       color: date != null ? Colors.black : Colors.grey[400],
                     ),
                   ),

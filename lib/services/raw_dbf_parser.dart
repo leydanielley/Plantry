@@ -14,9 +14,15 @@ class RawDbfParser {
       AppLogger.info('RawDbfParser', 'Read ${bytes.length} bytes from DBF');
 
       // Read basic header info
-      final recordCount = ByteData.view(bytes.buffer).getUint32(4, Endian.little);
-      final headerLength = ByteData.view(bytes.buffer).getUint16(8, Endian.little);
-      final recordLength = ByteData.view(bytes.buffer).getUint16(10, Endian.little);
+      final recordCount = ByteData.view(
+        bytes.buffer,
+      ).getUint32(4, Endian.little);
+      final headerLength = ByteData.view(
+        bytes.buffer,
+      ).getUint16(8, Endian.little);
+      final recordLength = ByteData.view(
+        bytes.buffer,
+      ).getUint16(10, Endian.little);
 
       AppLogger.info('RawDbfParser', 'Record count: $recordCount');
       AppLogger.info('RawDbfParser', 'Record length: $recordLength');
@@ -25,9 +31,14 @@ class RawDbfParser {
       // Debug: Show first record marker and first 40 bytes of first record
       if (headerLength < bytes.length) {
         final firstRecordMarker = bytes[headerLength];
-        AppLogger.debug('RawDbfParser', 'First record marker at $headerLength: 0x${firstRecordMarker.toRadixString(16).padLeft(2, '0')}');
+        AppLogger.debug(
+          'RawDbfParser',
+          'First record marker at $headerLength: 0x${firstRecordMarker.toRadixString(16).padLeft(2, '0')}',
+        );
         if (headerLength + 40 <= bytes.length) {
-          final preview = String.fromCharCodes(bytes.sublist(headerLength + 1, headerLength + 41));
+          final preview = String.fromCharCodes(
+            bytes.sublist(headerLength + 1, headerLength + 41),
+          );
           AppLogger.debug('RawDbfParser', 'First 40 bytes of data: "$preview"');
         }
       }
@@ -35,14 +46,26 @@ class RawDbfParser {
       // Use hardcoded HydroBuddy field structure
       // Dynamic header parsing doesn't work for this proprietary DBF format
       final fields = _getHydroBuddyFields();
-      AppLogger.info('RawDbfParser', 'Using hardcoded HydroBuddy structure (${fields.length} fields)');
+      AppLogger.info(
+        'RawDbfParser',
+        'Using hardcoded HydroBuddy structure (${fields.length} fields)',
+      );
 
       // Calculate total field size for validation
-      final int totalFieldSize = fields.fold(0, (sum, field) => sum + field.length);
-      AppLogger.debug('RawDbfParser', 'Total field size: $totalFieldSize bytes (record size: ${recordLength - 1} bytes)');
+      final int totalFieldSize = fields.fold(
+        0,
+        (sum, field) => sum + field.length,
+      );
+      AppLogger.debug(
+        'RawDbfParser',
+        'Total field size: $totalFieldSize bytes (record size: ${recordLength - 1} bytes)',
+      );
 
       for (int i = 0; i < 5 && i < fields.length; i++) {
-        AppLogger.debug('RawDbfParser', 'Field $i: ${fields[i].name} (${fields[i].type}, len=${fields[i].length})');
+        AppLogger.debug(
+          'RawDbfParser',
+          'Field $i: ${fields[i].name} (${fields[i].type}, len=${fields[i].length})',
+        );
       }
 
       // Read records
@@ -81,7 +104,10 @@ class RawDbfParser {
         }
       }
 
-      AppLogger.info('RawDbfParser', 'Successfully parsed ${records.length} records');
+      AppLogger.info(
+        'RawDbfParser',
+        'Successfully parsed ${records.length} records',
+      );
       return records;
     } catch (e) {
       AppLogger.error('RawDbfParser', 'Error parsing DBF', e);

@@ -86,11 +86,7 @@ class PhasePlantIcon extends StatelessWidget {
   final PlantPhase phase;
   final double size;
 
-  const PhasePlantIcon({
-    super.key,
-    required this.phase,
-    this.size = 80,
-  });
+  const PhasePlantIcon({super.key, required this.phase, this.size = 80});
 
   @override
   Widget build(BuildContext context) {

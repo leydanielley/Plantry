@@ -42,8 +42,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        AppMessages.showError(context, 
-'Fehler: $e');
+        AppMessages.showError(context, 'Fehler: $e');
       }
     }
   }
@@ -64,14 +63,13 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
       );
       await _harvestRepo.updateHarvest(updated);
       _loadHarvest();
-      
+
       if (mounted) {
         AppMessages.showSuccess(context, 'Curing gestartet! 📦');
       }
     } catch (e) {
       if (mounted) {
-        AppMessages.showError(context, 
-'Fehler: $e');
+        AppMessages.showError(context, 'Fehler: $e');
       }
     }
   }
@@ -109,7 +107,8 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                         final date = await showDatePicker(
                           context: context,
                           initialDate: selectedStartDate,
-                          firstDate: _harvest!.dryingEndDate ?? _harvest!.harvestDate,
+                          firstDate:
+                              _harvest!.dryingEndDate ?? _harvest!.harvestDate,
                           lastDate: DateTime.now().add(const Duration(days: 7)),
                         );
                         if (date != null) {
@@ -121,7 +120,10 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Curing-Start',
-                          prefixIcon: const Icon(Icons.calendar_today, color: Colors.purple),
+                          prefixIcon: const Icon(
+                            Icons.calendar_today,
+                            color: Colors.purple,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -140,7 +142,10 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                       decoration: InputDecoration(
                         labelText: 'Curing-Methode',
                         hintText: 'z.B. Glass Jars, Grove Bags',
-                        prefixIcon: const Icon(Icons.dashboard, color: Colors.purple),
+                        prefixIcon: const Icon(
+                          Icons.dashboard,
+                          color: Colors.purple,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -151,18 +156,30 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                     // Method Suggestion Chips
                     Wrap(
                       spacing: 8,
-                      children: ['Glass Jars', 'Grove Bags', 'CVault', 'Vacuum Sealed']
-                          .map((method) => ActionChip(
-                                label: Text(method, style: const TextStyle(fontSize: 12)),
-                                onPressed: () {
-                                  methodController.text = method;
-                                  setDialogState(() {});
-                                },
-                                backgroundColor: methodController.text == method
-                                    ? Colors.purple[100]
-                                    : null,
-                              ))
-                          .toList(),
+                      children:
+                          [
+                                'Glass Jars',
+                                'Grove Bags',
+                                'CVault',
+                                'Vacuum Sealed',
+                              ]
+                              .map(
+                                (method) => ActionChip(
+                                  label: Text(
+                                    method,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  onPressed: () {
+                                    methodController.text = method;
+                                    setDialogState(() {});
+                                  },
+                                  backgroundColor:
+                                      methodController.text == method
+                                      ? Colors.purple[100]
+                                      : null,
+                                ),
+                              )
+                              .toList(),
                     ),
                     const SizedBox(height: 16),
 
@@ -172,7 +189,10 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                       decoration: InputDecoration(
                         labelText: 'Notizen (optional)',
                         hintText: 'Burping Schedule, Besonderheiten...',
-                        prefixIcon: const Icon(Icons.note, color: Colors.purple),
+                        prefixIcon: const Icon(
+                          Icons.note,
+                          color: Colors.purple,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -191,8 +211,12 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                   onPressed: () {
                     Navigator.pop(context, {
                       'startDate': selectedStartDate,
-                      'method': methodController.text.isNotEmpty ? methodController.text : null,
-                      'notes': notesController.text.isNotEmpty ? notesController.text : null,
+                      'method': methodController.text.isNotEmpty
+                          ? methodController.text
+                          : null,
+                      'notes': notesController.text.isNotEmpty
+                          ? notesController.text
+                          : null,
                     });
                   },
                   icon: const Icon(Icons.check),
@@ -225,14 +249,13 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
       );
       await _harvestRepo.updateHarvest(updated);
       _loadHarvest();
-      
+
       if (mounted) {
         AppMessages.showSuccess(context, 'Curing abgeschlossen! 🎉');
       }
     } catch (e) {
       if (mounted) {
-        AppMessages.showError(context, 
-'Fehler: $e');
+        AppMessages.showError(context, 'Fehler: $e');
       }
     }
   }
@@ -278,7 +301,8 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditHarvestCuringScreen(harvest: _harvest!),
+                    builder: (context) =>
+                        EditHarvestCuringScreen(harvest: _harvest!),
                   ),
                 );
                 if (result == true) _loadHarvest();
@@ -293,17 +317,14 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
           children: [
             _buildStatusCard(hasStarted, hasEnded, isActive),
             const SizedBox(height: 20),
-            
-            if (hasStarted) ...[
-              _buildDataCard(),
-              const SizedBox(height: 20),
-            ],
-            
+
+            if (hasStarted) ...[_buildDataCard(), const SizedBox(height: 20)],
+
             if (!hasStarted)
               _buildStartButton()
             else if (isActive)
               _buildEndButton(),
-            
+
             if (hasEnded) ...[
               const SizedBox(height: 20),
               _buildNextStepButton(),
@@ -345,10 +366,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               child: Icon(icon, color: Colors.white, size: 32),
             ),
             const SizedBox(width: 16),
@@ -366,10 +384,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -398,7 +413,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
               ],
             ),
             const Divider(height: 20),
-            
+
             if (_harvest!.curingStartDate != null)
               _buildInfoRow(
                 'Start',
@@ -406,7 +421,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                 Icons.play_arrow,
                 Colors.purple,
               ),
-            
+
             if (_harvest!.curingEndDate != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
@@ -416,7 +431,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                 Colors.green,
               ),
             ],
-            
+
             if (_harvest!.calculatedCuringDays != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
@@ -427,7 +442,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                 highlight: true,
               ),
             ],
-            
+
             if (_harvest!.curingMethod != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
@@ -437,15 +452,12 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                 Colors.purple,
               ),
             ],
-            
+
             if (_harvest!.curingNotes != null) ...[
               const SizedBox(height: 16),
               const Text(
                 'Notizen',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 8),
               Container(
@@ -464,7 +476,13 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, IconData icon, Color color, {bool highlight = false}) {
+  Widget _buildInfoRow(
+    String label,
+    String value,
+    IconData icon,
+    Color color, {
+    bool highlight = false,
+  }) {
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
@@ -535,7 +553,8 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => HarvestQualityScreen(harvestId: widget.harvestId),
+              builder: (context) =>
+                  HarvestQualityScreen(harvestId: widget.harvestId),
             ),
           );
           _loadHarvest();

@@ -24,7 +24,8 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
   final _formKey = GlobalKey<FormState>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
-  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
+  final ISettingsRepository _settingsRepo =
+      getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
 
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
@@ -40,7 +41,8 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
   void initState() {
     super.initState();
     _initTranslations(); // ✅ AUDIT FIX: i18n
-    final dateStr = '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}';
     _nameController = TextEditingController(text: 'Grow $dateStr');
     _descriptionController = TextEditingController();
     _loadRooms();
@@ -53,8 +55,12 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
       setState(() {
         _t = AppTranslations(settings.language);
         // Update name controller with translated default name
-        final dateStr = '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}';
-        _nameController.text = _t['add_grow_default_name'].replaceAll('{date}', dateStr);
+        final dateStr =
+            '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}';
+        _nameController.text = _t['add_grow_default_name'].replaceAll(
+          '{date}',
+          dateStr,
+        );
       });
     }
   }
@@ -91,7 +97,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
 
     try {
       final grow = Grow(
-        name: _nameController.text.trim(),  // ✅ Trim hinzugefügt
+        name: _nameController.text.trim(), // ✅ Trim hinzugefügt
         description: _descriptionController.text.trim().isNotEmpty
             ? _descriptionController.text.trim()
             : null,
@@ -169,7 +175,8 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
             helperText: 'z.B. "Grow 2025-10" oder "Winter Grow"',
           ),
           // ✅ FIX BUG #3: Validator hinzugefügt!
-          validator: (value) => Validators.validateNotEmpty(value, fieldName: 'Name'),
+          validator: (value) =>
+              Validators.validateNotEmpty(value, fieldName: 'Name'),
           autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         const SizedBox(height: 12),
@@ -213,12 +220,12 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
               helperText: _t['add_grow_room_helper'],
             ),
             items: [
-              DropdownMenuItem(value: null, child: Text(_t['add_grow_no_room'])), // ✅ i18n
+              DropdownMenuItem(
+                value: null,
+                child: Text(_t['add_grow_no_room']),
+              ), // ✅ i18n
               ..._rooms.map((room) {
-                return DropdownMenuItem(
-                  value: room.id,
-                  child: Text(room.name),
-                );
+                return DropdownMenuItem(value: room.id, child: Text(room.name));
               }),
             ],
             onChanged: (value) => setState(() => _selectedRoomId = value),

@@ -30,7 +30,8 @@ class HarvestDetailScreen extends StatefulWidget {
 
 class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
-  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
+  final ISettingsRepository _settingsRepo =
+      getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
 
   Harvest? _harvest;
   Map<String, dynamic>? _harvestWithPlant;
@@ -57,14 +58,22 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
   Future<void> _loadHarvest() async {
     setState(() => _isLoading = true);
 
-    AppLogger.info('HarvestDetailScreen', '🟢 Loading harvest with ID: ${widget.harvestId}');
+    AppLogger.info(
+      'HarvestDetailScreen',
+      '🟢 Loading harvest with ID: ${widget.harvestId}',
+    );
 
     try {
-      final harvestWithPlant = await _harvestRepo.getHarvestWithPlant(widget.harvestId);
+      final harvestWithPlant = await _harvestRepo.getHarvestWithPlant(
+        widget.harvestId,
+      );
       final harvest = await _harvestRepo.getHarvestById(widget.harvestId);
 
       AppLogger.info('HarvestDetailScreen', '✅ Harvest loaded: $harvest');
-      AppLogger.info('HarvestDetailScreen', '✅ HarvestWithPlant: $harvestWithPlant');
+      AppLogger.info(
+        'HarvestDetailScreen',
+        '✅ HarvestWithPlant: $harvestWithPlant',
+      );
 
       setState(() {
         _harvest = harvest;
@@ -77,8 +86,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
       setState(() => _isLoading = false);
 
       if (mounted) {
-        AppMessages.showError(context, 
-'Fehler beim Laden: $e');
+        AppMessages.showError(context, 'Fehler beim Laden: $e');
       }
     }
   }
@@ -115,7 +123,11 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, size: 20, color: Colors.blue[700]),
+                      Icon(
+                        Icons.info_outline,
+                        size: 20,
+                        color: Colors.blue[700],
+                      ),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
@@ -155,13 +167,11 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
         await _harvestRepo.deleteHarvest(widget.harvestId);
         if (mounted) {
           Navigator.pop(context, true);
-          AppMessages.showSuccess(context,
-_t['harvest_detail_deleted']);
+          AppMessages.showSuccess(context, _t['harvest_detail_deleted']);
         }
       } catch (e) {
         if (mounted) {
-          AppMessages.showError(context,
-'Fehler: $e');
+          AppMessages.showError(context, 'Fehler: $e');
         }
       }
     }
@@ -191,11 +201,7 @@ _t['harvest_detail_deleted']);
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 80,
-                color: Colors.red[400],
-              ),
+              Icon(Icons.error_outline, size: 80, color: Colors.red[400]),
               const SizedBox(height: 16),
               Text(
                 _t['harvest_detail_not_found'],
@@ -207,10 +213,7 @@ _t['harvest_detail_deleted']);
               const SizedBox(height: 8),
               Text(
                 'ID: ${widget.harvestId}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
@@ -246,14 +249,16 @@ _t['harvest_detail_deleted']);
               if (result == true) _loadHarvest();
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: _deleteHarvest,
-          ),
+          IconButton(icon: const Icon(Icons.delete), onPressed: _deleteHarvest),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: 80,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,10 +275,15 @@ _t['harvest_detail_deleted']);
             const SizedBox(height: 16),
             _buildCuringSection(),
             const SizedBox(height: 16),
-            if (_harvest!.thcPercentage != null || _harvest!.cbdPercentage != null || _harvest!.terpeneProfile != null)
+            if (_harvest!.thcPercentage != null ||
+                _harvest!.cbdPercentage != null ||
+                _harvest!.terpeneProfile != null)
               _buildQualitySection(),
             const SizedBox(height: 16),
-            if (_harvest!.rating != null || _harvest!.tasteNotes != null || _harvest!.effectNotes != null || _harvest!.overallNotes != null)
+            if (_harvest!.rating != null ||
+                _harvest!.tasteNotes != null ||
+                _harvest!.effectNotes != null ||
+                _harvest!.overallNotes != null)
               _buildRatingSection(),
           ],
         ),
@@ -283,8 +293,10 @@ _t['harvest_detail_deleted']);
 
   Widget _buildStatusOverview() {
     final isComplete = _harvest!.isComplete;
-    final inDrying = _harvest!.dryingStartDate != null && _harvest!.dryingEndDate == null;
-    final inCuring = _harvest!.curingStartDate != null && _harvest!.curingEndDate == null;
+    final inDrying =
+        _harvest!.dryingStartDate != null && _harvest!.dryingEndDate == null;
+    final inCuring =
+        _harvest!.curingStartDate != null && _harvest!.curingEndDate == null;
 
     Color statusColor;
     String statusText;
@@ -334,17 +346,17 @@ _t['harvest_detail_deleted']);
                       ),
                       Text(
                         'Ernte vom ${DateFormat('dd.MM.yyyy').format(_harvest!.harvestDate)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),
                 ),
                 if (_harvest!.dryWeight != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green,
                       borderRadius: BorderRadius.circular(20),
@@ -373,16 +385,36 @@ _t['harvest_detail_deleted']);
       children: [
         _buildTimelineStep('Ernte', Icons.grass, true, Colors.green),
         _buildTimelineConnector(true),
-        _buildTimelineStep('Trocknung', Icons.dry_cleaning, _harvest!.dryingStartDate != null, Colors.orange),
+        _buildTimelineStep(
+          'Trocknung',
+          Icons.dry_cleaning,
+          _harvest!.dryingStartDate != null,
+          Colors.orange,
+        ),
         _buildTimelineConnector(_harvest!.dryingEndDate != null),
-        _buildTimelineStep('Curing', Icons.inventory_2, _harvest!.curingStartDate != null, Colors.purple),
+        _buildTimelineStep(
+          'Curing',
+          Icons.inventory_2,
+          _harvest!.curingStartDate != null,
+          Colors.purple,
+        ),
         _buildTimelineConnector(_harvest!.curingEndDate != null),
-        _buildTimelineStep('Fertig', Icons.check_circle, _harvest!.isComplete, Colors.green),
+        _buildTimelineStep(
+          'Fertig',
+          Icons.check_circle,
+          _harvest!.isComplete,
+          Colors.green,
+        ),
       ],
     );
   }
 
-  Widget _buildTimelineStep(String label, IconData icon, bool isActive, Color color) {
+  Widget _buildTimelineStep(
+    String label,
+    IconData icon,
+    bool isActive,
+    Color color,
+  ) {
     return Expanded(
       child: Column(
         children: [
@@ -433,7 +465,8 @@ _t['harvest_detail_deleted']);
             await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => HarvestDryingScreen(harvestId: widget.harvestId),
+                builder: (context) =>
+                    HarvestDryingScreen(harvestId: widget.harvestId),
               ),
             );
             _loadHarvest();
@@ -459,7 +492,8 @@ _t['harvest_detail_deleted']);
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HarvestCuringScreen(harvestId: widget.harvestId),
+                  builder: (context) =>
+                      HarvestCuringScreen(harvestId: widget.harvestId),
                 ),
               );
               _loadHarvest();
@@ -486,7 +520,8 @@ _t['harvest_detail_deleted']);
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HarvestQualityScreen(harvestId: widget.harvestId),
+                  builder: (context) =>
+                      HarvestQualityScreen(harvestId: widget.harvestId),
                 ),
               );
               _loadHarvest();
@@ -514,16 +549,15 @@ _t['harvest_detail_deleted']);
           children: [
             Text(
               _t['harvest_detail_phases_title'],
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            ...actions.map((action) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: action,
-            )),
+            ...actions.map(
+              (action) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: action,
+              ),
+            ),
           ],
         ),
       ),
@@ -542,7 +576,13 @@ _t['harvest_detail_deleted']);
               children: [
                 Icon(Icons.scale, color: Colors.green[700]),
                 const SizedBox(width: 8),
-                Text(_t['harvest_detail_weight_title'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  _t['harvest_detail_weight_title'],
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const Divider(height: 20),
@@ -567,11 +607,25 @@ _t['harvest_detail_deleted']);
         Row(
           children: [
             if (hasWet) ...[
-              Expanded(child: _buildWeightBar(_t['harvest_detail_wet_weight'], _harvest!.wetWeight!, Colors.blue, Icons.water_drop)),
+              Expanded(
+                child: _buildWeightBar(
+                  _t['harvest_detail_wet_weight'],
+                  _harvest!.wetWeight!,
+                  Colors.blue,
+                  Icons.water_drop,
+                ),
+              ),
               const SizedBox(width: 12),
             ],
             if (hasDry)
-              Expanded(child: _buildWeightBar(_t['harvest_detail_dry_weight'], _harvest!.dryWeight!, Colors.green, Icons.grass)),
+              Expanded(
+                child: _buildWeightBar(
+                  _t['harvest_detail_dry_weight'],
+                  _harvest!.dryWeight!,
+                  Colors.green,
+                  Icons.grass,
+                ),
+              ),
           ],
         ),
         if (loss != null) ...[
@@ -592,12 +646,19 @@ _t['harvest_detail_deleted']);
                     children: [
                       Text(
                         'Gewichtsverlust: ${loss.toStringAsFixed(1)}%',
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.white),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
                       ),
                       if (hasWet && hasDry)
                         Text(
                           '${(_harvest!.wetWeight! - _harvest!.dryWeight!).toStringAsFixed(1)}g Wasser verloren',
-                          style: const TextStyle(fontSize: 11, color: Colors.white70),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.white70,
+                          ),
                         ),
                     ],
                   ),
@@ -610,7 +671,12 @@ _t['harvest_detail_deleted']);
     );
   }
 
-  Widget _buildWeightBar(String label, double weight, Color color, IconData icon) {
+  Widget _buildWeightBar(
+    String label,
+    double weight,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -624,7 +690,14 @@ _t['harvest_detail_deleted']);
           const SizedBox(height: 8),
           Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
           const SizedBox(height: 4),
-          Text('${weight.toStringAsFixed(1)}g', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+          Text(
+            '${weight.toStringAsFixed(1)}g',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
@@ -642,24 +715,43 @@ _t['harvest_detail_deleted']);
               children: [
                 Icon(Icons.dry_cleaning, color: Colors.orange[700]),
                 const SizedBox(width: 8),
-                const Text('Trocknung', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Trocknung',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 const Spacer(),
                 _buildStatusBadge(_harvest!.dryingStatus, Colors.orange),
               ],
             ),
             const Divider(height: 20),
             if (_harvest!.dryingStartDate != null) ...[
-              _buildInfoRow('Start', DateFormat('dd.MM.yyyy').format(_harvest!.dryingStartDate!)),
+              _buildInfoRow(
+                'Start',
+                DateFormat('dd.MM.yyyy').format(_harvest!.dryingStartDate!),
+              ),
               if (_harvest!.dryingEndDate != null)
-                _buildInfoRow('Ende', DateFormat('dd.MM.yyyy').format(_harvest!.dryingEndDate!)),
+                _buildInfoRow(
+                  'Ende',
+                  DateFormat('dd.MM.yyyy').format(_harvest!.dryingEndDate!),
+                ),
               if (_harvest!.calculatedDryingDays != null)
-                _buildInfoRow('Dauer', '${_harvest!.calculatedDryingDays} Tage', highlight: true),
+                _buildInfoRow(
+                  'Dauer',
+                  '${_harvest!.calculatedDryingDays} Tage',
+                  highlight: true,
+                ),
               if (_harvest!.dryingMethod != null)
                 _buildInfoRow('Methode', _harvest!.dryingMethod!),
               if (_harvest!.dryingTemperature != null)
-                _buildInfoRow('Temperatur', '${_harvest!.dryingTemperature!.toStringAsFixed(1)}°C'),
+                _buildInfoRow(
+                  'Temperatur',
+                  '${_harvest!.dryingTemperature!.toStringAsFixed(1)}°C',
+                ),
               if (_harvest!.dryingHumidity != null)
-                _buildInfoRow('Luftfeuchtigkeit', '${_harvest!.dryingHumidity!.toStringAsFixed(0)}%'),
+                _buildInfoRow(
+                  'Luftfeuchtigkeit',
+                  '${_harvest!.dryingHumidity!.toStringAsFixed(0)}%',
+                ),
             ] else
               const Text('Trocknung noch nicht gestartet'),
           ],
@@ -680,22 +772,38 @@ _t['harvest_detail_deleted']);
               children: [
                 Icon(Icons.inventory_2, color: Colors.purple[700]),
                 const SizedBox(width: 8),
-                const Text('Curing', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Curing',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 const Spacer(),
                 _buildStatusBadge(_harvest!.curingStatus, Colors.purple),
               ],
             ),
             const Divider(height: 20),
             if (_harvest!.curingStartDate != null) ...[
-              _buildInfoRow('Start', DateFormat('dd.MM.yyyy').format(_harvest!.curingStartDate!)),
+              _buildInfoRow(
+                'Start',
+                DateFormat('dd.MM.yyyy').format(_harvest!.curingStartDate!),
+              ),
               if (_harvest!.curingEndDate != null)
-                _buildInfoRow('Ende', DateFormat('dd.MM.yyyy').format(_harvest!.curingEndDate!)),
+                _buildInfoRow(
+                  'Ende',
+                  DateFormat('dd.MM.yyyy').format(_harvest!.curingEndDate!),
+                ),
               if (_harvest!.calculatedCuringDays != null)
-                _buildInfoRow('Dauer', '${_harvest!.calculatedCuringDays} Tage', highlight: true),
+                _buildInfoRow(
+                  'Dauer',
+                  '${_harvest!.calculatedCuringDays} Tage',
+                  highlight: true,
+                ),
               if (_harvest!.curingMethod != null)
                 _buildInfoRow('Methode', _harvest!.curingMethod!),
               if (_harvest!.curingNotes != null)
-                _buildInfoRow(_t['harvest_detail_notes_label'], _harvest!.curingNotes!),
+                _buildInfoRow(
+                  _t['harvest_detail_notes_label'],
+                  _harvest!.curingNotes!,
+                ),
             ] else
               const Text('Curing noch nicht gestartet'),
           ],
@@ -716,7 +824,13 @@ _t['harvest_detail_deleted']);
               children: [
                 Icon(Icons.science, color: Colors.blue[700]),
                 const SizedBox(width: 8),
-                Text(_t['harvest_detail_quality_title'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  _t['harvest_detail_quality_title'],
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const Divider(height: 20),
@@ -724,7 +838,11 @@ _t['harvest_detail_deleted']);
               _buildPercentageBar('THC', _harvest!.thcPercentage!, Colors.red),
             if (_harvest!.cbdPercentage != null) ...[
               const SizedBox(height: 12),
-              _buildPercentageBar('CBD', _harvest!.cbdPercentage!, Colors.green),
+              _buildPercentageBar(
+                'CBD',
+                _harvest!.cbdPercentage!,
+                Colors.green,
+              ),
             ],
             if (_harvest!.terpeneProfile != null) ...[
               const SizedBox(height: 12),
@@ -744,7 +862,10 @@ _t['harvest_detail_deleted']);
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-            Text('${percentage.toStringAsFixed(1)}%', style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+            Text(
+              '${percentage.toStringAsFixed(1)}%',
+              style: TextStyle(fontWeight: FontWeight.bold, color: color),
+            ),
           ],
         ),
         const SizedBox(height: 4),
@@ -773,14 +894,23 @@ _t['harvest_detail_deleted']);
               children: [
                 Icon(Icons.star, color: Colors.amber[700]),
                 const SizedBox(width: 8),
-                const Text('Bewertung', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Bewertung',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             const Divider(height: 20),
             if (_harvest!.rating != null) _buildRatingRow(_harvest!.rating!),
-            if (_harvest!.tasteNotes != null) _buildInfoRow('Geschmack', _harvest!.tasteNotes!),
-            if (_harvest!.effectNotes != null) _buildInfoRow('Wirkung', _harvest!.effectNotes!),
-            if (_harvest!.overallNotes != null) _buildInfoRow(_t['harvest_detail_overall_notes'], _harvest!.overallNotes!),
+            if (_harvest!.tasteNotes != null)
+              _buildInfoRow('Geschmack', _harvest!.tasteNotes!),
+            if (_harvest!.effectNotes != null)
+              _buildInfoRow('Wirkung', _harvest!.effectNotes!),
+            if (_harvest!.overallNotes != null)
+              _buildInfoRow(
+                _t['harvest_detail_overall_notes'],
+                _harvest!.overallNotes!,
+              ),
           ],
         ),
       ),
@@ -803,11 +933,24 @@ _t['harvest_detail_deleted']);
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_harvestWithPlant!['plant_name'] as String, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                Text(
+                  _harvestWithPlant!['plant_name'] as String,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
                 if (_harvestWithPlant!['plant_strain'] != null)
-                  Text(_harvestWithPlant!['plant_strain'] as String, style: const TextStyle(fontSize: 14, color: Colors.white70)),
+                  Text(
+                    _harvestWithPlant!['plant_strain'] as String,
+                    style: const TextStyle(fontSize: 14, color: Colors.white70),
+                  ),
                 if (_harvestWithPlant!['plant_breeder'] != null)
-                  Text(_harvestWithPlant!['plant_breeder'] as String, style: const TextStyle(fontSize: 12, color: Colors.white60)),
+                  Text(
+                    _harvestWithPlant!['plant_breeder'] as String,
+                    style: const TextStyle(fontSize: 12, color: Colors.white60),
+                  ),
               ],
             ),
           ),
@@ -824,7 +967,14 @@ _t['harvest_detail_deleted']);
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
-      child: Text(status, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
+      child: Text(
+        status,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
     );
   }
 
@@ -836,7 +986,13 @@ _t['harvest_detail_deleted']);
         children: [
           SizedBox(
             width: 120,
-            child: Text(label, style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500)),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           Expanded(
             child: Text(
@@ -859,7 +1015,13 @@ _t['harvest_detail_deleted']);
         children: [
           SizedBox(
             width: 120,
-            child: Text('Bewertung', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500)),
+            child: Text(
+              'Bewertung',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           ...List.generate(5, (index) {
             return Icon(
@@ -869,7 +1031,10 @@ _t['harvest_detail_deleted']);
             );
           }),
           const SizedBox(width: 8),
-          Text('$rating/5', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            '$rating/5',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );

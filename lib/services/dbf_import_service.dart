@@ -11,12 +11,18 @@ class DbfImportService {
   /// Parse HydroBuddy DBF file and return list of Fertilizers
   static Future<List<Fertilizer>> importFromDbf(File file) async {
     try {
-      AppLogger.info('DbfImportService', 'Starting DBF import from: ${file.path}');
+      AppLogger.info(
+        'DbfImportService',
+        'Starting DBF import from: ${file.path}',
+      );
 
       // Use our custom raw parser instead of the buggy dbf_reader package
       final records = await RawDbfParser.parse(file);
 
-      AppLogger.info('DbfImportService', 'Found ${records.length} records in DBF');
+      AppLogger.info(
+        'DbfImportService',
+        'Found ${records.length} records in DBF',
+      );
 
       final List<Fertilizer> fertilizers = [];
       int skippedEmpty = 0;
@@ -28,7 +34,10 @@ class DbfImportService {
 
           // Debug: Log first 10 records to see structure
           if (i < 10) {
-            AppLogger.debug('DbfImportService', 'Record $i: NAME="${record['NAME']}" FORMULA="${record['FORMULA']}"');
+            AppLogger.debug(
+              'DbfImportService',
+              'Record $i: NAME="${record['NAME']}" FORMULA="${record['FORMULA']}"',
+            );
           }
 
           final fertilizer = _parseFertilizerFromRecord(record);
@@ -36,7 +45,10 @@ class DbfImportService {
           if (fertilizer != null) {
             fertilizers.add(fertilizer);
             if (i < 5) {
-              AppLogger.debug('DbfImportService', 'Parsed: ${fertilizer.name} | ppmValue: ${fertilizer.ppmValue}');
+              AppLogger.debug(
+                'DbfImportService',
+                'Parsed: ${fertilizer.name} | ppmValue: ${fertilizer.ppmValue}',
+              );
             }
           } else {
             // Track why it was skipped
@@ -49,13 +61,23 @@ class DbfImportService {
             }
           }
         } catch (e) {
-          AppLogger.error('DbfImportService', 'Error parsing record ${i + 1}', e);
+          AppLogger.error(
+            'DbfImportService',
+            'Error parsing record ${i + 1}',
+            e,
+          );
           // Continue with next record
         }
       }
 
-      AppLogger.info('DbfImportService', 'Successfully parsed ${fertilizers.length} fertilizers');
-      AppLogger.info('DbfImportService', 'Skipped: $skippedEmpty empty, $skippedDisabled disabled');
+      AppLogger.info(
+        'DbfImportService',
+        'Successfully parsed ${fertilizers.length} fertilizers',
+      );
+      AppLogger.info(
+        'DbfImportService',
+        'Skipped: $skippedEmpty empty, $skippedDisabled disabled',
+      );
       return fertilizers;
     } catch (e) {
       AppLogger.error('DbfImportService', 'Error reading DBF file', e);
@@ -82,19 +104,33 @@ class DbfImportService {
       final mg = _parseDouble(record['MG']) ?? 0.0;
       final ca = _parseDouble(record['CA']) ?? 0.0;
       final s = _parseDouble(record['S']) ?? 0.0;
-      final nutrientCount = [nNo3, nNh4, p, k, mg, ca, s].where((v) => v > 0).length;
+      final nutrientCount = [
+        nNo3,
+        nNh4,
+        p,
+        k,
+        mg,
+        ca,
+        s,
+      ].where((v) => v > 0).length;
 
       // Debug: Log nutrient data for ALL entries
       // AppLogger.debug('DbfImportService', '  -> "$readableName": NPK=$totalN-$p-$k, nutrients=$nutrientCount');
 
       // Skip if empty or starts with * (disabled in HydroBuddy)
       if (readableName.isEmpty) {
-        AppLogger.debug('DbfImportService', '  -> SKIP: Empty name (formula="$chemicalFormula")');
+        AppLogger.debug(
+          'DbfImportService',
+          '  -> SKIP: Empty name (formula="$chemicalFormula")',
+        );
         return null; // Skip empty names
       }
 
       if (readableName.startsWith('*') || chemicalFormula.startsWith('*')) {
-        AppLogger.debug('DbfImportService', '  -> SKIP: Disabled "$readableName"');
+        AppLogger.debug(
+          'DbfImportService',
+          '  -> SKIP: Disabled "$readableName"',
+        );
         return null; // Skip disabled substances
       }
 
@@ -131,7 +167,10 @@ class DbfImportService {
       );
 
       // Debug logging for nutrient values
-      AppLogger.debug('DbfImportService', '$readableName: N=$totalN P=$p K=$k Mg=$mg Ca=$ca S=$s | nutrients=$nutrientCount | ppm=$ppmPerUnit');
+      AppLogger.debug(
+        'DbfImportService',
+        '$readableName: N=$totalN P=$p K=$k Mg=$mg Ca=$ca S=$s | nutrients=$nutrientCount | ppm=$ppmPerUnit',
+      );
 
       return Fertilizer(
         name: readableName, // Use the readable name from FORMULA field
@@ -143,7 +182,9 @@ class DbfImportService {
         purity: _parseDouble(record['PURITY']),
         isLiquid: isLiquid,
         density: _parseDouble(record['DENSITY']),
-        ppmValue: ppmPerUnit > 0 ? ppmPerUnit : null, // Auto-calculated ppm per ml/g
+        ppmValue: ppmPerUnit > 0
+            ? ppmPerUnit
+            : null, // Auto-calculated ppm per ml/g
         // Macronutrients
         nNO3: nNo3 > 0 ? nNo3 : null,
         nNH4: nNh4 > 0 ? nNh4 : null,
@@ -180,8 +221,10 @@ class DbfImportService {
   static bool? _parseBool(String? value) {
     if (value == null || value.isEmpty) return null;
     final lower = value.toLowerCase().trim();
-    if (lower == 'true' || lower == '1' || lower == 'yes' || lower == 't') return true;
-    if (lower == 'false' || lower == '0' || lower == 'no' || lower == 'f') return false;
+    if (lower == 'true' || lower == '1' || lower == 'yes' || lower == 't')
+      return true;
+    if (lower == 'false' || lower == '0' || lower == 'no' || lower == 'f')
+      return false;
     return null;
   }
 

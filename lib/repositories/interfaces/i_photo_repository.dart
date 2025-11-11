@@ -11,6 +11,10 @@ abstract class IPhotoRepository {
   Future<Photo?> getById(int id);
   Future<int> delete(int id);
   Future<int> deletePhoto(int id);
-  Future<List<Photo>> getPhotosByPlantId(int plantId, {int? limit, int? offset});
+  Future<List<Photo>> getPhotosByPlantId(
+    int plantId, {
+    int? limit,
+    int? offset,
+  });
   Future<void> deleteByLogId(int logId);
 }

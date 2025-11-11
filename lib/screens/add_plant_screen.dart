@@ -43,7 +43,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   final _quantityController = TextEditingController(text: '1');
 
   SeedType _seedType = SeedType.photo;
-  GenderType _genderType = GenderType.feminized;  // ✅ KORRIGIERT: Neues Enum
+  GenderType _genderType = GenderType.feminized; // ✅ KORRIGIERT: Neues Enum
   Medium _medium = Medium.erde;
   PlantPhase _phase = PlantPhase.seedling;
   int? _selectedRoomId;
@@ -64,7 +64,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ AUDIT FIX: i18n
+    _t = AppTranslations(
+      Localizations.localeOf(context).languageCode,
+    ); // ✅ AUDIT FIX: i18n
     _selectedGrowId = widget.preselectedGrowId;
     _loadRooms();
     _loadGrows();
@@ -134,7 +136,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   }
 
   bool get _isHydroSystem {
-    return _medium == Medium.dwc || _medium == Medium.rdwc || _medium == Medium.hydro;
+    return _medium == Medium.dwc ||
+        _medium == Medium.rdwc ||
+        _medium == Medium.hydro;
   }
 
   /// Get occupied bucket numbers for an RDWC system
@@ -148,7 +152,8 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
 
   Future<void> _createNewGrow() async {
     final nameController = TextEditingController(
-      text: 'Grow ${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}',
+      text:
+          'Grow ${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}',
     );
     final descriptionController = TextEditingController();
 
@@ -192,7 +197,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 Navigator.of(context).pop(true);
               }
             },
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFF004225)),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF004225),
+            ),
             child: const Text('Erstellen'),
           ),
         ],
@@ -250,19 +257,30 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       final quantity = int.tryParse(_quantityController.text) ?? 1;
       final baseName = _nameController.text;
 
-      AppLogger.info('AddPlantScreen', 'Saving $quantity plant(s) with growId: $_selectedGrowId');
+      AppLogger.info(
+        'AddPlantScreen',
+        'Saving $quantity plant(s) with growId: $_selectedGrowId',
+      );
 
       // Bei RDWC: Verfügbare Buckets ermitteln für Auto-Assignment
       List<int>? availableBuckets;
-      if (_medium == Medium.rdwc && _selectedRdwcSystemId != null && quantity > 1) {
-        final occupiedBuckets = await _getOccupiedBuckets(_selectedRdwcSystemId!);
+      if (_medium == Medium.rdwc &&
+          _selectedRdwcSystemId != null &&
+          quantity > 1) {
+        final occupiedBuckets = await _getOccupiedBuckets(
+          _selectedRdwcSystemId!,
+        );
         // ✅ CRITICAL FIX: Safe fallback for empty list
         final selectedSystem = _rdwcSystems.firstWhere(
           (s) => s.id == _selectedRdwcSystemId,
           orElse: () {
             if (_rdwcSystems.isEmpty) {
               AppLogger.error('AddPlantScreen', 'No RDWC systems found');
-              return RdwcSystem(name: 'Unknown', maxCapacity: 100, bucketCount: 1);
+              return RdwcSystem(
+                name: 'Unknown',
+                maxCapacity: 100,
+                bucketCount: 1,
+              );
             }
             return _rdwcSystems.first;
           },
@@ -280,8 +298,8 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
             AppMessages.showError(
               context,
               _t['add_plant_bucket_insufficient'] // ✅ i18n
-                .replaceAll('{available}', '${availableBuckets.length}')
-                .replaceAll('{requested}', '$quantity'),
+                  .replaceAll('{available}', '${availableBuckets.length}')
+                  .replaceAll('{requested}', '$quantity'),
             );
           }
           return;
@@ -294,7 +312,11 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         // ✅ Seed-Datum ohne Uhrzeit
         DateTime effectiveSeedDate;
         if (_seedDate != null) {
-          effectiveSeedDate = DateTime(_seedDate!.year, _seedDate!.month, _seedDate!.day);
+          effectiveSeedDate = DateTime(
+            _seedDate!.year,
+            _seedDate!.month,
+            _seedDate!.day,
+          );
         } else {
           final now = DateTime.now();
           effectiveSeedDate = DateTime(now.year, now.month, now.day);
@@ -306,7 +328,10 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           if (quantity > 1 && availableBuckets != null) {
             // Automatische Zuweisung: Nimm nächsten freien Bucket
             assignedBucket = availableBuckets[i - 1];
-            AppLogger.debug('AddPlantScreen', 'Auto-assigning plant #$i to bucket $assignedBucket');
+            AppLogger.debug(
+              'AddPlantScreen',
+              'Auto-assigning plant #$i to bucket $assignedBucket',
+            );
           } else {
             // Single plant: Verwende gewählten Bucket
             assignedBucket = _selectedBucketNumber;
@@ -315,8 +340,12 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
 
         final plant = Plant(
           name: plantName,
-          strain: _strainController.text.isNotEmpty ? _strainController.text : null,
-          breeder: _breederController.text.isNotEmpty ? _breederController.text : null,
+          strain: _strainController.text.isNotEmpty
+              ? _strainController.text
+              : null,
+          breeder: _breederController.text.isNotEmpty
+              ? _breederController.text
+              : null,
           feminized: _genderType == GenderType.feminized,
           seedType: _seedType,
           medium: _medium,
@@ -331,14 +360,17 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           currentContainerSize: _containerSizeController.text.isNotEmpty
               ? double.tryParse(_containerSizeController.text)
               : null,
-          currentSystemSize: _medium == Medium.rdwc ? null : (
-            _systemSizeController.text.isNotEmpty
-                ? double.tryParse(_systemSizeController.text)
-                : null
-          ),
+          currentSystemSize: _medium == Medium.rdwc
+              ? null
+              : (_systemSizeController.text.isNotEmpty
+                    ? double.tryParse(_systemSizeController.text)
+                    : null),
         );
 
-        AppLogger.debug('AddPlantScreen', 'Plant #$i: ${plant.name}, bucket: $assignedBucket');
+        AppLogger.debug(
+          'AddPlantScreen',
+          'Plant #$i: ${plant.name}, bucket: $assignedBucket',
+        );
         await _plantRepo.save(plant);
       }
 
@@ -362,32 +394,32 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_t['add_plant_title']),  // ✅ i18n
+        title: Text(_t['add_plant_title']), // ✅ i18n
         backgroundColor: const Color(0xFF004225),
         foregroundColor: Colors.white,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
-        key: _formKey,
-        child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _buildBasicInfo(),
-              const SizedBox(height: 24),
-              _buildGeneticsInfo(),
-              const SizedBox(height: 24),
-              _buildGrowInfo(),
-              const SizedBox(height: 24),
-              _buildContainerInfo(),
-              const SizedBox(height: 24),
-              _buildDatePicker(),
-              const SizedBox(height: 24),
-              _buildSaveButton(),
-              const SizedBox(height: 16),
-            ]
-        ),
-      ),
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildBasicInfo(),
+                  const SizedBox(height: 24),
+                  _buildGeneticsInfo(),
+                  const SizedBox(height: 24),
+                  _buildGrowInfo(),
+                  const SizedBox(height: 24),
+                  _buildContainerInfo(),
+                  const SizedBox(height: 24),
+                  _buildDatePicker(),
+                  const SizedBox(height: 24),
+                  _buildSaveButton(),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
     );
   }
 
@@ -544,7 +576,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
               DropdownButtonFormField<int?>(
                 initialValue: _selectedGrowId,
                 decoration: InputDecoration(
-                  labelText: widget.preselectedGrowId != null ? _t['add_plant_grow_preselected'] : _t['add_plant_grow_optional'], // ✅ i18n
+                  labelText: widget.preselectedGrowId != null
+                      ? _t['add_plant_grow_preselected']
+                      : _t['add_plant_grow_optional'], // ✅ i18n
                   prefixIcon: const Icon(Icons.eco, color: Color(0xFF004225)),
                   border: const OutlineInputBorder(),
                   helperText: widget.preselectedGrowId != null
@@ -552,7 +586,10 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                       : 'Mehrere Pflanzen zu einem Grow zusammenfassen',
                 ),
                 items: [
-                  DropdownMenuItem(value: null, child: Text(_t['add_plant_no_grow'])), // ✅ i18n
+                  DropdownMenuItem(
+                    value: null,
+                    child: Text(_t['add_plant_no_grow']),
+                  ), // ✅ i18n
                   ..._grows.map((grow) {
                     return DropdownMenuItem(
                       value: grow.id,
@@ -592,11 +629,16 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 helperText: _t['add_plant_rdwc_helper'], // ✅ i18n
               ),
               items: [
-                DropdownMenuItem(value: null, child: Text(_t['add_plant_no_system'])), // ✅ i18n
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(_t['add_plant_no_system']),
+                ), // ✅ i18n
                 ..._rdwcSystems.map((system) {
                   return DropdownMenuItem(
                     value: system.id,
-                    child: Text('${system.name} (${system.bucketCount} Buckets)'),
+                    child: Text(
+                      '${system.name} (${system.bucketCount} Buckets)',
+                    ),
                   );
                 }),
               ],
@@ -631,7 +673,11 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                   (s) => s.id == _selectedRdwcSystemId,
                   orElse: () {
                     if (_rdwcSystems.isEmpty) {
-                      return RdwcSystem(name: 'Unknown', maxCapacity: 100, bucketCount: 1);
+                      return RdwcSystem(
+                        name: 'Unknown',
+                        maxCapacity: 100,
+                        bucketCount: 1,
+                      );
                     }
                     return _rdwcSystems.first;
                   },
@@ -654,7 +700,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     decoration: BoxDecoration(
                       color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.blue.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -662,7 +710,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            '${_t['add_plant_bucket_auto_distribution']}\n${_t['add_plant_bucket_auto_info'].replaceAll('{buckets}', freeBuckets.take(quantity).join(', '))}',  // ✅ i18n
+                            '${_t['add_plant_bucket_auto_distribution']}\n${_t['add_plant_bucket_auto_info'].replaceAll('{buckets}', freeBuckets.take(quantity).join(', '))}', // ✅ i18n
                             style: const TextStyle(fontSize: 13),
                           ),
                         ),
@@ -675,13 +723,21 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 return DropdownButtonFormField<int?>(
                   initialValue: _selectedBucketNumber,
                   decoration: InputDecoration(
-                    labelText: _t['add_plant_bucket_number'],  // ✅ i18n
+                    labelText: _t['add_plant_bucket_number'], // ✅ i18n
                     prefixIcon: const Icon(Icons.filter_list),
                     border: const OutlineInputBorder(),
-                    helperText: _t['add_plant_bucket_occupied'].replaceAll('{occupied}', '${_occupiedBuckets.length}').replaceAll('{total}', '${selectedSystem.bucketCount}'),  // ✅ i18n
+                    helperText: _t['add_plant_bucket_occupied']
+                        .replaceAll('{occupied}', '${_occupiedBuckets.length}')
+                        .replaceAll(
+                          '{total}',
+                          '${selectedSystem.bucketCount}',
+                        ), // ✅ i18n
                   ),
                   items: [
-                    DropdownMenuItem(value: null, child: Text(_t['add_plant_bucket_select'])), // ✅ i18n
+                    DropdownMenuItem(
+                      value: null,
+                      child: Text(_t['add_plant_bucket_select']),
+                    ), // ✅ i18n
                     ...List.generate(selectedSystem.bucketCount, (index) {
                       final bucketNum = index + 1;
                       final isOccupied = _occupiedBuckets.contains(bucketNum);
@@ -692,9 +748,12 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                       );
                     }).whereType<DropdownMenuItem<int?>>(),
                   ],
-                  onChanged: (value) => setState(() => _selectedBucketNumber = value),
+                  onChanged: (value) =>
+                      setState(() => _selectedBucketNumber = value),
                   validator: (value) {
-                    if (_medium == Medium.rdwc && _selectedRdwcSystemId != null && value == null) {
+                    if (_medium == Medium.rdwc &&
+                        _selectedRdwcSystemId != null &&
+                        value == null) {
                       return _t['add_plant_bucket_required']; // ✅ i18n
                     }
                     return null;
@@ -715,12 +774,12 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
               border: const OutlineInputBorder(),
             ),
             items: [
-              DropdownMenuItem(value: null, child: Text(_t['add_plant_no_room'])), // ✅ i18n
+              DropdownMenuItem(
+                value: null,
+                child: Text(_t['add_plant_no_room']),
+              ), // ✅ i18n
               ..._rooms.map((room) {
-                return DropdownMenuItem(
-                  value: room.id,
-                  child: Text(room.name),
-                );
+                return DropdownMenuItem(value: room.id, child: Text(room.name));
               }),
             ],
             onChanged: (value) => setState(() => _selectedRoomId = value),
@@ -745,7 +804,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                _t['add_plant_system_info_rdwc'],  // ✅ i18n
+                _t['add_plant_system_info_rdwc'], // ✅ i18n
                 style: TextStyle(fontSize: 13, color: Colors.grey[700]),
               ),
             ),
@@ -758,7 +817,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _isHydroSystem ? _t['add_plant_system_info'] : _t['add_plant_container_info'],  // ✅ i18n
+          _isHydroSystem
+              ? _t['add_plant_system_info']
+              : _t['add_plant_container_info'], // ✅ i18n
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -812,7 +873,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         if (item is SeedType) {
           displayName = (item as SeedType).displayName;
         } else if (item is GenderType) {
-          displayName = (item as GenderType).displayName;  // ✅ NEU
+          displayName = (item as GenderType).displayName; // ✅ NEU
         } else if (item is Medium) {
           displayName = (item as Medium).displayName;
         } else if (item is PlantPhase) {
@@ -820,10 +881,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         } else {
           displayName = item.toString();
         }
-        return DropdownMenuItem<T>(
-          value: item,
-          child: Text(displayName),
-        );
+        return DropdownMenuItem<T>(value: item, child: Text(displayName));
       }).toList(),
       onChanged: onChanged,
     );
@@ -877,7 +935,10 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
             ),
             if (_seedDate == null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
@@ -885,10 +946,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     Expanded(
                       child: Text(
                         _t['add_plant_seed_date_tip'], // ✅ i18n
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ),
                   ],

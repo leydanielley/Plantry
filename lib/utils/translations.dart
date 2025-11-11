@@ -35,7 +35,7 @@ class AppTranslations {
       'hardware': 'Hardware',
       'harvests': 'Ernten',
       'settings': 'Einstellungen',
-      
+
       // Dashboard
       'welcome': 'Willkommen',
       'overview': 'Übersicht',
@@ -46,19 +46,19 @@ class AppTranslations {
       'plants_by_phase': 'Pflanzen nach Phase',
       'quick_actions': 'Schnellzugriff',
       'recent_activity': 'Letzte Aktivitäten',
-      
+
       // Statistics
       'total': 'Gesamt',
       'active': 'Aktiv',
       'archived': 'Archiviert',
-      
+
       // Phases
       'seedling': 'Keimling',
       'veg': 'Wachstum',
       'bloom': 'Blüte',
       'harvest': 'Ernte',
       'phase_archived': 'Archiviert',
-      
+
       // Actions
       'add_plant': 'Pflanze hinzufügen',
       'add_grow': 'Anbau hinzufügen',
@@ -195,7 +195,8 @@ class AppTranslations {
       'export_success_desc': 'Backup wurde im Download-Ordner gespeichert.',
       'export_error': 'Export fehlgeschlagen',
       'import_confirm': 'Backup importieren?',
-      'import_confirm_desc': 'ACHTUNG: Alle aktuellen Daten werden gelöscht und durch das Backup ersetzt!',
+      'import_confirm_desc':
+          'ACHTUNG: Alle aktuellen Daten werden gelöscht und durch das Backup ersetzt!',
       'import_success': 'Import erfolgreich! Alle Daten wiederhergestellt.',
       'import_error': 'Import fehlgeschlagen',
       'backup_info': 'Backup-Informationen',
@@ -204,7 +205,7 @@ class AppTranslations {
       'photos': 'Fotos',
       'close': 'Schließen',
       'import': 'Importieren',
-      
+
       // Common
       'name': 'Name',
       'description': 'Beschreibung',
@@ -234,7 +235,8 @@ class AppTranslations {
       'recipe_deleted': 'Rezept gelöscht',
       'error_deleting_recipe': 'Fehler beim Löschen',
       'no_recipes_yet': 'Noch keine Rezepte',
-      'create_first_recipe': 'Erstelle dein erstes Rezept, um Dünger-Kombinationen zu speichern',
+      'create_first_recipe':
+          'Erstelle dein erstes Rezept, um Dünger-Kombinationen zu speichern',
       'recipe_name': 'Rezeptname',
       'recipe_name_required': 'Name eingeben',
       'recipe_description_hint': 'z.B. Blüte Woche 3',
@@ -291,7 +293,8 @@ class AppTranslations {
 
       // v0.9.1: Top-Up Calculator
       'topup_calculator': 'Auffüll-Rechner',
-      'topup_calculator_description': 'Berechne wie viel Nährlösung du hinzufügen musst, um dein System aufzufüllen und den Ziel-PPM zu erreichen.',
+      'topup_calculator_description':
+          'Berechne wie viel Nährlösung du hinzufügen musst, um dein System aufzufüllen und den Ziel-PPM zu erreichen.',
       'system_capacity': 'Systemkapazität',
       'current_status': 'Aktueller Status',
       'current_volume': 'Aktuelles Volumen',
@@ -314,12 +317,17 @@ class AppTranslations {
       'required_field': 'Pflichtfeld',
       'error_volume_exceeds_capacity': 'Volumen überschreitet Systemkapazität',
       'error_system_full': 'System ist bereits voll',
-      'warning_dilution_needed': 'Ziel-PPM ist niedriger als aktuell. Verdünnung statt Auffüllung erforderlich.',
-      'warning_high_ppm': 'Hohe PPM-Konzentration! Erwäge schrittweises Hinzufügen.',
-      'warning_extreme_ppm': 'Sehr hohe PPM-Konzentration! Erwäge mehrere kleinere Schritte.',
+      'warning_dilution_needed':
+          'Ziel-PPM ist niedriger als aktuell. Verdünnung statt Auffüllung erforderlich.',
+      'warning_high_ppm':
+          'Hohe PPM-Konzentration! Erwäge schrittweises Hinzufügen.',
+      'warning_extreme_ppm':
+          'Sehr hohe PPM-Konzentration! Erwäge mehrere kleinere Schritte.',
       'warning_recipe_no_ec': 'Rezept hat keinen Ziel-EC/PPM definiert',
-      'warning_moderate_scaling': 'Rezept wird um {factor}x skaliert. Überprüfe Dosierung!',
-      'warning_high_scaling': 'GEFAHR: Rezept wird um {factor}x skaliert! Risiko von Überdüngung!',
+      'warning_moderate_scaling':
+          'Rezept wird um {factor}x skaliert. Überprüfe Dosierung!',
+      'warning_high_scaling':
+          'GEFAHR: Rezept wird um {factor}x skaliert! Risiko von Überdüngung!',
       'recipe_scaled_by': 'Rezept skaliert um',
       'original_recipe_target': 'Original Rezept Ziel',
       'scaled_to': 'Skaliert auf',
@@ -331,7 +339,8 @@ class AppTranslations {
 
       // Messages
       'delete_confirm': 'Wirklich löschen?',
-      'delete_plant_confirm': 'Pflanze wirklich löschen! Alle Einträge gehen verloren!',
+      'delete_plant_confirm':
+          'Pflanze wirklich löschen! Alle Einträge gehen verloren!',
       'deleted_success': 'Gelöscht!',
       'saved_success': 'Gespeichert!',
       'unexpected_error': 'Unerwarteter Fehler',
@@ -339,43 +348,44 @@ class AppTranslations {
       // Fertilizer Delete Messages
       'cannot_delete': 'Kann nicht gelöscht werden',
       'fertilizer_in_use_message': 'Dieser Dünger wird verwendet in:',
-      'fertilizer_remove_first': 'Entferne ihn zuerst aus allen Rezepten und Logs.',
+      'fertilizer_remove_first':
+          'Entferne ihn zuerst aus allen Rezepten und Logs.',
       'plant_logs': 'Pflanzen-Logs',
-      
+
       // Empty States - Plants
       'no_plants_available': 'Keine Pflanzen vorhanden',
       'create_first_plant': 'Erstelle deine erste Pflanze!',
-      
+
       // Empty States - Grows
       'no_grows': 'Keine Anbauten',
       'no_archived_grows': 'Keine archivierten Anbauten',
       'create_first_grow': 'Erstelle deinen ersten Anbau!',
       'archive_grow_to_see': 'Archiviere einen Anbau um ihn hier zu sehen',
-      
+
       // Empty States - Rooms
       'no_rooms': 'Keine Räume',
       'add_first_room': 'Füge deinen ersten Anbau-Raum hinzu!',
-      
+
       // Empty States - Fertilizers
       'no_fertilizers': 'Keine Dünger',
       'add_first_fertilizer': 'Füge deinen ersten Dünger hinzu!',
-      
+
       // Empty States - Hardware
       'no_hardware': 'Keine Hardware erfasst',
       'add_first_hardware': 'Füge die erste Hardware hinzu!',
-      
+
       // Empty States - Harvests
       'no_harvests_yet': 'Noch keine Ernten',
       'no_harvests_found': 'Keine Ernten gefunden',
       'record_first_harvest': 'Erfasse deine erste Ernte!',
       'no_harvests_filter': 'Keine Ernten mit diesem Filter',
-      
+
       // Harvest Filters
       'all': 'Alle',
       'in_drying': 'In Trocknung',
       'in_curing': 'In Reifung',
       'completed': 'Abgeschlossen',
-      
+
       // Actions (extended)
       'archive': 'Archivieren',
       'unarchive': 'Wiederherstellen',
@@ -385,19 +395,21 @@ class AppTranslations {
       'hide_inactive': 'Inaktive ausblenden',
       'activate': 'Aktivieren',
       'deactivate': 'Deaktivieren',
-      
+
       // Confirms
       'attention': 'Achtung!',
       'delete_grow_title': 'Anbau löschen?',
-      'delete_grow_with_plants': 'Dieser Anbau enthält noch {count} Pflanze(n). Die Pflanzen werden vom Anbau getrennt, aber nicht gelöscht.\n\nFortfahren?',
+      'delete_grow_with_plants':
+          'Dieser Anbau enthält noch {count} Pflanze(n). Die Pflanzen werden vom Anbau getrennt, aber nicht gelöscht.\n\nFortfahren?',
       'delete_room_title': 'Raum löschen?',
-      'delete_room_with_plants': 'In "{name}" befinden sich noch {count} Pflanze(n). Entferne zuerst alle Pflanzen oder weise sie einem anderen Raum zu.',
+      'delete_room_with_plants':
+          'In "{name}" befinden sich noch {count} Pflanze(n). Entferne zuerst alle Pflanzen oder weise sie einem anderen Raum zu.',
       'delete_fertilizer_title': 'Dünger löschen?',
       'delete_hardware_title': 'Hardware löschen?',
       'room_cannot_be_deleted': 'Raum kann nicht gelöscht werden',
       'yes_delete': 'Ja, löschen',
       'ok': 'OK',
-      
+
       // Stats / Info
       'day_short': 'Tag',
       'plants_short': 'Pflanze(n)',
@@ -418,7 +430,8 @@ class AppTranslations {
       'reset_database': 'Alle Daten löschen',
       'reset_database_desc': 'Löscht ALLE Daten (Backup wird erstellt)',
       'reset_confirm_title': 'Alle Daten löschen?',
-      'reset_confirm_message': 'ACHTUNG: Alle Daten werden PERMANENT gelöscht!\n\nVorher wird automatisch ein Backup auf deinem Gerät gespeichert.\n\nFortfahren?',
+      'reset_confirm_message':
+          'ACHTUNG: Alle Daten werden PERMANENT gelöscht!\n\nVorher wird automatisch ein Backup auf deinem Gerät gespeichert.\n\nFortfahren?',
       'reset_success': 'Datenbank zurückgesetzt',
       'reset_success_desc': 'Backup erstellt. Alle Daten gelöscht.',
       'reset_error': 'Zurücksetzen fehlgeschlagen',
@@ -428,7 +441,8 @@ class AppTranslations {
       // Battery Optimization Dialog
       'battery_dialog_title': 'App-Stabilität verbessern',
       'battery_dialog_crashes': 'Die App wurde {count} mal unerwartet beendet.',
-      'battery_dialog_reason': 'Dies kann durch aggressive Akku-Optimierung verursacht werden.',
+      'battery_dialog_reason':
+          'Dies kann durch aggressive Akku-Optimierung verursacht werden.',
       'battery_dialog_recommendations': 'Empfohlene Einstellungen:',
       'battery_dialog_understood': 'Verstanden',
 
@@ -438,9 +452,11 @@ class AppTranslations {
       'error_invalid_ec': 'Ungültiger EC-Wert',
       'error_ec_range': 'EC muss zwischen 0 und 10.0 mS/cm liegen',
       'error_invalid_temperature': 'Ungültige Temperatur',
-      'error_temperature_range': 'Temperatur muss zwischen -50°C und 50°C liegen',
+      'error_temperature_range':
+          'Temperatur muss zwischen -50°C und 50°C liegen',
       'error_invalid_humidity': 'Ungültige Luftfeuchtigkeit',
-      'error_humidity_range': 'Luftfeuchtigkeit muss zwischen 0% und 100% liegen',
+      'error_humidity_range':
+          'Luftfeuchtigkeit muss zwischen 0% und 100% liegen',
       'error_invalid_water_amount': 'Ungültige Wassermenge',
       'error_water_amount_positive': 'Wassermenge muss positiv sein',
       'error_invalid_email': 'Ungültige E-Mail-Adresse',
@@ -453,10 +469,13 @@ class AppTranslations {
       'error_field_required': 'ist erforderlich',
 
       // ✅ AUDIT FIX: i18n extraction - Log Date Validation
-      'error_log_before_seed': 'Log-Datum liegt {days} Tag(e) vor dem Pflanz-Datum ({date})',
-      'error_log_before_phase': 'Log-Datum liegt {days} Tag(e) vor dem Phasen-Start ({date})',
+      'error_log_before_seed':
+          'Log-Datum liegt {days} Tag(e) vor dem Pflanz-Datum ({date})',
+      'error_log_before_phase':
+          'Log-Datum liegt {days} Tag(e) vor dem Phasen-Start ({date})',
       'error_log_future': 'Log-Datum kann nicht in der Zukunft liegen',
-      'error_log_before_seed_short': 'Log-Datum kann nicht vor dem Pflanz-Datum liegen',
+      'error_log_before_seed_short':
+          'Log-Datum kann nicht vor dem Pflanz-Datum liegen',
       'warning_log_old': 'Achtung: Log liegt {days} Tage nach Pflanz-Datum',
 
       // Photo Gallery
@@ -468,8 +487,10 @@ class AppTranslations {
       'hint_drying_method': 'z.B. Hängend, Netz, Box',
       'hint_drainage_material': 'z.B. Blähton, Perlite, Kies',
       'hint_fertilizer_dosage': 'Zusätzliche Infos, Dosierung, etc...',
-      'hint_hardware_notes': 'Zusätzliche Informationen, Wartungshinweise, etc...',
-      'hint_harvest_observations': 'Zusätzliche Beobachtungen, Besonderheiten...',
+      'hint_hardware_notes':
+          'Zusätzliche Informationen, Wartungshinweise, etc...',
+      'hint_harvest_observations':
+          'Zusätzliche Beobachtungen, Besonderheiten...',
 
       // ✅ AUDIT FIX: i18n extraction - Add Log Screen
       'add_log_title': 'Log für {plant}',
@@ -484,16 +505,19 @@ class AppTranslations {
       'phase_description_harvest': 'Ernte',
       'phase_description_archived': 'Archiviert',
       'bulk_mode_title': 'Massen-Log Modus',
-      'bulk_mode_info': 'Dieser Log wird für {count} Pflanzen gleichzeitig gespeichert.',
+      'bulk_mode_info':
+          'Dieser Log wird für {count} Pflanzen gleichzeitig gespeichert.',
       'total_day': 'Gesamt: Tag',
-      'backlog_info': 'Du kannst auch alte Logs nachträglich erstellen. Ändere einfach das Datum - der Tag wird automatisch berechnet!',
+      'backlog_info':
+          'Du kannst auch alte Logs nachträglich erstellen. Ändere einfach das Datum - der Tag wird automatisch berechnet!',
       'action': 'Aktion',
       'new_phase': 'Neue Phase',
       'change_phase': 'Phase ändern',
       'date_time': 'Datum & Uhrzeit',
       'add_photo': 'Hinzufügen',
       'no_photos_added': 'Keine Fotos hinzugefügt',
-      'tap_to_add_photos': 'Tippe auf "Hinzufügen" um Fotos zu diesem Log hinzuzufügen',
+      'tap_to_add_photos':
+          'Tippe auf "Hinzufügen" um Fotos zu diesem Log hinzuzufügen',
       'water': 'Wasser',
       'amount_liter': 'Menge (Liter)',
       'no_fertilizers_selected': 'Keine Dünger ausgewählt',
@@ -533,7 +557,8 @@ class AppTranslations {
       'edit_log_title': 'Log bearbeiten - {plant}',
       'edit_log_day_info': 'Tag {day} bearbeiten',
       'edit_log_created_at': 'Erstellt: {date}',
-      'edit_log_invalid_file_type': 'Ungültiger Dateityp. Nur Bilder (.jpg, .jpeg, .png, .webp) sind erlaubt.',
+      'edit_log_invalid_file_type':
+          'Ungültiger Dateityp. Nur Bilder (.jpg, .jpeg, .png, .webp) sind erlaubt.',
       'edit_log_select_new_phase': 'Neue Phase wählen',
       'edit_log_photos_count': 'Fotos ({count})',
       'edit_log_existing_photos': 'Vorhandene Fotos:',
@@ -558,7 +583,8 @@ class AppTranslations {
       'edit_harvest_tab_quality': 'Qualität',
       'edit_harvest_tab_rating': 'Bewertung',
       'edit_harvest_discard_title': 'Änderungen verwerfen?',
-      'edit_harvest_discard_message': 'Möchtest du wirklich abbrechen? Alle nicht gespeicherten Änderungen gehen verloren.',
+      'edit_harvest_discard_message':
+          'Möchtest du wirklich abbrechen? Alle nicht gespeicherten Änderungen gehen verloren.',
       'edit_harvest_continue_editing': 'Weiter bearbeiten',
       'edit_harvest_discard': 'Verwerfen',
       'edit_harvest_basic_header': 'Grund-Daten',
@@ -570,9 +596,11 @@ class AppTranslations {
       'edit_harvest_wet_weight_helper': 'Gewicht direkt nach der Ernte',
       'edit_harvest_dry_weight_label': 'Trockengewicht',
       'edit_harvest_dry_weight_hint': 'z.B. 100',
-      'edit_harvest_dry_weight_helper': 'Endgültiges Gewicht nach der Trocknung',
+      'edit_harvest_dry_weight_helper':
+          'Endgültiges Gewicht nach der Trocknung',
       'edit_harvest_weight_loss': 'Gewichtsverlust',
-      'edit_harvest_water_evaporated': 'Wasser, das während der Trocknung verdunstet',
+      'edit_harvest_water_evaporated':
+          'Wasser, das während der Trocknung verdunstet',
       'edit_harvest_drying_header': 'Trocknung',
       'edit_harvest_drying_description': 'Tracking der Trocknungsphase',
       'edit_harvest_drying_method_label': 'Trocknungs-Methode',
@@ -598,7 +626,8 @@ class AppTranslations {
       'edit_harvest_cbd_helper': 'Cannabidiol',
       'edit_harvest_terpene_label': 'Terpene',
       'edit_harvest_terpene_hint': 'z.B. Caryophyllene, Limonene, Myrcene...',
-      'edit_harvest_quality_info': 'Laboranalysen sind optional, können aber wertvolle Informationen über die Qualität deiner Ernte liefern.',
+      'edit_harvest_quality_info':
+          'Laboranalysen sind optional, können aber wertvolle Informationen über die Qualität deiner Ernte liefern.',
       'edit_harvest_rating_header': 'Bewertung & Notizen',
       'edit_harvest_rating_description': 'Deine persönliche Einschätzung',
       'edit_harvest_overall_rating': 'Gesamt-Bewertung',
@@ -629,7 +658,8 @@ class AppTranslations {
       'add_hardware_brand_required': 'Bitte Marke eingeben',
       'add_hardware_model_label': 'Modell',
       'add_hardware_model_hint': 'z.B. TS1000',
-      'add_hardware_name_info': 'Der Name wird automatisch generiert: Marke + Modell',
+      'add_hardware_name_info':
+          'Der Name wird automatisch generiert: Marke + Modell',
       'add_hardware_technical_data': 'Technische Daten',
       'add_hardware_quantity': 'Anzahl',
       'add_hardware_quantity_unit': 'Stk',
@@ -665,21 +695,25 @@ class AppTranslations {
       'add_hardware_material_hint': 'z.B. Kunststoff, Edelstahl',
       'add_hardware_chiller': 'Mit Chiller',
       'add_hardware_air_pump': 'Mit Luftpumpe',
-      'add_hardware_meter_info': 'Messgeräte benötigen keine speziellen technischen Daten',
+      'add_hardware_meter_info':
+          'Messgeräte benötigen keine speziellen technischen Daten',
       'add_hardware_throughput': 'Durchsatz (m³/h) *',
       'add_hardware_diameter_hint': 'z.B. 150mm',
       'add_hardware_length': 'Länge',
       'add_hardware_controller_type': 'Controller-Typ',
-      'add_hardware_controller_hint': 'z.B. Klima-Controller, Bewässerungs-Controller',
+      'add_hardware_controller_hint':
+          'z.B. Klima-Controller, Bewässerungs-Controller',
       'add_hardware_output_count': 'Anzahl Ausgänge',
       'add_hardware_functions': 'Funktionen',
       'add_hardware_functions_hint': 'z.B. Temp/Feuchte/Timer',
-      'add_hardware_other_info': 'Nutze das Feld "Zusätzliche Spezifikationen" für Details',
+      'add_hardware_other_info':
+          'Nutze das Feld "Zusätzliche Spezifikationen" für Details',
       'add_hardware_purchase_info': 'Kauf-Informationen (optional)',
       'add_hardware_purchase_date': 'Kaufdatum',
       'add_hardware_not_set': 'Nicht gesetzt',
       'add_hardware_purchase_price': 'Kaufpreis',
-      'add_hardware_notes_hint': 'Zusätzliche Informationen, Wartungshinweise, etc...',
+      'add_hardware_notes_hint':
+          'Zusätzliche Informationen, Wartungshinweise, etc...',
       'add_hardware_add_button': 'Hardware hinzufügen',
 
       // ✅ AUDIT FIX: i18n extraction - Add Plant Screen
@@ -704,7 +738,8 @@ class AppTranslations {
       'add_plant_grow_optional': 'Grow (optional)',
       'add_plant_grow_preselected': 'Grow (vorgegeben)',
       'add_plant_grow_helper': 'Mehrere Pflanzen zu einem Grow zusammenfassen',
-      'add_plant_grow_helper_preselected': 'Diese Pflanze wird diesem Grow zugeordnet',
+      'add_plant_grow_helper_preselected':
+          'Diese Pflanze wird diesem Grow zugeordnet',
       'add_plant_no_grow': 'Kein Grow',
       'add_plant_create_grow': 'Neuen Grow erstellen',
       'add_plant_create_grow_title': 'Neuen Grow erstellen',
@@ -721,42 +756,51 @@ class AppTranslations {
       'add_plant_bucket_occupied': '{occupied}/{total} Buckets belegt',
       'add_plant_bucket_auto_distribution': 'Automatische Verteilung:',
       'add_plant_bucket_auto_info': 'Buckets {buckets} werden verwendet',
-      'add_plant_bucket_insufficient': 'Nur {available} freie Buckets verfügbar, aber {requested} Plants gewählt!',
+      'add_plant_bucket_insufficient':
+          'Nur {available} freie Buckets verfügbar, aber {requested} Plants gewählt!',
       'add_plant_room_optional': 'Raum (optional)',
       'add_plant_no_room': 'Kein Raum',
-      'add_plant_system_info_rdwc': 'System-Größe wird vom RDWC System übernommen',
+      'add_plant_system_info_rdwc':
+          'System-Größe wird vom RDWC System übernommen',
       'add_plant_system_info': 'System Info (optional)',
       'add_plant_container_info': 'Container Info (optional)',
       'add_plant_system_size': 'System Größe (Liter)',
       'add_plant_system_size_hint': 'z.B. 100',
-      'add_plant_system_size_helper': 'Gesamtgröße des Hydro-Systems (DWC/Hydro)',
+      'add_plant_system_size_helper':
+          'Gesamtgröße des Hydro-Systems (DWC/Hydro)',
       'add_plant_container_size': 'Topfgröße (Liter)',
       'add_plant_container_size_hint': 'z.B. 11',
       'add_plant_container_size_helper': 'Aktueller Topf',
       'add_plant_seed_date': 'Seed-Datum',
-      'add_plant_seed_date_not_set': 'Nicht gesetzt (wird auf Erstellungszeitpunkt gesetzt)',
+      'add_plant_seed_date_not_set':
+          'Nicht gesetzt (wird auf Erstellungszeitpunkt gesetzt)',
       'add_plant_seed_date_reset': 'Datum zurücksetzen',
-      'add_plant_seed_date_tip': 'Tipp: Setze ein Datum für genaueres Day-Tracking',
+      'add_plant_seed_date_tip':
+          'Tipp: Setze ein Datum für genaueres Day-Tracking',
       'add_plant_create_button': 'Pflanze(n) erstellen',
 
       // ✅ AUDIT FIX: i18n extraction - Plant Detail Screen
       'plant_detail_photo_gallery': 'Foto-Galerie',
       'plant_detail_create_log_title': 'Log-Eintrag erstellen',
-      'plant_detail_grow_plant_count': 'Diese Pflanze gehört zu einem Grow mit {count} Pflanzen.',
+      'plant_detail_grow_plant_count':
+          'Diese Pflanze gehört zu einem Grow mit {count} Pflanzen.',
       'plant_detail_what_to_log': 'Was möchtest du loggen?',
       'plant_detail_only_this_plant': 'Nur diese Pflanze',
       'plant_detail_all_plants': 'Alle {count} Pflanzen',
       'plant_detail_delete_log_title': 'Log löschen?',
-      'plant_detail_delete_log_confirm': 'Möchtest du diesen Log-Eintrag wirklich löschen?',
+      'plant_detail_delete_log_confirm':
+          'Möchtest du diesen Log-Eintrag wirklich löschen?',
       'plant_detail_delete_photo_title': 'Foto löschen?',
-      'plant_detail_delete_photo_confirm': 'Möchtest du dieses Foto wirklich löschen?',
+      'plant_detail_delete_photo_confirm':
+          'Möchtest du dieses Foto wirklich löschen?',
       'plant_detail_harvest': 'Ernte',
       'plant_detail_log_entry': 'Log Entry',
       'plant_detail_unknown_strain': 'Unknown Strain',
       'plant_detail_unknown_breeder': 'Unknown Breeder',
       'plant_detail_day': 'Tag {day}',
       'plant_detail_status': 'Status: {drying} / {curing}',
-      'plant_detail_harvest_id_missing': 'Ernte-ID fehlt - bitte Support kontaktieren',
+      'plant_detail_harvest_id_missing':
+          'Ernte-ID fehlt - bitte Support kontaktieren',
       'plant_detail_no_logs': 'Noch keine Logs',
       'plant_detail_add_first_log': 'Füge den ersten Log-Eintrag hinzu!',
       'plant_detail_total_day': 'Gesamt: Tag {day}',
@@ -785,7 +829,8 @@ class AppTranslations {
       'add_room_height_hint': 'z.B. 200',
       'add_room_save_button': 'Raum speichern',
       'add_room_hardware_dialog_title': 'Hardware hinzufügen?',
-      'add_room_hardware_dialog_message': 'Möchtest du jetzt Hardware für "{name}" hinzufügen?\n\nDu kannst z.B. Lampen, Lüfter oder andere Geräte erfassen.',
+      'add_room_hardware_dialog_message':
+          'Möchtest du jetzt Hardware für "{name}" hinzufügen?\n\nDu kannst z.B. Lampen, Lüfter oder andere Geräte erfassen.',
       'add_room_hardware_later': 'Später',
       'add_room_hardware_now': 'Jetzt hinzufügen',
       'add_room_hardware_complete': 'Hardware-Eingabe abgeschlossen! 🔧',
@@ -819,7 +864,8 @@ class AppTranslations {
       'edit_plant_seed_date_label': 'Seed-Datum',
       'edit_plant_not_set': 'Nicht gesetzt',
       'edit_plant_phases_section': 'Phasen-Daten (optional)',
-      'edit_plant_phases_description': 'Setze die Startdaten für jede Phase manuell. Dies ermöglicht retroaktive Korrekturen.',
+      'edit_plant_phases_description':
+          'Setze die Startdaten für jede Phase manuell. Dies ermöglicht retroaktive Korrekturen.',
       'edit_plant_veg_start_label': 'Veg-Start',
       'edit_plant_bloom_start_label': 'Bloom-Start',
       'edit_plant_harvest_start_label': 'Harvest-Start',
@@ -827,32 +873,46 @@ class AppTranslations {
       'edit_plant_delete_button': 'Pflanze löschen',
 
       // Validation errors
-      'edit_plant_error_veg_before_seed': 'Wachstumsdatum kann nicht vor dem Keimdatum liegen!',
-      'edit_plant_error_bloom_before_veg': 'Blütedatum kann nicht vor dem Wachstumsdatum liegen!',
-      'edit_plant_error_harvest_before_bloom': 'Erntedatum kann nicht vor dem Blütedatum liegen!',
-      'edit_plant_error_bloom_before_seed': 'Blütedatum kann nicht vor dem Keimdatum liegen!',
-      'edit_plant_error_harvest_before_veg': 'Erntedatum kann nicht vor dem Wachstumsdatum liegen!',
+      'edit_plant_error_veg_before_seed':
+          'Wachstumsdatum kann nicht vor dem Keimdatum liegen!',
+      'edit_plant_error_bloom_before_veg':
+          'Blütedatum kann nicht vor dem Wachstumsdatum liegen!',
+      'edit_plant_error_harvest_before_bloom':
+          'Erntedatum kann nicht vor dem Blütedatum liegen!',
+      'edit_plant_error_bloom_before_seed':
+          'Blütedatum kann nicht vor dem Keimdatum liegen!',
+      'edit_plant_error_harvest_before_veg':
+          'Erntedatum kann nicht vor dem Wachstumsdatum liegen!',
 
       // Phase change warning
       'edit_plant_warning_title': '⚠️ Warnung',
-      'edit_plant_warning_from_harvest': 'Du möchtest von Harvest zurück zu {phase} wechseln. Dies ist ungewöhnlich. Fortfahren?',
-      'edit_plant_warning_reactivate': 'Pflanze reaktivieren auf {phase}. Fortfahren?',
+      'edit_plant_warning_from_harvest':
+          'Du möchtest von Harvest zurück zu {phase} wechseln. Dies ist ungewöhnlich. Fortfahren?',
+      'edit_plant_warning_reactivate':
+          'Pflanze reaktivieren auf {phase}. Fortfahren?',
       'edit_plant_proceed_button': 'Fortfahren',
 
       // Seed date change warning
       'edit_plant_seed_warning_title': 'Achtung: Logs werden gelöscht!',
-      'edit_plant_seed_warning_total': 'Diese Pflanze hat {count} Log-Einträge.',
+      'edit_plant_seed_warning_total':
+          'Diese Pflanze hat {count} Log-Einträge.',
       'edit_plant_seed_warning_deleted': '{count} Logs werden GELÖSCHT!',
-      'edit_plant_seed_warning_before_date': 'Diese Logs liegen vor dem neuen Seed-Datum und werden permanent entfernt.',
-      'edit_plant_seed_warning_what_happens': 'Was passiert beim Ändern des Seed-Datums:',
-      'edit_plant_seed_warning_recalculate': '✅ Alle Tagnummern (day_number) werden neu berechnet',
-      'edit_plant_seed_warning_delete_logs': '❌ {count} Logs werden permanent gelöscht',
-      'edit_plant_seed_warning_irreversible': 'Diese Aktion kann NICHT rückgängig gemacht werden!',
+      'edit_plant_seed_warning_before_date':
+          'Diese Logs liegen vor dem neuen Seed-Datum und werden permanent entfernt.',
+      'edit_plant_seed_warning_what_happens':
+          'Was passiert beim Ändern des Seed-Datums:',
+      'edit_plant_seed_warning_recalculate':
+          '✅ Alle Tagnummern (day_number) werden neu berechnet',
+      'edit_plant_seed_warning_delete_logs':
+          '❌ {count} Logs werden permanent gelöscht',
+      'edit_plant_seed_warning_irreversible':
+          'Diese Aktion kann NICHT rückgängig gemacht werden!',
       'edit_plant_seed_change_confirm': 'Ja, Seed-Datum ändern',
 
       // Delete confirmation
       'edit_plant_delete_title': 'Pflanze löschen?',
-      'edit_plant_delete_message': 'Möchtest du "{name}" wirklich löschen? Alle Logs und Daten gehen verloren.\n\nDiese Aktion kann nicht rückgängig gemacht werden!',
+      'edit_plant_delete_message':
+          'Möchtest du "{name}" wirklich löschen? Alle Logs und Daten gehen verloren.\n\nDiese Aktion kann nicht rückgängig gemacht werden!',
     },
 
     // ENGLISH
@@ -867,7 +927,7 @@ class AppTranslations {
       'hardware': 'Hardware',
       'harvests': 'Harvests',
       'settings': 'Settings',
-      
+
       // Dashboard
       'welcome': 'Welcome',
       'overview': 'Overview',
@@ -878,19 +938,19 @@ class AppTranslations {
       'plants_by_phase': 'Plants by Phase',
       'quick_actions': 'Quick Actions',
       'recent_activity': 'Recent Activity',
-      
+
       // Statistics
       'total': 'Total',
       'active': 'Active',
       'archived': 'Archived',
-      
+
       // Phases
       'seedling': 'Seedling',
       'veg': 'Vegetative',
       'bloom': 'Bloom',
       'harvest': 'Harvest',
       'phase_archived': 'Archived',
-      
+
       // Actions
       'add_plant': 'Add Plant',
       'add_grow': 'Add Grow',
@@ -1024,10 +1084,12 @@ class AppTranslations {
       'import_data': 'Import Data',
       'import_data_desc': 'Restore data from backup',
       'export_success': 'Export successful!',
-      'export_success_desc': 'Backup has been created and saved to Downloads folder.',
+      'export_success_desc':
+          'Backup has been created and saved to Downloads folder.',
       'export_error': 'Export failed',
       'import_confirm': 'Import backup?',
-      'import_confirm_desc': 'WARNING: All current data will be deleted and replaced with the backup!',
+      'import_confirm_desc':
+          'WARNING: All current data will be deleted and replaced with the backup!',
       'import_success': 'Import successful! All data has been restored.',
       'import_error': 'Import failed',
       'backup_info': 'Backup Information',
@@ -1036,7 +1098,7 @@ class AppTranslations {
       'photos': 'Photos',
       'close': 'Close',
       'import': 'Import',
-      
+
       // Common
       'name': 'Name',
       'description': 'Description',
@@ -1066,11 +1128,13 @@ class AppTranslations {
       'recipe_deleted': 'Recipe deleted',
       'error_deleting_recipe': 'Error deleting recipe',
       'no_recipes_yet': 'No recipes yet',
-      'create_first_recipe': 'Create your first recipe to save fertilizer combinations',
+      'create_first_recipe':
+          'Create your first recipe to save fertilizer combinations',
       'recipe_name': 'Recipe Name',
       'recipe_name_required': 'Please enter name',
       'recipe_description_hint': 'e.g. Use in bloom week 3',
-      'recipe_info_hint': 'Recipes save fertilizer combinations for quick loading',
+      'recipe_info_hint':
+          'Recipes save fertilizer combinations for quick loading',
       'target_values': 'Target Values',
       'target_ec': 'Target EC',
       'target_ph': 'Target pH',
@@ -1123,7 +1187,8 @@ class AppTranslations {
 
       // v0.9.1: Top-Up Calculator
       'topup_calculator': 'Top-Up Calculator',
-      'topup_calculator_description': 'Calculate how much nutrient solution you need to add to refill your system and reach target PPM.',
+      'topup_calculator_description':
+          'Calculate how much nutrient solution you need to add to refill your system and reach target PPM.',
       'system_capacity': 'System Capacity',
       'current_status': 'Current Status',
       'current_volume': 'Current Volume',
@@ -1146,12 +1211,15 @@ class AppTranslations {
       'required_field': 'Required field',
       'error_volume_exceeds_capacity': 'Volume exceeds system capacity',
       'error_system_full': 'System is already full',
-      'warning_dilution_needed': 'Target PPM is lower than current. Dilution needed instead of top-up.',
+      'warning_dilution_needed':
+          'Target PPM is lower than current. Dilution needed instead of top-up.',
       'warning_high_ppm': 'High PPM concentration! Consider adding in steps.',
-      'warning_extreme_ppm': 'Very high PPM concentration! Consider multiple smaller steps.',
+      'warning_extreme_ppm':
+          'Very high PPM concentration! Consider multiple smaller steps.',
       'warning_recipe_no_ec': 'Recipe has no target EC/PPM defined',
       'warning_moderate_scaling': 'Recipe scaled by {factor}x. Check dosage!',
-      'warning_high_scaling': 'DANGER: Recipe scaled by {factor}x! Risk of nutrient burn!',
+      'warning_high_scaling':
+          'DANGER: Recipe scaled by {factor}x! Risk of nutrient burn!',
       'recipe_scaled_by': 'Recipe scaled by',
       'original_recipe_target': 'Original Recipe Target',
       'scaled_to': 'Scaled to',
@@ -1163,7 +1231,8 @@ class AppTranslations {
 
       // Messages
       'delete_confirm': 'Really delete?',
-      'delete_plant_confirm': 'Do you really want to delete this plant? All logs will be deleted too!',
+      'delete_plant_confirm':
+          'Do you really want to delete this plant? All logs will be deleted too!',
       'deleted_success': 'Successfully deleted!',
       'saved_success': 'Successfully saved!',
       'unexpected_error': 'Unexpected error',
@@ -1173,41 +1242,41 @@ class AppTranslations {
       'fertilizer_in_use_message': 'This fertilizer is used in:',
       'fertilizer_remove_first': 'Remove it from all recipes and logs first.',
       'plant_logs': 'Plant Logs',
-      
+
       // Empty States - Plants
       'no_plants_available': 'No plants available',
       'create_first_plant': 'Create your first plant!',
-      
+
       // Empty States - Grows
       'no_grows': 'No grows',
       'no_archived_grows': 'No archived grows',
       'create_first_grow': 'Create your first grow!',
       'archive_grow_to_see': 'Archive a grow to see it here',
-      
+
       // Empty States - Rooms
       'no_rooms': 'No rooms',
       'add_first_room': 'Add your first grow room!',
-      
+
       // Empty States - Fertilizers
       'no_fertilizers': 'No fertilizers',
       'add_first_fertilizer': 'Add your first fertilizer!',
-      
+
       // Empty States - Hardware
       'no_hardware': 'No hardware recorded',
       'add_first_hardware': 'Add your first hardware!',
-      
+
       // Empty States - Harvests
       'no_harvests_yet': 'No harvests yet',
       'no_harvests_found': 'No harvests found',
       'record_first_harvest': 'Record your first harvest!',
       'no_harvests_filter': 'No harvests with this filter',
-      
+
       // Harvest Filters
       'all': 'All',
       'in_drying': 'Drying',
       'in_curing': 'Curing',
       'completed': 'Completed',
-      
+
       // Actions (extended)
       'archive': 'Archive',
       'unarchive': 'Restore',
@@ -1217,19 +1286,21 @@ class AppTranslations {
       'hide_inactive': 'Hide inactive',
       'activate': 'Activate',
       'deactivate': 'Deactivate',
-      
+
       // Confirms
       'attention': 'Attention!',
       'delete_grow_title': 'Delete grow?',
-      'delete_grow_with_plants': 'This grow contains {count} plant(s). If you delete it, the plants will be detached from the grow but not deleted.\n\nDo you want to continue?',
+      'delete_grow_with_plants':
+          'This grow contains {count} plant(s). If you delete it, the plants will be detached from the grow but not deleted.\n\nDo you want to continue?',
       'delete_room_title': 'Delete room?',
-      'delete_room_with_plants': '"{name}" still contains {count} plant(s). Please remove all plants first or assign them to another room.',
+      'delete_room_with_plants':
+          '"{name}" still contains {count} plant(s). Please remove all plants first or assign them to another room.',
       'delete_fertilizer_title': 'Delete fertilizer?',
       'delete_hardware_title': 'Delete hardware?',
       'room_cannot_be_deleted': 'Room cannot be deleted',
       'yes_delete': 'Yes, delete',
       'ok': 'OK',
-      
+
       // Stats / Info
       'day_short': 'Day',
       'plants_short': 'Plant(s)',
@@ -1250,7 +1321,8 @@ class AppTranslations {
       'reset_database': 'Delete All Data',
       'reset_database_desc': 'Deletes ALL data (backup will be created)',
       'reset_confirm_title': 'Delete All Data?',
-      'reset_confirm_message': 'WARNING: All data will be PERMANENTLY deleted!\n\nA backup will be automatically created and saved to your device before deletion.\n\nDo you want to continue?',
+      'reset_confirm_message':
+          'WARNING: All data will be PERMANENTLY deleted!\n\nA backup will be automatically created and saved to your device before deletion.\n\nDo you want to continue?',
       'reset_success': 'Database reset',
       'reset_success_desc': 'Backup was created. All data has been deleted.',
       'reset_error': 'Reset failed',
@@ -1259,8 +1331,10 @@ class AppTranslations {
 
       // Battery Optimization Dialog
       'battery_dialog_title': 'Improve App Stability',
-      'battery_dialog_crashes': 'The app has been unexpectedly closed {count} times.',
-      'battery_dialog_reason': 'This can be caused by aggressive battery optimization.',
+      'battery_dialog_crashes':
+          'The app has been unexpectedly closed {count} times.',
+      'battery_dialog_reason':
+          'This can be caused by aggressive battery optimization.',
       'battery_dialog_recommendations': 'Recommended settings:',
       'battery_dialog_understood': 'Understood',
 
@@ -1285,8 +1359,10 @@ class AppTranslations {
       'error_field_required': 'is required',
 
       // ✅ AUDIT FIX: i18n extraction - Log Date Validation
-      'error_log_before_seed': 'Log date is {days} day(s) before seed date ({date})',
-      'error_log_before_phase': 'Log date is {days} day(s) before phase start ({date})',
+      'error_log_before_seed':
+          'Log date is {days} day(s) before seed date ({date})',
+      'error_log_before_phase':
+          'Log date is {days} day(s) before phase start ({date})',
       'error_log_future': 'Log date cannot be in the future',
       'error_log_before_seed_short': 'Log date cannot be before seed date',
       'warning_log_old': 'Warning: Log is {days} days after seed date',
@@ -1300,7 +1376,8 @@ class AppTranslations {
       'hint_drying_method': 'e.g. Hanging, Net, Box',
       'hint_drainage_material': 'e.g. Clay pebbles, Perlite, Gravel',
       'hint_fertilizer_dosage': 'Additional info, dosage, etc...',
-      'hint_hardware_notes': 'Additional information, maintenance notes, etc...',
+      'hint_hardware_notes':
+          'Additional information, maintenance notes, etc...',
       'hint_harvest_observations': 'Additional observations, special notes...',
 
       // ✅ AUDIT FIX: i18n extraction - Add Log Screen
@@ -1316,9 +1393,11 @@ class AppTranslations {
       'phase_description_harvest': 'Harvest',
       'phase_description_archived': 'Archived',
       'bulk_mode_title': 'Bulk Log Mode',
-      'bulk_mode_info': 'This log will be saved for {count} plants simultaneously.',
+      'bulk_mode_info':
+          'This log will be saved for {count} plants simultaneously.',
       'total_day': 'Total: Day',
-      'backlog_info': 'You can also create old logs retroactively. Just change the date - the day will be calculated automatically!',
+      'backlog_info':
+          'You can also create old logs retroactively. Just change the date - the day will be calculated automatically!',
       'action': 'Action',
       'new_phase': 'New Phase',
       'change_phase': 'Change Phase',
@@ -1365,7 +1444,8 @@ class AppTranslations {
       'edit_log_title': 'Edit Log - {plant}',
       'edit_log_day_info': 'Editing Day {day}',
       'edit_log_created_at': 'Created: {date}',
-      'edit_log_invalid_file_type': 'Invalid file type. Only images (.jpg, .jpeg, .png, .webp) are allowed.',
+      'edit_log_invalid_file_type':
+          'Invalid file type. Only images (.jpg, .jpeg, .png, .webp) are allowed.',
       'edit_log_select_new_phase': 'Select New Phase',
       'edit_log_photos_count': 'Photos ({count})',
       'edit_log_existing_photos': 'Existing Photos:',
@@ -1390,7 +1470,8 @@ class AppTranslations {
       'edit_harvest_tab_quality': 'Quality',
       'edit_harvest_tab_rating': 'Rating',
       'edit_harvest_discard_title': 'Discard Changes?',
-      'edit_harvest_discard_message': 'Do you really want to cancel? All unsaved changes will be lost.',
+      'edit_harvest_discard_message':
+          'Do you really want to cancel? All unsaved changes will be lost.',
       'edit_harvest_continue_editing': 'Continue Editing',
       'edit_harvest_discard': 'Discard',
       'edit_harvest_basic_header': 'Basic Data',
@@ -1430,7 +1511,8 @@ class AppTranslations {
       'edit_harvest_cbd_helper': 'Cannabidiol',
       'edit_harvest_terpene_label': 'Terpenes',
       'edit_harvest_terpene_hint': 'e.g. Caryophyllene, Limonene, Myrcene...',
-      'edit_harvest_quality_info': 'Laboratory analyses are optional, but can provide valuable information about the quality of your harvest.',
+      'edit_harvest_quality_info':
+          'Laboratory analyses are optional, but can provide valuable information about the quality of your harvest.',
       'edit_harvest_rating_header': 'Rating & Notes',
       'edit_harvest_rating_description': 'Your personal assessment',
       'edit_harvest_overall_rating': 'Overall Rating',
@@ -1439,7 +1521,8 @@ class AppTranslations {
       'edit_harvest_taste_hint': 'e.g. fruity, earthy, citrus...',
       'edit_harvest_effect_label': 'Effect',
       'edit_harvest_effect_hint': 'e.g. relaxing, euphoric, creative...',
-      'edit_harvest_notes_hint': 'Additional observations, special characteristics...',
+      'edit_harvest_notes_hint':
+          'Additional observations, special characteristics...',
       'edit_harvest_duration_days': 'Duration: {days} Days',
       'edit_harvest_not_set': 'Not set',
       'edit_harvest_start_today': 'Start: Today',
@@ -1461,7 +1544,8 @@ class AppTranslations {
       'add_hardware_brand_required': 'Please enter brand',
       'add_hardware_model_label': 'Model',
       'add_hardware_model_hint': 'e.g. TS1000',
-      'add_hardware_name_info': 'Name is generated automatically: Brand + Model',
+      'add_hardware_name_info':
+          'Name is generated automatically: Brand + Model',
       'add_hardware_technical_data': 'Technical Data',
       'add_hardware_quantity': 'Quantity',
       'add_hardware_quantity_unit': 'pcs',
@@ -1502,16 +1586,19 @@ class AppTranslations {
       'add_hardware_diameter_hint': 'e.g. 150mm',
       'add_hardware_length': 'Length',
       'add_hardware_controller_type': 'Controller Type',
-      'add_hardware_controller_hint': 'e.g. Climate Controller, Irrigation Controller',
+      'add_hardware_controller_hint':
+          'e.g. Climate Controller, Irrigation Controller',
       'add_hardware_output_count': 'Number of Outputs',
       'add_hardware_functions': 'Functions',
       'add_hardware_functions_hint': 'e.g. Temp/Humidity/Timer',
-      'add_hardware_other_info': 'Use the "Additional Specifications" field for details',
+      'add_hardware_other_info':
+          'Use the "Additional Specifications" field for details',
       'add_hardware_purchase_info': 'Purchase Information (optional)',
       'add_hardware_purchase_date': 'Purchase Date',
       'add_hardware_not_set': 'Not set',
       'add_hardware_purchase_price': 'Purchase Price',
-      'add_hardware_notes_hint': 'Additional information, maintenance notes, etc...',
+      'add_hardware_notes_hint':
+          'Additional information, maintenance notes, etc...',
       'add_hardware_add_button': 'Add Hardware',
 
       // ✅ AUDIT FIX: i18n extraction - Add Plant Screen
@@ -1536,7 +1623,8 @@ class AppTranslations {
       'add_plant_grow_optional': 'Grow (optional)',
       'add_plant_grow_preselected': 'Grow (preselected)',
       'add_plant_grow_helper': 'Group multiple plants into one grow',
-      'add_plant_grow_helper_preselected': 'This plant will be assigned to this grow',
+      'add_plant_grow_helper_preselected':
+          'This plant will be assigned to this grow',
       'add_plant_no_grow': 'No Grow',
       'add_plant_create_grow': 'Create New Grow',
       'add_plant_create_grow_title': 'Create New Grow',
@@ -1553,10 +1641,12 @@ class AppTranslations {
       'add_plant_bucket_occupied': '{occupied}/{total} Buckets occupied',
       'add_plant_bucket_auto_distribution': 'Automatic distribution:',
       'add_plant_bucket_auto_info': 'Buckets {buckets} will be used',
-      'add_plant_bucket_insufficient': 'Only {available} free buckets available, but {requested} plants selected!',
+      'add_plant_bucket_insufficient':
+          'Only {available} free buckets available, but {requested} plants selected!',
       'add_plant_room_optional': 'Room (optional)',
       'add_plant_no_room': 'No Room',
-      'add_plant_system_info_rdwc': 'System size will be taken from RDWC system',
+      'add_plant_system_info_rdwc':
+          'System size will be taken from RDWC system',
       'add_plant_system_info': 'System Info (optional)',
       'add_plant_container_info': 'Container Info (optional)',
       'add_plant_system_size': 'System Size (Liters)',
@@ -1568,27 +1658,32 @@ class AppTranslations {
       'add_plant_seed_date': 'Seed Date',
       'add_plant_seed_date_not_set': 'Not set (will be set to creation time)',
       'add_plant_seed_date_reset': 'Reset date',
-      'add_plant_seed_date_tip': 'Tip: Set a date for more accurate day tracking',
+      'add_plant_seed_date_tip':
+          'Tip: Set a date for more accurate day tracking',
       'add_plant_create_button': 'Create Plant(s)',
 
       // ✅ AUDIT FIX: i18n extraction - Plant Detail Screen
       'plant_detail_photo_gallery': 'Photo Gallery',
       'plant_detail_create_log_title': 'Create Log Entry',
-      'plant_detail_grow_plant_count': 'This plant belongs to a grow with {count} plants.',
+      'plant_detail_grow_plant_count':
+          'This plant belongs to a grow with {count} plants.',
       'plant_detail_what_to_log': 'What would you like to log?',
       'plant_detail_only_this_plant': 'Only this plant',
       'plant_detail_all_plants': 'All {count} plants',
       'plant_detail_delete_log_title': 'Delete log?',
-      'plant_detail_delete_log_confirm': 'Do you really want to delete this log entry?',
+      'plant_detail_delete_log_confirm':
+          'Do you really want to delete this log entry?',
       'plant_detail_delete_photo_title': 'Delete photo?',
-      'plant_detail_delete_photo_confirm': 'Do you really want to delete this photo?',
+      'plant_detail_delete_photo_confirm':
+          'Do you really want to delete this photo?',
       'plant_detail_harvest': 'Harvest',
       'plant_detail_log_entry': 'Log Entry',
       'plant_detail_unknown_strain': 'Unknown Strain',
       'plant_detail_unknown_breeder': 'Unknown Breeder',
       'plant_detail_day': 'Day {day}',
       'plant_detail_status': 'Status: {drying} / {curing}',
-      'plant_detail_harvest_id_missing': 'Harvest ID missing - please contact support',
+      'plant_detail_harvest_id_missing':
+          'Harvest ID missing - please contact support',
       'plant_detail_no_logs': 'No logs yet',
       'plant_detail_add_first_log': 'Add your first log entry!',
       'plant_detail_total_day': 'Total: Day {day}',
@@ -1617,7 +1712,8 @@ class AppTranslations {
       'add_room_height_hint': 'e.g. 200',
       'add_room_save_button': 'Save Room',
       'add_room_hardware_dialog_title': 'Add Hardware?',
-      'add_room_hardware_dialog_message': 'Would you like to add hardware for "{name}" now?\n\nYou can add lights, fans, or other equipment.',
+      'add_room_hardware_dialog_message':
+          'Would you like to add hardware for "{name}" now?\n\nYou can add lights, fans, or other equipment.',
       'add_room_hardware_later': 'Later',
       'add_room_hardware_now': 'Add now',
       'add_room_hardware_complete': 'Hardware input completed! 🔧',
@@ -1651,7 +1747,8 @@ class AppTranslations {
       'edit_plant_seed_date_label': 'Seed Date',
       'edit_plant_not_set': 'Not set',
       'edit_plant_phases_section': 'Phase Dates (optional)',
-      'edit_plant_phases_description': 'Set the start dates for each phase manually. This allows retroactive corrections.',
+      'edit_plant_phases_description':
+          'Set the start dates for each phase manually. This allows retroactive corrections.',
       'edit_plant_veg_start_label': 'Veg Start',
       'edit_plant_bloom_start_label': 'Bloom Start',
       'edit_plant_harvest_start_label': 'Harvest Start',
@@ -1659,15 +1756,21 @@ class AppTranslations {
       'edit_plant_delete_button': 'Delete Plant',
 
       // Validation errors
-      'edit_plant_error_veg_before_seed': 'Veg date cannot be before seed date!',
-      'edit_plant_error_bloom_before_veg': 'Bloom date cannot be before veg date!',
-      'edit_plant_error_harvest_before_bloom': 'Harvest date cannot be before bloom date!',
-      'edit_plant_error_bloom_before_seed': 'Bloom date cannot be before seed date!',
-      'edit_plant_error_harvest_before_veg': 'Harvest date cannot be before veg date!',
+      'edit_plant_error_veg_before_seed':
+          'Veg date cannot be before seed date!',
+      'edit_plant_error_bloom_before_veg':
+          'Bloom date cannot be before veg date!',
+      'edit_plant_error_harvest_before_bloom':
+          'Harvest date cannot be before bloom date!',
+      'edit_plant_error_bloom_before_seed':
+          'Bloom date cannot be before seed date!',
+      'edit_plant_error_harvest_before_veg':
+          'Harvest date cannot be before veg date!',
 
       // Phase change warning
       'edit_plant_warning_title': '⚠️ Warning',
-      'edit_plant_warning_from_harvest': 'You want to switch from Harvest back to {phase}. This is unusual. Continue?',
+      'edit_plant_warning_from_harvest':
+          'You want to switch from Harvest back to {phase}. This is unusual. Continue?',
       'edit_plant_warning_reactivate': 'Reactivate plant to {phase}. Continue?',
       'edit_plant_proceed_button': 'Continue',
 
@@ -1675,16 +1778,21 @@ class AppTranslations {
       'edit_plant_seed_warning_title': 'Warning: Logs will be deleted!',
       'edit_plant_seed_warning_total': 'This plant has {count} log entries.',
       'edit_plant_seed_warning_deleted': '{count} Logs will be DELETED!',
-      'edit_plant_seed_warning_before_date': 'These logs are before the new seed date and will be permanently removed.',
-      'edit_plant_seed_warning_what_happens': 'What happens when changing the seed date:',
-      'edit_plant_seed_warning_recalculate': '✅ All day numbers (day_number) will be recalculated',
-      'edit_plant_seed_warning_delete_logs': '❌ {count} Logs will be permanently deleted',
+      'edit_plant_seed_warning_before_date':
+          'These logs are before the new seed date and will be permanently removed.',
+      'edit_plant_seed_warning_what_happens':
+          'What happens when changing the seed date:',
+      'edit_plant_seed_warning_recalculate':
+          '✅ All day numbers (day_number) will be recalculated',
+      'edit_plant_seed_warning_delete_logs':
+          '❌ {count} Logs will be permanently deleted',
       'edit_plant_seed_warning_irreversible': 'This action CANNOT be undone!',
       'edit_plant_seed_change_confirm': 'Yes, change seed date',
 
       // Delete confirmation
       'edit_plant_delete_title': 'Delete plant?',
-      'edit_plant_delete_message': 'Do you really want to delete "{name}"? All logs and data will be lost.\n\nThis action cannot be undone!',
+      'edit_plant_delete_message':
+          'Do you really want to delete "{name}"? All logs and data will be lost.\n\nThis action cannot be undone!',
 
       // ✅ AUDIT FIX: Dashboard screen translations
       'dashboard_plants_subtitle': 'Pflanzen verwalten',
@@ -1695,7 +1803,8 @@ class AppTranslations {
       'dashboard_harvests_subtitle': 'Ernten dokumentieren',
       'dashboard_rdwc_subtitle': 'RDWC Wasserwerte tracken',
       'dashboard_nutrient_calculator': 'Nährstoff Kalkulator',
-      'dashboard_nutrient_calculator_subtitle': 'Universeller Rechner für Nährstoffmischungen',
+      'dashboard_nutrient_calculator_subtitle':
+          'Universeller Rechner für Nährstoffmischungen',
       'dashboard_app_version': 'Plantry v1.0',
 
       // ✅ AUDIT FIX: Add Grow screen translations
@@ -1713,12 +1822,14 @@ class AppTranslations {
       'add_grow_start_date_section': 'Start-Datum',
       'add_grow_start_date_subtitle': 'Wann hast du mit diesem Grow begonnen?',
       'add_grow_help_title': 'Was ist ein Grow?',
-      'add_grow_help_text': 'Ein Grow ist eine Gruppierung für mehrere Pflanzen. Du kannst mehrere Pflanzen einem Grow zuordnen, um sie gemeinsam zu verwalten und zu tracken.',
+      'add_grow_help_text':
+          'Ein Grow ist eine Gruppierung für mehrere Pflanzen. Du kannst mehrere Pflanzen einem Grow zuordnen, um sie gemeinsam zu verwalten und zu tracken.',
       'add_grow_create_button': 'Grow erstellen',
 
       // ✅ AUDIT FIX: Add Fertilizer screen translations
       'add_fertilizer_title': 'Neuer Dünger',
-      'add_fertilizer_info_text': 'Füge Dünger hinzu, um sie später in Logs zu verwenden.',
+      'add_fertilizer_info_text':
+          'Füge Dünger hinzu, um sie später in Logs zu verwenden.',
       'add_fertilizer_basic_section': 'Grundinformationen',
       'add_fertilizer_name_label': 'Name *',
       'add_fertilizer_name_hint': 'z.B. Bloom A+B',
@@ -1734,7 +1845,8 @@ class AppTranslations {
       'add_fertilizer_description_hint': 'Zusätzliche Infos, Dosierung, etc...',
       'add_fertilizer_expert_section': 'RDWC Expert Settings',
       'add_fertilizer_expert_badge': 'EXPERT',
-      'add_fertilizer_expert_info': 'Diese Werte werden für EC/PPM-Berechnungen in RDWC-Logs verwendet.',
+      'add_fertilizer_expert_info':
+          'Diese Werte werden für EC/PPM-Berechnungen in RDWC-Logs verwendet.',
       'add_fertilizer_ec_label': 'EC-Wert pro ml (optional)',
       'add_fertilizer_ec_hint': 'z.B. 0.5',
       'add_fertilizer_ec_helper': 'EC-Beitrag pro ml Dünger',
@@ -1752,7 +1864,8 @@ class AppTranslations {
 
       // ✅ AUDIT FIX: Edit Fertilizer screen translations
       'edit_fertilizer_title': 'Dünger bearbeiten',
-      'edit_fertilizer_npk_helper': 'Format: N-P-K (z.B. 4-2-3 oder 10.5-5.2-8.1)',
+      'edit_fertilizer_npk_helper':
+          'Format: N-P-K (z.B. 4-2-3 oder 10.5-5.2-8.1)',
 
       // ✅ AUDIT FIX: Edit Room screen translations
       'edit_room_title': 'Raum bearbeiten',
@@ -1768,7 +1881,8 @@ class AppTranslations {
       'room_detail_hardware_title': 'Hardware',
       'room_detail_hardware_subtitle': '{count} Items • {wattage} W Gesamt',
       'room_detail_no_hardware': 'Keine Hardware erfasst',
-      'room_detail_add_hardware_hint': 'Füge Hardware über den Pfeil oben hinzu',
+      'room_detail_add_hardware_hint':
+          'Füge Hardware über den Pfeil oben hinzu',
       'room_detail_plants_title': 'Pflanzen',
       'room_detail_plants_subtitle': '{count} Pflanze(n) in diesem Raum',
       'room_detail_no_plants': 'Keine Pflanzen in diesem Raum',
@@ -1777,7 +1891,8 @@ class AppTranslations {
 
       // ✅ AUDIT FIX: Grow Detail screen translations
       'grow_detail_add_plant_dialog_title': 'Pflanze hinzufügen',
-      'grow_detail_add_plant_dialog_content': 'Möchtest du eine neue Pflanze erstellen oder eine vorhandene Pflanze diesem Grow zuweisen?',
+      'grow_detail_add_plant_dialog_content':
+          'Möchtest du eine neue Pflanze erstellen oder eine vorhandene Pflanze diesem Grow zuweisen?',
       'grow_detail_assign_existing': 'Vorhandene zuweisen',
       'grow_detail_create_new': 'Neue erstellen',
       'grow_detail_select_plant_title': 'Pflanze auswählen',
@@ -1787,14 +1902,18 @@ class AppTranslations {
       'grow_detail_plant_tab': 'Pflanze',
       'grow_detail_bulk_log_tab': 'Massen-Log',
       'grow_detail_no_plants_title': 'Keine Pflanzen in diesem Grow',
-      'grow_detail_no_plants_subtitle': 'Füge Pflanzen zu diesem Grow hinzu!\n\nTipp: Beim Erstellen einer Pflanze kannst\ndu sie einem Grow zuweisen.',
-      'grow_detail_no_available_plants': 'Keine vorhandenen Pflanzen verfügbar. Erstelle erst eine neue Pflanze!',
+      'grow_detail_no_plants_subtitle':
+          'Füge Pflanzen zu diesem Grow hinzu!\n\nTipp: Beim Erstellen einer Pflanze kannst\ndu sie einem Grow zuweisen.',
+      'grow_detail_no_available_plants':
+          'Keine vorhandenen Pflanzen verfügbar. Erstelle erst eine neue Pflanze!',
       'grow_detail_plant_assigned': '{name} wurde dem Grow hinzugefügt! 🌱',
-      'grow_detail_no_plants_for_bulk': 'Keine Pflanzen in diesem Grow! Füge erst Pflanzen hinzu.',
+      'grow_detail_no_plants_for_bulk':
+          'Keine Pflanzen in diesem Grow! Füge erst Pflanzen hinzu.',
 
       // ✅ AUDIT FIX: Harvest Detail screen translations
       'harvest_detail_delete_title': 'Ernte löschen?',
-      'harvest_detail_delete_message': 'Möchtest du diese Ernte wirklich löschen?',
+      'harvest_detail_delete_message':
+          'Möchtest du diese Ernte wirklich löschen?',
       'harvest_detail_deleted': 'Ernte gelöscht! 🗑️',
       'harvest_detail_title': 'Ernte',
       'harvest_detail_not_found': 'Ernte nicht gefunden',
@@ -1833,13 +1952,16 @@ class AppTranslations {
 
       // ✅ AUDIT FIX: Settings screen translations (Expert Mode Dialog)
       'settings_expert_mode_title': 'Expert-Modus',
-      'settings_expert_mode_warning': 'Der Expert-Modus ist experimentell und kann noch Fehler enthalten.',
+      'settings_expert_mode_warning':
+          'Der Expert-Modus ist experimentell und kann noch Fehler enthalten.',
       'settings_expert_mode_features': 'Er bietet erweiterte Funktionen wie:',
       'settings_expert_mode_rdwc': '• RDWC System Management',
       'settings_expert_mode_nutrients': '• Detaillierte Nährstoff-Tracking',
       'settings_expert_mode_drift': '• EC/pH Drift-Analyse',
-      'settings_expert_mode_question': 'Möchten Sie den Expert-Modus aktivieren?',
-      'settings_expert_mode_unsure': 'Falls Sie unsicher sind, bleiben Sie im Normal-Modus.',
+      'settings_expert_mode_question':
+          'Möchten Sie den Expert-Modus aktivieren?',
+      'settings_expert_mode_unsure':
+          'Falls Sie unsicher sind, bleiben Sie im Normal-Modus.',
       'settings_normal_mode_keep': 'Normal-Modus behalten',
       'settings_expert_mode_activate': 'Expert-Modus aktivieren',
       'settings_creating_backup': 'Erstelle Backup...\nBitte warten!',

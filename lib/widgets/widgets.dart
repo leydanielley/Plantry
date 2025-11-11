@@ -1,5 +1,5 @@
 /// 🎨 GrowLog Widgets Library
-/// 
+///
 /// Zentrale Export-Datei für alle Custom Widgets
 /// Import: import 'package:growlog_app/widgets/widgets.dart';
 library;

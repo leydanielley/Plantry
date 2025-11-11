@@ -12,9 +12,8 @@ import 'package:flutter/material.dart';
 /// - Race Condition Protection (mounted checks)
 /// - Retry mechanism
 mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
-  
   /// Executes an async operation with error handling
-  /// 
+  ///
   /// Features:
   /// - Loading State Management
   /// - Mounted Checks (Race Condition Protection)
@@ -32,7 +31,7 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
     try {
       // Execute operation
       await operation();
-      
+
       // Success Feedback (with mounted check!)
       if (mounted && successMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -43,20 +42,20 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
           ),
         );
       }
-      
+
       // Success Callback (with mounted check!)
       if (mounted && onSuccess != null) {
         onSuccess();
       }
-      
+
       return true;
     } catch (e) {
       // Error Handling (with mounted check!)
       if (mounted) {
-        final errorMessage = errorPrefix != null 
-            ? '$errorPrefix: $e' 
+        final errorMessage = errorPrefix != null
+            ? '$errorPrefix: $e'
             : 'Error: $e';
-        
+
         // Show Error with Retry Option
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -84,11 +83,11 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
           ),
         );
       }
-      
+
       return false;
     }
   }
-  
+
   /// Shows an error dialog (with mounted check!)
   Future<void> showErrorDialog({
     required String title,
@@ -96,7 +95,7 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
     String? details,
   }) async {
     if (!mounted) return;
-    
+
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -143,7 +142,7 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
       ),
     );
   }
-  
+
   /// Shows a confirm dialog (with mounted check!)
   Future<bool> showConfirmDialog({
     required String title,
@@ -153,7 +152,7 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
     Color? confirmColor,
   }) async {
     if (!mounted) return false;
-    
+
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -182,14 +181,14 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
         ],
       ),
     );
-    
+
     return result ?? false;
   }
-  
+
   /// Shows a loading dialog (PopScope instead of deprecated WillPopScope)
   void showLoadingDialog({String message = 'Please wait...'}) {
     if (!mounted) return;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -207,18 +206,18 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
       ),
     );
   }
-  
+
   /// Closes the loading dialog (with mounted check!)
   void hideLoadingDialog() {
     if (mounted) {
       Navigator.of(context).pop();
     }
   }
-  
+
   /// Shows a success snackbar (with mounted check!)
   void showSuccessMessage(String message) {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -233,11 +232,11 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
       ),
     );
   }
-  
+
   /// Shows an error snackbar (with mounted check!)
   void showErrorMessage(String message) {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -252,11 +251,11 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
       ),
     );
   }
-  
+
   /// Shows a warning snackbar (with mounted check!)
   void showWarningMessage(String message) {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -271,11 +270,11 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
       ),
     );
   }
-  
+
   /// Shows an info snackbar (with mounted check!)
   void showInfoMessage(String message) {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

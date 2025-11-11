@@ -8,7 +8,9 @@ import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
-class SettingsRepository with RepositoryErrorHandler implements ISettingsRepository {
+class SettingsRepository
+    with RepositoryErrorHandler
+    implements ISettingsRepository {
   @override
   String get repositoryName => 'SettingsRepository';
 

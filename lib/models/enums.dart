@@ -398,11 +398,11 @@ enum GrowType {
 
 // ✅ BUG FIX #1: Watering System mit DB-kompatiblen Werten
 enum WateringSystem {
-  manual,      // statt "hand" - passt zu DB 'MANUAL'
+  manual, // statt "hand" - passt zu DB 'MANUAL'
   drip,
   autopot,
   rdwc,
-  floodDrain;  // statt "ebbFlow" - passt zu DB 'FLOOD_DRAIN'
+  floodDrain; // statt "ebbFlow" - passt zu DB 'FLOOD_DRAIN'
 
   String get displayName {
     switch (this) {

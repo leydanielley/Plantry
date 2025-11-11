@@ -15,25 +15,27 @@ class EditHarvestQualityScreen extends StatefulWidget {
   const EditHarvestQualityScreen({super.key, required this.harvest});
 
   @override
-  State<EditHarvestQualityScreen> createState() => _EditHarvestQualityScreenState();
+  State<EditHarvestQualityScreen> createState() =>
+      _EditHarvestQualityScreenState();
 }
 
-class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> with SingleTickerProviderStateMixin {
+class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
+    with SingleTickerProviderStateMixin {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
   late TabController _tabController;
-  
+
   // Quality Data
   final TextEditingController _thcController = TextEditingController();
   final TextEditingController _cbdController = TextEditingController();
   final TextEditingController _terpeneController = TextEditingController();
-  
+
   // Rating Data
   int? _rating;
   final TextEditingController _tasteController = TextEditingController();
   final TextEditingController _effectController = TextEditingController();
   final TextEditingController _overallNotesController = TextEditingController();
-  
+
   bool _isSaving = false;
 
   @override
@@ -75,11 +77,19 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
       final updated = widget.harvest.copyWith(
         thcPercentage: double.tryParse(_thcController.text),
         cbdPercentage: double.tryParse(_cbdController.text),
-        terpeneProfile: _terpeneController.text.isNotEmpty ? _terpeneController.text : null,
+        terpeneProfile: _terpeneController.text.isNotEmpty
+            ? _terpeneController.text
+            : null,
         rating: _rating,
-        tasteNotes: _tasteController.text.isNotEmpty ? _tasteController.text : null,
-        effectNotes: _effectController.text.isNotEmpty ? _effectController.text : null,
-        overallNotes: _overallNotesController.text.isNotEmpty ? _overallNotesController.text : null,
+        tasteNotes: _tasteController.text.isNotEmpty
+            ? _tasteController.text
+            : null,
+        effectNotes: _effectController.text.isNotEmpty
+            ? _effectController.text
+            : null,
+        overallNotes: _overallNotesController.text.isNotEmpty
+            ? _overallNotesController.text
+            : null,
         updatedAt: DateTime.now(),
       );
 
@@ -92,8 +102,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        AppMessages.showError(context, 
-'Fehler: $e');
+        AppMessages.showError(context, 'Fehler: $e');
       }
     }
   }
@@ -107,10 +116,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
         foregroundColor: Colors.white,
         actions: [
           if (!_isSaving)
-            IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: _save,
-            ),
+            IconButton(icon: const Icon(Icons.check), onPressed: _save),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -118,11 +124,21 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
           tabs: [
             Tab(
               icon: const Icon(Icons.science, color: Colors.white),
-              child: Text(AppTranslations(Localizations.localeOf(context).languageCode)['edit_harvest_tab_quality'], style: const TextStyle(color: Colors.white)),
+              child: Text(
+                AppTranslations(
+                  Localizations.localeOf(context).languageCode,
+                )['edit_harvest_tab_quality'],
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
             Tab(
               icon: const Icon(Icons.star, color: Colors.white),
-              child: Text(AppTranslations(Localizations.localeOf(context).languageCode)['edit_harvest_tab_rating'], style: const TextStyle(color: Colors.white)),
+              child: Text(
+                AppTranslations(
+                  Localizations.localeOf(context).languageCode,
+                )['edit_harvest_tab_rating'],
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),
@@ -131,10 +147,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
         key: _formKey,
         child: TabBarView(
           controller: _tabController,
-          children: [
-            _buildQualityTab(),
-            _buildRatingTab(),
-          ],
+          children: [_buildQualityTab(), _buildRatingTab()],
         ),
       ),
       bottomNavigationBar: Container(
@@ -166,7 +179,10 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Icon(Icons.save),
                 label: Text(_isSaving ? 'Speichert...' : 'Speichern'),
@@ -202,17 +218,14 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
                 const Expanded(
                   child: Text(
                     'Cannabinoid-Profil',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // THC
           TextFormField(
             controller: _thcController,
@@ -229,7 +242,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 16),
-          
+
           // CBD
           TextFormField(
             controller: _cbdController,
@@ -246,19 +259,22 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 20),
-          
+
           // Preview
           if (_thcController.text.isNotEmpty || _cbdController.text.isNotEmpty)
             _buildCannabinoidPreview(),
           const SizedBox(height: 20),
-          
+
           // Terpenes
           TextFormField(
             controller: _terpeneController,
             decoration: InputDecoration(
               labelText: 'Terpen-Profil',
               hintText: 'z.B. Myrcene, Limonene, Caryophyllene',
-              prefixIcon: const Icon(Icons.format_list_bulleted, color: Colors.purple),
+              prefixIcon: const Icon(
+                Icons.format_list_bulleted,
+                color: Colors.purple,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -266,34 +282,35 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
             maxLines: 3,
           ),
           const SizedBox(height: 8),
-          
+
           // Terpene Suggestions
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: [
-              'Myrcene',
-              'Limonene',
-              'Caryophyllene',
-              'Pinene',
-              'Linalool',
-              'Humulene',
-            ].map((terpene) {
-              return ActionChip(
-                label: Text(terpene),
-                onPressed: () {
-                  final current = _terpeneController.text;
-                  if (current.isEmpty) {
-                    _terpeneController.text = terpene;
-                  } else if (!current.contains(terpene)) {
-                    _terpeneController.text = '$current, $terpene';
-                  }
-                },
-              );
-            }).toList(),
+            children:
+                [
+                  'Myrcene',
+                  'Limonene',
+                  'Caryophyllene',
+                  'Pinene',
+                  'Linalool',
+                  'Humulene',
+                ].map((terpene) {
+                  return ActionChip(
+                    label: Text(terpene),
+                    onPressed: () {
+                      final current = _terpeneController.text;
+                      if (current.isEmpty) {
+                        _terpeneController.text = terpene;
+                      } else if (!current.contains(terpene)) {
+                        _terpeneController.text = '$current, $terpene';
+                      }
+                    },
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 24),
-          
+
           // Info Box
           Container(
             padding: const EdgeInsets.all(16),
@@ -309,7 +326,9 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    AppTranslations(Localizations.localeOf(context).languageCode)['edit_harvest_quality_info'],
+                    AppTranslations(
+                      Localizations.localeOf(context).languageCode,
+                    )['edit_harvest_quality_info'],
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
@@ -324,12 +343,15 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
   Widget _buildCannabinoidPreview() {
     final thc = double.tryParse(_thcController.text);
     final cbd = double.tryParse(_cbdController.text);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.purple[50] ?? Colors.purple, Colors.blue[50] ?? Colors.blue],
+          colors: [
+            Colors.purple[50] ?? Colors.purple,
+            Colors.blue[50] ?? Colors.blue,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -367,10 +389,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
           children: [
             Text(
               label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
             Text(
               '${percentage.toStringAsFixed(1)}%',
@@ -416,17 +435,14 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
                 const Expanded(
                   child: Text(
                     'Bewertung & Notizen',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Star Rating
           Card(
             elevation: 2,
@@ -436,10 +452,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
                 children: [
                   const Text(
                     'Gesamt-Bewertung',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -447,7 +460,9 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
                     children: List.generate(5, (index) {
                       return IconButton(
                         icon: Icon(
-                          (_rating ?? 0) > index ? Icons.star : Icons.star_border,
+                          (_rating ?? 0) > index
+                              ? Icons.star
+                              : Icons.star_border,
                           size: 40,
                         ),
                         color: Colors.amber,
@@ -471,17 +486,14 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
                   if (_rating == null)
                     Text(
                       'Tippe auf die Sterne zum Bewerten',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Taste Notes
           TextFormField(
             controller: _tasteController,
@@ -498,29 +510,30 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: [
-              'Fruchtig',
-              'Erdig',
-              'Zitrusartig',
-              'Süß',
-              'Würzig',
-              'Blumig',
-            ].map((taste) {
-              return ActionChip(
-                label: Text(taste),
-                onPressed: () {
-                  final current = _tasteController.text;
-                  if (current.isEmpty) {
-                    _tasteController.text = taste;
-                  } else if (!current.contains(taste)) {
-                    _tasteController.text = '$current, $taste';
-                  }
-                },
-              );
-            }).toList(),
+            children:
+                [
+                  'Fruchtig',
+                  'Erdig',
+                  'Zitrusartig',
+                  'Süß',
+                  'Würzig',
+                  'Blumig',
+                ].map((taste) {
+                  return ActionChip(
+                    label: Text(taste),
+                    onPressed: () {
+                      final current = _tasteController.text;
+                      if (current.isEmpty) {
+                        _tasteController.text = taste;
+                      } else if (!current.contains(taste)) {
+                        _tasteController.text = '$current, $taste';
+                      }
+                    },
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 20),
-          
+
           // Effect Notes
           TextFormField(
             controller: _effectController,
@@ -537,29 +550,30 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen> wit
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: [
-              'Entspannend',
-              'Euphorisch',
-              'Kreativ',
-              'Energetisch',
-              'Fokussiert',
-              'Schläfrig',
-            ].map((effect) {
-              return ActionChip(
-                label: Text(effect),
-                onPressed: () {
-                  final current = _effectController.text;
-                  if (current.isEmpty) {
-                    _effectController.text = effect;
-                  } else if (!current.contains(effect)) {
-                    _effectController.text = '$current, $effect';
-                  }
-                },
-              );
-            }).toList(),
+            children:
+                [
+                  'Entspannend',
+                  'Euphorisch',
+                  'Kreativ',
+                  'Energetisch',
+                  'Fokussiert',
+                  'Schläfrig',
+                ].map((effect) {
+                  return ActionChip(
+                    label: Text(effect),
+                    onPressed: () {
+                      final current = _effectController.text;
+                      if (current.isEmpty) {
+                        _effectController.text = effect;
+                      } else if (!current.contains(effect)) {
+                        _effectController.text = '$current, $effect';
+                      }
+                    },
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 20),
-          
+
           // Overall Notes
           TextFormField(
             controller: _overallNotesController,

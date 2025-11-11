@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// 🚀 Hero Animation Wrapper
-/// 
+///
 /// Simplifies Hero animations between screens
 /// Automatically handles tags and transitions
 class HeroWrapper extends StatelessWidget {
@@ -22,16 +22,13 @@ class HeroWrapper extends StatelessWidget {
 
     return Hero(
       tag: tag,
-      child: Material(
-        type: MaterialType.transparency,
-        child: child,
-      ),
+      child: Material(type: MaterialType.transparency, child: child),
     );
   }
 }
 
 /// 🚀 Hero Card Wrapper
-/// 
+///
 /// Hero animation for card transitions
 class HeroCard extends StatelessWidget {
   final String tag;
@@ -62,7 +59,7 @@ class HeroCard extends StatelessWidget {
 }
 
 /// 🚀 Hero Image Wrapper
-/// 
+///
 /// Hero animation for images
 class HeroImage extends StatelessWidget {
   final String tag;
@@ -88,19 +85,14 @@ class HeroImage extends StatelessWidget {
       tag: tag,
       child: ClipRRect(
         borderRadius: borderRadius ?? BorderRadius.circular(8),
-        child: Image(
-          image: image,
-          width: width,
-          height: height,
-          fit: fit,
-        ),
+        child: Image(image: image, width: width, height: height, fit: fit),
       ),
     );
   }
 }
 
 /// 🚀 Hero Page Route
-/// 
+///
 /// Custom page route with hero-friendly transitions
 class HeroPageRoute<T> extends PageRoute<T> {
   final WidgetBuilder builder;
@@ -140,15 +132,12 @@ class HeroPageRoute<T> extends PageRoute<T> {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    return FadeTransition(
-      opacity: animation,
-      child: child,
-    );
+    return FadeTransition(opacity: animation, child: child);
   }
 }
 
 /// 🚀 Scale Hero Page Route
-/// 
+///
 /// Hero transition with scale effect
 class ScaleHeroPageRoute<T> extends PageRoute<T> {
   final WidgetBuilder builder;
@@ -192,22 +181,14 @@ class ScaleHeroPageRoute<T> extends PageRoute<T> {
       scale: Tween<double>(
         begin: 0.8,
         end: 1.0,
-      ).animate(
-        CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOut,
-        ),
-      ),
-      child: FadeTransition(
-        opacity: animation,
-        child: child,
-      ),
+      ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+      child: FadeTransition(opacity: animation, child: child),
     );
   }
 }
 
 /// 🚀 Slide Hero Page Route
-/// 
+///
 /// Hero transition with slide effect
 class SlideHeroPageRoute<T> extends PageRoute<T> {
   final WidgetBuilder builder;
@@ -253,12 +234,7 @@ class SlideHeroPageRoute<T> extends PageRoute<T> {
       position: Tween<Offset>(
         begin: beginOffset,
         end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOut,
-        ),
-      ),
+      ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
       child: child,
     );
   }

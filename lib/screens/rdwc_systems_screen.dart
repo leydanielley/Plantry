@@ -41,7 +41,9 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
   Future<void> _loadData() async {
     try {
       final settings = await _settingsRepo.getSettings();
-      final systems = await _rdwcRepo.getAllSystems(includeArchived: _showArchived);
+      final systems = await _rdwcRepo.getAllSystems(
+        includeArchived: _showArchived,
+      );
 
       if (mounted) {
         setState(() {
@@ -60,7 +62,9 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
   }
 
   Future<void> _refreshSystems() async {
-    final systems = await _rdwcRepo.getAllSystems(includeArchived: _showArchived);
+    final systems = await _rdwcRepo.getAllSystems(
+      includeArchived: _showArchived,
+    );
     if (mounted) {
       setState(() => _systems = systems);
     }
@@ -144,164 +148,199 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
       child: Card(
         margin: const EdgeInsets.only(bottom: 12),
         child: InkWell(
-        onTap: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => RdwcSystemDetailScreen(system: system),
-            ),
-          );
-          if (result == true) {
-            _refreshSystems();
-          }
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Row
-              Row(
-                children: [
-                  Icon(
-                    Icons.water_damage,
-                    color: statusColor,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          onTap: () async {
+            final result = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => RdwcSystemDetailScreen(system: system),
+              ),
+            );
+            if (result == true) {
+              _refreshSystems();
+            }
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Row
+                Row(
+                  children: [
+                    Icon(Icons.water_damage, color: statusColor, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            system.name,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          if (system.description != null &&
+                              system.description!.isNotEmpty)
+                            Text(
+                              system.description!,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: isDark
+                                        ? Colors.grey[500]
+                                        : Colors.grey[600],
+                                  ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (system.archived)
+                      const Icon(Icons.archive, color: Colors.grey),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Level Progress Bar
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          system.name,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          _t['water_level'],
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          '${system.fillPercentage.toStringAsFixed(0)}%',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
+                                color: statusColor,
                               ),
                         ),
-                        if (system.description != null && system.description!.isNotEmpty)
-                          Text(
-                            system.description!,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: isDark ? Colors.grey[500] : Colors.grey[600],
-                                ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
                       ],
                     ),
-                  ),
-                  if (system.archived)
-                    const Icon(Icons.archive, color: Colors.grey),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Level Progress Bar
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _t['water_level'],
-                        style: Theme.of(context).textTheme.bodySmall,
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: system.fillPercentage / 100,
+                        minHeight: 8,
+                        backgroundColor: isDark
+                            ? Colors.grey[800]
+                            : Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                       ),
-                      Text(
-                        '${system.fillPercentage.toStringAsFixed(0)}%',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: statusColor,
-                            ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: system.fillPercentage / 100,
-                      minHeight: 8,
-                      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[300],
-                      valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Stats Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildStat(
-                    _t['current_level'],
-                    UnitConverter.formatVolume(system.currentLevel, _settings.volumeUnit),
-                    isDark,
-                  ),
-                  _buildStat(
-                    _t['max_capacity'],
-                    UnitConverter.formatVolume(system.maxCapacity, _settings.volumeUnit),
-                    isDark,
-                  ),
-                  _buildStat(
-                    _t['remaining_capacity'],
-                    UnitConverter.formatVolume(system.remainingCapacity, _settings.volumeUnit),
-                    isDark,
-                  ),
-                ],
-              ),
-
-              // Warning message
-              if (system.isCriticallyLow)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.warning, color: Colors.red, size: 16),
-                        const SizedBox(width: 8),
-                        Text(
-                          _t['system_critical'],
-                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else if (system.isLowWater)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info, color: Colors.orange, size: 16),
-                        const SizedBox(width: 8),
-                        Text(
-                          _t['system_low_water'],
-                          style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
-            ],
+                const SizedBox(height: 12),
+
+                // Stats Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildStat(
+                      _t['current_level'],
+                      UnitConverter.formatVolume(
+                        system.currentLevel,
+                        _settings.volumeUnit,
+                      ),
+                      isDark,
+                    ),
+                    _buildStat(
+                      _t['max_capacity'],
+                      UnitConverter.formatVolume(
+                        system.maxCapacity,
+                        _settings.volumeUnit,
+                      ),
+                      isDark,
+                    ),
+                    _buildStat(
+                      _t['remaining_capacity'],
+                      UnitConverter.formatVolume(
+                        system.remainingCapacity,
+                        _settings.volumeUnit,
+                      ),
+                      isDark,
+                    ),
+                  ],
+                ),
+
+                // Warning message
+                if (system.isCriticallyLow)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.warning,
+                            color: Colors.red,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _t['system_critical'],
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else if (system.isLowWater)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: Colors.orange.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.info,
+                            color: Colors.orange,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _t['system_low_water'],
+                            style: const TextStyle(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -313,15 +352,15 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: isDark ? Colors.grey[500] : Colors.grey[600],
-              ),
+            color: isDark ? Colors.grey[500] : Colors.grey[600],
+          ),
         ),
         const SizedBox(height: 2),
         Text(
           value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );

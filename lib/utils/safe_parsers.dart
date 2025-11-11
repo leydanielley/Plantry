@@ -126,9 +126,7 @@ class SafeParsers {
       // Try case-insensitive match
       try {
         final lowerName = enumString.toLowerCase();
-        return values.firstWhere(
-          (v) => v.name.toLowerCase() == lowerName,
-        );
+        return values.firstWhere((v) => v.name.toLowerCase() == lowerName);
       } catch (e2) {
         AppLogger.warning(
           'SafeParsers',

@@ -9,7 +9,9 @@ import 'package:growlog_app/repositories/interfaces/i_hardware_repository.dart';
 import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
-class HardwareRepository with RepositoryErrorHandler implements IHardwareRepository {
+class HardwareRepository
+    with RepositoryErrorHandler
+    implements IHardwareRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   @override
@@ -25,7 +27,7 @@ class HardwareRepository with RepositoryErrorHandler implements IHardwareReposit
       where: 'room_id = ?',
       whereArgs: [roomId],
       orderBy: 'type ASC, name ASC',
-      limit: limit ?? 500,  // Reasonable default limit per room
+      limit: limit ?? 500, // Reasonable default limit per room
     );
 
     return maps.map((map) => Hardware.fromMap(map)).toList();
@@ -41,7 +43,7 @@ class HardwareRepository with RepositoryErrorHandler implements IHardwareReposit
       where: 'room_id = ? AND active = ?',
       whereArgs: [roomId, 1],
       orderBy: 'type ASC, name ASC',
-      limit: limit ?? 500,  // Reasonable default limit per room
+      limit: limit ?? 500, // Reasonable default limit per room
     );
 
     return maps.map((map) => Hardware.fromMap(map)).toList();
@@ -70,7 +72,7 @@ class HardwareRepository with RepositoryErrorHandler implements IHardwareReposit
     final maps = await db.query(
       'hardware',
       orderBy: 'room_id ASC, type ASC, name ASC',
-      limit: limit ?? 1000,  // Reasonable default limit
+      limit: limit ?? 1000, // Reasonable default limit
     );
 
     return maps.map((map) => Hardware.fromMap(map)).toList();
@@ -109,12 +111,8 @@ class HardwareRepository with RepositoryErrorHandler implements IHardwareReposit
   /// Hardware löschen
   @override
   Future<int> delete(int id) async {
-   final db = await _dbHelper.database;
-    return await db.delete(
-      'hardware',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final db = await _dbHelper.database;
+    return await db.delete('hardware', where: 'id = ?', whereArgs: [id]);
   }
 
   /// Hardware deaktivieren (statt löschen)

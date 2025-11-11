@@ -25,7 +25,8 @@ class RdwcAnalyticsScreen extends StatefulWidget {
   State<RdwcAnalyticsScreen> createState() => _RdwcAnalyticsScreenState();
 }
 
-class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTickerProviderStateMixin {
+class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
+    with SingleTickerProviderStateMixin {
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
@@ -57,16 +58,31 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
   }
 
   Future<void> _loadData() async {
-    if (!mounted) return;  // ✅ FIX: Add mounted check before setState
+    if (!mounted) return; // ✅ FIX: Add mounted check before setState
     setState(() => _isLoading = true);
 
     try {
       final settings = await _settingsRepo.getSettings();
-      final consumptionStats = await _rdwcRepo.getConsumptionStats(widget.system.id!, days: _selectedDays);
-      final dailyConsumption = await _rdwcRepo.getDailyConsumption(widget.system.id!, days: _selectedDays);
-      final ecDrift = await _rdwcRepo.getEcDriftAnalysis(widget.system.id!, days: _selectedDays);
-      final phDrift = await _rdwcRepo.getPhDriftAnalysis(widget.system.id!, days: _selectedDays);
-      final logs = await _rdwcRepo.getRecentLogs(widget.system.id!, limit: _selectedDays * 3);
+      final consumptionStats = await _rdwcRepo.getConsumptionStats(
+        widget.system.id!,
+        days: _selectedDays,
+      );
+      final dailyConsumption = await _rdwcRepo.getDailyConsumption(
+        widget.system.id!,
+        days: _selectedDays,
+      );
+      final ecDrift = await _rdwcRepo.getEcDriftAnalysis(
+        widget.system.id!,
+        days: _selectedDays,
+      );
+      final phDrift = await _rdwcRepo.getPhDriftAnalysis(
+        widget.system.id!,
+        days: _selectedDays,
+      );
+      final logs = await _rdwcRepo.getRecentLogs(
+        widget.system.id!,
+        limit: _selectedDays * 3,
+      );
 
       if (mounted) {
         setState(() {
@@ -94,7 +110,9 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.system.name} - ${_isLoading ? 'Loading...' : _t['analytics']}'),
+        title: Text(
+          '${widget.system.name} - ${_isLoading ? 'Loading...' : _t['analytics']}',
+        ),
         actions: [
           // Day selector
           PopupMenuButton<int>(
@@ -104,9 +122,18 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
               _loadData();
             },
             itemBuilder: (context) => [
-              PopupMenuItem(value: 7, child: Text('7 ${_isLoading ? 'Days' : _t['days']}')),
-              PopupMenuItem(value: 14, child: Text('14 ${_isLoading ? 'Days' : _t['days']}')),
-              PopupMenuItem(value: 30, child: Text('30 ${_isLoading ? 'Days' : _t['days']}')),
+              PopupMenuItem(
+                value: 7,
+                child: Text('7 ${_isLoading ? 'Days' : _t['days']}'),
+              ),
+              PopupMenuItem(
+                value: 14,
+                child: Text('14 ${_isLoading ? 'Days' : _t['days']}'),
+              ),
+              PopupMenuItem(
+                value: 30,
+                child: Text('30 ${_isLoading ? 'Days' : _t['days']}'),
+              ),
             ],
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -124,9 +151,18 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
             : TabBar(
                 controller: _tabController,
                 tabs: [
-                  Tab(text: _t['consumption'], icon: const Icon(Icons.water_drop)),
-                  Tab(text: 'EC ${_t['drift_analysis']}', icon: const Icon(Icons.analytics)),
-                  Tab(text: 'pH ${_t['drift_analysis']}', icon: const Icon(Icons.water)),
+                  Tab(
+                    text: _t['consumption'],
+                    icon: const Icon(Icons.water_drop),
+                  ),
+                  Tab(
+                    text: 'EC ${_t['drift_analysis']}',
+                    icon: const Icon(Icons.analytics),
+                  ),
+                  Tab(
+                    text: 'pH ${_t['drift_analysis']}',
+                    icon: const Icon(Icons.water),
+                  ),
                 ],
               ),
       ),
@@ -160,7 +196,10 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
               Expanded(
                 child: StatsCard(
                   label: _t['average'],
-                  value: UnitConverter.formatVolume(avgConsumption, _settings.volumeUnit),
+                  value: UnitConverter.formatVolume(
+                    avgConsumption,
+                    _settings.volumeUnit,
+                  ),
                   icon: Icons.water_drop,
                   color: Colors.blue,
                   subtitle: _t['per_day'],
@@ -170,7 +209,10 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
               Expanded(
                 child: StatsCard(
                   label: _t['total_added'],
-                  value: UnitConverter.formatVolume(totalConsumption, _settings.volumeUnit),
+                  value: UnitConverter.formatVolume(
+                    totalConsumption,
+                    _settings.volumeUnit,
+                  ),
                   icon: Icons.water,
                   color: Colors.green,
                   subtitle: '$_selectedDays ${_t['days']}',
@@ -184,7 +226,10 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
               Expanded(
                 child: StatsCard(
                   label: _t['maximum'],
-                  value: UnitConverter.formatVolume(maxConsumption, _settings.volumeUnit),
+                  value: UnitConverter.formatVolume(
+                    maxConsumption,
+                    _settings.volumeUnit,
+                  ),
                   icon: Icons.trending_up,
                   color: Colors.orange,
                   trend: 'up',
@@ -194,7 +239,10 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
               Expanded(
                 child: StatsCard(
                   label: _t['minimum'],
-                  value: UnitConverter.formatVolume(minConsumption, _settings.volumeUnit),
+                  value: UnitConverter.formatVolume(
+                    minConsumption,
+                    _settings.volumeUnit,
+                  ),
                   icon: Icons.trending_down,
                   color: Colors.purple,
                   trend: 'down',
@@ -214,8 +262,8 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
                   child: Text(
                     '${_t['daily']} ${_t['consumption']}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 ConsumptionChart(
@@ -241,10 +289,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
     // Build drift data points from logs
     final ecDriftPoints = _logs
         .where((log) => log.ecDrift != null)
-        .map((log) => DriftDataPoint(
-              date: log.logDate,
-              value: log.ecDrift!,
-            ))
+        .map((log) => DriftDataPoint(date: log.logDate, value: log.ecDrift!))
         .toList();
 
     return RefreshIndicator(
@@ -309,15 +354,11 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
                   child: Text(
                     'EC ${_t['drift_analysis']} ${_t['over_time']}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                DriftChart(
-                  ecData: ecDriftPoints,
-                  phData: const [],
-                  mode: 'ec',
-                ),
+                DriftChart(ecData: ecDriftPoints, phData: const [], mode: 'ec'),
               ],
             ),
           ),
@@ -336,10 +377,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
     // Build drift data points from logs
     final phDriftPoints = _logs
         .where((log) => log.phDrift != null)
-        .map((log) => DriftDataPoint(
-              date: log.logDate,
-              value: log.phDrift!,
-            ))
+        .map((log) => DriftDataPoint(date: log.logDate, value: log.phDrift!))
         .toList();
 
     return RefreshIndicator(
@@ -404,15 +442,11 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen> with SingleTi
                   child: Text(
                     'pH ${_t['drift_analysis']} ${_t['over_time']}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                DriftChart(
-                  ecData: const [],
-                  phData: phDriftPoints,
-                  mode: 'ph',
-                ),
+                DriftChart(ecData: const [], phData: phDriftPoints, mode: 'ph'),
               ],
             ),
           ),

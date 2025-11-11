@@ -33,7 +33,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
   final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
-  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
+  final ISettingsRepository _settingsRepo =
+      getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
 
   List<Plant> _plants = [];
   List<Hardware> _hardware = [];
@@ -128,17 +129,17 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-        onRefresh: _loadData,
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 80),
-          children: [
-            _buildRoomInfoCard(),
-            if (_rdwcSystem != null) _buildRdwcSystemCard(),
-            _buildHardwareSection(),
-            _buildPlantsSection(),
-          ],
-        ),
-      ),
+              onRefresh: _loadData,
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 80),
+                children: [
+                  _buildRoomInfoCard(),
+                  if (_rdwcSystem != null) _buildRdwcSystemCard(),
+                  _buildHardwareSection(),
+                  _buildPlantsSection(),
+                ],
+              ),
+            ),
     );
   }
 
@@ -180,11 +181,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.water_damage,
-                    color: statusColor,
-                    size: 28,
-                  ),
+                  Icon(Icons.water_damage, color: statusColor, size: 28),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -287,7 +284,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                   ),
                 ],
               ),
-              if (system.description != null && system.description!.isNotEmpty) ...[
+              if (system.description != null &&
+                  system.description!.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(
                   system.description!,
@@ -370,7 +368,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 if (widget.room.height > 0)
                   _buildInfoChip(
                     Icons.height,
-                    _t['room_detail_height'].replaceAll('{height}', (widget.room.height * 100).toStringAsFixed(0)),
+                    _t['room_detail_height'].replaceAll(
+                      '{height}',
+                      (widget.room.height * 100).toStringAsFixed(0),
+                    ),
                   ),
                 if (widget.room.wateringSystem != null)
                   _buildInfoChip(
@@ -379,7 +380,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                   ),
                 _buildInfoChip(
                   Icons.spa,
-                  _t['room_detail_plants_count'].replaceAll('{count}', '${_plants.length}'),
+                  _t['room_detail_plants_count'].replaceAll(
+                    '{count}',
+                    '${_plants.length}',
+                  ),
                   color: Colors.green[600],
                 ),
               ],
@@ -400,7 +404,11 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color != null ? Colors.white : Colors.grey[700]),
+          Icon(
+            icon,
+            size: 16,
+            color: color != null ? Colors.white : Colors.grey[700],
+          ),
           const SizedBox(width: 4),
           Text(
             label,
@@ -451,30 +459,37 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
           ),
           if (_hardware.isNotEmpty) ...[
             const Divider(height: 1),
-            ..._hardware.take(3).map((hw) => ListTile(
-              dense: true,
-              leading: Icon(
-                hw.type.icon,
-                color: Colors.orange[700],
-                size: 24,
-              ),
-              title: Text(hw.displayName),
-              subtitle: Text(hw.type.displayName),
-              trailing: hw.wattage != null
-                  ? Text(
-                hw.wattageDisplay,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.orange[700],
+            ..._hardware
+                .take(3)
+                .map(
+                  (hw) => ListTile(
+                    dense: true,
+                    leading: Icon(
+                      hw.type.icon,
+                      color: Colors.orange[700],
+                      size: 24,
+                    ),
+                    title: Text(hw.displayName),
+                    subtitle: Text(hw.type.displayName),
+                    trailing: hw.wattage != null
+                        ? Text(
+                            hw.wattageDisplay,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.orange[700],
+                            ),
+                          )
+                        : null,
+                  ),
                 ),
-              )
-                  : null,
-            )),
             if (_hardware.length > 3)
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Text(
-                  _t['room_detail_more_items'].replaceAll('{count}', '${_hardware.length - 3}'),
+                  _t['room_detail_more_items'].replaceAll(
+                    '{count}',
+                    '${_hardware.length - 3}',
+                  ),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -487,26 +502,16 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
               padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.devices_other,
-                    size: 48,
-                    color: Colors.grey[400],
-                  ),
+                  Icon(Icons.devices_other, size: 48, color: Colors.grey[400]),
                   const SizedBox(height: 12),
                   Text(
                     _t['room_detail_no_hardware'],
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _t['room_detail_add_hardware_hint'],
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                 ],
               ),
@@ -532,60 +537,57 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              _t['room_detail_plants_subtitle'].replaceAll('{count}', '${_plants.length}'),
+              _t['room_detail_plants_subtitle'].replaceAll(
+                '{count}',
+                '${_plants.length}',
+              ),
             ),
           ),
           if (_plants.isNotEmpty) ...[
             const Divider(height: 1),
-            ..._plants.map((plant) => ListTile(
-              dense: true,
-              leading: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[800] : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  _getPhaseEmoji(plant.phase),
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
-              title: Text(plant.name),
-              subtitle: Text('${plant.strain ?? 'Unknown'} • Tag ${plant.totalDays}'),
-              onTap: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => PlantDetailScreen(plant: plant),
+            ..._plants.map(
+              (plant) => ListTile(
+                dense: true,
+                leading: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[800] : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                );
-                _loadData();
-              },
-            )),
+                  child: Text(
+                    _getPhaseEmoji(plant.phase),
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ),
+                title: Text(plant.name),
+                subtitle: Text(
+                  '${plant.strain ?? 'Unknown'} • Tag ${plant.totalDays}',
+                ),
+                onTap: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => PlantDetailScreen(plant: plant),
+                    ),
+                  );
+                  _loadData();
+                },
+              ),
+            ),
           ] else
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.spa,
-                    size: 48,
-                    color: Colors.grey[400],
-                  ),
+                  Icon(Icons.spa, size: 48, color: Colors.grey[400]),
                   const SizedBox(height: 12),
                   Text(
                     _t['room_detail_no_plants'],
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _t['room_detail_add_plant_hint'],
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                 ],
               ),

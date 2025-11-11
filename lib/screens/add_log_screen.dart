@@ -115,33 +115,42 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
 
       if (logDetails == null) return;
 
-      final sourceFertilizers = logDetails['fertilizers'] as List<Map<String, dynamic>>;
+      final sourceFertilizers =
+          logDetails['fertilizers'] as List<Map<String, dynamic>>;
 
       if (!mounted) return;
 
       setState(() {
         _selectedAction = lastLog.actionType;
-        _waterAmountController.text = lastLog.waterAmount?.toStringAsFixed(1) ?? '';
+        _waterAmountController.text =
+            lastLog.waterAmount?.toStringAsFixed(1) ?? '';
         _phInController.text = lastLog.phIn?.toStringAsFixed(1) ?? '';
         _ecInController.text = lastLog.ecIn?.toStringAsFixed(1) ?? '';
         _phOutController.text = lastLog.phOut?.toStringAsFixed(1) ?? '';
         _ecOutController.text = lastLog.ecOut?.toStringAsFixed(1) ?? '';
-        _temperatureController.text = lastLog.temperature?.toStringAsFixed(1) ?? '';
+        _temperatureController.text =
+            lastLog.temperature?.toStringAsFixed(1) ?? '';
         _humidityController.text = lastLog.humidity?.toStringAsFixed(0) ?? '';
         _runoff = lastLog.runoff;
         _cleanse = lastLog.cleanse;
         _noteController.text = lastLog.note ?? '';
-        _containerSizeController.text = lastLog.containerSize?.toStringAsFixed(0) ?? '';
-        _containerMediumAmountController.text = lastLog.containerMediumAmount?.toStringAsFixed(1) ?? '';
+        _containerSizeController.text =
+            lastLog.containerSize?.toStringAsFixed(0) ?? '';
+        _containerMediumAmountController.text =
+            lastLog.containerMediumAmount?.toStringAsFixed(1) ?? '';
         _containerDrainage = lastLog.containerDrainage;
-        _containerDrainageMaterialController.text = lastLog.containerDrainageMaterial ?? '';
-        _systemReservoirSizeController.text = lastLog.systemReservoirSize?.toStringAsFixed(0) ?? '';
-        _systemBucketCountController.text = lastLog.systemBucketCount?.toString() ?? '';
-        _systemBucketSizeController.text = lastLog.systemBucketSize?.toStringAsFixed(0) ?? '';
+        _containerDrainageMaterialController.text =
+            lastLog.containerDrainageMaterial ?? '';
+        _systemReservoirSizeController.text =
+            lastLog.systemReservoirSize?.toStringAsFixed(0) ?? '';
+        _systemBucketCountController.text =
+            lastLog.systemBucketCount?.toString() ?? '';
+        _systemBucketSizeController.text =
+            lastLog.systemBucketSize?.toStringAsFixed(0) ?? '';
 
         _selectedFertilizers = {
           for (var fert in sourceFertilizers)
-            fert['fertilizer_id'] as int: (fert['amount'] as num).toDouble()
+            fert['fertilizer_id'] as int: (fert['amount'] as num).toDouble(),
         };
       });
 
@@ -256,7 +265,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       );
 
       final hasSpace = await StorageHelper.hasEnoughStorage(
-        bytesNeeded: totalSizeNeeded + (50 * 1024 * 1024), // Photos + 50MB buffer
+        bytesNeeded:
+            totalSizeNeeded + (50 * 1024 * 1024), // Photos + 50MB buffer
       );
 
       if (!hasSpace) {
@@ -265,7 +275,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         if (mounted && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('❌ ${AppTranslations(Localizations.localeOf(context).languageCode)['error']}'),
+              content: Text(
+                '❌ ${AppTranslations(Localizations.localeOf(context).languageCode)['error']}',
+              ),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 4),
             ),
@@ -290,12 +302,16 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           // ✅ SAFETY: Check file size (max 10MB)
           final size = await file.length();
           if (size > 10 * 1024 * 1024) {
-            AppLogger.warning('AddLogScreen', '⚠️ Photo too large: ${photo.name} (${(size / 1024 / 1024).toStringAsFixed(1)}MB)');
+            AppLogger.warning(
+              'AddLogScreen',
+              '⚠️ Photo too large: ${photo.name} (${(size / 1024 / 1024).toStringAsFixed(1)}MB)',
+            );
             failedPhotos.add('${photo.name} (zu groß)');
             continue;
           }
 
-          final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(photo.path)}';
+          final fileName =
+              '${DateTime.now().millisecondsSinceEpoch}_${path.basename(photo.path)}';
           // ✅ CRITICAL FIX: Use path.join() for cross-platform compatibility
           final filePath = path.join(photosDir.path, fileName);
 
@@ -303,7 +319,10 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           savedPaths.add(filePath);
           AppLogger.info('AddLogScreen', '✅ Photo saved: $fileName');
         } catch (e) {
-          AppLogger.error('AddLogScreen', '❌ Failed to save photo ${photo.name}: $e');
+          AppLogger.error(
+            'AddLogScreen',
+            '❌ Failed to save photo ${photo.name}: $e',
+          );
           failedPhotos.add(photo.name);
         }
       }
@@ -313,7 +332,11 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         if (failedPhotos.isEmpty && savedPaths.isNotEmpty) {
           AppMessages.photoSaved(context, savedPaths.length);
         } else if (failedPhotos.isNotEmpty) {
-          AppMessages.photoSavingPartialError(context, savedPaths.length, failedPhotos.length);
+          AppMessages.photoSavingPartialError(
+            context,
+            savedPaths.length,
+            failedPhotos.length,
+          );
         }
       }
     } catch (e) {
@@ -345,14 +368,19 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
     super.dispose();
   }
 
-  bool get _showPhEc => _selectedAction == ActionType.water || _selectedAction == ActionType.feed;
-  bool get _showPhEcOut => _showPhEc && widget.plant.medium.needsRunoffMeasurement;
-  bool get _showFlags => widget.plant.medium.needsRunoffFlags &&
-      (_selectedAction == ActionType.water || _selectedAction == ActionType.feed);
+  bool get _showPhEc =>
+      _selectedAction == ActionType.water || _selectedAction == ActionType.feed;
+  bool get _showPhEcOut =>
+      _showPhEc && widget.plant.medium.needsRunoffMeasurement;
+  bool get _showFlags =>
+      widget.plant.medium.needsRunoffFlags &&
+      (_selectedAction == ActionType.water ||
+          _selectedAction == ActionType.feed);
   bool get _showEnvironment => true;
   bool get _showContainerFields => _selectedAction == ActionType.transplant;
   bool get _showFertilizers => _selectedAction == ActionType.feed;
-  bool get _isHydroSystem => widget.plant.medium == Medium.dwc ||
+  bool get _isHydroSystem =>
+      widget.plant.medium == Medium.dwc ||
       widget.plant.medium == Medium.rdwc ||
       widget.plant.medium == Medium.hydro;
 
@@ -412,7 +440,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             ? double.tryParse(_containerMediumAmountController.text)
             : null,
         containerDrainage: _containerDrainage,
-        containerDrainageMaterial: _containerDrainageMaterialController.text.isNotEmpty
+        containerDrainageMaterial:
+            _containerDrainageMaterialController.text.isNotEmpty
             ? _containerDrainageMaterialController.text
             : null,
         systemReservoirSize: _systemReservoirSizeController.text.isNotEmpty
@@ -500,7 +529,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       if (mounted) {
         AppMessages.savingError(context, e.toString());
       }
-    } finally{
+    } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -511,7 +540,11 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
     return await showDialog<PlantPhase>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppTranslations(Localizations.localeOf(context).languageCode)['select_phase']),
+        title: Text(
+          AppTranslations(
+            Localizations.localeOf(context).languageCode,
+          )['select_phase'],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: PlantPhase.values.map((phase) {
@@ -596,59 +629,59 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (widget.bulkMode) _buildBulkModeWarning(),
-            _buildDayNumberCard(),
-            const SizedBox(height: 16),
-            _buildActionTypeSelector(),
-            const SizedBox(height: 16),
-            _buildDatePicker(),
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (widget.bulkMode) _buildBulkModeWarning(),
+                  _buildDayNumberCard(),
+                  const SizedBox(height: 16),
+                  _buildActionTypeSelector(),
+                  const SizedBox(height: 16),
+                  _buildDatePicker(),
 
-            const SizedBox(height: 24),
-            _buildPhotoSection(),
+                  const SizedBox(height: 24),
+                  _buildPhotoSection(),
 
-            const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-            if (_showContainerFields) ...[
-              if (_isHydroSystem)
-                _buildSystemFields()
-              else
-                _buildContainerFields(),
-              const SizedBox(height: 24),
-            ],
+                  if (_showContainerFields) ...[
+                    if (_isHydroSystem)
+                      _buildSystemFields()
+                    else
+                      _buildContainerFields(),
+                    const SizedBox(height: 24),
+                  ],
 
-            if (_selectedAction == ActionType.water ||
-                _selectedAction == ActionType.feed) ...[
-              _buildWaterSection(),
-              if (_showFertilizers) ...[
-                const SizedBox(height: 16),
-                _buildFertilizerSection(),
-              ],
-              if (_showPhEc) ...[
-                const SizedBox(height: 16),
-                _buildPhEcSection(),
-              ],
-              if (_showFlags) ...[
-                const SizedBox(height: 16),
-                _buildFlagsSection(),
-              ],
-            ],
+                  if (_selectedAction == ActionType.water ||
+                      _selectedAction == ActionType.feed) ...[
+                    _buildWaterSection(),
+                    if (_showFertilizers) ...[
+                      const SizedBox(height: 16),
+                      _buildFertilizerSection(),
+                    ],
+                    if (_showPhEc) ...[
+                      const SizedBox(height: 16),
+                      _buildPhEcSection(),
+                    ],
+                    if (_showFlags) ...[
+                      const SizedBox(height: 16),
+                      _buildFlagsSection(),
+                    ],
+                  ],
 
-            if (_showEnvironment) ...[
-              const SizedBox(height: 16),
-              _buildEnvironmentSection(),
-            ],
-            const SizedBox(height: 16),
-            _buildNoteSection(),
-            const SizedBox(height: 24),
-            _buildSaveButton(),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+                  if (_showEnvironment) ...[
+                    const SizedBox(height: 16),
+                    _buildEnvironmentSection(),
+                  ],
+                  const SizedBox(height: 16),
+                  _buildNoteSection(),
+                  const SizedBox(height: 24),
+                  _buildSaveButton(),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
     );
   }
 
@@ -677,10 +710,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                   const SizedBox(height: 4),
                   Text(
                     'Dieser Log wird für ${widget.bulkPlantIds?.length ?? 0} Pflanzen gleichzeitig gespeichert.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.blue[600]),
                   ),
                 ],
               ),
@@ -693,17 +723,23 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
 
   Widget _buildDayNumberCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? Colors.grey[850] : (widget.bulkMode ? Colors.blue[50] : Colors.green[50]);
+    final cardColor = isDark
+        ? Colors.grey[850]
+        : (widget.bulkMode ? Colors.blue[50] : Colors.green[50]);
 
     // Berechne Phase-Tag-Nummer basierend auf ausgewähltem Datum
     int phaseDayNumber = 1;
     if (widget.plant.phaseStartDate != null) {
-      final phaseDay = DateTime(widget.plant.phaseStartDate!.year, 
-                                widget.plant.phaseStartDate!.month, 
-                                widget.plant.phaseStartDate!.day);
-      final selectedDay = DateTime(_selectedDate.year, 
-                                   _selectedDate.month, 
-                                   _selectedDate.day);
+      final phaseDay = DateTime(
+        widget.plant.phaseStartDate!.year,
+        widget.plant.phaseStartDate!.month,
+        widget.plant.phaseStartDate!.day,
+      );
+      final selectedDay = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+      );
       phaseDayNumber = selectedDay.difference(phaseDay).inDays + 1;
       if (phaseDayNumber < 1) phaseDayNumber = 1;
     }
@@ -734,17 +770,11 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                     // ✅ KLEIN: Gesamt-Tag
                     Text(
                       'Gesamt: Tag $_nextDayNumber',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                     Text(
                       widget.plant.medium.displayName,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[500],
-                      ),
+                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                     ),
                   ],
                 ),
@@ -767,10 +797,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                     Expanded(
                       child: Text(
                         'Du kannst auch alte Logs nachträglich erstellen. Ändere einfach das Datum - der Tag wird automatisch berechnet!',
-                        style: TextStyle(
-                          color: Colors.blue[900],
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: Colors.blue[900], fontSize: 11),
                       ),
                     ),
                   ],
@@ -841,7 +868,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             );
           }).toList(),
         ),
-        if (_selectedAction == ActionType.phaseChange && _selectedPhase != null) ...[
+        if (_selectedAction == ActionType.phaseChange &&
+            _selectedPhase != null) ...[
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
@@ -874,10 +902,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                     children: [
                       Text(
                         'Neue Phase',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                       ),
                       Text(
                         _selectedPhase!.displayName,
@@ -911,7 +936,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   // ✅ BUG #7 FIX: Datum nur bis heute
   Widget _buildDatePicker() {
     final dateFormat = DateFormat('dd.MM.yyyy HH:mm');
-    
+
     // ✅ Validierung prüfen
     final dateWarning = widget.plant.seedDate != null
         ? Validators.validateLogDate(
@@ -932,7 +957,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             final date = await showDatePicker(
               context: context,
               initialDate: _selectedDate,
-              firstDate: widget.plant.seedDate ?? DateTime(2020),  // ✅ Nicht vor seedDate!
+              firstDate:
+                  widget.plant.seedDate ??
+                  DateTime(2020), // ✅ Nicht vor seedDate!
               lastDate: DateTime.now(), // ✅ BUG #7 FIX: Nur bis heute
             );
             if (date != null && mounted) {
@@ -973,10 +1000,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                 Expanded(
                   child: Text(
                     dateWarning,
-                    style: TextStyle(
-                      color: Colors.orange[900],
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.orange[900], fontSize: 12),
                   ),
                 ),
               ],
@@ -1008,7 +1032,11 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             TextButton.icon(
               onPressed: _showPhotoSourceDialog,
               icon: const Icon(Icons.add_a_photo),
-              label: Text(AppTranslations(Localizations.localeOf(context).languageCode)['add_photo']),
+              label: Text(
+                AppTranslations(
+                  Localizations.localeOf(context).languageCode,
+                )['add_photo'],
+              ),
             ),
           ],
         ),
@@ -1020,22 +1048,32 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
               color: isDark ? Colors.grey[850] : Colors.grey[100],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark ? Colors.grey[700] ?? Colors.grey : Colors.grey[300] ?? Colors.grey,
+                color: isDark
+                    ? Colors.grey[700] ?? Colors.grey
+                    : Colors.grey[300] ?? Colors.grey,
                 width: 2,
               ),
             ),
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.add_photo_alternate, size: 48, color: Colors.grey[400]),
+                  Icon(
+                    Icons.add_photo_alternate,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'Keine Fotos hinzugefügt',
-                    style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    AppTranslations(Localizations.localeOf(context).languageCode)['tap_to_add_photos'],
+                    AppTranslations(
+                      Localizations.localeOf(context).languageCode,
+                    )['tap_to_add_photos'],
                     style: TextStyle(
                       color: isDark ? Colors.grey[500] : Colors.grey[500],
                       fontSize: 12,
@@ -1116,11 +1154,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             prefixIcon: Icon(Icons.water_drop, color: Colors.blue[600]),
             border: const OutlineInputBorder(),
           ),
-          validator: (value) => Validators.validatePositiveNumber(
-            value,
-            min: 0.1,
-            max: 1000.0,
-          ),
+          validator: (value) =>
+              Validators.validatePositiveNumber(value, min: 0.1, max: 1000.0),
         ),
       ],
     );
@@ -1144,7 +1179,11 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             TextButton.icon(
               onPressed: _showAddFertilizerDialog,
               icon: const Icon(Icons.add),
-              label: Text(AppTranslations(Localizations.localeOf(context).languageCode)['add_photo']),
+              label: Text(
+                AppTranslations(
+                  Localizations.localeOf(context).languageCode,
+                )['add_photo'],
+              ),
             ),
           ],
         ),
@@ -1183,7 +1222,11 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Colors.green[600],
-                  child: const Icon(Icons.science, color: Colors.white, size: 20),
+                  child: const Icon(
+                    Icons.science,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
                 title: Text(fertilizer.name),
                 subtitle: Text('${entry.value.toStringAsFixed(1)} ml'),
@@ -1205,7 +1248,10 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
 
   void _showAddFertilizerDialog() {
     if (_availableFertilizers.isEmpty) {
-      AppMessages.showInfo(context, 'Keine Dünger verfügbar. Erstelle erst Dünger!');
+      AppMessages.showInfo(
+        context,
+        'Keine Dünger verfügbar. Erstelle erst Dünger!',
+      );
       return;
     }
 
@@ -1213,7 +1259,11 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppTranslations(Localizations.localeOf(context).languageCode)['add_fertilizer']),
+          title: Text(
+            AppTranslations(
+              Localizations.localeOf(context).languageCode,
+            )['add_fertilizer'],
+          ),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
@@ -1221,11 +1271,15 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
               itemCount: _availableFertilizers.length,
               itemBuilder: (context, index) {
                 final fertilizer = _availableFertilizers[index];
-                final isSelected = _selectedFertilizers.containsKey(fertilizer.id);
+                final isSelected = _selectedFertilizers.containsKey(
+                  fertilizer.id,
+                );
 
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: isSelected ? Colors.green[600] : Colors.grey[400],
+                    backgroundColor: isSelected
+                        ? Colors.green[600]
+                        : Colors.grey[400],
                     child: Icon(
                       isSelected ? Icons.check : Icons.science,
                       color: Colors.white,
@@ -1273,7 +1327,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             title: Text(fertilizer.name),
             content: TextFormField(
               controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: 'Menge (ml)',
                 border: OutlineInputBorder(),
@@ -1295,7 +1351,11 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                     Navigator.of(context).pop();
                   }
                 },
-                child: Text(AppTranslations(Localizations.localeOf(context).languageCode)['add_photo']),
+                child: Text(
+                  AppTranslations(
+                    Localizations.localeOf(context).languageCode,
+                  )['add_photo'],
+                ),
               ),
             ],
           );
@@ -1308,7 +1368,10 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   }
 
   // ✅ FIX: Made async to properly await dialog and dispose controller
-  Future<void> _editFertilizerAmount(int fertilizerId, double currentAmount) async {
+  Future<void> _editFertilizerAmount(
+    int fertilizerId,
+    double currentAmount,
+  ) async {
     final amountController = TextEditingController(
       text: currentAmount.toStringAsFixed(1),
     );
@@ -1331,7 +1394,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             title: Text(fertilizer.name),
             content: TextFormField(
               controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: 'Menge (ml)',
                 border: OutlineInputBorder(),
@@ -1383,7 +1448,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             Expanded(
               child: TextFormField(
                 controller: _phInController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'pH In',
                   border: OutlineInputBorder(),
@@ -1395,7 +1462,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             Expanded(
               child: TextFormField(
                 controller: _ecInController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'EC In',
                   border: OutlineInputBorder(),
@@ -1412,7 +1481,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
               Expanded(
                 child: TextFormField(
                   controller: _phOutController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'pH Out',
                     border: OutlineInputBorder(),
@@ -1424,7 +1495,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
               Expanded(
                 child: TextFormField(
                   controller: _ecOutController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'EC Out',
                     border: OutlineInputBorder(),
@@ -1451,7 +1524,11 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         ),
         SwitchListTile(
           title: const Text('Cleanse'),
-          subtitle: Text(AppTranslations(Localizations.localeOf(context).languageCode)['cleanse_subtitle']),
+          subtitle: Text(
+            AppTranslations(
+              Localizations.localeOf(context).languageCode,
+            )['cleanse_subtitle'],
+          ),
           value: _cleanse,
           onChanged: (value) => setState(() => _cleanse = value),
           activeThumbColor: Colors.blue[600],
@@ -1478,7 +1555,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             Expanded(
               child: TextFormField(
                 controller: _temperatureController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Temperatur (°C)',
                   prefixIcon: Icon(Icons.thermostat),
@@ -1491,7 +1570,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             Expanded(
               child: TextFormField(
                 controller: _humidityController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Luftfeuchte (%)',
                   prefixIcon: Icon(Icons.water_damage),
@@ -1523,7 +1604,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           controller: _noteController,
           maxLines: 4,
           decoration: InputDecoration(
-            hintText: AppTranslations(Localizations.localeOf(context).languageCode)['notes_hint'],
+            hintText: AppTranslations(
+              Localizations.localeOf(context).languageCode,
+            )['notes_hint'],
             border: const OutlineInputBorder(),
           ),
         ),
@@ -1553,11 +1636,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             prefixIcon: Icon(Icons.local_florist, color: Colors.brown[600]),
             border: const OutlineInputBorder(),
           ),
-          validator: (value) => Validators.validatePositiveNumber(
-              value,
-              min: 0.5,
-              max: 500.0
-          ),
+          validator: (value) =>
+              Validators.validatePositiveNumber(value, min: 0.5, max: 500.0),
         ),
         const SizedBox(height: 12),
         TextFormField(
@@ -1569,11 +1649,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             prefixIcon: Icon(Icons.grass, color: Colors.green[700]),
             border: const OutlineInputBorder(),
           ),
-          validator: (value) => Validators.validatePositiveNumber(
-            value,
-            min: 0.1,
-            max: 500.0,
-          ),
+          validator: (value) =>
+              Validators.validatePositiveNumber(value, min: 0.1, max: 500.0),
         ),
         const SizedBox(height: 12),
         SwitchListTile(
@@ -1621,11 +1698,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             prefixIcon: Icon(Icons.water, color: Colors.blue[600]),
             border: const OutlineInputBorder(),
           ),
-          validator: (value) => Validators.validatePositiveNumber(
-            value,
-            min: 1.0,
-            max: 10000.0,
-          ),
+          validator: (value) =>
+              Validators.validatePositiveNumber(value, min: 1.0, max: 10000.0),
         ),
         const SizedBox(height: 12),
         Row(
@@ -1639,18 +1713,17 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                   hintText: 'z.B. 4',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) => Validators.validateInteger(
-                  value,
-                  min: 1,
-                  max: 100,
-                ),
+                validator: (value) =>
+                    Validators.validateInteger(value, min: 1, max: 100),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: TextFormField(
                 controller: _systemBucketSizeController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Bucket-Größe (L)',
                   hintText: 'z.B. 15',

@@ -2,7 +2,7 @@
 // GROWLOG - Harvest Model (Ernte-Tracking)
 // =============================================
 
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -10,38 +10,38 @@ const Object _undefined = Object();
 class Harvest {
   final int? id;
   final int plantId;
-  
+
   // Ernte-Daten
   final DateTime harvestDate;
-  final double? wetWeight;        // Nassgewicht in Gramm
-  final double? dryWeight;        // Trockengewicht in Gramm
-  
+  final double? wetWeight; // Nassgewicht in Gramm
+  final double? dryWeight; // Trockengewicht in Gramm
+
   // Trocknungs-Tracking
   final DateTime? dryingStartDate;
   final DateTime? dryingEndDate;
-  final int? dryingDays;          // Automatisch berechnet
-  final String? dryingMethod;     // z.B. "Hängend", "Netz", "Box"
+  final int? dryingDays; // Automatisch berechnet
+  final String? dryingMethod; // z.B. "Hängend", "Netz", "Box"
   final double? dryingTemperature;
   final double? dryingHumidity;
-  
+
   // Curing-Tracking
   final DateTime? curingStartDate;
   final DateTime? curingEndDate;
-  final int? curingDays;          // Automatisch berechnet
-  final String? curingMethod;     // z.B. "Glass Jars", "Grove Bags"
+  final int? curingDays; // Automatisch berechnet
+  final String? curingMethod; // z.B. "Glass Jars", "Grove Bags"
   final String? curingNotes;
-  
+
   // Qualitäts-Daten (optional)
   final double? thcPercentage;
   final double? cbdPercentage;
-  final String? terpeneProfile;   // z.B. "Myrcene, Limonene, Caryophyllene"
-  
+  final String? terpeneProfile; // z.B. "Myrcene, Limonene, Caryophyllene"
+
   // Bewertung & Notizen
-  final int? rating;              // 1-5 Sterne
+  final int? rating; // 1-5 Sterne
   final String? tasteNotes;
   final String? effectNotes;
   final String? overallNotes;
-  
+
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -156,12 +156,12 @@ class Harvest {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
-    
+
     // Nur ID hinzufügen wenn sie nicht null ist (für UPDATE)
     if (id != null) {
       map['id'] = id;
     }
-    
+
     return map;
   }
 
@@ -198,28 +198,68 @@ class Harvest {
       id: id ?? this.id,
       plantId: plantId ?? this.plantId,
       harvestDate: harvestDate ?? this.harvestDate,
-      wetWeight: wetWeight == _undefined ? this.wetWeight : wetWeight as double?,
-      dryWeight: dryWeight == _undefined ? this.dryWeight : dryWeight as double?,
-      dryingStartDate: dryingStartDate == _undefined ? this.dryingStartDate : dryingStartDate as DateTime?,
-      dryingEndDate: dryingEndDate == _undefined ? this.dryingEndDate : dryingEndDate as DateTime?,
-      dryingDays: dryingDays == _undefined ? this.dryingDays : dryingDays as int?,
-      dryingMethod: dryingMethod == _undefined ? this.dryingMethod : dryingMethod as String?,
-      dryingTemperature: dryingTemperature == _undefined ? this.dryingTemperature : dryingTemperature as double?,
-      dryingHumidity: dryingHumidity == _undefined ? this.dryingHumidity : dryingHumidity as double?,
-      curingStartDate: curingStartDate == _undefined ? this.curingStartDate : curingStartDate as DateTime?,
-      curingEndDate: curingEndDate == _undefined ? this.curingEndDate : curingEndDate as DateTime?,
-      curingDays: curingDays == _undefined ? this.curingDays : curingDays as int?,
-      curingMethod: curingMethod == _undefined ? this.curingMethod : curingMethod as String?,
-      curingNotes: curingNotes == _undefined ? this.curingNotes : curingNotes as String?,
-      thcPercentage: thcPercentage == _undefined ? this.thcPercentage : thcPercentage as double?,
-      cbdPercentage: cbdPercentage == _undefined ? this.cbdPercentage : cbdPercentage as double?,
-      terpeneProfile: terpeneProfile == _undefined ? this.terpeneProfile : terpeneProfile as String?,
+      wetWeight: wetWeight == _undefined
+          ? this.wetWeight
+          : wetWeight as double?,
+      dryWeight: dryWeight == _undefined
+          ? this.dryWeight
+          : dryWeight as double?,
+      dryingStartDate: dryingStartDate == _undefined
+          ? this.dryingStartDate
+          : dryingStartDate as DateTime?,
+      dryingEndDate: dryingEndDate == _undefined
+          ? this.dryingEndDate
+          : dryingEndDate as DateTime?,
+      dryingDays: dryingDays == _undefined
+          ? this.dryingDays
+          : dryingDays as int?,
+      dryingMethod: dryingMethod == _undefined
+          ? this.dryingMethod
+          : dryingMethod as String?,
+      dryingTemperature: dryingTemperature == _undefined
+          ? this.dryingTemperature
+          : dryingTemperature as double?,
+      dryingHumidity: dryingHumidity == _undefined
+          ? this.dryingHumidity
+          : dryingHumidity as double?,
+      curingStartDate: curingStartDate == _undefined
+          ? this.curingStartDate
+          : curingStartDate as DateTime?,
+      curingEndDate: curingEndDate == _undefined
+          ? this.curingEndDate
+          : curingEndDate as DateTime?,
+      curingDays: curingDays == _undefined
+          ? this.curingDays
+          : curingDays as int?,
+      curingMethod: curingMethod == _undefined
+          ? this.curingMethod
+          : curingMethod as String?,
+      curingNotes: curingNotes == _undefined
+          ? this.curingNotes
+          : curingNotes as String?,
+      thcPercentage: thcPercentage == _undefined
+          ? this.thcPercentage
+          : thcPercentage as double?,
+      cbdPercentage: cbdPercentage == _undefined
+          ? this.cbdPercentage
+          : cbdPercentage as double?,
+      terpeneProfile: terpeneProfile == _undefined
+          ? this.terpeneProfile
+          : terpeneProfile as String?,
       rating: rating == _undefined ? this.rating : rating as int?,
-      tasteNotes: tasteNotes == _undefined ? this.tasteNotes : tasteNotes as String?,
-      effectNotes: effectNotes == _undefined ? this.effectNotes : effectNotes as String?,
-      overallNotes: overallNotes == _undefined ? this.overallNotes : overallNotes as String?,
+      tasteNotes: tasteNotes == _undefined
+          ? this.tasteNotes
+          : tasteNotes as String?,
+      effectNotes: effectNotes == _undefined
+          ? this.effectNotes
+          : effectNotes as String?,
+      overallNotes: overallNotes == _undefined
+          ? this.overallNotes
+          : overallNotes as String?,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt == _undefined ? this.updatedAt : updatedAt as DateTime?,
+      updatedAt: updatedAt == _undefined
+          ? this.updatedAt
+          : updatedAt as DateTime?,
     );
   }
 
@@ -276,9 +316,7 @@ class Harvest {
 
   /// Ist komplett fertig?
   bool get isComplete {
-    return dryWeight != null && 
-           dryingEndDate != null && 
-           curingEndDate != null;
+    return dryWeight != null && dryingEndDate != null && curingEndDate != null;
   }
 
   @override

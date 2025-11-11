@@ -10,10 +10,7 @@ import 'package:growlog_app/utils/translations.dart';
 class BatteryOptimizationDialog extends StatelessWidget {
   final int crashCount;
 
-  const BatteryOptimizationDialog({
-    super.key,
-    required this.crashCount,
-  });
+  const BatteryOptimizationDialog({super.key, required this.crashCount});
 
   @override
   Widget build(BuildContext context) {
@@ -34,23 +31,25 @@ class BatteryOptimizationDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              t.translate('battery_dialog_crashes').replaceAll('{count}', crashCount.toString()),
+              t
+                  .translate('battery_dialog_crashes')
+                  .replaceAll('{count}', crashCount.toString()),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            Text(
-              t.translate('battery_dialog_reason'),
-            ),
+            Text(t.translate('battery_dialog_reason')),
             const SizedBox(height: 16),
             Text(
               t.translate('battery_dialog_recommendations'),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            ...recommendations.map((rec) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(rec),
-            )),
+            ...recommendations.map(
+              (rec) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(rec),
+              ),
+            ),
           ],
         ),
       ),

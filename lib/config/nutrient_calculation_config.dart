@@ -68,7 +68,7 @@ class NutrientCalculationConfig {
   /// Check if scaling factor is in moderate range
   static bool isModerateScaling(double scalingFactor) {
     return scalingFactor > moderateScalingMin &&
-           scalingFactor <= moderateScalingMax;
+        scalingFactor <= moderateScalingMax;
   }
 
   /// Check if scaling factor is high/dangerous

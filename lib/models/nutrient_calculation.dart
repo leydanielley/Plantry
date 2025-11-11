@@ -10,29 +10,29 @@ import 'package:growlog_app/config/nutrient_calculation_config.dart';
 
 /// Calculator modes
 enum CalculatorMode {
-  topUp,      // Top-up existing reservoir (increase/maintain PPM)
-  batchMix,   // Mix fresh batch from 0L
-  quickMix,   // Quick mixing for watering
-  dilution,   // Dilute to lower PPM
+  topUp, // Top-up existing reservoir (increase/maintain PPM)
+  batchMix, // Mix fresh batch from 0L
+  quickMix, // Quick mixing for watering
+  dilution, // Dilute to lower PPM
 }
 
 /// Recipe usage mode
 enum RecipeMode {
-  manual,  // User enters target PPM manually
-  recipe,  // User selects a recipe
-  direct,  // User selects individual fertilizers directly
+  manual, // User enters target PPM manually
+  recipe, // User selects a recipe
+  direct, // User selects individual fertilizers directly
 }
 
 /// Universal nutrient calculation result
 class NutrientCalculation {
-  final double targetVolume;        // Target volume in liters
-  final double currentVolume;       // Current volume in liters
-  final double currentPPM;          // Current PPM
-  final double targetPPM;           // Target PPM
-  final RdwcRecipe? recipe;         // Optional recipe used
-  final AppSettings settings;       // For unit conversions
-  final CalculatorMode calculatorMode;  // Calculator mode
-  final RecipeMode recipeMode;      // Recipe usage mode
+  final double targetVolume; // Target volume in liters
+  final double currentVolume; // Current volume in liters
+  final double currentPPM; // Current PPM
+  final double targetPPM; // Target PPM
+  final RdwcRecipe? recipe; // Optional recipe used
+  final AppSettings settings; // For unit conversions
+  final CalculatorMode calculatorMode; // Calculator mode
+  final RecipeMode recipeMode; // Recipe usage mode
 
   NutrientCalculation({
     required this.targetVolume,
@@ -51,7 +51,7 @@ class NutrientCalculation {
     required double targetVolume,
     required double currentVolume,
     required double currentPPM,
-    required double targetPPM,  // User-specified target for entire system
+    required double targetPPM, // User-specified target for entire system
     required RdwcRecipe recipe,
     required AppSettings settings,
     CalculatorMode calculatorMode = CalculatorMode.topUp,
@@ -94,7 +94,8 @@ class NutrientCalculation {
   /// Formula: (target_ppm × target_vol - current_ppm × current_vol) / vol_to_add
   double get requiredPPM {
     if (volumeToAdd <= 0) return 0;
-    return (targetPPM * targetVolume - currentPPM * currentVolume) / volumeToAdd;
+    return (targetPPM * targetVolume - currentPPM * currentVolume) /
+        volumeToAdd;
   }
 
   /// Calculate required EC of solution to add
@@ -118,7 +119,8 @@ class NutrientCalculation {
   /// This scales the recipe to match the actual PPM needed in the solution
   /// Returns map: fertilizerId → total ml needed (SCALED)
   Map<int, double> getScaledFertilizerAmounts() {
-    if (recipe == null || volumeToAdd <= 0 || recipe!.targetEc == null) return {};
+    if (recipe == null || volumeToAdd <= 0 || recipe!.targetEc == null)
+      return {};
 
     final scaleFactor = scalingFactor;
     final originalAmounts = recipe!.getTotalAmounts(volumeToAdd);
@@ -145,7 +147,8 @@ class NutrientCalculation {
   /// Example: Recipe is 1260 PPM, but we need 1500 PPM → factor = 1.19
   double get scalingFactor {
     final recipeTarget = recipeTargetPPM;
-    if (recipeTarget == null || recipeTarget == 0 || requiredPPM == 0) return 1.0;
+    if (recipeTarget == null || recipeTarget == 0 || requiredPPM == 0)
+      return 1.0;
     return requiredPPM / recipeTarget;
   }
 
@@ -172,8 +175,8 @@ class NutrientCalculation {
   /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
   bool get isValid {
     return volumeToAdd > NutrientCalculationConfig.minimumVolumeToAdd &&
-           !needsDilution &&
-           !isSystemFull;
+        !needsDilution &&
+        !isSystemFull;
   }
 
   bool get isSystemFull => currentVolume >= targetVolume;
@@ -181,7 +184,8 @@ class NutrientCalculation {
   bool get volumeExceedsCapacity => currentVolume > targetVolume;
 
   /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
-  bool get needsDilution => NutrientCalculationConfig.needsDilution(requiredPPM);
+  bool get needsDilution =>
+      NutrientCalculationConfig.needsDilution(requiredPPM);
 
   /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
   bool get isHighPPM => NutrientCalculationConfig.isHighPpm(requiredPPM);
@@ -232,13 +236,16 @@ class NutrientCalculation {
 
   /// Check if this is a batch mix (starting from 0L)
   /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
-  bool get isBatchMix => calculatorMode == CalculatorMode.batchMix ||
-                         currentVolume == NutrientCalculationConfig.batchMixStartVolume;
+  bool get isBatchMix =>
+      calculatorMode == CalculatorMode.batchMix ||
+      currentVolume == NutrientCalculationConfig.batchMixStartVolume;
 
   /// Check if this is a dilution (lowering PPM with water)
   /// ✅ AUDIT FIX: Uses config constants instead of magic numbers
-  bool get isDilutionMode => calculatorMode == CalculatorMode.dilution ||
-                             (targetPPM < currentPPM && currentVolume > NutrientCalculationConfig.minimumVolumeToAdd);
+  bool get isDilutionMode =>
+      calculatorMode == CalculatorMode.dilution ||
+      (targetPPM < currentPPM &&
+          currentVolume > NutrientCalculationConfig.minimumVolumeToAdd);
 
   @override
   String toString() {
@@ -248,7 +255,7 @@ class NutrientCalculation {
 
 /// Warning levels for top-up calculation
 enum WarningLevel {
-  safe,     // Green - all good
-  warning,  // Yellow - high PPM but acceptable
-  error,    // Red - dilution needed or extreme PPM
+  safe, // Green - all good
+  warning, // Yellow - high PPM but acceptable
+  error, // Red - dilution needed or extreme PPM
 }

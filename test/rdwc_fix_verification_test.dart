@@ -134,13 +134,12 @@ void main() {
       };
 
       for (final entry in testCases.entries) {
-        final log = RdwcLog(
-          systemId: 1,
-          logType: entry.key,
-          levelAfter: 100.0,
+        final log = RdwcLog(systemId: 1, logType: entry.key, levelAfter: 100.0);
+        expect(
+          log.toMap()['log_type'],
+          entry.value,
+          reason: 'Failed for ${entry.key}',
         );
-        expect(log.toMap()['log_type'], entry.value,
-            reason: 'Failed for ${entry.key}');
       }
     });
 
@@ -165,8 +164,11 @@ void main() {
           logDate: DateTime.now(),
           actionType: entry.key,
         );
-        expect(log.toMap()['action_type'], entry.value,
-            reason: 'Failed for ${entry.key}');
+        expect(
+          log.toMap()['action_type'],
+          entry.value,
+          reason: 'Failed for ${entry.key}',
+        );
       }
     });
   });

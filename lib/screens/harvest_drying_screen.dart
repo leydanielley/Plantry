@@ -46,8 +46,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       if (mounted) {
-        AppMessages.showError(context,
-'Fehler: $e');
+        AppMessages.showError(context, 'Fehler: $e');
       }
     }
   }
@@ -62,14 +61,13 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
       );
       await _harvestRepo.updateHarvest(updated);
       _loadHarvest();
-      
+
       if (mounted) {
         AppMessages.showSuccess(context, 'Trocknung gestartet! 🌿');
       }
     } catch (e) {
       if (mounted) {
-        AppMessages.showError(context, 
-'Fehler: $e');
+        AppMessages.showError(context, 'Fehler: $e');
       }
     }
   }
@@ -129,7 +127,9 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 autofocus: true,
               ),
             ],
@@ -147,7 +147,10 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                   // ✅ FIX: Use dialogContext instead of context
                   Navigator.pop(dialogContext, w);
                 } else {
-                  AppMessages.showSuccess(dialogContext, 'Bitte gültiges Gewicht eingeben');
+                  AppMessages.showSuccess(
+                    dialogContext,
+                    'Bitte gültiges Gewicht eingeben',
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -225,7 +228,8 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditHarvestDryingScreen(harvest: _harvest!),
+                    builder: (context) =>
+                        EditHarvestDryingScreen(harvest: _harvest!),
                   ),
                 );
                 if (result == true) _loadHarvest();
@@ -240,10 +244,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
           children: [
             _buildStatusCard(hasStarted, hasEnded, isActive),
             const SizedBox(height: 20),
-            if (hasStarted) ...[
-              _buildDataCard(),
-              const SizedBox(height: 20),
-            ],
+            if (hasStarted) ...[_buildDataCard(), const SizedBox(height: 20)],
             if (!hasStarted)
               _buildStartButton()
             else if (isActive)
@@ -289,10 +290,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               child: Icon(icon, color: Colors.white, size: 32),
             ),
             const SizedBox(width: 16),
@@ -310,10 +308,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -401,7 +396,13 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, IconData icon, Color color, {bool highlight = false}) {
+  Widget _buildInfoRow(
+    String label,
+    String value,
+    IconData icon,
+    Color color, {
+    bool highlight = false,
+  }) {
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
@@ -472,7 +473,8 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => HarvestCuringScreen(harvestId: widget.harvestId),
+              builder: (context) =>
+                  HarvestCuringScreen(harvestId: widget.harvestId),
             ),
           );
           _loadHarvest();

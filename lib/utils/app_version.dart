@@ -59,10 +59,14 @@ class AppVersion {
   /// - -1 wenn andere Version neuer ist
   static int compareTo(String otherVersion) {
     // ✅ CRITICAL FIX: Use tryParse to prevent crash on malformed version strings
-    final thisParts = version.split('+')[0].split('.')
+    final thisParts = version
+        .split('+')[0]
+        .split('.')
         .map((s) => int.tryParse(s) ?? 0)
         .toList();
-    final otherParts = otherVersion.split('+')[0].split('.')
+    final otherParts = otherVersion
+        .split('+')[0]
+        .split('.')
         .map((s) => int.tryParse(s) ?? 0)
         .toList();
 

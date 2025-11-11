@@ -14,11 +14,14 @@ import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/di/service_locator.dart';
 
 class NotificationHelper {
-  static final INotificationService _notificationService = getIt<INotificationService>();
-  static final INotificationRepository _notificationRepo = getIt<INotificationRepository>();
+  static final INotificationService _notificationService =
+      getIt<INotificationService>();
+  static final INotificationRepository _notificationRepo =
+      getIt<INotificationRepository>();
   static final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
   static final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
-  static final ILogFertilizerRepository _logFertilizerRepo = getIt<ILogFertilizerRepository>();
+  static final ILogFertilizerRepository _logFertilizerRepo =
+      getIt<ILogFertilizerRepository>();
 
   /// Schedule all reminders for a plant based on last activities
   static Future<void> scheduleRemindersForPlant(Plant plant) async {
@@ -84,11 +87,16 @@ class NotificationHelper {
         }
       }
 
-      AppLogger.info('NotificationHelper',
-        'Scheduled all reminders for ${plant.name}');
+      AppLogger.info(
+        'NotificationHelper',
+        'Scheduled all reminders for ${plant.name}',
+      );
     } catch (e) {
-      AppLogger.error('NotificationHelper',
-        'Failed to schedule reminders for plant', e);
+      AppLogger.error(
+        'NotificationHelper',
+        'Failed to schedule reminders for plant',
+        e,
+      );
     }
   }
 
@@ -114,7 +122,11 @@ class NotificationHelper {
 
       AppLogger.info('NotificationHelper', 'Rescheduled reminders after log');
     } catch (e) {
-      AppLogger.error('NotificationHelper', 'Failed to reschedule after log', e);
+      AppLogger.error(
+        'NotificationHelper',
+        'Failed to reschedule after log',
+        e,
+      );
     }
   }
 
@@ -135,7 +147,11 @@ class NotificationHelper {
 
       AppLogger.info('NotificationHelper', 'Rescheduled photo reminder');
     } catch (e) {
-      AppLogger.error('NotificationHelper', 'Failed to reschedule photo reminder', e);
+      AppLogger.error(
+        'NotificationHelper',
+        'Failed to reschedule photo reminder',
+        e,
+      );
     }
   }
 
@@ -143,7 +159,10 @@ class NotificationHelper {
   static Future<void> onPlantDeleted(int plantId) async {
     try {
       await _notificationService.cancelPlantReminders(plantId);
-      AppLogger.info('NotificationHelper', 'Cancelled reminders for deleted plant');
+      AppLogger.info(
+        'NotificationHelper',
+        'Cancelled reminders for deleted plant',
+      );
     } catch (e) {
       AppLogger.error('NotificationHelper', 'Failed to cancel reminders', e);
     }
@@ -156,7 +175,9 @@ class NotificationHelper {
   static Future<DateTime?> _getLastWateringDate(int plantId) async {
     try {
       final logs = await _logRepo.findByPlant(plantId);
-      final wateredLogs = logs.where((l) => l.waterAmount != null && l.waterAmount! > 0);
+      final wateredLogs = logs.where(
+        (l) => l.waterAmount != null && l.waterAmount! > 0,
+      );
       if (wateredLogs.isEmpty) return null;
 
       wateredLogs.toList().sort((a, b) => b.logDate.compareTo(a.logDate));
@@ -192,7 +213,11 @@ class NotificationHelper {
 
       return null;
     } catch (e) {
-      AppLogger.error('NotificationHelper', 'Error getting last fertilizing date', e);
+      AppLogger.error(
+        'NotificationHelper',
+        'Error getting last fertilizing date',
+        e,
+      );
       return null;
     }
   }

@@ -14,7 +14,7 @@ import 'package:growlog_app/database/database_recovery.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static final _lock = Lock();  // ✅ CRITICAL FIX: Mutex prevents race condition
+  static final _lock = Lock(); // ✅ CRITICAL FIX: Mutex prevents race condition
 
   DatabaseHelper._init();
 
@@ -37,13 +37,21 @@ class DatabaseHelper {
       if (_database != null) return _database!;
 
       try {
-        AppLogger.info('DatabaseHelper', 'Initializing database with mutex lock...');
+        AppLogger.info(
+          'DatabaseHelper',
+          'Initializing database with mutex lock...',
+        );
         _database = await _initDB('growlog.db');
         AppLogger.info('DatabaseHelper', '✅ Database initialized successfully');
         return _database!;
       } catch (e, stackTrace) {
-        AppLogger.error('DatabaseHelper', 'Database initialization failed', e, stackTrace);
-        _database = null;  // Reset on failure to allow retry
+        AppLogger.error(
+          'DatabaseHelper',
+          'Database initialization failed',
+          e,
+          stackTrace,
+        );
+        _database = null; // Reset on failure to allow retry
         rethrow;
       }
     });
@@ -58,19 +66,27 @@ class DatabaseHelper {
     try {
       return await openDatabase(
         path,
-        version: 13,  // ✅ v13: Database integrity & performance (FK constraints, composite indexes)
+        version:
+            13, // ✅ v13: Database integrity & performance (FK constraints, composite indexes)
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onConfigure: _onConfigure,
       );
     } catch (e) {
-      AppLogger.error('DatabaseHelper', 'Database open failed, attempting recovery...', e);
+      AppLogger.error(
+        'DatabaseHelper',
+        'Database open failed, attempting recovery...',
+        e,
+      );
 
       // Attempt database recovery
       final recoveryResult = await DatabaseRecovery.performRecovery(path);
 
       if (recoveryResult.isSuccess || recoveryResult.wasRecreated) {
-        AppLogger.info('DatabaseHelper', 'Recovery successful, reopening database...');
+        AppLogger.info(
+          'DatabaseHelper',
+          'Recovery successful, reopening database...',
+        );
 
         // Try opening again
         return await openDatabase(
@@ -81,7 +97,10 @@ class DatabaseHelper {
           onConfigure: _onConfigure,
         );
       } else {
-        AppLogger.error('DatabaseHelper', 'Database recovery failed completely');
+        AppLogger.error(
+          'DatabaseHelper',
+          'Database recovery failed completely',
+        );
         rethrow;
       }
     }
@@ -140,9 +159,15 @@ class DatabaseHelper {
           FOREIGN KEY (grow_id) REFERENCES grows(id) ON DELETE SET NULL
         )
       ''');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_systems_room ON rdwc_systems(room_id)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_systems_grow ON rdwc_systems(grow_id)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_systems_archived ON rdwc_systems(archived)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_rdwc_systems_room ON rdwc_systems(room_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_rdwc_systems_grow ON rdwc_systems(grow_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_rdwc_systems_archived ON rdwc_systems(archived)',
+      );
 
       // RDWC Logs Table (Water Addback Tracking)
       await db.execute('''
@@ -165,9 +190,15 @@ class DatabaseHelper {
           FOREIGN KEY (system_id) REFERENCES rdwc_systems(id) ON DELETE CASCADE
         )
       ''');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_logs_system ON rdwc_logs(system_id)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_logs_date ON rdwc_logs(log_date)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_logs_type ON rdwc_logs(log_type)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_rdwc_logs_system ON rdwc_logs(system_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_rdwc_logs_date ON rdwc_logs(log_date)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_rdwc_logs_type ON rdwc_logs(log_type)',
+      );
 
       AppLogger.info('DatabaseHelper', '✅ Migration 2→3 complete!');
     }
@@ -193,7 +224,9 @@ class DatabaseHelper {
       ''');
 
       // Create index for plant-to-system lookup
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_rdwc_system ON plants(rdwc_system_id)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_plants_rdwc_system ON plants(rdwc_system_id)',
+      );
 
       AppLogger.info('DatabaseHelper', '✅ Migration 3→4 complete!');
     }
@@ -211,7 +244,9 @@ class DatabaseHelper {
       ''');
 
       // Create index for room-to-system lookup
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_rooms_rdwc_system ON rooms(rdwc_system_id)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_rooms_rdwc_system ON rooms(rdwc_system_id)',
+      );
 
       AppLogger.info('DatabaseHelper', '✅ Migration 4→5 complete!');
     }
@@ -226,8 +261,12 @@ class DatabaseHelper {
       // Add hardware columns to rdwc_systems
       await db.execute('ALTER TABLE rdwc_systems ADD COLUMN pump_brand TEXT');
       await db.execute('ALTER TABLE rdwc_systems ADD COLUMN pump_model TEXT');
-      await db.execute('ALTER TABLE rdwc_systems ADD COLUMN pump_wattage INTEGER');
-      await db.execute('ALTER TABLE rdwc_systems ADD COLUMN pump_flow_rate REAL');
+      await db.execute(
+        'ALTER TABLE rdwc_systems ADD COLUMN pump_wattage INTEGER',
+      );
+      await db.execute(
+        'ALTER TABLE rdwc_systems ADD COLUMN pump_flow_rate REAL',
+      );
       await db.execute('ALTER TABLE rdwc_systems ADD COLUMN accessories TEXT');
 
       AppLogger.info('DatabaseHelper', '✅ Migration 5→6 complete!');
@@ -241,16 +280,32 @@ class DatabaseHelper {
       );
 
       // Add Air Pump columns to rdwc_systems
-      await db.execute('ALTER TABLE rdwc_systems ADD COLUMN air_pump_brand TEXT');
-      await db.execute('ALTER TABLE rdwc_systems ADD COLUMN air_pump_model TEXT');
-      await db.execute('ALTER TABLE rdwc_systems ADD COLUMN air_pump_wattage INTEGER');
-      await db.execute('ALTER TABLE rdwc_systems ADD COLUMN air_pump_flow_rate REAL');
+      await db.execute(
+        'ALTER TABLE rdwc_systems ADD COLUMN air_pump_brand TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE rdwc_systems ADD COLUMN air_pump_model TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE rdwc_systems ADD COLUMN air_pump_wattage INTEGER',
+      );
+      await db.execute(
+        'ALTER TABLE rdwc_systems ADD COLUMN air_pump_flow_rate REAL',
+      );
 
       // Add Chiller columns to rdwc_systems
-      await db.execute('ALTER TABLE rdwc_systems ADD COLUMN chiller_brand TEXT');
-      await db.execute('ALTER TABLE rdwc_systems ADD COLUMN chiller_model TEXT');
-      await db.execute('ALTER TABLE rdwc_systems ADD COLUMN chiller_wattage INTEGER');
-      await db.execute('ALTER TABLE rdwc_systems ADD COLUMN chiller_cooling_power INTEGER');
+      await db.execute(
+        'ALTER TABLE rdwc_systems ADD COLUMN chiller_brand TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE rdwc_systems ADD COLUMN chiller_model TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE rdwc_systems ADD COLUMN chiller_wattage INTEGER',
+      );
+      await db.execute(
+        'ALTER TABLE rdwc_systems ADD COLUMN chiller_cooling_power INTEGER',
+      );
 
       AppLogger.info('DatabaseHelper', '✅ Migration 6→7 complete!');
     }
@@ -295,7 +350,9 @@ class DatabaseHelper {
         FOREIGN KEY (rdwc_system_id) REFERENCES rdwc_systems(id) ON DELETE SET NULL
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rooms_rdwc_system ON rooms(rdwc_system_id)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rooms_rdwc_system ON rooms(rdwc_system_id)',
+    );
 
     // Grows Table
     await db.execute('''
@@ -311,8 +368,12 @@ class DatabaseHelper {
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_grows_archived ON grows(archived)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_grows_room ON grows(room_id)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_grows_archived ON grows(archived)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_grows_room ON grows(room_id)',
+    );
 
     // Plants Table - ✅ BUG FIX #4: SeedType CHECK korrigiert (ohne 'REGULAR')
     // ✅ v10: Phase History (veg_date, bloom_date, harvest_date)
@@ -346,14 +407,30 @@ class DatabaseHelper {
         FOREIGN KEY (rdwc_system_id) REFERENCES rdwc_systems(id) ON DELETE SET NULL
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_room ON plants(room_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_grow ON plants(grow_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_rdwc_system ON plants(rdwc_system_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_phase ON plants(phase)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_archived ON plants(archived)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_veg_date ON plants(veg_date)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_bloom_date ON plants(bloom_date)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_plants_harvest_date ON plants(harvest_date)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plants_room ON plants(room_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plants_grow ON plants(grow_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plants_rdwc_system ON plants(rdwc_system_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plants_phase ON plants(phase)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plants_archived ON plants(archived)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plants_veg_date ON plants(veg_date)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plants_bloom_date ON plants(bloom_date)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plants_harvest_date ON plants(harvest_date)',
+    );
 
     // Plant Logs Table
     await db.execute('''
@@ -387,11 +464,21 @@ class DatabaseHelper {
         FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_logs_plant ON plant_logs(plant_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_logs_date ON plant_logs(log_date)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_logs_action ON plant_logs(action_type)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_plant_logs_lookup ON plant_logs(plant_id, log_date DESC)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_plant_logs_action_date ON plant_logs(action_type, log_date DESC)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_logs_plant ON plant_logs(plant_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_logs_date ON plant_logs(log_date)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_logs_action ON plant_logs(action_type)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plant_logs_lookup ON plant_logs(plant_id, log_date DESC)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plant_logs_action_date ON plant_logs(action_type, log_date DESC)',
+    );
 
     // Fertilizers Table (v8: added ec_value, ppm_value for RDWC calculations)
     // ✅ FIX: Added v11 migration fields to prevent schema mismatch on fresh installs
@@ -442,7 +529,9 @@ class DatabaseHelper {
         FOREIGN KEY (fertilizer_id) REFERENCES fertilizers(id) ON DELETE RESTRICT
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_log_fertilizers_lookup ON log_fertilizers(log_id, fertilizer_id)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_log_fertilizers_lookup ON log_fertilizers(log_id, fertilizer_id)',
+    );
 
     // App Settings Table
     await db.execute('''
@@ -499,9 +588,15 @@ class DatabaseHelper {
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_hardware_room ON hardware(room_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_hardware_type ON hardware(type)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_hardware_active ON hardware(active)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_hardware_room ON hardware(room_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_hardware_type ON hardware(type)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_hardware_active ON hardware(active)',
+    );
 
     // Photos Table
     await db.execute('''
@@ -513,8 +608,12 @@ class DatabaseHelper {
         FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE CASCADE
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_photos_log ON photos(log_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_photos_log_lookup ON photos(log_id, created_at DESC)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_photos_log ON photos(log_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_photos_log_lookup ON photos(log_id, created_at DESC)',
+    );
 
     // Log Templates Table
     await db.execute('''
@@ -547,7 +646,9 @@ class DatabaseHelper {
         FOREIGN KEY (fertilizer_id) REFERENCES fertilizers(id) ON DELETE RESTRICT
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_template_fertilizers_template ON template_fertilizers(template_id)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_template_fertilizers_template ON template_fertilizers(template_id)',
+    );
 
     // Harvests Table
     await db.execute('''
@@ -580,8 +681,12 @@ class DatabaseHelper {
         FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_harvests_plant ON harvests(plant_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_harvests_date ON harvests(harvest_date)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_harvests_plant ON harvests(plant_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_harvests_date ON harvests(harvest_date)',
+    );
 
     // RDWC Systems Table
     await db.execute('''
@@ -613,9 +718,15 @@ class DatabaseHelper {
         FOREIGN KEY (grow_id) REFERENCES grows(id) ON DELETE SET NULL
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_systems_room ON rdwc_systems(room_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_systems_grow ON rdwc_systems(grow_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_systems_archived ON rdwc_systems(archived)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_systems_room ON rdwc_systems(room_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_systems_grow ON rdwc_systems(grow_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_systems_archived ON rdwc_systems(archived)',
+    );
 
     // RDWC Logs Table (Water Addback Tracking)
     await db.execute('''
@@ -638,9 +749,15 @@ class DatabaseHelper {
         FOREIGN KEY (system_id) REFERENCES rdwc_systems(id) ON DELETE CASCADE
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_logs_system ON rdwc_logs(system_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_logs_date ON rdwc_logs(log_date)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_logs_type ON rdwc_logs(log_type)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_logs_system ON rdwc_logs(system_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_logs_date ON rdwc_logs(log_date)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_logs_type ON rdwc_logs(log_type)',
+    );
 
     // RDWC Log Fertilizers Table (v8: Expert Mode nutrient tracking)
     await db.execute('''
@@ -655,8 +772,12 @@ class DatabaseHelper {
         FOREIGN KEY (fertilizer_id) REFERENCES fertilizers(id) ON DELETE RESTRICT
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_log_fertilizers_log ON rdwc_log_fertilizers(rdwc_log_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_log_fertilizers_fertilizer ON rdwc_log_fertilizers(fertilizer_id)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_log_fertilizers_log ON rdwc_log_fertilizers(rdwc_log_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_log_fertilizers_fertilizer ON rdwc_log_fertilizers(fertilizer_id)',
+    );
 
     // RDWC Recipes Table (v8: Reusable fertilizer combinations)
     await db.execute('''
@@ -669,7 +790,9 @@ class DatabaseHelper {
         created_at TEXT DEFAULT (datetime('now'))
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_recipes_name ON rdwc_recipes(name)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_recipes_name ON rdwc_recipes(name)',
+    );
 
     // RDWC Recipe Fertilizers Table (v8: Recipe → Fertilizer mapping)
     await db.execute('''
@@ -682,15 +805,25 @@ class DatabaseHelper {
         FOREIGN KEY (fertilizer_id) REFERENCES fertilizers(id) ON DELETE RESTRICT
       )
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_recipe_fertilizers_recipe ON rdwc_recipe_fertilizers(recipe_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_rdwc_recipe_fertilizers_fertilizer ON rdwc_recipe_fertilizers(fertilizer_id)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_recipe_fertilizers_recipe ON rdwc_recipe_fertilizers(recipe_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_rdwc_recipe_fertilizers_fertilizer ON rdwc_recipe_fertilizers(fertilizer_id)',
+    );
 
-    AppLogger.info('DatabaseHelper', 'Schema v$version created successfully! ✅');
+    AppLogger.info(
+      'DatabaseHelper',
+      'Schema v$version created successfully! ✅',
+    );
   }
 
   Future<void> analyze() async {
     final db = await database;
-    AppLogger.info('DatabaseHelper', '🔍 Running ANALYZE for query optimization...');
+    AppLogger.info(
+      'DatabaseHelper',
+      '🔍 Running ANALYZE for query optimization...',
+    );
     await db.execute('ANALYZE');
     AppLogger.info('DatabaseHelper', '✅ Database analyzed!');
   }

@@ -93,8 +93,10 @@ class FertilizerValidator {
     if (nameLower.contains('amazon.') || nameLower.contains('amzn.to')) {
       return true;
     }
-    if (nameLower.contains('.com') || nameLower.contains('.de') ||
-        nameLower.contains('.co.uk') || nameLower.contains('.to/')) {
+    if (nameLower.contains('.com') ||
+        nameLower.contains('.de') ||
+        nameLower.contains('.co.uk') ||
+        nameLower.contains('.to/')) {
       return true;
     }
     if (nameLower.startsWith('http') || nameLower.startsWith('www')) {
@@ -114,7 +116,8 @@ class FertilizerValidator {
 
     // 5. Looks like truncated/corrupted text (ends with incomplete word)
     // Examples: "ate)", "c Acid", "alcium Nitrate"
-    if (name.length < 10 && (name.endsWith(')') || name.startsWith('c ') || !name.contains(' '))) {
+    if (name.length < 10 &&
+        (name.endsWith(')') || name.startsWith('c ') || !name.contains(' '))) {
       // Very short names that look incomplete
       final hasVowel = RegExp(r'[aeiouAEIOU]').hasMatch(name);
       if (!hasVowel) {
@@ -230,7 +233,6 @@ class FertilizerValidator {
     if (isIncomplete(fertilizer)) return 'incomplete';
     return 'valid';
   }
-
 
   // =============================================
   // BATCH VALIDATION METHODS

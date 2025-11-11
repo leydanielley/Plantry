@@ -77,7 +77,11 @@ class PlantProvider with ChangeNotifier {
 
   /// Load all plants (not archived)
   Future<void> loadPlants({int? limit, int? offset}) async {
-    AppLogger.debug('PlantProvider', 'Loading plants', 'limit=$limit, offset=$offset');
+    AppLogger.debug(
+      'PlantProvider',
+      'Loading plants',
+      'limit=$limit, offset=$offset',
+    );
 
     _plants = const Loading();
     _safeNotifyListeners();
@@ -127,10 +131,18 @@ class PlantProvider with ChangeNotifier {
     try {
       final plantList = await _repository.findByRoom(roomId);
       _plantsByRoom = Success(plantList);
-      AppLogger.info('PlantProvider', 'Loaded ${plantList.length} plants for room');
+      AppLogger.info(
+        'PlantProvider',
+        'Loaded ${plantList.length} plants for room',
+      );
     } catch (e, stack) {
       _plantsByRoom = Error('Failed to load plants by room', e, stack);
-      AppLogger.error('PlantProvider', 'Failed to load plants by room', e, stack);
+      AppLogger.error(
+        'PlantProvider',
+        'Failed to load plants by room',
+        e,
+        stack,
+      );
     }
 
     _safeNotifyListeners();
@@ -147,10 +159,18 @@ class PlantProvider with ChangeNotifier {
     try {
       final plantList = await _repository.findByGrow(growId);
       _plantsByGrow = Success(plantList);
-      AppLogger.info('PlantProvider', 'Loaded ${plantList.length} plants for grow');
+      AppLogger.info(
+        'PlantProvider',
+        'Loaded ${plantList.length} plants for grow',
+      );
     } catch (e, stack) {
       _plantsByGrow = Error('Failed to load plants by grow', e, stack);
-      AppLogger.error('PlantProvider', 'Failed to load plants by grow', e, stack);
+      AppLogger.error(
+        'PlantProvider',
+        'Failed to load plants by grow',
+        e,
+        stack,
+      );
     }
 
     _safeNotifyListeners();

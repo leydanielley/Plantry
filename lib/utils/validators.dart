@@ -52,9 +52,7 @@ class Validators {
   static bool isValidEmail(String email) {
     if (email.isEmpty) return false;
 
-    final regex = RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-    );
+    final regex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
     return regex.hasMatch(email);
   }
 
@@ -143,7 +141,8 @@ class Validators {
 
     final parsed = double.tryParse(value);
     if (parsed == null) return 'Invalid temperature';
-    if (!isValidTemperature(parsed)) return 'Temperature must be between -50°C and 50°C';
+    if (!isValidTemperature(parsed))
+      return 'Temperature must be between -50°C and 50°C';
 
     return null;
   }
@@ -184,12 +183,18 @@ class Validators {
     return null;
   }
 
-  static String? validateIntegerRange(String? value, String fieldName, int min, int max) {
+  static String? validateIntegerRange(
+    String? value,
+    String fieldName,
+    int min,
+    int max,
+  ) {
     if (value == null || value.isEmpty) return null; // Optional field
 
     final parsed = int.tryParse(value);
     if (parsed == null) return 'Invalid number';
-    if (parsed < min || parsed > max) return '$fieldName must be between $min and $max';
+    if (parsed < min || parsed > max)
+      return '$fieldName must be between $min and $max';
 
     return null;
   }
@@ -200,10 +205,10 @@ class Validators {
 
   // validatePositiveNumber with optional min/max parameters
   static String? validatePositiveNumber(
-      String? value, {
-        double min = 0.0,
-        double max = double.infinity,
-      }) {
+    String? value, {
+    double min = 0.0,
+    double max = double.infinity,
+  }) {
     if (value == null || value.trim().isEmpty) {
       return null; // Optional field
     }
@@ -226,11 +231,11 @@ class Validators {
 
   // validatePositiveNumber as REQUIRED field with required parameter
   static String? validatePositiveNumberRequired(
-      String? value, {
-        required String fieldName,
-        double min = 0.0,
-        double max = double.infinity,
-      }) {
+    String? value, {
+    required String fieldName,
+    double min = 0.0,
+    double max = double.infinity,
+  }) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName is required';
     }
@@ -253,10 +258,10 @@ class Validators {
 
   // validateInteger - for bucket count etc.
   static String? validateInteger(
-      String? value, {
-        int min = 0,
-        int max = 999999,
-      }) {
+    String? value, {
+    int min = 0,
+    int max = 999999,
+  }) {
     if (value == null || value.trim().isEmpty) {
       return null; // Optional field
     }
@@ -307,7 +312,7 @@ class Validators {
   }) {
     // ✅ Nur Datums-Teil vergleichen
     final logDay = DateTime(logDate.year, logDate.month, logDate.day);
-    
+
     // Prüfe seedDate
     if (seedDate != null) {
       final seedDay = DateTime(seedDate.year, seedDate.month, seedDate.day);
@@ -319,7 +324,11 @@ class Validators {
 
     // Prüfe phaseStartDate (optional)
     if (phaseStartDate != null) {
-      final phaseDay = DateTime(phaseStartDate.year, phaseStartDate.month, phaseStartDate.day);
+      final phaseDay = DateTime(
+        phaseStartDate.year,
+        phaseStartDate.month,
+        phaseStartDate.day,
+      );
       if (logDay.isBefore(phaseDay)) {
         final diff = phaseDay.difference(logDay).inDays;
         return 'Log-Datum liegt $diff Tag(e) vor dem Phasen-Start (${_formatDate(phaseStartDate)})';
@@ -337,7 +346,7 @@ class Validators {
     final logDay = DateTime(logDate.year, logDate.month, logDate.day);
     final today = DateTime.now();
     final todayDay = DateTime(today.year, today.month, today.day);
-    
+
     // Nicht in der Zukunft
     if (logDay.isAfter(todayDay)) {
       return 'Log-Datum kann nicht in der Zukunft liegen';
@@ -349,7 +358,7 @@ class Validators {
       if (logDay.isBefore(seedDay)) {
         return 'Log-Datum kann nicht vor dem Pflanz-Datum liegen';
       }
-      
+
       // Warnung bei sehr alten Logs (>365 Tage)
       final daysSinceSeed = logDay.difference(seedDay).inDays;
       if (daysSinceSeed > 365) {
@@ -365,7 +374,7 @@ class Validators {
     // ✅ Nur Datums-Teil vergleichen (ohne Uhrzeit!)
     final logDay = DateTime(logDate.year, logDate.month, logDate.day);
     final seedDay = DateTime(seedDate.year, seedDate.month, seedDate.day);
-    
+
     final days = logDay.difference(seedDay).inDays + 1;
     return days > 0 ? days : 1;
   }

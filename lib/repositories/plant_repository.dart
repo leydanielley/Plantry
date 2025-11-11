@@ -35,7 +35,12 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
 
       return maps.map((map) => Plant.fromMap(map)).toList();
     } catch (e, stackTrace) {
-      AppLogger.error('PlantRepository', 'Failed to load plants', e, stackTrace);
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to load plants',
+        e,
+        stackTrace,
+      );
       return []; // Return empty list on error
     }
   }
@@ -55,7 +60,12 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
       if (maps.isEmpty) return null;
       return Plant.fromMap(maps.first);
     } catch (e, stackTrace) {
-      AppLogger.error('PlantRepository', 'Failed to load plant by id', e, stackTrace);
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to load plant by id',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }
@@ -74,7 +84,12 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
 
       return maps.map((map) => Plant.fromMap(map)).toList();
     } catch (e, stackTrace) {
-      AppLogger.error('PlantRepository', 'Failed to load plants by room', e, stackTrace);
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to load plants by room',
+        e,
+        stackTrace,
+      );
       return [];
     }
   }
@@ -93,7 +108,12 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
 
       return maps.map((map) => Plant.fromMap(map)).toList();
     } catch (e, stackTrace) {
-      AppLogger.error('PlantRepository', 'Failed to load plants by grow', e, stackTrace);
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to load plants by grow',
+        e,
+        stackTrace,
+      );
       return [];
     }
   }
@@ -115,21 +135,27 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
 
         if (oldPlant != null) {
           final seedDateChanged = oldPlant.seedDate != plant.seedDate;
-          final phaseStartChanged = oldPlant.phaseStartDate != plant.phaseStartDate;
+          final phaseStartChanged =
+              oldPlant.phaseStartDate != plant.phaseStartDate;
 
           // ✅ v10: Check for phase history date changes
           final vegDateChanged = oldPlant.vegDate != plant.vegDate;
           final bloomDateChanged = oldPlant.bloomDate != plant.bloomDate;
           final harvestDateChanged = oldPlant.harvestDate != plant.harvestDate;
-          final anyPhaseDateChanged = vegDateChanged || bloomDateChanged || harvestDateChanged;
+          final anyPhaseDateChanged =
+              vegDateChanged || bloomDateChanged || harvestDateChanged;
 
           // ✅ FIX: Recalculate ALL log data if ANY date changes
           // This ensures consistency: seedDate changes affect phases too!
-          final anyDateChanged = seedDateChanged || anyPhaseDateChanged || phaseStartChanged;
+          final anyDateChanged =
+              seedDateChanged || anyPhaseDateChanged || phaseStartChanged;
 
           // ✅ CRITICAL FIX: Warn user before deleting logs
           if (seedDateChanged && plant.seedDate != null) {
-            final logsToDelete = await countLogsToBeDeleted(plant.id!, plant.seedDate!);
+            final logsToDelete = await countLogsToBeDeleted(
+              plant.id!,
+              plant.seedDate!,
+            );
             if (logsToDelete > 0) {
               AppLogger.warning(
                 'PlantRepository',
@@ -191,7 +217,11 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
 
       // Use transaction for atomic cascading delete
       return await db.transaction((txn) async {
-        AppLogger.info('PlantRepo', 'Starting cascading delete for plant', 'plantId=$id');
+        AppLogger.info(
+          'PlantRepo',
+          'Starting cascading delete for plant',
+          'plantId=$id',
+        );
 
         // Step 1: Get all log IDs for this plant (needed to delete photos)
         final logs = await txn.query(
@@ -223,7 +253,11 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
                 if (await file.exists()) {
                   await file.delete();
                   deletedPhotoFiles++;
-                  AppLogger.debug('PlantRepo', 'Deleted photo file', 'path=$filePath');
+                  AppLogger.debug(
+                    'PlantRepo',
+                    'Deleted photo file',
+                    'path=$filePath',
+                  );
                 }
               } catch (e) {
                 AppLogger.error('PlantRepo', 'Failed to delete photo file', e);
@@ -271,7 +305,12 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
         return deletedPlant;
       });
     } catch (e, stackTrace) {
-      AppLogger.error('PlantRepository', 'Failed to delete plant with cascading', e, stackTrace);
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to delete plant with cascading',
+        e,
+        stackTrace,
+      );
       rethrow;
     }
   }
@@ -308,10 +347,17 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
   Future<int> count() async {
     try {
       final db = await _dbHelper.database;
-      final result = await db.rawQuery('SELECT COUNT(*) as count FROM plants WHERE archived = 0');
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM plants WHERE archived = 0',
+      );
       return Sqflite.firstIntValue(result) ?? 0;
     } catch (e, stackTrace) {
-      AppLogger.error('PlantRepository', 'Failed to count plants', e, stackTrace);
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to count plants',
+        e,
+        stackTrace,
+      );
       return 0;
     }
   }
@@ -322,14 +368,21 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
   Future<int> countLogsToBeDeleted(int plantId, DateTime newSeedDate) async {
     try {
       final db = await _dbHelper.database;
-      final seedDay = DateTime(newSeedDate.year, newSeedDate.month, newSeedDate.day);
+      final seedDay = DateTime(
+        newSeedDate.year,
+        newSeedDate.month,
+        newSeedDate.day,
+      );
 
-      final result = await db.rawQuery('''
+      final result = await db.rawQuery(
+        '''
         SELECT COUNT(*) as count
         FROM plant_logs
         WHERE plant_id = ?
           AND DATE(log_date) < DATE(?)
-      ''', [plantId, seedDay.toIso8601String()]);
+      ''',
+        [plantId, seedDay.toIso8601String()],
+      );
 
       return Sqflite.firstIntValue(result) ?? 0;
     } catch (e) {
@@ -356,7 +409,10 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
       if (!logDay.isBefore(harvestDay)) {
         return {
           'phase': 'HARVEST',
-          'phaseDayNumber': Validators.calculateDayNumber(logDate, plant.harvestDate!),
+          'phaseDayNumber': Validators.calculateDayNumber(
+            logDate,
+            plant.harvestDate!,
+          ),
         };
       }
     }
@@ -371,7 +427,10 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
       if (!logDay.isBefore(bloomDay)) {
         return {
           'phase': 'BLOOM',
-          'phaseDayNumber': Validators.calculateDayNumber(logDate, plant.bloomDate!),
+          'phaseDayNumber': Validators.calculateDayNumber(
+            logDate,
+            plant.bloomDate!,
+          ),
         };
       }
     }
@@ -386,7 +445,10 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
       if (!logDay.isBefore(vegDay)) {
         return {
           'phase': 'VEG',
-          'phaseDayNumber': Validators.calculateDayNumber(logDate, plant.vegDate!),
+          'phaseDayNumber': Validators.calculateDayNumber(
+            logDate,
+            plant.vegDate!,
+          ),
         };
       }
     }
@@ -421,70 +483,89 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
     int plantId,
     Plant plant,
   ) async {
-    AppLogger.debug('PlantRepo', 'Starting comprehensive log recalculation', 'plantId=$plantId');
+    AppLogger.debug(
+      'PlantRepo',
+      'Starting comprehensive log recalculation',
+      'plantId=$plantId',
+    );
 
-      // Get all logs for this plant
-      final logs = await txn.query(
-        'plant_logs',
-        where: 'plant_id = ?',
-        whereArgs: [plantId],
-        orderBy: 'log_date ASC',
+    // Get all logs for this plant
+    final logs = await txn.query(
+      'plant_logs',
+      where: 'plant_id = ?',
+      whereArgs: [plantId],
+      orderBy: 'log_date ASC',
+    );
+
+    int deleted = 0;
+    int updated = 0;
+
+    for (final log in logs) {
+      final logDateStr = log['log_date'] as String;
+      // ✅ HIGH FIX: Use SafeParsers to prevent crashes from corrupted DB data
+      final logDate = SafeParsers.parseDateTime(
+        logDateStr,
+        fallback: DateTime.now(),
+        context: 'PlantRepository.recalculateDayNumbers',
+      );
+      final logDay = DateTime(logDate.year, logDate.month, logDate.day);
+
+      if (plant.seedDate == null) {
+        AppLogger.error(
+          'PlantRepo',
+          'Plant has no seedDate, skipping log recalculation',
+          Exception('Missing seedDate'),
+        );
+        continue;
+      }
+
+      final seedDay = DateTime(
+        plant.seedDate!.year,
+        plant.seedDate!.month,
+        plant.seedDate!.day,
       );
 
-      int deleted = 0;
-      int updated = 0;
-
-      for (final log in logs) {
-        final logDateStr = log['log_date'] as String;
-        // ✅ HIGH FIX: Use SafeParsers to prevent crashes from corrupted DB data
-        final logDate = SafeParsers.parseDateTime(
-          logDateStr,
-          fallback: DateTime.now(),
-          context: 'PlantRepository.recalculateDayNumbers',
-        );
-        final logDay = DateTime(logDate.year, logDate.month, logDate.day);
-
-        if (plant.seedDate == null) {
-          AppLogger.error('PlantRepo', 'Plant has no seedDate, skipping log recalculation', Exception('Missing seedDate'));
-          continue;
-        }
-
-        final seedDay = DateTime(plant.seedDate!.year, plant.seedDate!.month, plant.seedDate!.day);
-
-        // Step 1: Delete logs before seedDate
-        if (logDay.isBefore(seedDay)) {
-          await txn.delete('plant_logs', where: 'id = ?', whereArgs: [log['id']]);
-          deleted++;
-          AppLogger.debug('PlantRepo', 'Deleted log before seedDate', 'logId=${log['id']}');
-          continue;
-        }
-
-        // Step 2: Calculate day_number
-        final newDayNumber = Validators.calculateDayNumber(logDate, plant.seedDate!);
-
-        // Step 3: Determine phase and phase_day_number using extracted helper
-        final phaseInfo = _determinePhaseForLog(logDate, plant);
-        final newPhase = phaseInfo['phase'] as String;
-        final newPhaseDayNumber = phaseInfo['phaseDayNumber'] as int;
-
-        // Step 4: Update log with all recalculated data
-        await txn.update(
-          'plant_logs',
-          {
-            'day_number': newDayNumber,
-            'phase': newPhase,
-            'phase_day_number': newPhaseDayNumber,
-          },
-          where: 'id = ?',
-          whereArgs: [log['id']],
-        );
-        updated++;
-
+      // Step 1: Delete logs before seedDate
+      if (logDay.isBefore(seedDay)) {
+        await txn.delete('plant_logs', where: 'id = ?', whereArgs: [log['id']]);
+        deleted++;
         AppLogger.debug(
           'PlantRepo',
-          'Updated log ${log['id']}: day=$newDayNumber, phase=$newPhase, phaseDay=$newPhaseDayNumber',
+          'Deleted log before seedDate',
+          'logId=${log['id']}',
         );
+        continue;
       }
+
+      // Step 2: Calculate day_number
+      final newDayNumber = Validators.calculateDayNumber(
+        logDate,
+        plant.seedDate!,
+      );
+
+      // Step 3: Determine phase and phase_day_number using extracted helper
+      final phaseInfo = _determinePhaseForLog(logDate, plant);
+      final newPhase = phaseInfo['phase'] as String;
+      final newPhaseDayNumber = phaseInfo['phaseDayNumber'] as int;
+
+      // Step 4: Update log with all recalculated data
+      await txn.update(
+        'plant_logs',
+        {
+          'day_number': newDayNumber,
+          'phase': newPhase,
+          'phase_day_number': newPhaseDayNumber,
+        },
+        where: 'id = ?',
+        whereArgs: [log['id']],
+      );
+      updated++;
+
+      AppLogger.debug(
+        'PlantRepo',
+        'Updated log ${log['id']}: day=$newDayNumber, phase=$newPhase, phaseDay=$newPhaseDayNumber',
+      );
+    }
 
     AppLogger.info(
       'PlantRepo',
@@ -518,7 +599,12 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
 
       return maps.map((map) => Plant.fromMap(map)).toList();
     } catch (e, stackTrace) {
-      AppLogger.error('PlantRepository', 'Failed to load plants by RDWC system', e, stackTrace);
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to load plants by RDWC system',
+        e,
+        stackTrace,
+      );
       return [];
     }
   }

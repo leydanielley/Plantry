@@ -137,12 +137,12 @@ mixin RepositoryErrorHandler {
 
 /// Repository error types for better error classification
 enum RepositoryErrorType {
-  databaseError,      // SQLite/database errors
-  validationError,    // Data validation failures
-  notFound,           // Entity not found
-  conflict,           // Unique constraint violations
-  timeout,            // Operation timeout
-  unknown,            // Unclassified errors
+  databaseError, // SQLite/database errors
+  validationError, // Data validation failures
+  notFound, // Entity not found
+  conflict, // Unique constraint violations
+  timeout, // Operation timeout
+  unknown, // Unclassified errors
 }
 
 /// Custom exception for repository operations

@@ -4,7 +4,7 @@
 
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/utils/app_logger.dart';
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -39,15 +39,15 @@ class PlantLog {
   final bool cleanse;
 
   // Container (für Topf/Erde)
-  final double? containerSize;           // Topfgröße in Liter
-  final double? containerMediumAmount;   // Erde/Coco Menge in Liter
-  final bool containerDrainage;          // Drainage vorhanden?
+  final double? containerSize; // Topfgröße in Liter
+  final double? containerMediumAmount; // Erde/Coco Menge in Liter
+  final bool containerDrainage; // Drainage vorhanden?
   final String? containerDrainageMaterial; // z.B. Blähton, Perlite
 
   // System (für RDWC/DWC/Hydro)
-  final double? systemReservoirSize;     // Reservoir Größe in Liter
-  final int? systemBucketCount;          // Anzahl Buckets
-  final double? systemBucketSize;        // Größe pro Bucket
+  final double? systemReservoirSize; // Reservoir Größe in Liter
+  final int? systemBucketCount; // Anzahl Buckets
+  final double? systemBucketSize; // Größe pro Bucket
 
   // Notiz
   final String? note;
@@ -81,8 +81,8 @@ class PlantLog {
     this.systemBucketSize,
     this.note,
     DateTime? createdAt,
-  })  : logDate = logDate ?? DateTime.now(),
-        createdAt = createdAt ?? DateTime.now();
+  }) : logDate = logDate ?? DateTime.now(),
+       createdAt = createdAt ?? DateTime.now();
 
   /// ✅ Helper: Parse ActionType from database string
   static ActionType _parseActionType(String dbValue) {
@@ -96,7 +96,11 @@ class PlantLog {
       final cleanName = normalized.replaceAll('_', '');
       return ActionType.values.byName(cleanName);
     } catch (e) {
-      AppLogger.warning('PlantLog', 'Invalid action type: $dbValue, defaulting to note', e);
+      AppLogger.warning(
+        'PlantLog',
+        'Invalid action type: $dbValue, defaulting to note',
+        e,
+      );
       return ActionType.note; // Fallback
     }
   }
@@ -131,7 +135,8 @@ class PlantLog {
       runoff: (map['runoff'] as int?) == 1,
       cleanse: (map['cleanse'] as int?) == 1,
       containerSize: (map['container_size'] as num?)?.toDouble(),
-      containerMediumAmount: (map['container_medium_amount'] as num?)?.toDouble(),
+      containerMediumAmount: (map['container_medium_amount'] as num?)
+          ?.toDouble(),
       containerDrainage: (map['container_drainage'] as int?) == 1,
       containerDrainageMaterial: map['container_drainage_material'] as String?,
       systemReservoirSize: (map['system_reservoir_size'] as num?)?.toDouble(),
@@ -248,23 +253,41 @@ class PlantLog {
       loggedBy: loggedBy == _undefined ? this.loggedBy : loggedBy as String?,
       actionType: actionType ?? this.actionType,
       phase: phase == _undefined ? this.phase : phase as PlantPhase?,
-      phaseDayNumber: phaseDayNumber == _undefined ? this.phaseDayNumber : phaseDayNumber as int?,
-      waterAmount: waterAmount == _undefined ? this.waterAmount : waterAmount as double?,
+      phaseDayNumber: phaseDayNumber == _undefined
+          ? this.phaseDayNumber
+          : phaseDayNumber as int?,
+      waterAmount: waterAmount == _undefined
+          ? this.waterAmount
+          : waterAmount as double?,
       phIn: phIn == _undefined ? this.phIn : phIn as double?,
       ecIn: ecIn == _undefined ? this.ecIn : ecIn as double?,
       phOut: phOut == _undefined ? this.phOut : phOut as double?,
       ecOut: ecOut == _undefined ? this.ecOut : ecOut as double?,
-      temperature: temperature == _undefined ? this.temperature : temperature as double?,
+      temperature: temperature == _undefined
+          ? this.temperature
+          : temperature as double?,
       humidity: humidity == _undefined ? this.humidity : humidity as double?,
       runoff: runoff ?? this.runoff,
       cleanse: cleanse ?? this.cleanse,
-      containerSize: containerSize == _undefined ? this.containerSize : containerSize as double?,
-      containerMediumAmount: containerMediumAmount == _undefined ? this.containerMediumAmount : containerMediumAmount as double?,
+      containerSize: containerSize == _undefined
+          ? this.containerSize
+          : containerSize as double?,
+      containerMediumAmount: containerMediumAmount == _undefined
+          ? this.containerMediumAmount
+          : containerMediumAmount as double?,
       containerDrainage: containerDrainage ?? this.containerDrainage,
-      containerDrainageMaterial: containerDrainageMaterial == _undefined ? this.containerDrainageMaterial : containerDrainageMaterial as String?,
-      systemReservoirSize: systemReservoirSize == _undefined ? this.systemReservoirSize : systemReservoirSize as double?,
-      systemBucketCount: systemBucketCount == _undefined ? this.systemBucketCount : systemBucketCount as int?,
-      systemBucketSize: systemBucketSize == _undefined ? this.systemBucketSize : systemBucketSize as double?,
+      containerDrainageMaterial: containerDrainageMaterial == _undefined
+          ? this.containerDrainageMaterial
+          : containerDrainageMaterial as String?,
+      systemReservoirSize: systemReservoirSize == _undefined
+          ? this.systemReservoirSize
+          : systemReservoirSize as double?,
+      systemBucketCount: systemBucketCount == _undefined
+          ? this.systemBucketCount
+          : systemBucketCount as int?,
+      systemBucketSize: systemBucketSize == _undefined
+          ? this.systemBucketSize
+          : systemBucketSize as double?,
       note: note == _undefined ? this.note : note as String?,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -273,7 +296,20 @@ class PlantLog {
   /// Formatiertes Datum für Anzeige
   String get formattedDate {
     // ✅ AUDIT FIX: Safe month array access with bounds checking
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Dez',
+    ];
     final monthIndex = logDate.month - 1;
     final monthName = (monthIndex >= 0 && monthIndex < months.length)
         ? months[monthIndex]
@@ -292,7 +328,10 @@ class PlantLog {
 
   /// Check if has measurements
   bool get hasMeasurements {
-    return phIn != null || ecIn != null || temperature != null || humidity != null;
+    return phIn != null ||
+        ecIn != null ||
+        temperature != null ||
+        humidity != null;
   }
 
   /// Check if has runoff data

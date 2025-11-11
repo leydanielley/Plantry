@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// 🌈 Animated Gradient Background
-/// 
+///
 /// Smooth animated gradient background
 /// Perfect for app backgrounds, splash screens, hero sections
 class AnimatedGradientBackground extends StatefulWidget {
@@ -25,8 +25,7 @@ class AnimatedGradientBackground extends StatefulWidget {
       _AnimatedGradientBackgroundState();
 }
 
-class _AnimatedGradientBackgroundState
-    extends State<AnimatedGradientBackground>
+class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -34,17 +33,13 @@ class _AnimatedGradientBackgroundState
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    )..repeat(reverse: true);
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..repeat(reverse: true);
 
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    _animation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -64,11 +59,7 @@ class _AnimatedGradientBackgroundState
               begin: widget.begin,
               end: widget.end,
               colors: widget.colors,
-              stops: [
-                0.0,
-                _animation.value,
-                1.0,
-              ],
+              stops: [0.0, _animation.value, 1.0],
             ),
           ),
           child: widget.child,
@@ -79,7 +70,7 @@ class _AnimatedGradientBackgroundState
 }
 
 /// 🌈 Multi-Color Animated Gradient
-/// 
+///
 /// Cycles through multiple gradient combinations
 class MultiColorGradientBackground extends StatefulWidget {
   final Widget child;
@@ -107,10 +98,8 @@ class _MultiColorGradientBackgroundState
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    )..addStatusListener(_handleAnimationStatus);
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..addStatusListener(_handleAnimationStatus);
     _controller.forward();
   }
 
@@ -171,7 +160,7 @@ class _MultiColorGradientBackgroundState
 }
 
 /// 🌈 Shimmer Gradient Background
-/// 
+///
 /// Animated shimmer effect moving across the background
 class ShimmerGradientBackground extends StatefulWidget {
   final Widget child;
@@ -199,10 +188,8 @@ class _ShimmerGradientBackgroundState extends State<ShimmerGradientBackground>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    )..repeat();
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..repeat();
   }
 
   @override

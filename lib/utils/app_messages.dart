@@ -118,7 +118,11 @@ class AppMessages {
   }
 
   /// Photo saving - partially failed
-  static void photoSavingPartialError(BuildContext context, int saved, int failed) {
+  static void photoSavingPartialError(
+    BuildContext context,
+    int saved,
+    int failed,
+  ) {
     showWarning(context, '$saved photo(s) saved, $failed failed ⚠️');
   }
 

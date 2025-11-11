@@ -21,73 +21,77 @@ class EditHarvestScreen extends StatefulWidget {
   State<EditHarvestScreen> createState() => _EditHarvestScreenState();
 }
 
-class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTickerProviderStateMixin {
+class _EditHarvestScreenState extends State<EditHarvestScreen>
+    with SingleTickerProviderStateMixin {
   late final AppTranslations _t; // ✅ AUDIT FIX: i18n
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
   late TabController _tabController;
-  
+
   // Basic Data
   late DateTime _harvestDate;
   final TextEditingController _wetWeightController = TextEditingController();
   final TextEditingController _dryWeightController = TextEditingController();
-  
+
   // Drying Data
   DateTime? _dryingStartDate;
   DateTime? _dryingEndDate;
   final TextEditingController _dryingMethodController = TextEditingController();
   final TextEditingController _dryingTempController = TextEditingController();
-  final TextEditingController _dryingHumidityController = TextEditingController();
-  
+  final TextEditingController _dryingHumidityController =
+      TextEditingController();
+
   // Curing Data
   DateTime? _curingStartDate;
   DateTime? _curingEndDate;
   final TextEditingController _curingMethodController = TextEditingController();
   final TextEditingController _curingNotesController = TextEditingController();
-  
+
   // Quality Data
   final TextEditingController _thcController = TextEditingController();
   final TextEditingController _cbdController = TextEditingController();
   final TextEditingController _terpeneController = TextEditingController();
-  
+
   // Rating & Notes
   int? _rating;
   final TextEditingController _tasteController = TextEditingController();
   final TextEditingController _effectController = TextEditingController();
   final TextEditingController _overallNotesController = TextEditingController();
-  
+
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ AUDIT FIX: i18n
+    _t = AppTranslations(
+      Localizations.localeOf(context).languageCode,
+    ); // ✅ AUDIT FIX: i18n
     _tabController = TabController(length: 5, vsync: this);
     _loadData();
   }
 
   void _loadData() {
     final h = widget.harvest;
-    
+
     _harvestDate = h.harvestDate;
     _wetWeightController.text = h.wetWeight?.toString() ?? '';
     _dryWeightController.text = h.dryWeight?.toString() ?? '';
-    
+
     _dryingStartDate = h.dryingStartDate;
     _dryingEndDate = h.dryingEndDate;
     _dryingMethodController.text = h.dryingMethod ?? '';
     _dryingTempController.text = h.dryingTemperature?.toString() ?? '';
     _dryingHumidityController.text = h.dryingHumidity?.toString() ?? '';
-    
+
     _curingStartDate = h.curingStartDate;
     _curingEndDate = h.curingEndDate;
     _curingMethodController.text = h.curingMethod ?? '';
     _curingNotesController.text = h.curingNotes ?? '';
-    
+
     _thcController.text = h.thcPercentage?.toString() ?? '';
     _cbdController.text = h.cbdPercentage?.toString() ?? '';
     _terpeneController.text = h.terpeneProfile ?? '';
-    
+
     _rating = h.rating;
     _tasteController.text = h.tasteNotes ?? '';
     _effectController.text = h.effectNotes ?? '';
@@ -128,7 +132,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
       if (_dryingStartDate != null && _dryingEndDate != null) {
         dryingDays = _dryingEndDate!.difference(_dryingStartDate!).inDays;
       }
-      
+
       // Berechne Curing Days automatisch
       int? curingDays;
       if (_curingStartDate != null && _curingEndDate != null) {
@@ -234,23 +238,38 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             tabs: [
               Tab(
                 icon: const Icon(Icons.grass, color: Colors.white),
-                child: Text(_t['edit_harvest_tab_basic'], style: const TextStyle(color: Colors.white)), // ✅ i18n
+                child: Text(
+                  _t['edit_harvest_tab_basic'],
+                  style: const TextStyle(color: Colors.white),
+                ), // ✅ i18n
               ),
               Tab(
                 icon: const Icon(Icons.dry_cleaning, color: Colors.white),
-                child: Text(_t['edit_harvest_tab_drying'], style: const TextStyle(color: Colors.white)), // ✅ i18n
+                child: Text(
+                  _t['edit_harvest_tab_drying'],
+                  style: const TextStyle(color: Colors.white),
+                ), // ✅ i18n
               ),
               Tab(
                 icon: const Icon(Icons.inventory_2, color: Colors.white),
-                child: Text(_t['edit_harvest_tab_curing'], style: const TextStyle(color: Colors.white)), // ✅ i18n
+                child: Text(
+                  _t['edit_harvest_tab_curing'],
+                  style: const TextStyle(color: Colors.white),
+                ), // ✅ i18n
               ),
               Tab(
                 icon: const Icon(Icons.science, color: Colors.white),
-                child: Text(_t['edit_harvest_tab_quality'], style: const TextStyle(color: Colors.white)), // ✅ i18n
+                child: Text(
+                  _t['edit_harvest_tab_quality'],
+                  style: const TextStyle(color: Colors.white),
+                ), // ✅ i18n
               ),
               Tab(
                 icon: const Icon(Icons.star, color: Colors.white),
-                child: Text(_t['edit_harvest_tab_rating'], style: const TextStyle(color: Colors.white)), // ✅ i18n
+                child: Text(
+                  _t['edit_harvest_tab_rating'],
+                  style: const TextStyle(color: Colors.white),
+                ), // ✅ i18n
               ),
             ],
           ),
@@ -291,11 +310,13 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _isSaving ? null : () async {
-                  if (await _showDiscardDialog() && mounted) {
-                    Navigator.of(context).pop(false);
-                  }
-                },
+                onPressed: _isSaving
+                    ? null
+                    : () async {
+                        if (await _showDiscardDialog() && mounted) {
+                          Navigator.of(context).pop(false);
+                        }
+                      },
                 icon: const Icon(Icons.close),
                 label: Text(_t['cancel']), // ✅ i18n
                 style: OutlinedButton.styleFrom(
@@ -316,11 +337,15 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Icon(Icons.save),
-                label: Text(_isSaving ? _t['edit_harvest_saving'] : _t['save']), // ✅ i18n
+                label: Text(
+                  _isSaving ? _t['edit_harvest_saving'] : _t['save'],
+                ), // ✅ i18n
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4CAF50),
                   foregroundColor: Colors.white,
@@ -336,23 +361,24 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
 
   Future<bool> _showDiscardDialog() async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(_t['edit_harvest_discard_title']), // ✅ i18n
-        content: Text(_t['edit_harvest_discard_message']), // ✅ i18n
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(_t['edit_harvest_continue_editing']), // ✅ i18n
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(_t['edit_harvest_discard_title']), // ✅ i18n
+            content: Text(_t['edit_harvest_discard_message']), // ✅ i18n
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(_t['edit_harvest_continue_editing']), // ✅ i18n
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: Text(_t['edit_harvest_discard']), // ✅ i18n
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(_t['edit_harvest_discard']), // ✅ i18n
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   // =============================================
@@ -403,7 +429,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             controller: _dryWeightController,
             label: _t['edit_harvest_dry_weight_label'], // ✅ i18n
             hint: _t['edit_harvest_dry_weight_hint'], // ✅ i18n
-            suffix: _t['edit_harvest_wet_weight_suffix'], // ✅ i18n (reusing 'g')
+            suffix:
+                _t['edit_harvest_wet_weight_suffix'], // ✅ i18n (reusing 'g')
             icon: Icons.scale,
             color: Colors.green,
             helperText: _t['edit_harvest_dry_weight_helper'], // ✅ i18n
@@ -411,9 +438,10 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             isBold: true,
           ),
           const SizedBox(height: 20),
-          
+
           // Weight Loss Info
-          if (_wetWeightController.text.isNotEmpty && _dryWeightController.text.isNotEmpty)
+          if (_wetWeightController.text.isNotEmpty &&
+              _dryWeightController.text.isNotEmpty)
             _buildWeightLossInfo(),
         ],
       ),
@@ -423,12 +451,12 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
   Widget _buildWeightLossInfo() {
     final wet = double.tryParse(_wetWeightController.text);
     final dry = double.tryParse(_dryWeightController.text);
-    
+
     if (wet == null || dry == null || wet == 0) return const SizedBox.shrink();
-    
+
     final loss = ((wet - dry) / wet) * 100;
     final lossGrams = wet - dry;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -445,7 +473,11 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                   color: const Color(0xFF0288D1), // Mittelblau
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.trending_down, color: Colors.white, size: 24),
+                child: const Icon(
+                  Icons.trending_down,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -517,10 +549,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF666666),
-            ),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF666666)),
           ),
         ],
       ),
@@ -549,7 +578,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
           _buildDateRangeSection(
             startDate: _dryingStartDate,
             endDate: _dryingEndDate,
-            onStartDateSelected: (date) => setState(() => _dryingStartDate = date),
+            onStartDateSelected: (date) =>
+                setState(() => _dryingStartDate = date),
             onEndDateSelected: (date) => setState(() => _dryingEndDate = date),
             onClearStart: () => setState(() => _dryingStartDate = null),
             onClearEnd: () => setState(() => _dryingEndDate = null),
@@ -608,7 +638,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             startColor: Colors.orange,
             endColor: Colors.green,
           ),
-          
+
           const SizedBox(height: 20),
           _buildTipsCard(
             _t['edit_harvest_drying_tips'], // ✅ i18n
@@ -644,12 +674,13 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             Colors.purple,
           ),
           const SizedBox(height: 20),
-          
+
           // Date Range
           _buildDateRangeSection(
             startDate: _curingStartDate,
             endDate: _curingEndDate,
-            onStartDateSelected: (date) => setState(() => _curingStartDate = date),
+            onStartDateSelected: (date) =>
+                setState(() => _curingStartDate = date),
             onEndDateSelected: (date) => setState(() => _curingEndDate = date),
             onClearStart: () => setState(() => _curingStartDate = null),
             onClearEnd: () => setState(() => _curingEndDate = null),
@@ -657,7 +688,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             color: Colors.purple,
           ),
           const SizedBox(height: 20),
-          
+
           // Method
           _buildTextField(
             controller: _curingMethodController,
@@ -665,7 +696,12 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             hint: _t['edit_harvest_curing_method_hint'], // ✅ i18n
             icon: Icons.inventory_2,
             color: Colors.purple,
-            suggestions: ['Glass Jars', 'Grove Bags', 'CVault', 'Vacuum Sealed'],
+            suggestions: [
+              'Glass Jars',
+              'Grove Bags',
+              'CVault',
+              'Vacuum Sealed',
+            ],
           ),
           const SizedBox(height: 16),
 
@@ -679,7 +715,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             maxLines: 4,
           ),
           const SizedBox(height: 20),
-          
+
           // Quick Actions
           _buildQuickActionButtons(
             onStart: () => setState(() => _curingStartDate ??= DateTime.now()),
@@ -689,7 +725,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             startColor: Colors.purple,
             endColor: Colors.green,
           ),
-          
+
           const SizedBox(height: 20),
           _buildTipsCard(
             _t['edit_harvest_curing_tips'], // ✅ i18n
@@ -722,7 +758,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             Colors.blue,
           ),
           const SizedBox(height: 20),
-          
+
           // THC
           _buildNumberField(
             controller: _thcController,
@@ -748,7 +784,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             allowDecimals: true,
           ),
           const SizedBox(height: 16),
-          
+
           // Terpene Profile
           _buildTextField(
             controller: _terpeneController,
@@ -767,11 +803,11 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             ],
           ),
           const SizedBox(height: 20),
-          
+
           // Cannabinoid Preview
           if (_thcController.text.isNotEmpty || _cbdController.text.isNotEmpty)
             _buildCannabinoidPreview(),
-          
+
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(16),
@@ -787,10 +823,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                 Expanded(
                   child: Text(
                     _t['edit_harvest_quality_info'], // ✅ i18n
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.blue[900],
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.blue[900]),
                   ),
                 ),
               ],
@@ -804,12 +837,15 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
   Widget _buildCannabinoidPreview() {
     final thc = double.tryParse(_thcController.text);
     final cbd = double.tryParse(_cbdController.text);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.purple[50] ?? Colors.purple, Colors.blue[50] ?? Colors.blue],
+          colors: [
+            Colors.purple[50] ?? Colors.purple,
+            Colors.blue[50] ?? Colors.blue,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -847,10 +883,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
           children: [
             Text(
               label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
             Text(
               '${percentage.toStringAsFixed(1)}%',
@@ -893,7 +926,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             Colors.amber,
           ),
           const SizedBox(height: 20),
-          
+
           // Star Rating
           Card(
             child: Padding(
@@ -913,7 +946,9 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                     children: List.generate(5, (index) {
                       return IconButton(
                         icon: Icon(
-                          (_rating ?? 0) > index ? Icons.star : Icons.star_border,
+                          (_rating ?? 0) > index
+                              ? Icons.star
+                              : Icons.star_border,
                           size: 40,
                         ),
                         color: Colors.amber,
@@ -926,7 +961,10 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                   if (_rating != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      _t['edit_harvest_rating_stars'].replaceAll('{rating}', '$_rating'), // ✅ i18n
+                      _t['edit_harvest_rating_stars'].replaceAll(
+                        '{rating}',
+                        '$_rating',
+                      ), // ✅ i18n
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -937,17 +975,14 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                   if (_rating == null)
                     Text(
                       _t['edit_harvest_not_set'], // ✅ i18n
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Taste Notes
           _buildTextField(
             controller: _tasteController,
@@ -989,7 +1024,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Overall Notes
           _buildTextField(
             controller: _overallNotesController,
@@ -1007,7 +1042,12 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
   // =============================================
   // REUSABLE WIDGETS
   // =============================================
-  Widget _buildSectionHeader(String title, String subtitle, IconData icon, Color color) {
+  Widget _buildSectionHeader(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1023,10 +1063,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             child: Icon(icon, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 16),
@@ -1044,10 +1081,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -1092,10 +1126,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   Text(
                     DateFormat('dd.MM.yyyy').format(currentDate),
@@ -1127,7 +1158,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
     final duration = startDate != null && endDate != null
         ? endDate.difference(startDate).inDays
         : null;
-    
+
     return Column(
       children: [
         Row(
@@ -1187,10 +1218,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                 const SizedBox(width: 8),
                 Text(
                   'Dauer: $duration Tage',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: color),
                 ),
               ],
             ),
@@ -1226,26 +1254,21 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                 Expanded(
                   child: Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ),
                 if (onClear != null)
                   InkWell(
                     onTap: onClear,
-                    child: Icon(
-                      Icons.clear,
-                      size: 18,
-                      color: Colors.grey[400],
-                    ),
+                    child: Icon(Icons.clear, size: 18, color: Colors.grey[400]),
                   ),
               ],
             ),
             const SizedBox(height: 4),
             Text(
-              date != null ? DateFormat('dd.MM.yyyy').format(date) : _t['edit_harvest_not_set'],
+              date != null
+                  ? DateFormat('dd.MM.yyyy').format(date)
+                  : _t['edit_harvest_not_set'],
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: date != null ? FontWeight.bold : FontWeight.normal,
@@ -1273,13 +1296,13 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+        labelStyle: TextStyle(
+          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+        ),
         hintText: hint,
         suffixText: suffix,
         prefixIcon: Icon(icon, color: color),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: color, width: 2),
@@ -1317,9 +1340,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
             labelText: label,
             hintText: hint,
             prefixIcon: Icon(icon, color: color),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: color, width: 2),
@@ -1343,7 +1364,10 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
@@ -1411,7 +1435,12 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
     );
   }
 
-  Widget _buildTipsCard(String title, List<String> tips, IconData icon, Color color) {
+  Widget _buildTipsCard(
+    String title,
+    List<String> tips,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1428,33 +1457,29 @@ class _EditHarvestScreenState extends State<EditHarvestScreen> with SingleTicker
               const SizedBox(width: 8),
               Text(
                 title,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, color: color),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          ...tips.map((tip) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.check_circle, color: color, size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    tip,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[700],
+          ...tips.map(
+            (tip) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.check_circle, color: color, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      tip,
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );

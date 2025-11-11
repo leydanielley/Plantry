@@ -22,9 +22,9 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
   Future<int> save(Photo photo) async {
     // Photo-Validierung
     _validatePhoto(photo);
-    
+
     final db = await _dbHelper.database;
-    
+
     if (photo.id == null) {
       // Neues Foto erstellen
       return await db.insert('photos', photo.toMap());
@@ -39,17 +39,17 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
       return photo.id!;
     }
   }
-  
+
   /// Photo-Validierung
   void _validatePhoto(Photo photo) {
     if (photo.logId <= 0) {
       throw ArgumentError('Ungültige Log ID: ${photo.logId}');
     }
-    
+
     if (photo.filePath.isEmpty) {
       throw ArgumentError('Foto-Pfad darf nicht leer sein');
     }
-    
+
     // Prüfe ob Pfad valide ist
     if (!photo.filePath.contains('/') && !photo.filePath.contains('\\')) {
       throw ArgumentError('Ungültiger Foto-Pfad: ${photo.filePath}');
@@ -102,7 +102,12 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
 
       return result;
     } catch (e, stackTrace) {
-      AppLogger.error('PhotoRepository', 'Failed to load photos by log ids', e, stackTrace);
+      AppLogger.error(
+        'PhotoRepository',
+        'Failed to load photos by log ids',
+        e,
+        stackTrace,
+      );
       return {};
     }
   }
@@ -111,11 +116,7 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
   @override
   Future<Photo?> getById(int id) async {
     final db = await _dbHelper.database;
-    final maps = await db.query(
-      'photos',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final maps = await db.query('photos', where: 'id = ?', whereArgs: [id]);
 
     if (maps.isEmpty) return null;
     return Photo.fromMap(maps.first);
@@ -141,19 +142,23 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
           AppLogger.info('PhotoRepo', '✅ Deleted file', photo.filePath);
         } catch (e) {
           // ✅ FIX: Log error but don't throw - allow DB cleanup even if file is locked/inaccessible
-          AppLogger.error('PhotoRepo', 'Failed to delete file (will clean up DB anyway)', e);
+          AppLogger.error(
+            'PhotoRepo',
+            'Failed to delete file (will clean up DB anyway)',
+            e,
+          );
         }
       } else {
-        AppLogger.warning('PhotoRepo', 'File already missing, cleaning up DB record', photo.filePath);
+        AppLogger.warning(
+          'PhotoRepo',
+          'File already missing, cleaning up DB record',
+          photo.filePath,
+        );
       }
     }
 
     // 3. Delete DB record (only reached if file delete succeeded or file doesn't exist)
-    return await db.delete(
-      'photos',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('photos', where: 'id = ?', whereArgs: [id]);
   }
 
   /// Foto löschen (mit klarerem Namen)
@@ -164,9 +169,13 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
 
   /// Alle Fotos für eine Pflanze abrufen (über Logs) mit Pagination
   @override
-  Future<List<Photo>> getPhotosByPlantId(int plantId, {int? limit, int? offset}) async {
+  Future<List<Photo>> getPhotosByPlantId(
+    int plantId, {
+    int? limit,
+    int? offset,
+  }) async {
     final db = await _dbHelper.database;
-    
+
     // Join mit logs Tabelle um alle Fotos einer Pflanze zu bekommen
     String query = '''
   SELECT photos.* FROM photos
@@ -174,19 +183,19 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
   WHERE plant_logs.plant_id = ?
   ORDER BY photos.created_at DESC
 ''';
-    
+
     final List<dynamic> args = [plantId];
-    
+
     if (limit != null) {
       query += ' LIMIT ?';
       args.add(limit);
     }
-    
+
     if (offset != null) {
       query += ' OFFSET ?';
       args.add(offset);
     }
-    
+
     final maps = await db.rawQuery(query, args);
 
     return List.generate(maps.length, (i) => Photo.fromMap(maps[i]));
@@ -212,7 +221,10 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
   /// Usage:
   /// - From within a transaction: call this method directly
   /// - Standalone: use deleteByLogId() which creates its own transaction
-  Future<void> deleteByLogIdInTransaction(DatabaseExecutor txn, int logId) async {
+  Future<void> deleteByLogIdInTransaction(
+    DatabaseExecutor txn,
+    int logId,
+  ) async {
     // 1. Get all photos for this log
     final photoMaps = await txn.query(
       'photos',
@@ -238,8 +250,12 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
           AppLogger.info('PhotoRepo', '✅ Deleted file', photo.filePath);
           successfullyDeletedIds.add(photo.id!);
         } else {
-          AppLogger.warning('PhotoRepo', 'File already missing, will clean up DB', photo.filePath);
-          successfullyDeletedIds.add(photo.id!);  // Still delete DB record
+          AppLogger.warning(
+            'PhotoRepo',
+            'File already missing, will clean up DB',
+            photo.filePath,
+          );
+          successfullyDeletedIds.add(photo.id!); // Still delete DB record
         }
       } catch (e) {
         AppLogger.error('PhotoRepo', 'Failed to delete file', e);
@@ -251,20 +267,21 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
     // 3. Delete DB records only for successfully deleted files (within existing transaction)
     if (successfullyDeletedIds.isNotEmpty) {
       for (final photoId in successfullyDeletedIds) {
-        await txn.delete(
-          'photos',
-          where: 'id = ?',
-          whereArgs: [photoId],
-        );
+        await txn.delete('photos', where: 'id = ?', whereArgs: [photoId]);
       }
-      AppLogger.info('PhotoRepo', 'Deleted ${successfullyDeletedIds.length}/${photos.length} photos from DB');
+      AppLogger.info(
+        'PhotoRepo',
+        'Deleted ${successfullyDeletedIds.length}/${photos.length} photos from DB',
+      );
     }
 
     // 4. If any errors occurred, log them
     if (errors.isNotEmpty) {
-      AppLogger.warning('PhotoRepo',
+      AppLogger.warning(
+        'PhotoRepo',
         'Failed to delete ${errors.length} photo files. DB records retained.',
-        errors.join('; '));
+        errors.join('; '),
+      );
     }
   }
 }

@@ -60,7 +60,8 @@ class NotificationConfig {
   static const String channelName = 'Pflanz-Erinnerungen';
 
   /// Notification channel description (hardcoded as it's used in native Android code)
-  static const String channelDescription = 'Erinnerungen für Gießen, Düngen und Pflege';
+  static const String channelDescription =
+      'Erinnerungen für Gießen, Düngen und Pflege';
 
   /// Notification icon
   static const String notificationIcon = '@mipmap/ic_launcher';

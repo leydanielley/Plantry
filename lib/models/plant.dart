@@ -3,7 +3,7 @@
 // =============================================
 
 import 'package:growlog_app/models/enums.dart';
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -17,17 +17,18 @@ class Plant {
   final SeedType seedType;
   final Medium medium;
   final PlantPhase phase;
-  final int? growId;  // NEU: Zuordnung zu einem Grow (optional)
-  final int? roomId;  // OPTIONAL: Pflanze kann auch ohne Zelt existieren
-  final int? rdwcSystemId;  // RDWC System ID (if medium is RDWC)
-  final int? bucketNumber;  // Position in RDWC system (1, 2, 3, 4...)
+  final int? growId; // NEU: Zuordnung zu einem Grow (optional)
+  final int? roomId; // OPTIONAL: Pflanze kann auch ohne Zelt existieren
+  final int? rdwcSystemId; // RDWC System ID (if medium is RDWC)
+  final int? bucketNumber; // Position in RDWC system (1, 2, 3, 4...)
   final DateTime? seedDate;
-  final DateTime? phaseStartDate;  // Deprecated - use vegDate/bloomDate/harvestDate
+  final DateTime?
+  phaseStartDate; // Deprecated - use vegDate/bloomDate/harvestDate
 
   // ✅ v10: Phase History
-  final DateTime? vegDate;       // When veg phase started
-  final DateTime? bloomDate;     // When bloom phase started
-  final DateTime? harvestDate;   // When harvest phase started
+  final DateTime? vegDate; // When veg phase started
+  final DateTime? bloomDate; // When bloom phase started
+  final DateTime? harvestDate; // When harvest phase started
 
   final DateTime createdAt;
   final String? createdBy;
@@ -35,8 +36,8 @@ class Plant {
   final bool archived;
 
   // Container Tracking
-  final double? currentContainerSize;  // Aktueller Topf in Liter
-  final double? currentSystemSize;     // Aktuelles System in Liter (RDWC/DWC)
+  final double? currentContainerSize; // Aktueller Topf in Liter
+  final double? currentSystemSize; // Aktuelles System in Liter (RDWC/DWC)
 
   Plant({
     this.id,
@@ -47,7 +48,7 @@ class Plant {
     required this.seedType,
     required this.medium,
     this.phase = PlantPhase.seedling,
-    this.growId,  // NEU: growId als optionaler Parameter
+    this.growId, // NEU: growId als optionaler Parameter
     this.roomId,
     this.rdwcSystemId,
     this.bucketNumber,
@@ -195,19 +196,35 @@ class Plant {
       phase: phase ?? this.phase,
       growId: growId == _undefined ? this.growId : growId as int?,
       roomId: roomId == _undefined ? this.roomId : roomId as int?,
-      rdwcSystemId: rdwcSystemId == _undefined ? this.rdwcSystemId : rdwcSystemId as int?,
-      bucketNumber: bucketNumber == _undefined ? this.bucketNumber : bucketNumber as int?,
+      rdwcSystemId: rdwcSystemId == _undefined
+          ? this.rdwcSystemId
+          : rdwcSystemId as int?,
+      bucketNumber: bucketNumber == _undefined
+          ? this.bucketNumber
+          : bucketNumber as int?,
       seedDate: seedDate == _undefined ? this.seedDate : seedDate as DateTime?,
-      phaseStartDate: phaseStartDate == _undefined ? this.phaseStartDate : phaseStartDate as DateTime?,
+      phaseStartDate: phaseStartDate == _undefined
+          ? this.phaseStartDate
+          : phaseStartDate as DateTime?,
       vegDate: vegDate == _undefined ? this.vegDate : vegDate as DateTime?,
-      bloomDate: bloomDate == _undefined ? this.bloomDate : bloomDate as DateTime?,
-      harvestDate: harvestDate == _undefined ? this.harvestDate : harvestDate as DateTime?,
+      bloomDate: bloomDate == _undefined
+          ? this.bloomDate
+          : bloomDate as DateTime?,
+      harvestDate: harvestDate == _undefined
+          ? this.harvestDate
+          : harvestDate as DateTime?,
       createdAt: createdAt ?? this.createdAt,
-      createdBy: createdBy == _undefined ? this.createdBy : createdBy as String?,
+      createdBy: createdBy == _undefined
+          ? this.createdBy
+          : createdBy as String?,
       logProfileName: logProfileName ?? this.logProfileName,
       archived: archived ?? this.archived,
-      currentContainerSize: currentContainerSize == _undefined ? this.currentContainerSize : currentContainerSize as double?,
-      currentSystemSize: currentSystemSize == _undefined ? this.currentSystemSize : currentSystemSize as double?,
+      currentContainerSize: currentContainerSize == _undefined
+          ? this.currentContainerSize
+          : currentContainerSize as double?,
+      currentSystemSize: currentSystemSize == _undefined
+          ? this.currentSystemSize
+          : currentSystemSize as double?,
     );
   }
 
@@ -231,7 +248,11 @@ class Plant {
     // ✅ Nur Datums-Teil vergleichen
     final today = DateTime.now();
     final todayDay = DateTime(today.year, today.month, today.day);
-    final phaseDay = DateTime(phaseStartDate!.year, phaseStartDate!.month, phaseStartDate!.day);
+    final phaseDay = DateTime(
+      phaseStartDate!.year,
+      phaseStartDate!.month,
+      phaseStartDate!.day,
+    );
     // ✅ FIX: +1 for 1-indexed days (Day 1 = phase start day)
     final days = todayDay.difference(phaseDay).inDays + 1;
     return days > 0 ? days : 0;
@@ -239,7 +260,9 @@ class Plant {
 
   /// Zeigt aktuellen Container/System Info Text
   String get containerInfo {
-    if (medium == Medium.dwc || medium == Medium.rdwc || medium == Medium.hydro) {
+    if (medium == Medium.dwc ||
+        medium == Medium.rdwc ||
+        medium == Medium.hydro) {
       if (currentSystemSize != null) {
         return '${currentSystemSize!.toStringAsFixed(0)}L System';
       }

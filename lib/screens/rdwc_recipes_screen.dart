@@ -113,9 +113,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_t['recipes']),
-      ),
+      appBar: AppBar(title: Text(_t['recipes'])),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push(
@@ -133,19 +131,19 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _recipes.isEmpty
-              ? _buildEmptyState(isDark)
-              : RefreshIndicator(
-                  onRefresh: _loadData,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _recipes.length,
-                    itemBuilder: (context, index) {
-                      final recipe = _recipes[index];
-                      final fertilizers = _recipeFertilizers[recipe.id] ?? [];
-                      return _buildRecipeCard(recipe, fertilizers, isDark);
-                    },
-                  ),
-                ),
+          ? _buildEmptyState(isDark)
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _recipes.length,
+                itemBuilder: (context, index) {
+                  final recipe = _recipes[index];
+                  final fertilizers = _recipeFertilizers[recipe.id] ?? [];
+                  return _buildRecipeCard(recipe, fertilizers, isDark);
+                },
+              ),
+            ),
     );
   }
 
@@ -173,7 +171,11 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
     );
   }
 
-  Widget _buildRecipeCard(RdwcRecipe recipe, List<Fertilizer> fertilizers, bool isDark) {
+  Widget _buildRecipeCard(
+    RdwcRecipe recipe,
+    List<Fertilizer> fertilizers,
+    bool isDark,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -202,8 +204,8 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                     child: Text(
                       recipe.name,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -213,13 +215,14 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                   ),
                 ],
               ),
-              if (recipe.description != null && recipe.description!.isNotEmpty) ...[
+              if (recipe.description != null &&
+                  recipe.description!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   recipe.description!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      ),
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
                 ),
               ],
               const SizedBox(height: 12),
@@ -257,7 +260,10 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                   runSpacing: 4,
                   children: fertilizers.map((fert) {
                     return Chip(
-                      label: Text(fert.name, style: const TextStyle(fontSize: 12)),
+                      label: Text(
+                        fert.name,
+                        style: const TextStyle(fontSize: 12),
+                      ),
                       avatar: const Icon(Icons.local_florist, size: 16),
                       visualDensity: VisualDensity.compact,
                     );

@@ -69,13 +69,17 @@ class _PlantPotPainter extends CustomPainter {
     potPath.moveTo(width * 0.25, height * 0.55);
     potPath.lineTo(width * 0.2, height * 0.9);
     potPath.quadraticBezierTo(
-      width * 0.2, height * 0.95,
-      width * 0.25, height * 0.95,
+      width * 0.2,
+      height * 0.95,
+      width * 0.25,
+      height * 0.95,
     );
     potPath.lineTo(width * 0.75, height * 0.95);
     potPath.quadraticBezierTo(
-      width * 0.8, height * 0.95,
-      width * 0.8, height * 0.9,
+      width * 0.8,
+      height * 0.95,
+      width * 0.8,
+      height * 0.9,
     );
     potPath.lineTo(width * 0.75, height * 0.55);
     potPath.close();
@@ -86,12 +90,7 @@ class _PlantPotPainter extends CustomPainter {
       ..color = potColor.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
     canvas.drawOval(
-      Rect.fromLTWH(
-        width * 0.2,
-        height * 0.52,
-        width * 0.6,
-        height * 0.06,
-      ),
+      Rect.fromLTWH(width * 0.2, height * 0.52, width * 0.6, height * 0.06),
       rimPaint,
     );
 
@@ -100,12 +99,7 @@ class _PlantPotPainter extends CustomPainter {
       ..color = soilColor
       ..style = PaintingStyle.fill;
     canvas.drawOval(
-      Rect.fromLTWH(
-        width * 0.24,
-        height * 0.54,
-        width * 0.52,
-        height * 0.05,
-      ),
+      Rect.fromLTWH(width * 0.24, height * 0.54, width * 0.52, height * 0.05),
       soilPaint,
     );
 
@@ -124,25 +118,74 @@ class _PlantPotPainter extends CustomPainter {
     canvas.drawPath(stemPath, stemPaint);
 
     // Leaves - Bottom pair (left)
-    _drawLeaf(canvas, width * 0.35, height * 0.48, -30, width * 0.15, leavesColor);
+    _drawLeaf(
+      canvas,
+      width * 0.35,
+      height * 0.48,
+      -30,
+      width * 0.15,
+      leavesColor,
+    );
     // Leaves - Bottom pair (right)
-    _drawLeaf(canvas, width * 0.65, height * 0.48, 30, width * 0.15, leavesColor);
+    _drawLeaf(
+      canvas,
+      width * 0.65,
+      height * 0.48,
+      30,
+      width * 0.15,
+      leavesColor,
+    );
 
     // Leaves - Middle pair (left)
-    _drawLeaf(canvas, width * 0.32, height * 0.38, -35, width * 0.16, leavesColor);
+    _drawLeaf(
+      canvas,
+      width * 0.32,
+      height * 0.38,
+      -35,
+      width * 0.16,
+      leavesColor,
+    );
     // Leaves - Middle pair (right)
-    _drawLeaf(canvas, width * 0.68, height * 0.38, 35, width * 0.16, leavesColor);
+    _drawLeaf(
+      canvas,
+      width * 0.68,
+      height * 0.38,
+      35,
+      width * 0.16,
+      leavesColor,
+    );
 
     // Leaves - Top pair (left)
-    _drawLeaf(canvas, width * 0.38, height * 0.28, -25, width * 0.14, leavesColor);
+    _drawLeaf(
+      canvas,
+      width * 0.38,
+      height * 0.28,
+      -25,
+      width * 0.14,
+      leavesColor,
+    );
     // Leaves - Top pair (right)
-    _drawLeaf(canvas, width * 0.62, height * 0.28, 25, width * 0.14, leavesColor);
+    _drawLeaf(
+      canvas,
+      width * 0.62,
+      height * 0.28,
+      25,
+      width * 0.14,
+      leavesColor,
+    );
 
     // Top leaf (center)
     _drawLeaf(canvas, width * 0.5, height * 0.15, 0, width * 0.12, leavesColor);
   }
 
-  void _drawLeaf(Canvas canvas, double x, double y, double angle, double size, Color color) {
+  void _drawLeaf(
+    Canvas canvas,
+    double x,
+    double y,
+    double angle,
+    double size,
+    Color color,
+  ) {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
@@ -159,32 +202,16 @@ class _PlantPotPainter extends CustomPainter {
     // Leaf shape
     final leafPath = Path();
     leafPath.moveTo(0, -size * 0.5);
-    leafPath.quadraticBezierTo(
-      size * 0.4, -size * 0.3,
-      size * 0.5, 0,
-    );
-    leafPath.quadraticBezierTo(
-      size * 0.4, size * 0.3,
-      0, size * 0.5,
-    );
-    leafPath.quadraticBezierTo(
-      -size * 0.4, size * 0.3,
-      -size * 0.5, 0,
-    );
-    leafPath.quadraticBezierTo(
-      -size * 0.4, -size * 0.3,
-      0, -size * 0.5,
-    );
+    leafPath.quadraticBezierTo(size * 0.4, -size * 0.3, size * 0.5, 0);
+    leafPath.quadraticBezierTo(size * 0.4, size * 0.3, 0, size * 0.5);
+    leafPath.quadraticBezierTo(-size * 0.4, size * 0.3, -size * 0.5, 0);
+    leafPath.quadraticBezierTo(-size * 0.4, -size * 0.3, 0, -size * 0.5);
     leafPath.close();
 
     canvas.drawPath(leafPath, paint);
 
     // Center vein
-    canvas.drawLine(
-      Offset(0, -size * 0.4),
-      Offset(0, size * 0.4),
-      strokePaint,
-    );
+    canvas.drawLine(Offset(0, -size * 0.4), Offset(0, size * 0.4), strokePaint);
 
     canvas.restore();
   }

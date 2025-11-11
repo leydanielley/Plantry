@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 /// 🎨 Glassmorphism Card Widget - OPTIMIZED VERSION
-/// 
+///
 /// Modern glass effect WITHOUT BackdropFilter for better performance
 /// Uses gradients and borders for clean look on all devices
 class GlassCard extends StatelessWidget {
@@ -34,8 +34,8 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final defaultBorderColor = isDark 
-        ? Colors.white.withValues(alpha: 0.08) 
+    final defaultBorderColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
         : Colors.white.withValues(alpha: 0.2);
 
     // Clean version without BackdropFilter (better quality)
@@ -44,13 +44,15 @@ class GlassCard extends StatelessWidget {
         margin: margin,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
-          boxShadow: boxShadow ?? [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow:
+              boxShadow ??
+              [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
         ),
         child: Container(
           decoration: BoxDecoration(
@@ -87,13 +89,15 @@ class GlassCard extends StatelessWidget {
       margin: margin,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: boxShadow ?? [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow:
+            boxShadow ??
+            [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
@@ -154,18 +158,22 @@ class SimpleGlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       margin: margin,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        color: backgroundColor ?? (isDark 
-          ? Colors.white.withValues(alpha: 0.05)
-          : Colors.white.withValues(alpha: 0.8)),
+        color:
+            backgroundColor ??
+            (isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.white.withValues(alpha: 0.8)),
         border: Border.all(
-          color: borderColor ?? (isDark
-            ? Colors.white.withValues(alpha: 0.1)
-            : Colors.black.withValues(alpha: 0.05)),
+          color:
+              borderColor ??
+              (isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05)),
           width: 1,
         ),
         boxShadow: [

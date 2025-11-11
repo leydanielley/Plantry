@@ -8,7 +8,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:growlog_app/utils/app_logger.dart';
-import 'package:growlog_app/config/notification_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
+import 'package:growlog_app/config/notification_config.dart'; // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
 import 'package:growlog_app/services/interfaces/i_notification_service.dart';
 
 class NotificationService implements INotificationService {
@@ -16,7 +16,8 @@ class NotificationService implements INotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   /// Initialize notification service
@@ -31,15 +32,23 @@ class NotificationService implements INotificationService {
       try {
         final String deviceTimezone = await FlutterTimezone.getLocalTimezone();
         tz.setLocalLocation(tz.getLocation(deviceTimezone));
-        AppLogger.info('NotificationService', 'Using device timezone: $deviceTimezone');
+        AppLogger.info(
+          'NotificationService',
+          'Using device timezone: $deviceTimezone',
+        );
       } catch (e) {
         // Fallback to default if detection fails
         tz.setLocalLocation(tz.getLocation(NotificationConfig.defaultTimezone));
-        AppLogger.warning('NotificationService', 'Timezone detection failed, using default: ${NotificationConfig.defaultTimezone}');
+        AppLogger.warning(
+          'NotificationService',
+          'Timezone detection failed, using default: ${NotificationConfig.defaultTimezone}',
+        );
       }
 
       // ✅ FIX: Add iOS initialization settings
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
+      );
       const iosSettings = DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
@@ -77,7 +86,10 @@ class NotificationService implements INotificationService {
     try {
       final parts = payload.split(':');
       if (parts.length != 2) {
-        AppLogger.warning('NotificationService', 'Invalid payload format: $payload');
+        AppLogger.warning(
+          'NotificationService',
+          'Invalid payload format: $payload',
+        );
         return;
       }
 
@@ -85,11 +97,17 @@ class NotificationService implements INotificationService {
       final plantId = int.tryParse(parts[1]);
 
       if (plantId == null && type != 'test') {
-        AppLogger.warning('NotificationService', 'Invalid plant ID in payload: $payload');
+        AppLogger.warning(
+          'NotificationService',
+          'Invalid plant ID in payload: $payload',
+        );
         return;
       }
 
-      AppLogger.info('NotificationService', 'Parsed notification: type=$type, plantId=$plantId');
+      AppLogger.info(
+        'NotificationService',
+        'Parsed notification: type=$type, plantId=$plantId',
+      );
 
       // Note: Navigation requires a NavigatorKey setup in the main app.
       // The app should register a callback via a future NavigationService
@@ -98,26 +116,45 @@ class NotificationService implements INotificationService {
 
       switch (type) {
         case 'watering':
-          AppLogger.info('NotificationService', 'Navigate to plant $plantId (watering reminder)');
+          AppLogger.info(
+            'NotificationService',
+            'Navigate to plant $plantId (watering reminder)',
+          );
           // Future: navigatorKey.currentState?.push(MaterialPageRoute(...))
           break;
         case 'fertilizing':
-          AppLogger.info('NotificationService', 'Navigate to plant $plantId (fertilizing reminder)');
+          AppLogger.info(
+            'NotificationService',
+            'Navigate to plant $plantId (fertilizing reminder)',
+          );
           break;
         case 'photo':
-          AppLogger.info('NotificationService', 'Navigate to plant $plantId (photo reminder)');
+          AppLogger.info(
+            'NotificationService',
+            'Navigate to plant $plantId (photo reminder)',
+          );
           break;
         case 'harvest':
-          AppLogger.info('NotificationService', 'Navigate to plant $plantId (harvest reminder)');
+          AppLogger.info(
+            'NotificationService',
+            'Navigate to plant $plantId (harvest reminder)',
+          );
           break;
         case 'test':
           AppLogger.info('NotificationService', 'Test notification tapped');
           break;
         default:
-          AppLogger.warning('NotificationService', 'Unknown notification type: $type');
+          AppLogger.warning(
+            'NotificationService',
+            'Unknown notification type: $type',
+          );
       }
     } catch (e) {
-      AppLogger.error('NotificationService', 'Error handling notification tap', e);
+      AppLogger.error(
+        'NotificationService',
+        'Error handling notification tap',
+        e,
+      );
     }
   }
 
@@ -127,17 +164,24 @@ class NotificationService implements INotificationService {
   Future<bool> requestPermissions() async {
     try {
       if (Platform.isAndroid) {
-        final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+        final androidPlugin = _notifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
 
         if (androidPlugin != null) {
           final granted = await androidPlugin.requestNotificationsPermission();
-          AppLogger.info('NotificationService', 'Android permission granted: $granted');
+          AppLogger.info(
+            'NotificationService',
+            'Android permission granted: $granted',
+          );
           return granted ?? false;
         }
       } else if (Platform.isIOS) {
-        final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+        final iosPlugin = _notifications
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
 
         if (iosPlugin != null) {
           final granted = await iosPlugin.requestPermissions(
@@ -145,12 +189,15 @@ class NotificationService implements INotificationService {
             badge: true,
             sound: true,
           );
-          AppLogger.info('NotificationService', 'iOS permission granted: $granted');
+          AppLogger.info(
+            'NotificationService',
+            'iOS permission granted: $granted',
+          );
           return granted ?? false;
         }
       }
 
-      return false;  // ✅ FIX: Return false instead of true if no platform matched
+      return false; // ✅ FIX: Return false instead of true if no platform matched
     } catch (e) {
       AppLogger.error('NotificationService', 'Permission request failed', e);
       return false;
@@ -164,7 +211,8 @@ class NotificationService implements INotificationService {
     required String plantName,
     required DateTime lastWatering,
     required int intervalDays,
-    String notificationTime = NotificationConfig.defaultNotificationTime,  // ✅ AUDIT FIX
+    String notificationTime =
+        NotificationConfig.defaultNotificationTime, // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
 
@@ -174,7 +222,10 @@ class NotificationService implements INotificationService {
 
       // ✅ FIX: Proper time validation with range checks
       if (timeParts.length < 2) {
-        AppLogger.error('NotificationService', 'Invalid notification time format: $notificationTime');
+        AppLogger.error(
+          'NotificationService',
+          'Invalid notification time format: $notificationTime',
+        );
         return;
       }
 
@@ -182,9 +233,19 @@ class NotificationService implements INotificationService {
       final minute = int.tryParse(timeParts[1]);
 
       // ✅ FIX: Validate time ranges (0-23 hours, 0-59 minutes)
-      if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-        AppLogger.error('NotificationService', 'Invalid time values: hour=$hour, minute=$minute');
-        throw ArgumentError('Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)');
+      if (hour == null ||
+          minute == null ||
+          hour < 0 ||
+          hour > 23 ||
+          minute < 0 ||
+          minute > 59) {
+        AppLogger.error(
+          'NotificationService',
+          'Invalid time values: hour=$hour, minute=$minute',
+        );
+        throw ArgumentError(
+          'Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)',
+        );
       }
 
       final scheduledDate = tz.TZDateTime(
@@ -198,7 +259,10 @@ class NotificationService implements INotificationService {
 
       // Skip if in the past
       if (scheduledDate.isBefore(tz.TZDateTime.now(tz.local))) {
-        AppLogger.debug('NotificationService', 'Skipping past date for plant $plantId');
+        AppLogger.debug(
+          'NotificationService',
+          'Skipping past date for plant $plantId',
+        );
         return;
       }
 
@@ -210,14 +274,21 @@ class NotificationService implements INotificationService {
         scheduledDate,
         _notificationDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'watering:$plantId',
       );
 
-      AppLogger.info('NotificationService',
-        'Scheduled watering reminder for $plantName at $scheduledDate');
+      AppLogger.info(
+        'NotificationService',
+        'Scheduled watering reminder for $plantName at $scheduledDate',
+      );
     } catch (e) {
-      AppLogger.error('NotificationService', 'Failed to schedule watering reminder', e);
+      AppLogger.error(
+        'NotificationService',
+        'Failed to schedule watering reminder',
+        e,
+      );
     }
   }
 
@@ -228,7 +299,8 @@ class NotificationService implements INotificationService {
     required String plantName,
     required DateTime lastFertilizing,
     required int intervalDays,
-    String notificationTime = NotificationConfig.defaultNotificationTime,  // ✅ AUDIT FIX
+    String notificationTime =
+        NotificationConfig.defaultNotificationTime, // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
 
@@ -238,7 +310,10 @@ class NotificationService implements INotificationService {
 
       // ✅ FIX: Proper time validation with range checks
       if (timeParts.length < 2) {
-        AppLogger.error('NotificationService', 'Invalid notification time format: $notificationTime');
+        AppLogger.error(
+          'NotificationService',
+          'Invalid notification time format: $notificationTime',
+        );
         return;
       }
 
@@ -246,9 +321,19 @@ class NotificationService implements INotificationService {
       final minute = int.tryParse(timeParts[1]);
 
       // ✅ FIX: Validate time ranges (0-23 hours, 0-59 minutes)
-      if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-        AppLogger.error('NotificationService', 'Invalid time values: hour=$hour, minute=$minute');
-        throw ArgumentError('Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)');
+      if (hour == null ||
+          minute == null ||
+          hour < 0 ||
+          hour > 23 ||
+          minute < 0 ||
+          minute > 59) {
+        AppLogger.error(
+          'NotificationService',
+          'Invalid time values: hour=$hour, minute=$minute',
+        );
+        throw ArgumentError(
+          'Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)',
+        );
       }
 
       final scheduledDate = tz.TZDateTime(
@@ -272,14 +357,21 @@ class NotificationService implements INotificationService {
         scheduledDate,
         _notificationDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'fertilizing:$plantId',
       );
 
-      AppLogger.info('NotificationService',
-        'Scheduled fertilizing reminder for $plantName at $scheduledDate');
+      AppLogger.info(
+        'NotificationService',
+        'Scheduled fertilizing reminder for $plantName at $scheduledDate',
+      );
     } catch (e) {
-      AppLogger.error('NotificationService', 'Failed to schedule fertilizing reminder', e);
+      AppLogger.error(
+        'NotificationService',
+        'Failed to schedule fertilizing reminder',
+        e,
+      );
     }
   }
 
@@ -290,7 +382,8 @@ class NotificationService implements INotificationService {
     required String plantName,
     required DateTime lastPhoto,
     required int intervalDays,
-    String notificationTime = NotificationConfig.defaultNotificationTime,  // ✅ AUDIT FIX
+    String notificationTime =
+        NotificationConfig.defaultNotificationTime, // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
 
@@ -300,7 +393,10 @@ class NotificationService implements INotificationService {
 
       // ✅ FIX: Proper time validation with range checks
       if (timeParts.length < 2) {
-        AppLogger.error('NotificationService', 'Invalid notification time format: $notificationTime');
+        AppLogger.error(
+          'NotificationService',
+          'Invalid notification time format: $notificationTime',
+        );
         return;
       }
 
@@ -308,9 +404,19 @@ class NotificationService implements INotificationService {
       final minute = int.tryParse(timeParts[1]);
 
       // ✅ FIX: Validate time ranges (0-23 hours, 0-59 minutes)
-      if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-        AppLogger.error('NotificationService', 'Invalid time values: hour=$hour, minute=$minute');
-        throw ArgumentError('Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)');
+      if (hour == null ||
+          minute == null ||
+          hour < 0 ||
+          hour > 23 ||
+          minute < 0 ||
+          minute > 59) {
+        AppLogger.error(
+          'NotificationService',
+          'Invalid time values: hour=$hour, minute=$minute',
+        );
+        throw ArgumentError(
+          'Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)',
+        );
       }
 
       final scheduledDate = tz.TZDateTime(
@@ -334,14 +440,21 @@ class NotificationService implements INotificationService {
         scheduledDate,
         _notificationDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'photo:$plantId',
       );
 
-      AppLogger.info('NotificationService',
-        'Scheduled photo reminder for $plantName at $scheduledDate');
+      AppLogger.info(
+        'NotificationService',
+        'Scheduled photo reminder for $plantName at $scheduledDate',
+      );
     } catch (e) {
-      AppLogger.error('NotificationService', 'Failed to schedule photo reminder', e);
+      AppLogger.error(
+        'NotificationService',
+        'Failed to schedule photo reminder',
+        e,
+      );
     }
   }
 
@@ -351,7 +464,8 @@ class NotificationService implements INotificationService {
     required int plantId,
     required String plantName,
     required DateTime estimatedHarvestDate,
-    String notificationTime = NotificationConfig.defaultNotificationTime,  // ✅ AUDIT FIX
+    String notificationTime =
+        NotificationConfig.defaultNotificationTime, // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
 
@@ -360,7 +474,10 @@ class NotificationService implements INotificationService {
 
       // ✅ FIX: Proper time validation with range checks
       if (timeParts.length < 2) {
-        AppLogger.error('NotificationService', 'Invalid notification time format: $notificationTime');
+        AppLogger.error(
+          'NotificationService',
+          'Invalid notification time format: $notificationTime',
+        );
         return;
       }
 
@@ -368,14 +485,26 @@ class NotificationService implements INotificationService {
       final minute = int.tryParse(timeParts[1]);
 
       // ✅ FIX: Validate time ranges (0-23 hours, 0-59 minutes)
-      if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-        AppLogger.error('NotificationService', 'Invalid time values: hour=$hour, minute=$minute');
-        throw ArgumentError('Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)');
+      if (hour == null ||
+          minute == null ||
+          hour < 0 ||
+          hour > 23 ||
+          minute < 0 ||
+          minute > 59) {
+        AppLogger.error(
+          'NotificationService',
+          'Invalid time values: hour=$hour, minute=$minute',
+        );
+        throw ArgumentError(
+          'Invalid notification time: $notificationTime (expected HH:MM format with valid ranges)',
+        );
       }
 
       // Remind 3 days before
       // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
-      final reminderDate = estimatedHarvestDate.subtract(const Duration(days: NotificationConfig.harvestReminderDaysBefore));
+      final reminderDate = estimatedHarvestDate.subtract(
+        const Duration(days: NotificationConfig.harvestReminderDaysBefore),
+      );
 
       final scheduledDate = tz.TZDateTime(
         tz.local,
@@ -398,14 +527,21 @@ class NotificationService implements INotificationService {
         scheduledDate,
         _notificationDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'harvest:$plantId',
       );
 
-      AppLogger.info('NotificationService',
-        'Scheduled harvest reminder for $plantName at $scheduledDate');
+      AppLogger.info(
+        'NotificationService',
+        'Scheduled harvest reminder for $plantName at $scheduledDate',
+      );
     } catch (e) {
-      AppLogger.error('NotificationService', 'Failed to schedule harvest reminder', e);
+      AppLogger.error(
+        'NotificationService',
+        'Failed to schedule harvest reminder',
+        e,
+      );
     }
   }
 
@@ -414,12 +550,23 @@ class NotificationService implements INotificationService {
   Future<void> cancelPlantReminders(int plantId) async {
     try {
       // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
-      await _notifications.cancel(NotificationConfig.getWateringNotificationId(plantId));
-      await _notifications.cancel(NotificationConfig.getFertilizingNotificationId(plantId));
-      await _notifications.cancel(NotificationConfig.getPhotoNotificationId(plantId));
-      await _notifications.cancel(NotificationConfig.getHarvestNotificationId(plantId));
+      await _notifications.cancel(
+        NotificationConfig.getWateringNotificationId(plantId),
+      );
+      await _notifications.cancel(
+        NotificationConfig.getFertilizingNotificationId(plantId),
+      );
+      await _notifications.cancel(
+        NotificationConfig.getPhotoNotificationId(plantId),
+      );
+      await _notifications.cancel(
+        NotificationConfig.getHarvestNotificationId(plantId),
+      );
 
-      AppLogger.info('NotificationService', 'Cancelled all reminders for plant $plantId');
+      AppLogger.info(
+        'NotificationService',
+        'Cancelled all reminders for plant $plantId',
+      );
     } catch (e) {
       AppLogger.error('NotificationService', 'Failed to cancel reminders', e);
     }
@@ -432,7 +579,11 @@ class NotificationService implements INotificationService {
       await _notifications.cancelAll();
       AppLogger.info('NotificationService', 'Cancelled all notifications');
     } catch (e) {
-      AppLogger.error('NotificationService', 'Failed to cancel all notifications', e);
+      AppLogger.error(
+        'NotificationService',
+        'Failed to cancel all notifications',
+        e,
+      );
     }
   }
 
@@ -442,7 +593,11 @@ class NotificationService implements INotificationService {
     try {
       return await _notifications.pendingNotificationRequests();
     } catch (e) {
-      AppLogger.error('NotificationService', 'Failed to get pending notifications', e);
+      AppLogger.error(
+        'NotificationService',
+        'Failed to get pending notifications',
+        e,
+      );
       return [];
     }
   }
@@ -462,7 +617,11 @@ class NotificationService implements INotificationService {
         payload: 'test',
       );
     } catch (e) {
-      AppLogger.error('NotificationService', 'Failed to show test notification', e);
+      AppLogger.error(
+        'NotificationService',
+        'Failed to show test notification',
+        e,
+      );
     }
   }
 

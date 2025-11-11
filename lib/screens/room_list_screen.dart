@@ -159,10 +159,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
               const SizedBox(height: 16),
               Text(
                 'Bitte verschieben oder löschen Sie diese Elemente zuerst.',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[700],
-                ),
+                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
               ),
             ],
           ),
@@ -184,7 +181,9 @@ class _RoomListScreenState extends State<RoomListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(_t['delete_room_title']),
-        content: Text('${_t['delete_confirm'].replaceAll('?', '')} "${room.name}"?'),
+        content: Text(
+          '${_t['delete_confirm'].replaceAll('?', '')} "${room.name}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -193,7 +192,10 @@ class _RoomListScreenState extends State<RoomListScreen> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(_t['delete'], style: const TextStyle(color: Colors.red)),
+            child: Text(
+              _t['delete'],
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -285,116 +287,118 @@ class _RoomListScreenState extends State<RoomListScreen> {
         key: ValueKey(room.id), // ✅ PERFORMANCE: Key for efficient updates
         margin: AppConstants.cardMarginVertical,
         child: ListTile(
-        leading: Container(
-          width: 60,
-          height: 60,
-          padding: const EdgeInsets.all(6),
-          child: Image.asset(
-            _getGrowTypeIconPath(room.growType),
-            fit: BoxFit.contain,
+          leading: Container(
+            width: 60,
+            height: 60,
+            padding: const EdgeInsets.all(6),
+            child: Image.asset(
+              _getGrowTypeIconPath(room.growType),
+              fit: BoxFit.contain,
+            ),
           ),
-        ),
-        title: Text(
-          room.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (room.description != null)
-              Text(room.description!),
-            const SizedBox(height: AppConstants.spacingXs),
-            Row(
-              children: [
-                Icon(
+          title: Text(
+            room.name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (room.description != null) Text(room.description!),
+              const SizedBox(height: AppConstants.spacingXs),
+              Row(
+                children: [
+                  Icon(
                     Icons.spa,
                     size: AppConstants.listItemIconSize,
-                    color: Colors.grey[600]
-                ),
-                const SizedBox(width: AppConstants.listItemIconSpacing),
-                Text(
-                  '$plantCount ${_t['plants_short']}',
-                  style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: AppConstants.fontSizeSmall
-                  ),
-                ),
-                const SizedBox(width: AppConstants.listItemSpacingMedium),
-                if (room.growType != null) ...[
-                  Icon(
-                      Icons.category,
-                      size: AppConstants.listItemIconSize,
-                      color: Colors.grey[600]
+                    color: Colors.grey[600],
                   ),
                   const SizedBox(width: AppConstants.listItemIconSpacing),
                   Text(
-                    room.growType!.displayName,
+                    '$plantCount ${_t['plants_short']}',
                     style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: AppConstants.fontSizeSmall
+                      color: Colors.grey[600],
+                      fontSize: AppConstants.fontSizeSmall,
                     ),
                   ),
+                  const SizedBox(width: AppConstants.listItemSpacingMedium),
+                  if (room.growType != null) ...[
+                    Icon(
+                      Icons.category,
+                      size: AppConstants.listItemIconSize,
+                      color: Colors.grey[600],
+                    ),
+                    const SizedBox(width: AppConstants.listItemIconSpacing),
+                    Text(
+                      room.growType!.displayName,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: AppConstants.fontSizeSmall,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-            if (room.width > 0 && room.depth > 0) ...[
-              const SizedBox(height: AppConstants.spacingXs / 2),
-              Text(
-                '${(room.width * 100).toStringAsFixed(0)}cm × ${(room.depth * 100).toStringAsFixed(0)}cm × ${(room.height * 100).toStringAsFixed(0)}cm',
-                style: TextStyle(
+              ),
+              if (room.width > 0 && room.depth > 0) ...[
+                const SizedBox(height: AppConstants.spacingXs / 2),
+                Text(
+                  '${(room.width * 100).toStringAsFixed(0)}cm × ${(room.depth * 100).toStringAsFixed(0)}cm × ${(room.height * 100).toStringAsFixed(0)}cm',
+                  style: TextStyle(
                     color: Colors.grey[500],
-                    fontSize: AppConstants.roomDimensionsFontSize
+                    fontSize: AppConstants.roomDimensionsFontSize,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          trailing: PopupMenuButton(
+            icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    const Icon(Icons.edit, color: Colors.blue),
+                    const SizedBox(width: AppConstants.spacingSmall),
+                    Text(_t['edit']),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete, color: Colors.red),
+                    const SizedBox(width: AppConstants.spacingSmall),
+                    Text(
+                      _t['delete'],
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ],
                 ),
               ),
             ],
-          ],
-        ),
-        trailing: PopupMenuButton(
-          icon: Icon(Icons.more_vert, color: Colors.grey[600]),
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  const Icon(Icons.edit, color: Colors.blue),
-                  const SizedBox(width: AppConstants.spacingSmall),
-                  Text(_t['edit']),
-                ],
+            onSelected: (value) async {
+              if (value == 'edit') {
+                final result = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => EditRoomScreen(room: room),
+                  ),
+                );
+                if (result == true) _loadRooms();
+              } else if (value == 'delete') {
+                _deleteRoom(room);
+              }
+            },
+          ),
+          onTap: () async {
+            final result = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => RoomDetailScreen(room: room),
               ),
-            ),
-            PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  const Icon(Icons.delete, color: Colors.red),
-                  const SizedBox(width: AppConstants.spacingSmall),
-                  Text(_t['delete'], style: const TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-          ],
-          onSelected: (value) async {
-            if (value == 'edit') {
-              final result = await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => EditRoomScreen(room: room),
-                ),
-              );
-              if (result == true) _loadRooms();
-            } else if (value == 'delete') {
-              _deleteRoom(room);
-            }
+            );
+            if (result == true) _loadRooms();
           },
         ),
-        onTap: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => RoomDetailScreen(room: room),
-            ),
-          );
-          if (result == true) _loadRooms();
-        },
-      ),
       ),
     );
   }

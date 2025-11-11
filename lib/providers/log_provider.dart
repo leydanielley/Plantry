@@ -71,7 +71,8 @@ class LogProvider with ChangeNotifier {
   AsyncValue<List<PlantLog>> get logsForPlant => _logsForPlant;
   AsyncValue<PlantLog> get currentLog => _currentLog;
   AsyncValue<List<PlantLog>> get recentActivity => _recentActivity;
-  AsyncValue<List<Map<String, dynamic>>> get logsWithDetails => _logsWithDetails;
+  AsyncValue<List<Map<String, dynamic>>> get logsWithDetails =>
+      _logsWithDetails;
   int? get currentPlantId => _currentPlantId;
 
   // ═══════════════════════════════════════════
@@ -99,7 +100,10 @@ class LogProvider with ChangeNotifier {
           offset: offset,
         );
         _logsForPlant = Success(logs);
-        AppLogger.info('LogProvider', 'Loaded ${logs.length} logs for plant $plantId');
+        AppLogger.info(
+          'LogProvider',
+          'Loaded ${logs.length} logs for plant $plantId',
+        );
       } catch (e, stack) {
         _logsForPlant = Error('Failed to load logs', e, stack);
         AppLogger.error('LogProvider', 'Failed to load logs', e, stack);
@@ -125,7 +129,12 @@ class LogProvider with ChangeNotifier {
       );
     } catch (e, stack) {
       _logsWithDetails = Error('Failed to load logs with details', e, stack);
-      AppLogger.error('LogProvider', 'Failed to load logs with details', e, stack);
+      AppLogger.error(
+        'LogProvider',
+        'Failed to load logs with details',
+        e,
+        stack,
+      );
     }
 
     _safeNotifyListeners();
@@ -167,7 +176,12 @@ class LogProvider with ChangeNotifier {
       AppLogger.info('LogProvider', 'Loaded ${logs.length} recent activities');
     } catch (e, stack) {
       _recentActivity = Error('Failed to load recent activity', e, stack);
-      AppLogger.error('LogProvider', 'Failed to load recent activity', e, stack);
+      AppLogger.error(
+        'LogProvider',
+        'Failed to load recent activity',
+        e,
+        stack,
+      );
     }
 
     _safeNotifyListeners();
@@ -206,7 +220,11 @@ class LogProvider with ChangeNotifier {
   /// Save multiple logs in a batch
   /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent batch save race conditions
   Future<bool> saveBatch(List<PlantLog> logs) async {
-    AppLogger.debug('LogProvider', 'Saving batch of logs', 'count=${logs.length}');
+    AppLogger.debug(
+      'LogProvider',
+      'Saving batch of logs',
+      'count=${logs.length}',
+    );
 
     return await _saveLock.synchronized(() async {
       try {
@@ -260,7 +278,11 @@ class LogProvider with ChangeNotifier {
   /// Delete multiple logs in a batch
   /// ✅ CRITICAL FIX: Wrapped in Lock to prevent concurrent batch delete race conditions
   Future<bool> deleteBatch(List<int> logIds, {int? plantId}) async {
-    AppLogger.debug('LogProvider', 'Deleting batch of logs', 'count=${logIds.length}');
+    AppLogger.debug(
+      'LogProvider',
+      'Deleting batch of logs',
+      'count=${logIds.length}',
+    );
 
     return await _saveLock.synchronized(() async {
       try {
@@ -271,7 +293,11 @@ class LogProvider with ChangeNotifier {
           await loadLogsForPlant(plantId);
         }
 
-        AppLogger.info('LogProvider', '✅ Batch deleted', '${logIds.length} logs');
+        AppLogger.info(
+          'LogProvider',
+          '✅ Batch deleted',
+          '${logIds.length} logs',
+        );
         return true;
       } catch (e, stack) {
         AppLogger.error('LogProvider', 'Failed to delete batch', e, stack);
@@ -313,7 +339,11 @@ class LogProvider with ChangeNotifier {
   /// Refresh current plant logs
   Future<void> refresh() async {
     if (_currentPlantId != null) {
-      AppLogger.debug('LogProvider', 'Refreshing logs for plant', _currentPlantId);
+      AppLogger.debug(
+        'LogProvider',
+        'Refreshing logs for plant',
+        _currentPlantId,
+      );
       await loadLogsForPlant(_currentPlantId!);
     }
   }

@@ -41,8 +41,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        AppMessages.showError(context, 
-'Fehler: $e');
+        AppMessages.showError(context, 'Fehler: $e');
       }
     }
   }
@@ -71,14 +70,16 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
       );
     }
 
-    final hasQualityData = _harvest!.thcPercentage != null || 
-                           _harvest!.cbdPercentage != null ||
-                           _harvest!.terpeneProfile != null;
-    
-    final hasRatingData = _harvest!.rating != null ||
-                          _harvest!.tasteNotes != null ||
-                          _harvest!.effectNotes != null ||
-                          _harvest!.overallNotes != null;
+    final hasQualityData =
+        _harvest!.thcPercentage != null ||
+        _harvest!.cbdPercentage != null ||
+        _harvest!.terpeneProfile != null;
+
+    final hasRatingData =
+        _harvest!.rating != null ||
+        _harvest!.tasteNotes != null ||
+        _harvest!.effectNotes != null ||
+        _harvest!.overallNotes != null;
 
     final isComplete = hasQualityData || hasRatingData;
 
@@ -94,7 +95,8 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => EditHarvestQualityScreen(harvest: _harvest!),
+                  builder: (context) =>
+                      EditHarvestQualityScreen(harvest: _harvest!),
                 ),
               );
               if (result == true) _loadHarvest();
@@ -109,20 +111,19 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
           children: [
             _buildStatusCard(isComplete),
             const SizedBox(height: 20),
-            
+
             if (hasQualityData) ...[
               _buildQualityCard(),
               const SizedBox(height: 20),
             ],
-            
+
             if (hasRatingData) ...[
               _buildRatingCard(),
               const SizedBox(height: 20),
             ],
-            
-            if (!isComplete)
-              _buildAddDataButton(),
-            
+
+            if (!isComplete) _buildAddDataButton(),
+
             if (_harvest!.isComplete) ...[
               const SizedBox(height: 20),
               _buildFinishButton(),
@@ -137,7 +138,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
     final Color color = isComplete ? Colors.green : Colors.grey;
     final IconData icon = isComplete ? Icons.check_circle : Icons.pending;
     final String status = isComplete ? 'Daten erfasst' : 'Offen';
-    final String subtitle = isComplete 
+    final String subtitle = isComplete
         ? 'Quality-Daten wurden erfasst'
         : 'Noch keine Daten erfasst';
 
@@ -149,10 +150,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               child: Icon(icon, color: Colors.white, size: 32),
             ),
             const SizedBox(width: 16),
@@ -170,10 +168,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -202,24 +197,25 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
               ],
             ),
             const Divider(height: 20),
-            
+
             if (_harvest!.thcPercentage != null) ...[
               _buildCannabinoidBar('THC', _harvest!.thcPercentage!, Colors.red),
               const SizedBox(height: 16),
             ],
-            
+
             if (_harvest!.cbdPercentage != null) ...[
-              _buildCannabinoidBar('CBD', _harvest!.cbdPercentage!, Colors.green),
+              _buildCannabinoidBar(
+                'CBD',
+                _harvest!.cbdPercentage!,
+                Colors.green,
+              ),
               const SizedBox(height: 16),
             ],
-            
+
             if (_harvest!.terpeneProfile != null) ...[
               const Text(
                 'Terpen-Profil',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 8),
               Container(
@@ -247,10 +243,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
             Text(
               '${percentage.toStringAsFixed(1)}%',
@@ -294,13 +287,15 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
               ],
             ),
             const Divider(height: 20),
-            
+
             if (_harvest!.rating != null) ...[
               Row(
                 children: [
                   ...List.generate(5, (index) {
                     return Icon(
-                      index < _harvest!.rating! ? Icons.star : Icons.star_border,
+                      index < _harvest!.rating!
+                          ? Icons.star
+                          : Icons.star_border,
                       color: Colors.amber,
                       size: 28,
                     );
@@ -317,19 +312,34 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
               ),
               const SizedBox(height: 16),
             ],
-            
+
             if (_harvest!.tasteNotes != null) ...[
-              _buildNoteSection('Geschmack', _harvest!.tasteNotes!, Icons.restaurant, Colors.orange),
+              _buildNoteSection(
+                'Geschmack',
+                _harvest!.tasteNotes!,
+                Icons.restaurant,
+                Colors.orange,
+              ),
               const SizedBox(height: 12),
             ],
-            
+
             if (_harvest!.effectNotes != null) ...[
-              _buildNoteSection('Wirkung', _harvest!.effectNotes!, Icons.psychology, Colors.purple),
+              _buildNoteSection(
+                'Wirkung',
+                _harvest!.effectNotes!,
+                Icons.psychology,
+                Colors.purple,
+              ),
               const SizedBox(height: 12),
             ],
-            
+
             if (_harvest!.overallNotes != null) ...[
-              _buildNoteSection('Gesamt-Notizen', _harvest!.overallNotes!, Icons.note, Colors.blue),
+              _buildNoteSection(
+                'Gesamt-Notizen',
+                _harvest!.overallNotes!,
+                Icons.note,
+                Colors.blue,
+              ),
             ],
           ],
         ),
@@ -337,7 +347,12 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
     );
   }
 
-  Widget _buildNoteSection(String label, String text, IconData icon, Color color) {
+  Widget _buildNoteSection(
+    String label,
+    String text,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -347,10 +362,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
             const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ],
         ),
@@ -376,7 +388,8 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => EditHarvestQualityScreen(harvest: _harvest!),
+              builder: (context) =>
+                  EditHarvestQualityScreen(harvest: _harvest!),
             ),
           );
           if (result == true) _loadHarvest();
@@ -403,7 +416,11 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
           Navigator.popUntil(context, (route) => route.isFirst);
         },
         icon: const Icon(Icons.check_circle),
-        label: Text(AppTranslations(Localizations.localeOf(context).languageCode)['complete_harvest']),
+        label: Text(
+          AppTranslations(
+            Localizations.localeOf(context).languageCode,
+          )['complete_harvest'],
+        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,

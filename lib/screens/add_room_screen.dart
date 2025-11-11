@@ -47,7 +47,9 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ AUDIT FIX: i18n
+    _t = AppTranslations(
+      Localizations.localeOf(context).languageCode,
+    ); // ✅ AUDIT FIX: i18n
     _loadInitialData();
   }
 
@@ -92,15 +94,20 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
             : null,
         growType: _growType,
         wateringSystem: _wateringSystem,
-        rdwcSystemId: _wateringSystem == WateringSystem.rdwc ? _selectedRdwcSystemId : null,
+        rdwcSystemId: _wateringSystem == WateringSystem.rdwc
+            ? _selectedRdwcSystemId
+            : null,
         width: _widthController.text.trim().isNotEmpty
-            ? (double.tryParse(_widthController.text.trim()) ?? 0.0) / 100.0  // ✅ CM → Meter
+            ? (double.tryParse(_widthController.text.trim()) ?? 0.0) /
+                  100.0 // ✅ CM → Meter
             : 0.0,
         depth: _depthController.text.trim().isNotEmpty
-            ? (double.tryParse(_depthController.text.trim()) ?? 0.0) / 100.0  // ✅ CM → Meter
+            ? (double.tryParse(_depthController.text.trim()) ?? 0.0) /
+                  100.0 // ✅ CM → Meter
             : 0.0,
         height: _heightController.text.trim().isNotEmpty
-            ? (double.tryParse(_heightController.text.trim()) ?? 0.0) / 100.0  // ✅ CM → Meter
+            ? (double.tryParse(_heightController.text.trim()) ?? 0.0) /
+                  100.0 // ✅ CM → Meter
             : 0.0,
       );
 
@@ -108,7 +115,9 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
 
       if (mounted) {
         // Erfolgreich gespeichert - jetzt Hardware-Dialog anzeigen
-        final savedRoom = room.id != null ? room : await _roomRepo.findAll().then((rooms) => rooms.last);
+        final savedRoom = room.id != null
+            ? room
+            : await _roomRepo.findAll().then((rooms) => rooms.last);
 
         if (!mounted) return;
         AppMessages.savedSuccessfully(context, 'Raum');
@@ -121,11 +130,16 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
               children: [
                 Icon(Icons.hardware, color: Colors.orange[700]),
                 const SizedBox(width: 12),
-                Expanded(child: Text(_t['add_room_hardware_dialog_title'])), // ✅ i18n
+                Expanded(
+                  child: Text(_t['add_room_hardware_dialog_title']),
+                ), // ✅ i18n
               ],
             ),
             content: Text(
-              _t['add_room_hardware_dialog_message'].replaceAll('{name}', room.name),  // ✅ i18n
+              _t['add_room_hardware_dialog_message'].replaceAll(
+                '{name}',
+                room.name,
+              ), // ✅ i18n
               style: const TextStyle(fontSize: 15),
             ),
             actions: [
@@ -158,7 +172,10 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
           );
 
           if (mounted) {
-            AppMessages.showSuccess(context, _t['add_room_hardware_complete']); // ✅ i18n
+            AppMessages.showSuccess(
+              context,
+              _t['add_room_hardware_complete'],
+            ); // ✅ i18n
           }
         }
 
@@ -190,21 +207,21 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildBasicInfo(),
-            const SizedBox(height: 24),
-            _buildGrowSettings(),
-            const SizedBox(height: 24),
-            _buildDimensions(),
-            const SizedBox(height: 24),
-            _buildSaveButton(),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildBasicInfo(),
+                  const SizedBox(height: 24),
+                  _buildGrowSettings(),
+                  const SizedBox(height: 24),
+                  _buildDimensions(),
+                  const SizedBox(height: 24),
+                  _buildSaveButton(),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
     );
   }
 
@@ -229,7 +246,8 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
             prefixIcon: const Icon(Icons.home),
             border: const OutlineInputBorder(),
           ),
-          validator: (value) => Validators.validateNotEmpty(value, fieldName: 'Name'),
+          validator: (value) =>
+              Validators.validateNotEmpty(value, fieldName: 'Name'),
           autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         const SizedBox(height: 12),
@@ -270,7 +288,10 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
             border: const OutlineInputBorder(),
           ),
           items: [
-            DropdownMenuItem(value: null, child: Text(_t['add_room_not_specified'])), // ✅ i18n
+            DropdownMenuItem(
+              value: null,
+              child: Text(_t['add_room_not_specified']),
+            ), // ✅ i18n
             ...GrowType.values.map((type) {
               return DropdownMenuItem(
                 value: type,
@@ -289,7 +310,10 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
             border: const OutlineInputBorder(),
           ),
           items: [
-            DropdownMenuItem(value: null, child: Text(_t['add_room_not_specified'])), // ✅ i18n
+            DropdownMenuItem(
+              value: null,
+              child: Text(_t['add_room_not_specified']),
+            ), // ✅ i18n
             ...WateringSystem.values.map((system) {
               return DropdownMenuItem(
                 value: system,
@@ -311,7 +335,10 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
               border: const OutlineInputBorder(),
             ),
             items: [
-              DropdownMenuItem(value: null, child: Text(_t['add_room_no_rdwc'])), // ✅ i18n
+              DropdownMenuItem(
+                value: null,
+                child: Text(_t['add_room_no_rdwc']),
+              ), // ✅ i18n
               ..._rdwcSystems.map((system) {
                 return DropdownMenuItem(
                   value: system.id,
@@ -342,10 +369,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
         // ✅ KORRIGIERT: Jetzt Zentimeter statt Meter
         Text(
           _t['add_room_dimensions_unit'], // ✅ i18n
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
         ),
         const SizedBox(height: 12),
         Row(
@@ -353,10 +377,12 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
             Expanded(
               child: TextFormField(
                 controller: _widthController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
-                  labelText: _t['add_room_width_label'],  // ✅ i18n
-                  hintText: _t['add_room_width_hint'],  // ✅ i18n
+                  labelText: _t['add_room_width_label'], // ✅ i18n
+                  hintText: _t['add_room_width_hint'], // ✅ i18n
                   border: const OutlineInputBorder(),
                 ),
                 // ✅ KORRIGIERT: Validator für CM (10-1000 cm)
@@ -371,10 +397,12 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
             Expanded(
               child: TextFormField(
                 controller: _depthController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
-                  labelText: _t['add_room_depth_label'],  // ✅ i18n
-                  hintText: _t['add_room_depth_hint'],  // ✅ i18n
+                  labelText: _t['add_room_depth_label'], // ✅ i18n
+                  hintText: _t['add_room_depth_hint'], // ✅ i18n
                   border: const OutlineInputBorder(),
                 ),
                 // ✅ KORRIGIERT: Validator für CM (10-1000 cm)
@@ -389,10 +417,12 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
             Expanded(
               child: TextFormField(
                 controller: _heightController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
-                  labelText: _t['add_room_height_label'],  // ✅ i18n
-                  hintText: _t['add_room_height_hint'],  // ✅ i18n
+                  labelText: _t['add_room_height_label'], // ✅ i18n
+                  hintText: _t['add_room_height_hint'], // ✅ i18n
                   border: const OutlineInputBorder(),
                 ),
                 // ✅ KORRIGIERT: Validator für CM (10-1000 cm)

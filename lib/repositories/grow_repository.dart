@@ -18,7 +18,6 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
   @override
   String get repositoryName => 'GrowRepository';
 
-
   /// Alle Grows abrufen (nicht archiviert)
   /// ✅ CRITICAL FIX: Added limit parameter to prevent memory overflow
   @override
@@ -31,7 +30,7 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
         maps = await db.query(
           'grows',
           orderBy: 'start_date DESC',
-          limit: limit ?? 1000,  // Reasonable default limit
+          limit: limit ?? 1000, // Reasonable default limit
         );
       } else {
         maps = await db.query(
@@ -39,7 +38,7 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
           where: 'archived = ?',
           whereArgs: [0],
           orderBy: 'start_date DESC',
-          limit: limit ?? 1000,  // Reasonable default limit
+          limit: limit ?? 1000, // Reasonable default limit
         );
       }
 
@@ -55,16 +54,17 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
   Future<Grow?> getById(int id) async {
     try {
       final db = await _dbHelper.database;
-      final maps = await db.query(
-        'grows',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      final maps = await db.query('grows', where: 'id = ?', whereArgs: [id]);
 
       if (maps.isEmpty) return null;
       return Grow.fromMap(maps.first);
     } catch (e, stackTrace) {
-      AppLogger.error('GrowRepository', 'Failed to load grow by id', e, stackTrace);
+      AppLogger.error(
+        'GrowRepository',
+        'Failed to load grow by id',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }
@@ -133,11 +133,7 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
         );
 
         // 2. Then delete the grow itself
-        return await txn.delete(
-          'grows',
-          where: 'id = ?',
-          whereArgs: [id],
-        );
+        return await txn.delete('grows', where: 'id = ?', whereArgs: [id]);
       });
     } catch (e, stackTrace) {
       AppLogger.error('GrowRepository', 'Failed to delete grow', e, stackTrace);
@@ -180,7 +176,12 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
       );
       return Sqflite.firstIntValue(result) ?? 0;
     } catch (e, stackTrace) {
-      AppLogger.error('GrowRepository', 'Failed to get plant count', e, stackTrace);
+      AppLogger.error(
+        'GrowRepository',
+        'Failed to get plant count',
+        e,
+        stackTrace,
+      );
       return 0;
     }
   }
@@ -211,7 +212,12 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
 
       return counts;
     } catch (e, stackTrace) {
-      AppLogger.error('GrowRepository', 'Failed to get plant counts', e, stackTrace);
+      AppLogger.error(
+        'GrowRepository',
+        'Failed to get plant counts',
+        e,
+        stackTrace,
+      );
       return {};
     }
   }
@@ -229,7 +235,11 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
       context: 'GrowRepository.updatePhaseForAllPlants',
     );
 
-    AppLogger.debug('GrowRepo', 'Updating phase for all plants', 'growId=$growId, newPhase=$newPhase');
+    AppLogger.debug(
+      'GrowRepo',
+      'Updating phase for all plants',
+      'growId=$growId, newPhase=$newPhase',
+    );
 
     await db.transaction((txn) async {
       // 1. Get all plant IDs in this grow
@@ -258,16 +268,28 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
         whereArgs: [growId],
       );
 
-      AppLogger.info('GrowRepo', 'Updated plants to new phase', 'count=${plantIds.length}, phase=$newPhase');
+      AppLogger.info(
+        'GrowRepo',
+        'Updated plants to new phase',
+        'count=${plantIds.length}, phase=$newPhase',
+      );
 
       // 3. ✅ FIX: Recalculate phase_day_numbers for ALL plants (in transaction)
       int totalLogsUpdated = 0;
       for (final plantId in plantIds) {
-        final logsUpdated = await _recalculatePhaseDayNumbersInTransaction(txn, plantId, phaseStartDate);
+        final logsUpdated = await _recalculatePhaseDayNumbersInTransaction(
+          txn,
+          plantId,
+          phaseStartDate,
+        );
         totalLogsUpdated += logsUpdated;
       }
 
-      AppLogger.info('GrowRepo', '✅ Updated phase for plants and recalculated logs', 'plants=${plantIds.length}, logs=$totalLogsUpdated');
+      AppLogger.info(
+        'GrowRepo',
+        '✅ Updated phase for plants and recalculated logs',
+        'plants=${plantIds.length}, logs=$totalLogsUpdated',
+      );
     });
   }
 
@@ -299,11 +321,18 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
 
       // Only update logs that are on or after phase start date
       final logDay = DateTime(logDate.year, logDate.month, logDate.day);
-      final phaseDay = DateTime(phaseStartDate.year, phaseStartDate.month, phaseStartDate.day);
+      final phaseDay = DateTime(
+        phaseStartDate.year,
+        phaseStartDate.month,
+        phaseStartDate.day,
+      );
 
       if (!logDay.isBefore(phaseDay)) {
         // Recalculate phase_day_number
-        final newPhaseDayNumber = Validators.calculateDayNumber(logDate, phaseStartDate);
+        final newPhaseDayNumber = Validators.calculateDayNumber(
+          logDate,
+          phaseStartDate,
+        );
 
         await txn.update(
           'plant_logs',

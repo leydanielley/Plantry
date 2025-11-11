@@ -3,13 +3,13 @@
 // =============================================
 
 import 'package:growlog_app/models/rdwc_log_fertilizer.dart';
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 enum RdwcLogType {
-  addback,        // Water addback/refill
-  fullChange,     // Complete reservoir change
-  maintenance,    // Cleaning/maintenance
-  measurement,    // Just measurement, no action
+  addback, // Water addback/refill
+  fullChange, // Complete reservoir change
+  maintenance, // Cleaning/maintenance
+  measurement, // Just measurement, no action
 }
 
 /// Sentinel object for copyWith to distinguish between null and undefined
@@ -22,10 +22,10 @@ class RdwcLog {
   final RdwcLogType logType;
 
   // Water tracking
-  final double? levelBefore;      // Water level before action (liters)
-  final double? waterAdded;       // Amount of water added (liters)
-  final double? levelAfter;       // Water level after action (liters)
-  final double? waterConsumed;    // Calculated consumption since last log
+  final double? levelBefore; // Water level before action (liters)
+  final double? waterAdded; // Amount of water added (liters)
+  final double? levelAfter; // Water level after action (liters)
+  final double? waterConsumed; // Calculated consumption since last log
 
   // pH/EC tracking
   final double? phBefore;
@@ -176,10 +176,18 @@ class RdwcLog {
       systemId: systemId ?? this.systemId,
       logDate: logDate ?? this.logDate,
       logType: logType ?? this.logType,
-      levelBefore: levelBefore == _undefined ? this.levelBefore : levelBefore as double?,
-      waterAdded: waterAdded == _undefined ? this.waterAdded : waterAdded as double?,
-      levelAfter: levelAfter == _undefined ? this.levelAfter : levelAfter as double?,
-      waterConsumed: waterConsumed == _undefined ? this.waterConsumed : waterConsumed as double?,
+      levelBefore: levelBefore == _undefined
+          ? this.levelBefore
+          : levelBefore as double?,
+      waterAdded: waterAdded == _undefined
+          ? this.waterAdded
+          : waterAdded as double?,
+      levelAfter: levelAfter == _undefined
+          ? this.levelAfter
+          : levelAfter as double?,
+      waterConsumed: waterConsumed == _undefined
+          ? this.waterConsumed
+          : waterConsumed as double?,
       phBefore: phBefore == _undefined ? this.phBefore : phBefore as double?,
       phAfter: phAfter == _undefined ? this.phAfter : phAfter as double?,
       ecBefore: ecBefore == _undefined ? this.ecBefore : ecBefore as double?,
@@ -187,7 +195,9 @@ class RdwcLog {
       note: note == _undefined ? this.note : note as String?,
       loggedBy: loggedBy == _undefined ? this.loggedBy : loggedBy as String?,
       createdAt: createdAt ?? this.createdAt,
-      fertilizers: fertilizers == _undefined ? this.fertilizers : fertilizers as List<RdwcLogFertilizer>?,
+      fertilizers: fertilizers == _undefined
+          ? this.fertilizers
+          : fertilizers as List<RdwcLogFertilizer>?,
     );
   }
 
@@ -212,7 +222,20 @@ class RdwcLog {
   /// Formatted date for display
   String get formattedDate {
     // ✅ AUDIT FIX: Safe month array access with bounds checking
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Dez',
+    ];
     final monthIndex = logDate.month - 1;
     final monthName = (monthIndex >= 0 && monthIndex < months.length)
         ? months[monthIndex]

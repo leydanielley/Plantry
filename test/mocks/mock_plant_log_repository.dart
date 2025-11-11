@@ -10,10 +10,12 @@ class MockPlantLogRepository implements IPlantLogRepository {
   int _nextId = 1;
 
   @override
-  Future<List<PlantLog>> findByPlant(int plantId, {int? limit, int? offset}) async {
-    final logs = _logs.values
-        .where((log) => log.plantId == plantId)
-        .toList()
+  Future<List<PlantLog>> findByPlant(
+    int plantId, {
+    int? limit,
+    int? offset,
+  }) async {
+    final logs = _logs.values.where((log) => log.plantId == plantId).toList()
       ..sort((a, b) => b.logDate.compareTo(a.logDate));
 
     if (offset != null) {
@@ -76,7 +78,9 @@ class MockPlantLogRepository implements IPlantLogRepository {
     final logs = _logs.values.where((log) => log.plantId == plantId).toList();
     if (logs.isEmpty) return 1;
 
-    final maxDay = logs.map((log) => log.dayNumber).reduce((a, b) => a > b ? a : b);
+    final maxDay = logs
+        .map((log) => log.dayNumber)
+        .reduce((a, b) => a > b ? a : b);
     return maxDay + 1;
   }
 
@@ -97,21 +101,20 @@ class MockPlantLogRepository implements IPlantLogRepository {
     required List<String> actionTypes,
     int limit = 10,
   }) async {
-    final logs = _logs.values
-        .where((log) => actionTypes.contains(log.actionType.name))
-        .toList()
-      ..sort((a, b) => b.logDate.compareTo(a.logDate));
+    final logs =
+        _logs.values
+            .where((log) => actionTypes.contains(log.actionType.name))
+            .toList()
+          ..sort((a, b) => b.logDate.compareTo(a.logDate));
     return logs.take(limit).toList();
   }
 
   @override
   Future<List<Map<String, dynamic>>> getLogsWithDetails(int plantId) async {
     final logs = await findByPlant(plantId);
-    return logs.map((log) => {
-      'log': log,
-      'fertilizers': [],
-      'photos': [],
-    }).toList();
+    return logs
+        .map((log) => {'log': log, 'fertilizers': [], 'photos': []})
+        .toList();
   }
 
   @override

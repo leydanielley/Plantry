@@ -45,7 +45,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
-  final ILogFertilizerRepository _logFertilizerRepo = getIt<ILogFertilizerRepository>();
+  final ILogFertilizerRepository _logFertilizerRepo =
+      getIt<ILogFertilizerRepository>();
   final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
   final IHarvestService _harvestService = getIt<IHarvestService>();
   late final AppTranslations _t; // ✅ AUDIT FIX: i18n
@@ -69,7 +70,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ AUDIT FIX: i18n
+    _t = AppTranslations(
+      Localizations.localeOf(context).languageCode,
+    ); // ✅ AUDIT FIX: i18n
     _currentPlant = widget.plant;
     _scrollController.addListener(_onScroll);
     _loadData();
@@ -85,7 +88,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
   // ✅ FIX: Lazy Loading für Logs
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.8) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.8) {
       if (!_isLoadingMore && _hasMoreLogs) {
         _loadMoreLogs();
       }
@@ -126,13 +130,17 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       final harvest = results[2] as Harvest?;
 
       // ✅ PERFORMANCE: Step 3 - Log Details parallel laden
-      final logIds = logs.where((log) => log.id != null).map((log) => log.id!).toList();
+      final logIds = logs
+          .where((log) => log.id != null)
+          .map((log) => log.id!)
+          .toList();
       final detailResults = await Future.wait([
         _logFertilizerRepo.findByLogs(logIds),
         _photoRepo.getPhotosByLogIds(logIds),
       ]);
 
-      final logFertilizersMap = detailResults[0] as Map<int, List<LogFertilizer>>;
+      final logFertilizersMap =
+          detailResults[0] as Map<int, List<LogFertilizer>>;
       final logPhotosMap = detailResults[1] as Map<int, List<Photo>>;
 
       if (!mounted) return;
@@ -169,7 +177,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       );
 
       // ✅ PERFORMANCE FIX: Batch-Query statt N+1
-      final newLogIds = newLogs.where((log) => log.id != null).map((log) => log.id!).toList();
+      final newLogIds = newLogs
+          .where((log) => log.id != null)
+          .map((log) => log.id!)
+          .toList();
       final newLogFertilizers = await _logFertilizerRepo.findByLogs(newLogIds);
       final newLogPhotos = await _photoRepo.getPhotosByLogIds(newLogIds);
 
@@ -226,9 +237,14 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _t['plant_detail_grow_plant_count'].replaceAll('{count}', '$plantCount'),  // ✅ i18n
+              _t['plant_detail_grow_plant_count'].replaceAll(
+                '{count}',
+                '$plantCount',
+              ), // ✅ i18n
               style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 16),
@@ -246,7 +262,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           ElevatedButton.icon(
             onPressed: () => Navigator.of(context).pop('bulk'),
             icon: const Icon(Icons.group),
-            label: Text(_t['plant_detail_all_plants'].replaceAll('{count}', '$plantCount')),  // ✅ i18n
+            label: Text(
+              _t['plant_detail_all_plants'].replaceAll(
+                '{count}',
+                '$plantCount',
+              ),
+            ), // ✅ i18n
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue[700],
               foregroundColor: Colors.white,
@@ -326,10 +347,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   Future<void> _editLog(PlantLog log) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => EditLogScreen(
-          plant: _currentPlant,
-          log: log,
-        ),
+        builder: (context) => EditLogScreen(plant: _currentPlant, log: log),
       ),
     );
 
@@ -348,10 +366,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           children: [
             Center(
               child: InteractiveViewer(
-                child: Image.file(
-                  File(photo.filePath),
-                  fit: BoxFit.contain,
-                ),
+                child: Image.file(File(photo.filePath), fit: BoxFit.contain),
               ),
             ),
             Positioned(
@@ -448,7 +463,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               onPressed: () async {
                 await Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => PlantPhotoGalleryScreen(plant: _currentPlant),
+                    builder: (context) =>
+                        PlantPhotoGalleryScreen(plant: _currentPlant),
                   ),
                 );
                 // ✅ MEDIUM FIX: Check mounted after async navigation
@@ -490,13 +506,15 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             if ((_currentPlant.phase == PlantPhase.bloom ||
-                _currentPlant.phase == PlantPhase.harvest) && _harvest == null)
+                    _currentPlant.phase == PlantPhase.harvest) &&
+                _harvest == null)
               FloatingActionButton.extended(
                 heroTag: 'harvest',
                 onPressed: () async {
                   final result = await Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => AddHarvestScreen(plant: _currentPlant),
+                      builder: (context) =>
+                          AddHarvestScreen(plant: _currentPlant),
                     ),
                   );
                   // ✅ MEDIUM FIX: Check mounted after async navigation
@@ -507,7 +525,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 backgroundColor: const Color(0xFF004225),
               ),
             if ((_currentPlant.phase == PlantPhase.bloom ||
-                _currentPlant.phase == PlantPhase.harvest) && _harvest == null)
+                    _currentPlant.phase == PlantPhase.harvest) &&
+                _harvest == null)
               const SizedBox(height: 12),
             FloatingActionButton.extended(
               heroTag: 'log',
@@ -550,7 +569,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _currentPlant.strain ?? _t['plant_detail_unknown_strain'], // ✅ i18n
+                      _currentPlant.strain ??
+                          _t['plant_detail_unknown_strain'], // ✅ i18n
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -558,7 +578,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       ),
                     ),
                     Text(
-                      _currentPlant.breeder ?? _t['plant_detail_unknown_breeder'], // ✅ i18n
+                      _currentPlant.breeder ??
+                          _t['plant_detail_unknown_breeder'], // ✅ i18n
                       style: TextStyle(
                         fontSize: 14,
                         color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -574,7 +595,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             children: [
               _buildInfoChip(
                 Icons.calendar_today,
-                _t['plant_detail_day'].replaceAll('{day}', '${_currentPlant.totalDays}'), // ✅ i18n
+                _t['plant_detail_day'].replaceAll(
+                  '{day}',
+                  '${_currentPlant.totalDays}',
+                ), // ✅ i18n
                 isDark,
               ),
               const SizedBox(width: 8),
@@ -609,16 +633,14 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               ),
             ],
           ),
-          if (_harvest != null)
-            const SizedBox(height: 12),
+          if (_harvest != null) const SizedBox(height: 12),
           if (_harvest != null && _harvest!.id != null)
             InkWell(
               onTap: () async {
                 await Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => HarvestDetailScreen(
-                      harvestId: _harvest!.id!,
-                    ),
+                    builder: (context) =>
+                        HarvestDetailScreen(harvestId: _harvest!.id!),
                   ),
                 );
                 // ✅ MEDIUM FIX: Check mounted after async navigation
@@ -628,7 +650,11 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   // ✅ FIX: Replace force unwrap with null-aware operator
-                  color: isDark ? (Colors.green[900] ?? Colors.green).withValues(alpha: 0.3) : Colors.green[50],
+                  color: isDark
+                      ? (Colors.green[900] ?? Colors.green).withValues(
+                          alpha: 0.3,
+                        )
+                      : Colors.green[50],
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: Colors.green[600] ?? Colors.green,
@@ -637,11 +663,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.grass,
-                      color: Colors.green[600],
-                      size: 24,
-                    ),
+                    Icon(Icons.grass, color: Colors.green[600], size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -659,14 +681,23 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                               '⚖️ ${_harvest!.dryWeight!.toStringAsFixed(1)}g',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                             ),
                           Text(
-                            _t['plant_detail_status'].replaceAll('{drying}', _harvest!.dryingStatus).replaceAll('{curing}', _harvest!.curingStatus),  // ✅ i18n
+                            _t['plant_detail_status']
+                                .replaceAll('{drying}', _harvest!.dryingStatus)
+                                .replaceAll(
+                                  '{curing}',
+                                  _harvest!.curingStatus,
+                                ), // ✅ i18n
                             style: TextStyle(
                               fontSize: 12,
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
                             ),
                           ),
                         ],
@@ -688,7 +719,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 color: Colors.red[50],
                 borderRadius: BorderRadius.circular(8),
                 // ✅ FIX: Replace force unwrap with null-aware operator
-                border: Border.all(color: Colors.red[300] ?? Colors.red, width: 2),
+                border: Border.all(
+                  color: Colors.red[300] ?? Colors.red,
+                  width: 2,
+                ),
               ),
               child: Row(
                 children: [
@@ -707,7 +741,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                         ),
                         Text(
                           _t['plant_detail_harvest_id_missing'], // ✅ i18n
-                          style: TextStyle(fontSize: 12, color: Colors.red[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.red[600],
+                          ),
                         ),
                       ],
                     ),
@@ -720,7 +757,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label, bool isDark, {Color? color}) {
+  Widget _buildInfoChip(
+    IconData icon,
+    String label,
+    bool isDark, {
+    Color? color,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -758,26 +800,16 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.note_add,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.note_add, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             _t['plant_detail_no_logs'], // ✅ i18n
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 20, color: Colors.grey[600]),
           ),
           const SizedBox(height: 8),
           Text(
             _t['plant_detail_add_first_log'], // ✅ i18n
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],
       ),
@@ -786,8 +818,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
   Widget _buildLogList(bool isDark) {
     return ListView.builder(
-      controller: _scrollController,  // ✅ FIX: ScrollController attached
-      itemCount: _logs.length + (_hasMoreLogs || _isLoadingMore ? 1 : 0),  // ✅ FIX: +1 für Loading
+      controller: _scrollController, // ✅ FIX: ScrollController attached
+      itemCount:
+          _logs.length +
+          (_hasMoreLogs || _isLoadingMore ? 1 : 0), // ✅ FIX: +1 für Loading
       padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 80),
       itemBuilder: (context, index) {
         // ✅ FIX: Loading Indicator am Ende
@@ -821,304 +855,335 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            Row(
-              children: [
-                // ✅ v13: Phase-Tag PROMINENT
-                if (log.phase != null && log.phaseDayNumber != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _getPhaseColor(log.phase!),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${log.phase!.prefix}${log.phaseDayNumber}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+              Row(
+                children: [
+                  // ✅ v13: Phase-Tag PROMINENT
+                  if (log.phase != null && log.phaseDayNumber != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
                       ),
-                    ),
-                  )
-                else
-                  // Fallback für alte Logs ohne Phase
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _getActionTypeColor(log.actionType),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      _t['plant_detail_day'].replaceAll('{day}', '${log.dayNumber}'), // ✅ i18n
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                      decoration: BoxDecoration(
+                        color: _getPhaseColor(log.phase!),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                  ),
-                const SizedBox(width: 8),
-                Text(
-                  log.actionType.displayName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
-                if (photos != null && photos.isNotEmpty) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[100],
-                      borderRadius: BorderRadius.circular(12),
-                      // ✅ FIX: Replace force unwrap with null-aware operator
-                      border: Border.all(color: Colors.blue[300] ?? Colors.blue, width: 1),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.photo_camera,
-                          size: 14,
-                          color: Colors.blue[700],
+                      child: Text(
+                        '${log.phase!.prefix}${log.phaseDayNumber}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${photos.length}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  else
+                    // Fallback für alte Logs ohne Phase
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getActionTypeColor(log.actionType),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _t['plant_detail_day'].replaceAll(
+                          '{day}',
+                          '${log.dayNumber}',
+                        ), // ✅ i18n
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  Text(
+                    log.actionType.displayName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  if (photos != null && photos.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[100],
+                        borderRadius: BorderRadius.circular(12),
+                        // ✅ FIX: Replace force unwrap with null-aware operator
+                        border: Border.all(
+                          color: Colors.blue[300] ?? Colors.blue,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.photo_camera,
+                            size: 14,
                             color: Colors.blue[700],
                           ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${photos.length}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
+                  // ✅ Gesamt-Tag als Info rechts
+                  Text(
+                    _t['plant_detail_total_day'].replaceAll(
+                      '{day}',
+                      '${log.dayNumber}',
+                    ), // ✅ i18n
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.grey[500] : Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  PopupMenuButton(
+                    icon: Icon(
+                      Icons.more_vert,
+                      size: 20,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, color: Colors.blue, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Bearbeiten',
+                              style: TextStyle(color: Colors.blue),
+                            ),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _t['delete'],
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        _editLog(log);
+                      } else if (value == 'delete') {
+                        _deleteLog(log);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                dateFormat.format(log.logDate),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+
+              if (photos != null && photos.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 120,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: photos.length,
+                    itemBuilder: (context, index) {
+                      final photo = photos[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: GestureDetector(
+                          onTap: () => _showPhotoDialog(photo),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(photo.filePath),
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 120,
+                                  height: 120,
+                                  color: isDark
+                                      ? Colors.grey[800]
+                                      : Colors.grey[300],
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: isDark
+                                        ? Colors.grey[600]
+                                        : Colors.grey[600],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+
+              if (log.actionType == ActionType.transplant) ...[
+                const SizedBox(height: 8),
+                if (log.containerSize != null) ...[
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.local_florist,
+                        size: 16,
+                        color: Colors.brown[600],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${log.containerSize!.toStringAsFixed(0)}L Topf',
+                        style: TextStyle(color: textColor),
+                      ),
+                      if (log.containerMediumAmount != null) ...[
+                        Text(
+                          ' • ${log.containerMediumAmount!.toStringAsFixed(1)}L Medium',
+                          style: TextStyle(color: textColor),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+                if (log.systemReservoirSize != null) ...[
+                  Row(
+                    children: [
+                      Icon(Icons.water, size: 16, color: Colors.blue[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${log.systemReservoirSize!.toStringAsFixed(0)}L System',
+                        style: TextStyle(color: textColor),
+                      ),
+                      if (log.systemBucketCount != null) ...[
+                        Text(
+                          ' • ${log.systemBucketCount} Buckets',
+                          style: TextStyle(color: textColor),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+                if (log.containerDrainage &&
+                    log.containerDrainageMaterial != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.layers, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Drainage: ${log.containerDrainageMaterial}',
+                        style: TextStyle(color: textColor),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+
+              if (log.waterAmount != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.water_drop, size: 16, color: Colors.blue[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${log.waterAmount}L',
+                      style: TextStyle(color: textColor),
+                    ),
+                  ],
+                ),
+              ],
+
+              if (logFerts != null && logFerts.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                ...logFerts.map((logFert) {
+                  final fertilizer = _fertilizers[logFert.fertilizerId];
+                  if (fertilizer == null) return const SizedBox.shrink();
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.science, size: 16, color: Colors.green[600]),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${fertilizer.name}: ${logFert.amount.toStringAsFixed(1)}${logFert.unit}',
+                          style: TextStyle(fontSize: 14, color: textColor),
                         ),
                       ],
                     ),
-                  ),
-                ],
-                const Spacer(),
-                // ✅ Gesamt-Tag als Info rechts
-                Text(
-                  _t['plant_detail_total_day'].replaceAll('{day}', '${log.dayNumber}'), // ✅ i18n
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? Colors.grey[500] : Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                PopupMenuButton(
-                  icon: Icon(
-                    Icons.more_vert,
-                    size: 20,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
-                  ),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, color: Colors.blue, size: 20),
-                          SizedBox(width: 8),
-                          Text('Bearbeiten', style: TextStyle(color: Colors.blue)),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete, color: Colors.red, size: 20),
-                          const SizedBox(width: 8),
-                          Text(_t['delete'], style: const TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      _editLog(log);
-                    } else if (value == 'delete') {
-                      _deleteLog(log);
-                    }
-                  },
-                ),
+                  );
+                }),
               ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              dateFormat.format(log.logDate),
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
 
-            if (photos != null && photos.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 120,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: photos.length,
-                  itemBuilder: (context, index) {
-                    final photo = photos[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () => _showPhotoDialog(photo),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(photo.filePath),
-                            width: 120,
-                            height: 120,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 120,
-                                height: 120,
-                                color: isDark ? Colors.grey[800] : Colors.grey[300],
-                                child: Icon(
-                                  Icons.broken_image,
-                                  color: isDark ? Colors.grey[600] : Colors.grey[600],
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-
-            if (log.actionType == ActionType.transplant) ...[
-              const SizedBox(height: 8),
-              if (log.containerSize != null) ...[
-                Row(
-                  children: [
-                    Icon(Icons.local_florist, size: 16, color: Colors.brown[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${log.containerSize!.toStringAsFixed(0)}L Topf',
-                      style: TextStyle(color: textColor),
-                    ),
-                    if (log.containerMediumAmount != null) ...[
-                      Text(
-                        ' • ${log.containerMediumAmount!.toStringAsFixed(1)}L Medium',
-                        style: TextStyle(color: textColor),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-              if (log.systemReservoirSize != null) ...[
-                Row(
-                  children: [
-                    Icon(Icons.water, size: 16, color: Colors.blue[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${log.systemReservoirSize!.toStringAsFixed(0)}L System',
-                      style: TextStyle(color: textColor),
-                    ),
-                    if (log.systemBucketCount != null) ...[
-                      Text(
-                        ' • ${log.systemBucketCount} Buckets',
-                        style: TextStyle(color: textColor),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-              if (log.containerDrainage && log.containerDrainageMaterial != null) ...[
+              if (log.phIn != null || log.ecIn != null) ...[
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.layers, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Drainage: ${log.containerDrainageMaterial}',
-                      style: TextStyle(color: textColor),
-                    ),
+                    if (log.phIn != null) ...[
+                      Text(
+                        'pH: ${log.phIn?.toStringAsFixed(1)} ',
+                        style: TextStyle(color: textColor),
+                      ),
+                    ],
+                    if (log.ecIn != null) ...[
+                      Text(
+                        'EC: ${log.ecIn?.toStringAsFixed(1)}',
+                        style: TextStyle(color: textColor),
+                      ),
+                    ],
                   ],
                 ),
               ],
-            ],
-
-            if (log.waterAmount != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.water_drop, size: 16, color: Colors.blue[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${log.waterAmount}L',
-                    style: TextStyle(color: textColor),
-                  ),
-                ],
-              ),
-            ],
-
-            if (logFerts != null && logFerts.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              ...logFerts.map((logFert) {
-                final fertilizer = _fertilizers[logFert.fertilizerId];
-                if (fertilizer == null) return const SizedBox.shrink();
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    children: [
-                      Icon(Icons.science, size: 16, color: Colors.green[600]),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${fertilizer.name}: ${logFert.amount.toStringAsFixed(1)}${logFert.unit}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: textColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-
-            if (log.phIn != null || log.ecIn != null) ...[
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  if (log.phIn != null) ...[
-                    Text(
-                      'pH: ${log.phIn?.toStringAsFixed(1)} ',
-                      style: TextStyle(color: textColor),
-                    ),
-                  ],
-                  if (log.ecIn != null) ...[
-                    Text(
-                      'EC: ${log.ecIn?.toStringAsFixed(1)}',
-                      style: TextStyle(color: textColor),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-            if (log.note != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                log.note!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: textColor,
+              if (log.note != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  log.note!,
+                  style: TextStyle(fontSize: 14, color: textColor),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
-      ),
       ),
     );
   }

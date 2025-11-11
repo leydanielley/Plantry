@@ -33,50 +33,66 @@ void main() {
       final plants = <Plant>[];
 
       // Pflanze 1: Veg Phase
-      plants.add(await plantRepo.save(Plant(
-        name: 'Purple Haze #1',
-        strain: 'Purple Haze',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.veg,
-        seedDate: today.subtract(const Duration(days: 20)),
-        phaseStartDate: today.subtract(const Duration(days: 10)),
-      )));
+      plants.add(
+        await plantRepo.save(
+          Plant(
+            name: 'Purple Haze #1',
+            strain: 'Purple Haze',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            phase: PlantPhase.veg,
+            seedDate: today.subtract(const Duration(days: 20)),
+            phaseStartDate: today.subtract(const Duration(days: 10)),
+          ),
+        ),
+      );
 
       // Pflanze 2: Veg Phase (ältere Pflanze)
-      plants.add(await plantRepo.save(Plant(
-        name: 'Purple Haze #2',
-        strain: 'Purple Haze',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.veg,
-        seedDate: today.subtract(const Duration(days: 25)),
-        phaseStartDate: today.subtract(const Duration(days: 15)),
-      )));
+      plants.add(
+        await plantRepo.save(
+          Plant(
+            name: 'Purple Haze #2',
+            strain: 'Purple Haze',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            phase: PlantPhase.veg,
+            seedDate: today.subtract(const Duration(days: 25)),
+            phaseStartDate: today.subtract(const Duration(days: 15)),
+          ),
+        ),
+      );
 
       // Pflanze 3: Bloom Phase
-      plants.add(await plantRepo.save(Plant(
-        name: 'OG Kush #1',
-        strain: 'OG Kush',
-        seedType: SeedType.photo,
-        medium: Medium.coco,
-        phase: PlantPhase.bloom,
-        seedDate: today.subtract(const Duration(days: 60)),
-        phaseStartDate: today.subtract(const Duration(days: 20)),
-        bloomDate: today.subtract(const Duration(days: 20)),
-      )));
+      plants.add(
+        await plantRepo.save(
+          Plant(
+            name: 'OG Kush #1',
+            strain: 'OG Kush',
+            seedType: SeedType.photo,
+            medium: Medium.coco,
+            phase: PlantPhase.bloom,
+            seedDate: today.subtract(const Duration(days: 60)),
+            phaseStartDate: today.subtract(const Duration(days: 20)),
+            bloomDate: today.subtract(const Duration(days: 20)),
+          ),
+        ),
+      );
 
       // Pflanze 4: Bloom Phase (kurz vor Ernte)
-      plants.add(await plantRepo.save(Plant(
-        name: 'OG Kush #2',
-        strain: 'OG Kush',
-        seedType: SeedType.photo,
-        medium: Medium.coco,
-        phase: PlantPhase.bloom,
-        seedDate: today.subtract(const Duration(days: 85)),
-        phaseStartDate: today.subtract(const Duration(days: 45)),
-        bloomDate: today.subtract(const Duration(days: 45)),
-      )));
+      plants.add(
+        await plantRepo.save(
+          Plant(
+            name: 'OG Kush #2',
+            strain: 'OG Kush',
+            seedType: SeedType.photo,
+            medium: Medium.coco,
+            phase: PlantPhase.bloom,
+            seedDate: today.subtract(const Duration(days: 85)),
+            phaseStartDate: today.subtract(const Duration(days: 45)),
+            bloomDate: today.subtract(const Duration(days: 45)),
+          ),
+        ),
+      );
 
       expect(plants.length, 4);
 
@@ -94,7 +110,9 @@ void main() {
       // User wässert beide Veg-Pflanzen gleichzeitig
       // ====================================
 
-      final vegPlants = allPlants.where((p) => p.phase == PlantPhase.veg).toList();
+      final vegPlants = allPlants
+          .where((p) => p.phase == PlantPhase.veg)
+          .toList();
       expect(vegPlants.length, 2);
 
       // User nutzt "Mehrere Pflanzen gießen" Feature
@@ -130,7 +148,8 @@ void main() {
         logDate: today,
         actionType: ActionType.feed,
         phase: PlantPhase.bloom,
-        phaseDayNumber: today.difference(bloomPlant1.phaseStartDate!).inDays + 1,
+        phaseDayNumber:
+            today.difference(bloomPlant1.phaseStartDate!).inDays + 1,
         waterAmount: 1000.0,
         ecIn: 1.8,
         phIn: 6.0,
@@ -147,7 +166,8 @@ void main() {
         logDate: today,
         actionType: ActionType.water,
         phase: PlantPhase.bloom,
-        phaseDayNumber: today.difference(bloomPlant2.phaseStartDate!).inDays + 1,
+        phaseDayNumber:
+            today.difference(bloomPlant2.phaseStartDate!).inDays + 1,
         waterAmount: 2000.0,
         cleanse: true,
         note: 'Tag 7 vom Spülen, Trichome werden bernsteinfarben',
@@ -184,7 +204,8 @@ void main() {
         actionType: ActionType.note,
         phase: PlantPhase.veg,
         phaseDayNumber: today.difference(plants[1].phaseStartDate!).inDays + 1,
-        note: 'Leichte Gelbfärbung untere Blätter - evtl. Stickstoffmangel? Nächstes Mal mehr Dünger.',
+        note:
+            'Leichte Gelbfärbung untere Blätter - evtl. Stickstoffmangel? Nächstes Mal mehr Dünger.',
       );
       await logRepo.save(observationLog2);
 
@@ -198,18 +219,27 @@ void main() {
         final plantLogs = await logRepo.findByPlant(plant.id!);
         final todayLogs = plantLogs.where((log) {
           return log.logDate.year == today.year &&
-                 log.logDate.month == today.month &&
-                 log.logDate.day == today.day;
+              log.logDate.month == today.month &&
+              log.logDate.day == today.day;
         }).toList();
         todaysLogs.addAll(todayLogs);
       }
 
-      expect(todaysLogs.length, 6); // 2 Veg Water + 1 Bloom Feed + 1 Bloom Flush + 2 Notes
+      expect(
+        todaysLogs.length,
+        6,
+      ); // 2 Veg Water + 1 Bloom Feed + 1 Bloom Flush + 2 Notes
 
       // Statistiken für User-Dashboard
-      final wateringCount = todaysLogs.where((l) => l.actionType == ActionType.water).length;
-      final feedingCount = todaysLogs.where((l) => l.actionType == ActionType.feed).length;
-      final noteCount = todaysLogs.where((l) => l.actionType == ActionType.note).length;
+      final wateringCount = todaysLogs
+          .where((l) => l.actionType == ActionType.water)
+          .length;
+      final feedingCount = todaysLogs
+          .where((l) => l.actionType == ActionType.feed)
+          .length;
+      final noteCount = todaysLogs
+          .where((l) => l.actionType == ActionType.note)
+          .length;
 
       expect(wateringCount, 3); // 2 Veg + 1 Flush
       expect(feedingCount, 1);
@@ -226,15 +256,17 @@ void main() {
     test('Scenario: User copies last log for quick entry', () async {
       // Häufiger Use Case: User wiederholt gleiche Aktion wie gestern
 
-      final plant = await plantRepo.save(Plant(
-        name: 'Auto CBD #1',
-        strain: 'CBD Auto',
-        seedType: SeedType.auto,
-        medium: Medium.hydro,
-        phase: PlantPhase.veg,
-        seedDate: DateTime.now().subtract(const Duration(days: 15)),
-        phaseStartDate: DateTime.now().subtract(const Duration(days: 5)),
-      ));
+      final plant = await plantRepo.save(
+        Plant(
+          name: 'Auto CBD #1',
+          strain: 'CBD Auto',
+          seedType: SeedType.auto,
+          medium: Medium.hydro,
+          phase: PlantPhase.veg,
+          seedDate: DateTime.now().subtract(const Duration(days: 15)),
+          phaseStartDate: DateTime.now().subtract(const Duration(days: 5)),
+        ),
+      );
 
       // Gestern: User hat gedüngt
       final yesterday = DateTime.now().subtract(const Duration(days: 1));
@@ -270,7 +302,7 @@ void main() {
         ecIn: lastLog.ecIn,
         phIn: lastLog.phIn,
         temperature: 24.0, // Leicht angepasst
-        humidity: 60.0,    // Leicht angepasst
+        humidity: 60.0, // Leicht angepasst
         note: 'Standard Feeding (kopiert von gestern)',
       );
       await logRepo.save(todayLog);

@@ -35,39 +35,39 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
   final _brandController = TextEditingController();
   final _modelController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
-  
+
   // Allgemeine Controller
   final _wattageController = TextEditingController();
-  
+
   // Beleuchtung
   final _spectrumController = TextEditingController();
   final _colorTemperatureController = TextEditingController();
-  
+
   // Lüftung
   final _airflowController = TextEditingController();
   final _flangeSizeController = TextEditingController();
   final _diameterController = TextEditingController();
-  
+
   // Klimatechnik
   final _coolingPowerController = TextEditingController();
   final _heatingPowerController = TextEditingController();
   final _coverageController = TextEditingController();
   final _humidificationRateController = TextEditingController();
-  
+
   // Bewässerung
   final _pumpRateController = TextEditingController();
   final _programCountController = TextEditingController();
   final _dripperCountController = TextEditingController();
   final _capacityController = TextEditingController();
   final _materialController = TextEditingController();
-  
+
   // Filter & Controller
   final _filterDiameterController = TextEditingController();
   final _filterLengthController = TextEditingController();
   final _controllerTypeController = TextEditingController();
   final _outputCountController = TextEditingController();
   final _controllerFunctionsController = TextEditingController();
-  
+
   // Optional
   final _specificationsController = TextEditingController();
   final _purchasePriceController = TextEditingController();
@@ -76,7 +76,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
   late HardwareType _selectedType;
   DateTime? _purchaseDate;
   bool _isLoading = false;
-  
+
   // Boolean Flags
   bool? _dimmable;
   bool? _controllable;
@@ -89,7 +89,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ AUDIT FIX: i18n
+    _t = AppTranslations(
+      Localizations.localeOf(context).languageCode,
+    ); // ✅ AUDIT FIX: i18n
     _selectedType = HardwareType.ledPanel;
     _loadRoom();
   }
@@ -158,47 +160,98 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
         roomId: widget.roomId,
         name: _generateName(),
         type: _selectedType,
-        brand: _brandController.text.trim().isNotEmpty ? _brandController.text.trim() : null,
-        model: _modelController.text.trim().isNotEmpty ? _modelController.text.trim() : null,
+        brand: _brandController.text.trim().isNotEmpty
+            ? _brandController.text.trim()
+            : null,
+        model: _modelController.text.trim().isNotEmpty
+            ? _modelController.text.trim()
+            : null,
         quantity: int.tryParse(_quantityController.text) ?? 1,
-        wattage: _wattageController.text.isNotEmpty ? int.tryParse(_wattageController.text) : null,
-        spectrum: _spectrumController.text.trim().isNotEmpty ? _spectrumController.text.trim() : null,
-        colorTemperature: _colorTemperatureController.text.trim().isNotEmpty ? _colorTemperatureController.text.trim() : null,
+        wattage: _wattageController.text.isNotEmpty
+            ? int.tryParse(_wattageController.text)
+            : null,
+        spectrum: _spectrumController.text.trim().isNotEmpty
+            ? _spectrumController.text.trim()
+            : null,
+        colorTemperature: _colorTemperatureController.text.trim().isNotEmpty
+            ? _colorTemperatureController.text.trim()
+            : null,
         dimmable: _dimmable,
-        airflow: _airflowController.text.isNotEmpty ? int.tryParse(_airflowController.text) : null,
-        flangeSize: _flangeSizeController.text.trim().isNotEmpty ? _flangeSizeController.text.trim() : null,
+        airflow: _airflowController.text.isNotEmpty
+            ? int.tryParse(_airflowController.text)
+            : null,
+        flangeSize: _flangeSizeController.text.trim().isNotEmpty
+            ? _flangeSizeController.text.trim()
+            : null,
         controllable: _controllable,
         oscillating: _oscillating,
-        diameter: _diameterController.text.isNotEmpty ? int.tryParse(_diameterController.text) : null,
-        coolingPower: _coolingPowerController.text.isNotEmpty ? int.tryParse(_coolingPowerController.text) : null,
-        heatingPower: _heatingPowerController.text.isNotEmpty ? int.tryParse(_heatingPowerController.text) : null,
-        coverage: _coverageController.text.isNotEmpty ? double.tryParse(_coverageController.text) : null,
+        diameter: _diameterController.text.isNotEmpty
+            ? int.tryParse(_diameterController.text)
+            : null,
+        coolingPower: _coolingPowerController.text.isNotEmpty
+            ? int.tryParse(_coolingPowerController.text)
+            : null,
+        heatingPower: _heatingPowerController.text.isNotEmpty
+            ? int.tryParse(_heatingPowerController.text)
+            : null,
+        coverage: _coverageController.text.isNotEmpty
+            ? double.tryParse(_coverageController.text)
+            : null,
         hasThermostat: _hasThermostat,
-        humidificationRate: _humidificationRateController.text.isNotEmpty ? int.tryParse(_humidificationRateController.text) : null,
-        pumpRate: _pumpRateController.text.isNotEmpty ? int.tryParse(_pumpRateController.text) : null,
+        humidificationRate: _humidificationRateController.text.isNotEmpty
+            ? int.tryParse(_humidificationRateController.text)
+            : null,
+        pumpRate: _pumpRateController.text.isNotEmpty
+            ? int.tryParse(_pumpRateController.text)
+            : null,
         isDigital: _isDigital,
-        programCount: _programCountController.text.isNotEmpty ? int.tryParse(_programCountController.text) : null,
-        dripperCount: _dripperCountController.text.isNotEmpty ? int.tryParse(_dripperCountController.text) : null,
-        capacity: _capacityController.text.isNotEmpty ? int.tryParse(_capacityController.text) : null,
-        material: _materialController.text.trim().isNotEmpty ? _materialController.text.trim() : null,
+        programCount: _programCountController.text.isNotEmpty
+            ? int.tryParse(_programCountController.text)
+            : null,
+        dripperCount: _dripperCountController.text.isNotEmpty
+            ? int.tryParse(_dripperCountController.text)
+            : null,
+        capacity: _capacityController.text.isNotEmpty
+            ? int.tryParse(_capacityController.text)
+            : null,
+        material: _materialController.text.trim().isNotEmpty
+            ? _materialController.text.trim()
+            : null,
         hasChiller: _hasChiller,
         hasAirPump: _hasAirPump,
-        filterDiameter: _filterDiameterController.text.trim().isNotEmpty ? _filterDiameterController.text.trim() : null,
-        filterLength: _filterLengthController.text.isNotEmpty ? int.tryParse(_filterLengthController.text) : null,
-        controllerType: _controllerTypeController.text.trim().isNotEmpty ? _controllerTypeController.text.trim() : null,
-        outputCount: _outputCountController.text.isNotEmpty ? int.tryParse(_outputCountController.text) : null,
-        controllerFunctions: _controllerFunctionsController.text.trim().isNotEmpty ? _controllerFunctionsController.text.trim() : null,
-        specifications: _specificationsController.text.trim().isNotEmpty ? _specificationsController.text.trim() : null,
+        filterDiameter: _filterDiameterController.text.trim().isNotEmpty
+            ? _filterDiameterController.text.trim()
+            : null,
+        filterLength: _filterLengthController.text.isNotEmpty
+            ? int.tryParse(_filterLengthController.text)
+            : null,
+        controllerType: _controllerTypeController.text.trim().isNotEmpty
+            ? _controllerTypeController.text.trim()
+            : null,
+        outputCount: _outputCountController.text.isNotEmpty
+            ? int.tryParse(_outputCountController.text)
+            : null,
+        controllerFunctions:
+            _controllerFunctionsController.text.trim().isNotEmpty
+            ? _controllerFunctionsController.text.trim()
+            : null,
+        specifications: _specificationsController.text.trim().isNotEmpty
+            ? _specificationsController.text.trim()
+            : null,
         purchaseDate: _purchaseDate,
-        purchasePrice: _purchasePriceController.text.isNotEmpty ? double.tryParse(_purchasePriceController.text) : null,
-        notes: _notesController.text.trim().isNotEmpty ? _notesController.text.trim() : null,
+        purchasePrice: _purchasePriceController.text.isNotEmpty
+            ? double.tryParse(_purchasePriceController.text)
+            : null,
+        notes: _notesController.text.trim().isNotEmpty
+            ? _notesController.text.trim()
+            : null,
       );
 
       await _hardwareRepo.save(hardware);
 
       if (mounted) {
         AppMessages.savedSuccessfully(context, hardware.name);
-        
+
         _resetForm();
       }
     } catch (e) {
@@ -238,7 +291,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
     _specificationsController.clear();
     _purchasePriceController.clear();
     _notesController.clear();
-    
+
     setState(() {
       _selectedType = HardwareType.ledPanel;
       _purchaseDate = null;
@@ -250,7 +303,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
       _hasChiller = null;
       _hasAirPump = null;
     });
-    
+
     FocusScope.of(context).requestFocus(FocusNode());
   }
 
@@ -304,7 +357,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
     // Filter out entire watering category if room has RDWC system
     final hasRdwcSystem = _room?.rdwcSystemId != null;
     final availableTypes = hasRdwcSystem
-        ? HardwareType.values.where((type) => type.category != HardwareCategory.watering).toList()
+        ? HardwareType.values
+              .where((type) => type.category != HardwareCategory.watering)
+              .toList()
         : HardwareType.values.toList();
 
     final grouped = <HardwareCategory, List<HardwareType>>{};
@@ -327,7 +382,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
         ...grouped.entries.map((entry) {
           final category = entry.key;
           final types = entry.value;
-          
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -428,10 +483,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               Expanded(
                 child: Text(
                   _t['add_hardware_name_info'], // ✅ i18n
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.orange[900],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.orange[900]),
                 ),
               ),
             ],
@@ -454,10 +506,10 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        
+
         // Dynamische Felder je nach Typ
         ..._buildTypeSpecificFields(),
-        
+
         // Anzahl (immer anzeigen)
         const SizedBox(height: 12),
         TextFormField(
@@ -503,7 +555,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -523,7 +577,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             controlAffinity: ListTileControlAffinity.leading,
           ),
         ];
-      
+
       case HardwareType.hpsLamp:
       case HardwareType.mhLamp:
       case HardwareType.cflLamp:
@@ -538,7 +592,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -551,7 +607,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             ),
           ),
         ];
-      
+
       // ========== LÜFTUNG ==========
       case HardwareType.exhaustFan:
         return [
@@ -565,7 +621,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'm³/h',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -597,7 +655,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             ),
           ),
         ];
-      
+
       case HardwareType.circulationFan:
         return [
           TextFormField(
@@ -610,7 +668,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'm³/h',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -644,7 +704,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             ),
           ),
         ];
-      
+
       // ========== KLIMATECHNIK ==========
       case HardwareType.airConditioner:
         return [
@@ -658,7 +718,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'BTU',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -671,10 +733,12 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
         ];
-      
+
       case HardwareType.heater:
         return [
           TextFormField(
@@ -687,7 +751,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -709,7 +775,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             controlAffinity: ListTileControlAffinity.leading,
           ),
         ];
-      
+
       case HardwareType.dehumidifier:
         return [
           TextFormField(
@@ -722,10 +788,12 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
         ];
-      
+
       case HardwareType.humidifier:
         return [
           TextFormField(
@@ -738,7 +806,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'ml/h',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -751,10 +821,12 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
         ];
-      
+
       // ========== BEWÄSSERUNG ==========
       case HardwareType.pump:
         return [
@@ -768,7 +840,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'L/h',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -781,10 +855,12 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
         ];
-      
+
       case HardwareType.timer:
         return [
           CheckboxListTile(
@@ -806,7 +882,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             ),
           ),
         ];
-      
+
       case HardwareType.dripSystem:
         return [
           TextFormField(
@@ -820,7 +896,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             ),
           ),
         ];
-      
+
       case HardwareType.reservoir:
         return [
           TextFormField(
@@ -833,7 +909,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'L',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -860,7 +938,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             controlAffinity: ListTileControlAffinity.leading,
           ),
         ];
-      
+
       // ========== MONITORING ==========
       case HardwareType.phMeter:
       case HardwareType.ecMeter:
@@ -889,7 +967,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             ),
           ),
         ];
-      
+
       // ========== SONSTIGES ==========
       case HardwareType.filter:
         return [
@@ -903,7 +981,9 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'm³/h',
             ),
-            validator: (value) => value?.isEmpty ?? true ? _t['add_hardware_required'] : null, // ✅ i18n
+            validator: (value) => value?.isEmpty ?? true
+                ? _t['add_hardware_required']
+                : null, // ✅ i18n
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -928,7 +1008,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             ),
           ),
         ];
-      
+
       case HardwareType.controller:
         return [
           TextFormField(
@@ -962,7 +1042,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
             ),
           ),
         ];
-      
+
       case HardwareType.other:
       default:
         return [

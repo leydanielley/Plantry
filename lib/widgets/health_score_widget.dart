@@ -41,7 +41,9 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
   /// - Checks mounted before setState to prevent memory leaks
   Future<void> _loadHealthData() async {
     try {
-      final healthScore = await _healthScoreService.calculateHealthScore(widget.plant);
+      final healthScore = await _healthScoreService.calculateHealthScore(
+        widget.plant,
+      );
       final warnings = await _warningService.checkWarnings(widget.plant);
 
       if (mounted) {
@@ -54,7 +56,9 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
     } catch (e) {
       // ✅ FIX: Set default health score on error to prevent null crashes
       if (mounted) {
-        final t = AppTranslations('de'); // Fallback to German for error messages
+        final t = AppTranslations(
+          'de',
+        ); // Fallback to German for error messages
         setState(() {
           _healthScore = HealthScore(
             score: 50,
@@ -108,10 +112,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
                   height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: _getScoreColor(),
-                      width: 6,
-                    ),
+                    border: Border.all(color: _getScoreColor(), width: 6),
                   ),
                   child: Center(
                     child: Column(
@@ -161,11 +162,10 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        AppTranslations(Localizations.localeOf(context).languageCode).translate('plant_health'),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        AppTranslations(
+                          Localizations.localeOf(context).languageCode,
+                        ).translate('plant_health'),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -182,17 +182,23 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppTranslations(Localizations.localeOf(context).languageCode).translate('warnings'),
+                    AppTranslations(
+                      Localizations.localeOf(context).languageCode,
+                    ).translate('warnings'),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  ..._warnings.take(3).map((warning) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _buildWarningItem(warning),
-                  )),
+                  ..._warnings
+                      .take(3)
+                      .map(
+                        (warning) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _buildWarningItem(warning),
+                        ),
+                      ),
                   if (_warnings.length > 3)
                     Text(
                       '+ ${_warnings.length - 3} weitere Warnungen',
@@ -245,21 +251,25 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  ..._healthScore!.recommendations.take(3).map((rec) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('• ', style: TextStyle(fontSize: 16)),
-                        Expanded(
-                          child: Text(
-                            rec,
-                            style: const TextStyle(fontSize: 13),
+                  ..._healthScore!.recommendations
+                      .take(3)
+                      .map(
+                        (rec) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('• ', style: TextStyle(fontSize: 16)),
+                              Expanded(
+                                child: Text(
+                                  rec,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  )),
+                      ),
                 ],
               ),
             ),
@@ -294,10 +304,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
         children: [
           Row(
             children: [
-              Text(
-                warning.getIcon(),
-                style: const TextStyle(fontSize: 16),
-              ),
+              Text(warning.getIcon(), style: const TextStyle(fontSize: 16)),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -314,10 +321,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
             const SizedBox(height: 4),
             Text(
               '→ ${warning.recommendation}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[700],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[700]),
             ),
           ],
         ],
@@ -332,16 +336,10 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              label,
-              style: const TextStyle(fontSize: 13),
-            ),
+            Text(label, style: const TextStyle(fontSize: 13)),
             Text(
               '${value.toInt()}%',
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -349,7 +347,9 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
         LinearProgressIndicator(
           value: value / 100,
           backgroundColor: Colors.grey[300],
-          valueColor: AlwaysStoppedAnimation<Color>(_getScoreColorForValue(value)),
+          valueColor: AlwaysStoppedAnimation<Color>(
+            _getScoreColorForValue(value),
+          ),
           minHeight: 8,
         ),
       ],

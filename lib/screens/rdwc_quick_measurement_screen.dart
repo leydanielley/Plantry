@@ -19,10 +19,12 @@ class RdwcQuickMeasurementScreen extends StatefulWidget {
   const RdwcQuickMeasurementScreen({super.key, required this.system});
 
   @override
-  State<RdwcQuickMeasurementScreen> createState() => _RdwcQuickMeasurementScreenState();
+  State<RdwcQuickMeasurementScreen> createState() =>
+      _RdwcQuickMeasurementScreenState();
 }
 
-class _RdwcQuickMeasurementScreenState extends State<RdwcQuickMeasurementScreen> {
+class _RdwcQuickMeasurementScreenState
+    extends State<RdwcQuickMeasurementScreen> {
   final _formKey = GlobalKey<FormState>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
@@ -40,7 +42,9 @@ class _RdwcQuickMeasurementScreenState extends State<RdwcQuickMeasurementScreen>
   @override
   void initState() {
     super.initState();
-    _levelController = TextEditingController(text: widget.system.currentLevel.toStringAsFixed(1));
+    _levelController = TextEditingController(
+      text: widget.system.currentLevel.toStringAsFixed(1),
+    );
     _phController = TextEditingController();
     _ecController = TextEditingController();
     _noteController = TextEditingController();
@@ -75,8 +79,12 @@ class _RdwcQuickMeasurementScreenState extends State<RdwcQuickMeasurementScreen>
     try {
       // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
       final level = double.tryParse(_levelController.text) ?? 0.0;
-      final ph = _phController.text.isNotEmpty ? double.tryParse(_phController.text) : null;
-      final ec = _ecController.text.isNotEmpty ? double.tryParse(_ecController.text) : null;
+      final ph = _phController.text.isNotEmpty
+          ? double.tryParse(_phController.text)
+          : null;
+      final ec = _ecController.text.isNotEmpty
+          ? double.tryParse(_ecController.text)
+          : null;
 
       final log = RdwcLog(
         systemId: widget.system.id!,
@@ -140,12 +148,19 @@ class _RdwcQuickMeasurementScreenState extends State<RdwcQuickMeasurementScreen>
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, size: 16, color: Colors.purple),
+                  const Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Colors.purple,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _t['quick_measurement_hint'],
-                      style: const TextStyle(fontSize: 12, color: Colors.purple),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.purple,
+                      ),
                     ),
                   ),
                 ],
@@ -160,10 +175,14 @@ class _RdwcQuickMeasurementScreenState extends State<RdwcQuickMeasurementScreen>
                 labelText: _t['current_level'],
                 hintText: 'e.g. 50',
                 prefixIcon: const Icon(Icons.water_drop),
-                suffixText: _settings.volumeUnit == VolumeUnit.liter ? 'L' : 'gal',
+                suffixText: _settings.volumeUnit == VolumeUnit.liter
+                    ? 'L'
+                    : 'gal',
                 border: const OutlineInputBorder(),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return _t['level_required'];
@@ -186,7 +205,9 @@ class _RdwcQuickMeasurementScreenState extends State<RdwcQuickMeasurementScreen>
                 prefixIcon: const Icon(Icons.water),
                 border: const OutlineInputBorder(),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) {
                 if (value != null && value.isNotEmpty) {
                   final number = double.tryParse(value);
@@ -209,7 +230,9 @@ class _RdwcQuickMeasurementScreenState extends State<RdwcQuickMeasurementScreen>
                 suffixText: 'mS/cm',
                 border: const OutlineInputBorder(),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) {
                 if (value != null && value.isNotEmpty) {
                   final number = double.tryParse(value);

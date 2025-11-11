@@ -16,12 +16,15 @@ class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  State<NotificationSettingsScreen> createState() =>
+      _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState
+    extends State<NotificationSettingsScreen> {
   final INotificationRepository _repo = getIt<INotificationRepository>();
-  final INotificationService _notificationService = getIt<INotificationService>();
+  final INotificationService _notificationService =
+      getIt<INotificationService>();
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
 
   late AppTranslations _t = AppTranslations('de');
@@ -54,7 +57,11 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         });
       }
     } catch (e) {
-      AppLogger.error('NotificationSettingsScreen', 'Failed to load settings', e);
+      AppLogger.error(
+        'NotificationSettingsScreen',
+        'Failed to load settings',
+        e,
+      );
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -140,7 +147,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               value: _settings!.enabled,
               onChanged: _toggleEnabled,
               secondary: Icon(
-                _settings!.enabled ? Icons.notifications_active : Icons.notifications_off,
+                _settings!.enabled
+                    ? Icons.notifications_active
+                    : Icons.notifications_off,
                 color: _settings!.enabled ? Colors.green : Colors.grey,
               ),
             ),
@@ -155,9 +164,12 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               children: [
                 SwitchListTile(
                   title: Text(_t['watering_reminders']),
-                  subtitle: Text('${_t['notification_interval']}: ${_settings!.wateringIntervalDays} ${_t['days']}'),
+                  subtitle: Text(
+                    '${_t['notification_interval']}: ${_settings!.wateringIntervalDays} ${_t['days']}',
+                  ),
                   value: _settings!.wateringReminders,
-                  onChanged: (v) => _saveSettings(_settings!.copyWith(wateringReminders: v)),
+                  onChanged: (v) =>
+                      _saveSettings(_settings!.copyWith(wateringReminders: v)),
                   secondary: const Icon(Icons.water_drop, color: Colors.blue),
                 ),
                 if (_settings!.wateringReminders)
@@ -168,7 +180,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                       value: _settings!.wateringIntervalDays,
                       min: 1,
                       max: 7,
-                      onChanged: (v) => _saveSettings(_settings!.copyWith(wateringIntervalDays: v.toInt())),
+                      onChanged: (v) => _saveSettings(
+                        _settings!.copyWith(wateringIntervalDays: v.toInt()),
+                      ),
                     ),
                   ),
 
@@ -176,9 +190,13 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
                 SwitchListTile(
                   title: Text(_t['fertilizing_reminders']),
-                  subtitle: Text('${_t['notification_interval']}: ${_settings!.fertilizingIntervalDays} ${_t['days']}'),
+                  subtitle: Text(
+                    '${_t['notification_interval']}: ${_settings!.fertilizingIntervalDays} ${_t['days']}',
+                  ),
                   value: _settings!.fertilizingReminders,
-                  onChanged: (v) => _saveSettings(_settings!.copyWith(fertilizingReminders: v)),
+                  onChanged: (v) => _saveSettings(
+                    _settings!.copyWith(fertilizingReminders: v),
+                  ),
                   secondary: const Icon(Icons.eco, color: Colors.green),
                 ),
                 if (_settings!.fertilizingReminders)
@@ -189,7 +207,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                       value: _settings!.fertilizingIntervalDays,
                       min: 3,
                       max: 14,
-                      onChanged: (v) => _saveSettings(_settings!.copyWith(fertilizingIntervalDays: v.toInt())),
+                      onChanged: (v) => _saveSettings(
+                        _settings!.copyWith(fertilizingIntervalDays: v.toInt()),
+                      ),
                     ),
                   ),
 
@@ -197,9 +217,12 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
                 SwitchListTile(
                   title: Text(_t['photo_reminders']),
-                  subtitle: Text('${_t['notification_interval']}: ${_settings!.photoIntervalDays} ${_t['days']}'),
+                  subtitle: Text(
+                    '${_t['notification_interval']}: ${_settings!.photoIntervalDays} ${_t['days']}',
+                  ),
                   value: _settings!.photoReminders,
-                  onChanged: (v) => _saveSettings(_settings!.copyWith(photoReminders: v)),
+                  onChanged: (v) =>
+                      _saveSettings(_settings!.copyWith(photoReminders: v)),
                   secondary: const Icon(Icons.camera_alt, color: Colors.orange),
                 ),
                 if (_settings!.photoReminders)
@@ -210,7 +233,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                       value: _settings!.photoIntervalDays,
                       min: 1,
                       max: 14,
-                      onChanged: (v) => _saveSettings(_settings!.copyWith(photoIntervalDays: v.toInt())),
+                      onChanged: (v) => _saveSettings(
+                        _settings!.copyWith(photoIntervalDays: v.toInt()),
+                      ),
                     ),
                   ),
 
@@ -220,7 +245,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   title: Text(_t['harvest_reminders']),
                   subtitle: Text(_t['harvest_reminder_subtitle']),
                   value: _settings!.harvestReminders,
-                  onChanged: (v) => _saveSettings(_settings!.copyWith(harvestReminders: v)),
+                  onChanged: (v) =>
+                      _saveSettings(_settings!.copyWith(harvestReminders: v)),
                   secondary: const Icon(Icons.agriculture, color: Colors.brown),
                 ),
               ],
@@ -233,7 +259,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               title: _t['notification_time'],
               children: [
                 ListTile(
-                  leading: const Icon(Icons.access_time, color: Color(0xFF004225)),
+                  leading: const Icon(
+                    Icons.access_time,
+                    color: Color(0xFF004225),
+                  ),
                   title: Text(_t['notification_time']),
                   subtitle: Text(_settings!.notificationTime),
                   trailing: const Icon(Icons.chevron_right),
@@ -286,7 +315,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     );
   }
 
-  Widget _buildSection({required String title, required List<Widget> children}) {
+  Widget _buildSection({
+    required String title,
+    required List<Widget> children,
+  }) {
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,7 +384,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     );
 
     if (selectedTime != null) {
-      final timeString = '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
+      final timeString =
+          '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
       _saveSettings(_settings!.copyWith(notificationTime: timeString));
     }
   }

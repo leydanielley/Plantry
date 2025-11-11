@@ -70,28 +70,18 @@ Future<void> setupServiceLocator() async {
   // ═══════════════════════════════════════════
   // DATABASE
   // ═══════════════════════════════════════════
-  getIt.registerLazySingleton<DatabaseHelper>(
-    () => DatabaseHelper.instance,
-  );
+  getIt.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper.instance);
 
   // ═══════════════════════════════════════════
   // REPOSITORIES (Interface-based Singletons)
   // ═══════════════════════════════════════════
-  getIt.registerLazySingleton<IPlantRepository>(
-    () => PlantRepository(),
-  );
+  getIt.registerLazySingleton<IPlantRepository>(() => PlantRepository());
 
-  getIt.registerLazySingleton<IGrowRepository>(
-    () => GrowRepository(),
-  );
+  getIt.registerLazySingleton<IGrowRepository>(() => GrowRepository());
 
-  getIt.registerLazySingleton<IRoomRepository>(
-    () => RoomRepository(),
-  );
+  getIt.registerLazySingleton<IRoomRepository>(() => RoomRepository());
 
-  getIt.registerLazySingleton<IPlantLogRepository>(
-    () => PlantLogRepository(),
-  );
+  getIt.registerLazySingleton<IPlantLogRepository>(() => PlantLogRepository());
 
   getIt.registerLazySingleton<IFertilizerRepository>(
     () => FertilizerRepository(),
@@ -101,25 +91,15 @@ Future<void> setupServiceLocator() async {
     () => LogFertilizerRepository(),
   );
 
-  getIt.registerLazySingleton<IPhotoRepository>(
-    () => PhotoRepository(),
-  );
+  getIt.registerLazySingleton<IPhotoRepository>(() => PhotoRepository());
 
-  getIt.registerLazySingleton<IHardwareRepository>(
-    () => HardwareRepository(),
-  );
+  getIt.registerLazySingleton<IHardwareRepository>(() => HardwareRepository());
 
-  getIt.registerLazySingleton<IHarvestRepository>(
-    () => HarvestRepository(),
-  );
+  getIt.registerLazySingleton<IHarvestRepository>(() => HarvestRepository());
 
-  getIt.registerLazySingleton<ISettingsRepository>(
-    () => SettingsRepository(),
-  );
+  getIt.registerLazySingleton<ISettingsRepository>(() => SettingsRepository());
 
-  getIt.registerLazySingleton<IRdwcRepository>(
-    () => RdwcRepository(),
-  );
+  getIt.registerLazySingleton<IRdwcRepository>(() => RdwcRepository());
 
   getIt.registerLazySingleton<INotificationRepository>(
     () => NotificationRepository(),
@@ -132,16 +112,18 @@ Future<void> setupServiceLocator() async {
     () => LogService(getIt<DatabaseHelper>(), getIt<IPlantRepository>()),
   );
 
-  getIt.registerLazySingleton<IBackupService>(
-    () => BackupService(),
-  );
+  getIt.registerLazySingleton<IBackupService>(() => BackupService());
 
   getIt.registerLazySingleton<IHealthScoreService>(
-    () => HealthScoreService(getIt<IPlantLogRepository>(), getIt<IPhotoRepository>()),
+    () => HealthScoreService(
+      getIt<IPlantLogRepository>(),
+      getIt<IPhotoRepository>(),
+    ),
   );
 
   getIt.registerLazySingleton<IWarningService>(
-    () => WarningService(getIt<IPlantLogRepository>(), getIt<IPhotoRepository>()),
+    () =>
+        WarningService(getIt<IPlantLogRepository>(), getIt<IPhotoRepository>()),
   );
 
   getIt.registerLazySingleton<IHarvestService>(

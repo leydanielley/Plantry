@@ -98,22 +98,30 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
       // Pre-fill if editing
       if (widget.system != null) {
         _nameController.text = widget.system!.name;
-        _maxCapacityController.text = widget.system!.maxCapacity.toStringAsFixed(1);
-        _currentLevelController.text = widget.system!.currentLevel.toStringAsFixed(1);
+        _maxCapacityController.text = widget.system!.maxCapacity
+            .toStringAsFixed(1);
+        _currentLevelController.text = widget.system!.currentLevel
+            .toStringAsFixed(1);
         _bucketCountController.text = widget.system!.bucketCount.toString();
         _descriptionController.text = widget.system!.description ?? '';
         _pumpBrandController.text = widget.system!.pumpBrand ?? '';
         _pumpModelController.text = widget.system!.pumpModel ?? '';
-        _pumpWattageController.text = widget.system!.pumpWattage?.toString() ?? '';
-        _pumpFlowRateController.text = widget.system!.pumpFlowRate?.toString() ?? '';
+        _pumpWattageController.text =
+            widget.system!.pumpWattage?.toString() ?? '';
+        _pumpFlowRateController.text =
+            widget.system!.pumpFlowRate?.toString() ?? '';
         _airPumpBrandController.text = widget.system!.airPumpBrand ?? '';
         _airPumpModelController.text = widget.system!.airPumpModel ?? '';
-        _airPumpWattageController.text = widget.system!.airPumpWattage?.toString() ?? '';
-        _airPumpFlowRateController.text = widget.system!.airPumpFlowRate?.toString() ?? '';
+        _airPumpWattageController.text =
+            widget.system!.airPumpWattage?.toString() ?? '';
+        _airPumpFlowRateController.text =
+            widget.system!.airPumpFlowRate?.toString() ?? '';
         _chillerBrandController.text = widget.system!.chillerBrand ?? '';
         _chillerModelController.text = widget.system!.chillerModel ?? '';
-        _chillerWattageController.text = widget.system!.chillerWattage?.toString() ?? '';
-        _chillerCoolingPowerController.text = widget.system!.chillerCoolingPower?.toString() ?? '';
+        _chillerWattageController.text =
+            widget.system!.chillerWattage?.toString() ?? '';
+        _chillerCoolingPowerController.text =
+            widget.system!.chillerCoolingPower?.toString() ?? '';
         _accessoriesController.text = widget.system!.accessories ?? '';
         _selectedRoomId = widget.system!.roomId;
       } else {
@@ -179,7 +187,8 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
       final chillerWattage = _chillerWattageController.text.trim().isNotEmpty
           ? int.tryParse(_chillerWattageController.text.trim())
           : null;
-      final chillerCoolingPower = _chillerCoolingPowerController.text.trim().isNotEmpty
+      final chillerCoolingPower =
+          _chillerCoolingPowerController.text.trim().isNotEmpty
           ? int.tryParse(_chillerCoolingPowerController.text.trim())
           : null;
       final accessories = _accessoriesController.text.trim();
@@ -314,10 +323,12 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                   value: null,
                   child: Text('- ${_t['none']} -'),
                 ),
-                ..._rooms.map((room) => DropdownMenuItem<int>(
-                  value: room.id,
-                  child: Text(room.name),
-                )),
+                ..._rooms.map(
+                  (room) => DropdownMenuItem<int>(
+                    value: room.id,
+                    child: Text(room.name),
+                  ),
+                ),
               ],
               onChanged: (value) {
                 setState(() => _selectedRoomId = value);
@@ -356,9 +367,13 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                 hintText: '100',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.water),
-                suffixText: UnitConverter.getVolumeUnitSuffix(_settings.volumeUnit),
+                suffixText: UnitConverter.getVolumeUnitSuffix(
+                  _settings.volumeUnit,
+                ),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Max capacity is required';
@@ -380,9 +395,13 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                 hintText: '100',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.water_drop),
-                suffixText: UnitConverter.getVolumeUnitSuffix(_settings.volumeUnit),
+                suffixText: UnitConverter.getVolumeUnitSuffix(
+                  _settings.volumeUnit,
+                ),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Current level is required';
@@ -391,7 +410,9 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                 if (number == null || number < 0) {
                   return 'Must be 0 or greater';
                 }
-                final maxCapacity = double.tryParse(_maxCapacityController.text);
+                final maxCapacity = double.tryParse(
+                  _maxCapacityController.text,
+                );
                 if (maxCapacity != null && number > maxCapacity) {
                   return 'Cannot exceed max capacity';
                 }
@@ -418,7 +439,10 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                 labelText: 'Pump Brand',
                 hintText: 'Hailea, Eheim, Aqua One',
                 border: const OutlineInputBorder(),
-                prefixIcon: Icon(Icons.settings_input_component, color: Colors.blue[700]),
+                prefixIcon: Icon(
+                  Icons.settings_input_component,
+                  color: Colors.blue[700],
+                ),
               ),
               textCapitalization: TextCapitalization.words,
             ),
@@ -431,7 +455,10 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                 labelText: 'Pump Model',
                 hintText: 'HX-6540',
                 border: const OutlineInputBorder(),
-                prefixIcon: Icon(Icons.precision_manufacturing, color: Colors.blue[700]),
+                prefixIcon: Icon(
+                  Icons.precision_manufacturing,
+                  color: Colors.blue[700],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -470,7 +497,9 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.speed, color: Colors.cyan),
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       if (value != null && value.trim().isNotEmpty) {
                         final number = double.tryParse(value);
@@ -517,7 +546,10 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                 labelText: 'Air Pump Model',
                 hintText: 'ACO-9602',
                 border: const OutlineInputBorder(),
-                prefixIcon: Icon(Icons.precision_manufacturing, color: Colors.cyan[700]),
+                prefixIcon: Icon(
+                  Icons.precision_manufacturing,
+                  color: Colors.cyan[700],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -556,7 +588,9 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.speed, color: Colors.cyan),
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       if (value != null && value.trim().isNotEmpty) {
                         final number = double.tryParse(value);
@@ -603,7 +637,10 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                 labelText: 'Chiller Model',
                 hintText: 'HC-300A',
                 border: const OutlineInputBorder(),
-                prefixIcon: Icon(Icons.precision_manufacturing, color: Colors.lightBlue[700]),
+                prefixIcon: Icon(
+                  Icons.precision_manufacturing,
+                  color: Colors.lightBlue[700],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -640,7 +677,10 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                       labelText: 'Cooling Power (W)',
                       hintText: '300',
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.thermostat, color: Colors.lightBlue),
+                      prefixIcon: Icon(
+                        Icons.thermostat,
+                        color: Colors.lightBlue,
+                      ),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {

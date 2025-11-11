@@ -52,7 +52,10 @@ final migrationV8 = Migration(
     await db.execute('ALTER TABLE fertilizers ADD COLUMN ec_value REAL');
     await db.execute('ALTER TABLE fertilizers ADD COLUMN ppm_value REAL');
 
-    AppLogger.info('Migration v8', '✓ Extended fertilizers table with EC/PPM values');
+    AppLogger.info(
+      'Migration v8',
+      '✓ Extended fertilizers table with EC/PPM values',
+    );
 
     // 3. Create rdwc_recipes table
     // Recipes store fertilizer combinations for reuse (e.g., "Bloom Week 3")
@@ -95,12 +98,18 @@ final migrationV8 = Migration(
 
     AppLogger.info('Migration v8', '✓ Created rdwc_recipe_fertilizers table');
 
-    AppLogger.info('Migration v8', '✅ RDWC Expert Mode migration completed successfully!');
+    AppLogger.info(
+      'Migration v8',
+      '✅ RDWC Expert Mode migration completed successfully!',
+    );
   },
 
   // Optional: Rollback logic (if migration fails)
   down: (db) async {
-    AppLogger.info('Migration v8', 'Rolling back RDWC Expert Mode migration...');
+    AppLogger.info(
+      'Migration v8',
+      'Rolling back RDWC Expert Mode migration...',
+    );
 
     // Remove new tables
     await db.execute('DROP TABLE IF EXISTS rdwc_recipe_fertilizers');

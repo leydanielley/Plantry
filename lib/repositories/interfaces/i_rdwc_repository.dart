@@ -10,8 +10,14 @@ import 'package:growlog_app/models/rdwc_recipe.dart';
 abstract class IRdwcRepository {
   // RDWC Systems
   Future<List<RdwcSystem>> getAllSystems({bool includeArchived = false});
-  Future<List<RdwcSystem>> getSystemsByRoom(int roomId, {bool includeArchived = false});
-  Future<List<RdwcSystem>> getSystemsByGrow(int growId, {bool includeArchived = false});
+  Future<List<RdwcSystem>> getSystemsByRoom(
+    int roomId, {
+    bool includeArchived = false,
+  });
+  Future<List<RdwcSystem>> getSystemsByGrow(
+    int growId, {
+    bool includeArchived = false,
+  });
   Future<RdwcSystem?> getSystemById(int id);
   Future<int> createSystem(RdwcSystem system);
   Future<int> updateSystem(RdwcSystem system);
@@ -27,14 +33,21 @@ abstract class IRdwcRepository {
   Future<int> updateLog(RdwcLog log);
   Future<int> deleteLog(int logId);
   Future<double?> getAverageDailyConsumption(int systemId, {int days = 7});
-  Future<double> getTotalWaterAdded(int systemId, {DateTime? startDate, DateTime? endDate});
+  Future<double> getTotalWaterAdded(
+    int systemId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  });
 
   // RDWC Log Fertilizers
   Future<int> addFertilizerToLog(RdwcLogFertilizer fertilizer);
   Future<int> removeFertilizerFromLog(int fertilizerId);
   Future<List<RdwcLogFertilizer>> getLogFertilizers(int rdwcLogId);
   Future<RdwcLog?> getLogWithFertilizers(int logId);
-  Future<List<RdwcLog>> getRecentLogsWithFertilizers(int systemId, {int limit = 10});
+  Future<List<RdwcLog>> getRecentLogsWithFertilizers(
+    int systemId, {
+    int limit = 10,
+  });
 
   // RDWC Recipes
   Future<List<RdwcRecipe>> getAllRecipes();
@@ -48,7 +61,10 @@ abstract class IRdwcRepository {
 
   // Consumption Tracking
   Future<Map<String, double>> getDailyConsumption(int systemId, {int days = 7});
-  Future<Map<String, dynamic>> getConsumptionStats(int systemId, {int days = 7});
+  Future<Map<String, dynamic>> getConsumptionStats(
+    int systemId, {
+    int days = 7,
+  });
 
   // Drift Analysis
   Future<Map<String, dynamic>> getEcDriftAnalysis(int systemId, {int days = 7});

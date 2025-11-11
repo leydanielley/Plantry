@@ -25,7 +25,8 @@ class EditHardwareScreen extends StatefulWidget {
 }
 
 // ✅ FIX: Added MountedStateMixin to prevent setState after dispose
-class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedStateMixin {
+class _EditHardwareScreenState extends State<EditHardwareScreen>
+    with MountedStateMixin {
   final _formKey = GlobalKey<FormState>();
   final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
@@ -64,25 +65,25 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
   /// Generiert automatisch einen Namen aus Marke, Modell und Typ
   String _generateName() {
     final parts = <String>[];
-    
+
     if (_brandController.text.trim().isNotEmpty) {
       parts.add(_brandController.text.trim());
     }
     if (_modelController.text.trim().isNotEmpty) {
       parts.add(_modelController.text.trim());
     }
-    
+
     if (parts.isEmpty) {
       return _selectedType.displayName;
     }
-    
+
     return parts.join(' ');
   }
 
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize controllers with existing hardware data
     _nameController = TextEditingController(text: widget.hardware.name);
     _brandController = TextEditingController(text: widget.hardware.brand ?? '');
@@ -100,7 +101,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
       text: widget.hardware.purchasePrice?.toString() ?? '',
     );
     _notesController = TextEditingController(text: widget.hardware.notes ?? '');
-    
+
     _selectedType = widget.hardware.type;
     _purchaseDate = widget.hardware.purchaseDate;
 
@@ -214,7 +215,9 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
     // Filter out entire watering category if room has RDWC system
     final hasRdwcSystem = _room?.rdwcSystemId != null;
     final availableTypes = hasRdwcSystem
-        ? HardwareType.values.where((type) => type.category != HardwareCategory.watering).toList()
+        ? HardwareType.values
+              .where((type) => type.category != HardwareCategory.watering)
+              .toList()
         : HardwareType.values.toList();
 
     // Gruppiere nach Kategorie
@@ -238,7 +241,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
         ...grouped.entries.map((entry) {
           final category = entry.key;
           final types = entry.value;
-          
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -304,7 +307,9 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return AppTranslations(Localizations.localeOf(context).languageCode)['add_hardware_brand_required'];
+                    return AppTranslations(
+                      Localizations.localeOf(context).languageCode,
+                    )['add_hardware_brand_required'];
                   }
                   return null;
                 },
@@ -339,10 +344,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
               Expanded(
                 child: Text(
                   'Der Name wird automatisch generiert: Marke + Modell',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.orange[900],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.orange[900]),
                 ),
               ),
             ],
@@ -367,7 +369,8 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
         const SizedBox(height: 12),
         Row(
           children: [
-            if (_isWattageRelevant) ...[  // Nur zeigen wenn relevant
+            if (_isWattageRelevant) ...[
+              // Nur zeigen wenn relevant
               Expanded(
                 child: TextFormField(
                   controller: _wattageController,
@@ -435,7 +438,9 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> with MountedSta
           subtitle: Text(
             _purchaseDate != null
                 ? dateFormat.format(_purchaseDate!)
-                : AppTranslations(Localizations.localeOf(context).languageCode)['add_hardware_not_set'],
+                : AppTranslations(
+                    Localizations.localeOf(context).languageCode,
+                  )['add_hardware_not_set'],
           ),
           trailing: const Icon(Icons.edit),
           onTap: () async {

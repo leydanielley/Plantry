@@ -43,7 +43,8 @@ class NotificationSettings {
       photoReminders: photoReminders ?? this.photoReminders,
       harvestReminders: harvestReminders ?? this.harvestReminders,
       wateringIntervalDays: wateringIntervalDays ?? this.wateringIntervalDays,
-      fertilizingIntervalDays: fertilizingIntervalDays ?? this.fertilizingIntervalDays,
+      fertilizingIntervalDays:
+          fertilizingIntervalDays ?? this.fertilizingIntervalDays,
       photoIntervalDays: photoIntervalDays ?? this.photoIntervalDays,
       notificationTime: notificationTime ?? this.notificationTime,
     );
@@ -97,7 +98,9 @@ class PlantNotificationSettings {
       'plant_id': plantId,
       'override_global': overrideGlobal ? 1 : 0,
       'watering_interval_days': wateringIntervalDays,
-      'watering_enabled': wateringEnabled != null ? (wateringEnabled! ? 1 : 0) : null,
+      'watering_enabled': wateringEnabled != null
+          ? (wateringEnabled! ? 1 : 0)
+          : null,
     };
   }
 
@@ -106,7 +109,9 @@ class PlantNotificationSettings {
       plantId: map['plant_id'] as int,
       overrideGlobal: map['override_global'] == 1,
       wateringIntervalDays: map['watering_interval_days'] as int?,
-      wateringEnabled: map['watering_enabled'] != null ? map['watering_enabled'] == 1 : null,
+      wateringEnabled: map['watering_enabled'] != null
+          ? map['watering_enabled'] == 1
+          : null,
     );
   }
 }

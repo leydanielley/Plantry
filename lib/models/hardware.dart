@@ -3,7 +3,7 @@
 // =============================================
 
 import 'package:growlog_app/models/enums.dart';
-import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -15,49 +15,49 @@ class Hardware {
   final HardwareType type;
   final String? brand;
   final String? model;
-  
+
   // Allgemeine Felder
-  final int? wattage;              // Wattzahl (für Lampen, Lüfter, Klimatechnik)
-  final int? quantity;             // Anzahl
-  
+  final int? wattage; // Wattzahl (für Lampen, Lüfter, Klimatechnik)
+  final int? quantity; // Anzahl
+
   // Beleuchtung
-  final int? airflow;              // Luftdurchsatz in m³/h (für Lüfter)
-  final String? spectrum;          // Lichtspektrum (LED)
-  final String? colorTemperature;  // Farbtemperatur (HPS/MH/CFL)
-  final bool? dimmable;            // Dimmbar? (Lampen, Lüfter)
-  
+  final int? airflow; // Luftdurchsatz in m³/h (für Lüfter)
+  final String? spectrum; // Lichtspektrum (LED)
+  final String? colorTemperature; // Farbtemperatur (HPS/MH/CFL)
+  final bool? dimmable; // Dimmbar? (Lampen, Lüfter)
+
   // Lüftung
-  final String? flangeSize;        // Flansch-Größe (Lüfter)
-  final bool? controllable;        // Regelbar? (Lüfter)
-  final bool? oscillating;         // Oszillierend? (Umluft)
-  final int? diameter;             // Durchmesser in cm (Umluft)
-  
+  final String? flangeSize; // Flansch-Größe (Lüfter)
+  final bool? controllable; // Regelbar? (Lüfter)
+  final bool? oscillating; // Oszillierend? (Umluft)
+  final int? diameter; // Durchmesser in cm (Umluft)
+
   // Klimatechnik
-  final int? coolingPower;         // Kühlleistung BTU (Klimaanlage)
-  final int? heatingPower;         // Heizleistung Watt (Heizung)
-  final double? coverage;          // Abdeckung m²/m³
-  final bool? hasThermostat;       // Thermostat? (Heizung)
-  final int? humidificationRate;   // Befeuchtungsleistung ml/h
-  
+  final int? coolingPower; // Kühlleistung BTU (Klimaanlage)
+  final int? heatingPower; // Heizleistung Watt (Heizung)
+  final double? coverage; // Abdeckung m²/m³
+  final bool? hasThermostat; // Thermostat? (Heizung)
+  final int? humidificationRate; // Befeuchtungsleistung ml/h
+
   // Bewässerung
-  final int? pumpRate;             // Förderleistung L/h (Pumpe)
-  final bool? isDigital;           // Digital/Analog (Timer)
-  final int? programCount;         // Anzahl Programme (Timer)
-  final int? dripperCount;         // Anzahl Tropfer
-  final int? capacity;             // Kapazität Liter (Reservoir)
-  final String? material;          // Material (Reservoir)
-  final bool? hasChiller;          // Mit Chiller?
-  final bool? hasAirPump;          // Mit Luftpumpe?
-  
+  final int? pumpRate; // Förderleistung L/h (Pumpe)
+  final bool? isDigital; // Digital/Analog (Timer)
+  final int? programCount; // Anzahl Programme (Timer)
+  final int? dripperCount; // Anzahl Tropfer
+  final int? capacity; // Kapazität Liter (Reservoir)
+  final String? material; // Material (Reservoir)
+  final bool? hasChiller; // Mit Chiller?
+  final bool? hasAirPump; // Mit Luftpumpe?
+
   // Filter & Controller
-  final String? filterDiameter;    // Filter-Durchmesser (AKF)
-  final int? filterLength;         // Filter-Länge cm (AKF)
-  final String? controllerType;    // Controller-Typ
-  final int? outputCount;          // Anzahl Ausgänge (Controller)
+  final String? filterDiameter; // Filter-Durchmesser (AKF)
+  final int? filterLength; // Filter-Länge cm (AKF)
+  final String? controllerType; // Controller-Typ
+  final int? outputCount; // Anzahl Ausgänge (Controller)
   final String? controllerFunctions; // Funktionen (Controller)
-  
+
   // Optionale Felder
-  final String? specifications;    // Zusätzliche Specs
+  final String? specifications; // Zusätzliche Specs
   final DateTime? purchaseDate;
   final double? purchasePrice;
   final String? notes;
@@ -106,14 +106,14 @@ class Hardware {
     this.active = true,
     DateTime? createdAt,
   }) : assert(roomId > 0, 'Room ID must be greater than 0'),
-        assert(name.isNotEmpty, 'Name cannot be empty'),
-        createdAt = createdAt ?? DateTime.now();
+       assert(name.isNotEmpty, 'Name cannot be empty'),
+       createdAt = createdAt ?? DateTime.now();
 
   /// Helper: Parse Hardware Type mit Fallback für alte DB-Einträge
   static HardwareType _parseHardwareType(String value) {
     // Handle both camelCase and lowercase formats
     final normalized = value.toLowerCase();
-    
+
     final typeMap = <String, HardwareType>{
       'ledpanel': HardwareType.ledPanel,
       'hpslamp': HardwareType.hpsLamp,
@@ -127,11 +127,11 @@ class Hardware {
       'ecmeter': HardwareType.ecMeter,
       'co2sensor': HardwareType.co2Sensor,
     };
-    
+
     if (typeMap.containsKey(normalized)) {
       return typeMap[normalized]!;
     }
-    
+
     // Try to match by enum name
     try {
       return HardwareType.values.firstWhere(
@@ -160,22 +160,34 @@ class Hardware {
       colorTemperature: map['color_temperature'] as String?,
       dimmable: map['dimmable'] != null ? (map['dimmable'] as int) == 1 : null,
       flangeSize: map['flange_size'] as String?,
-      controllable: map['controllable'] != null ? (map['controllable'] as int) == 1 : null,
-      oscillating: map['oscillating'] != null ? (map['oscillating'] as int) == 1 : null,
+      controllable: map['controllable'] != null
+          ? (map['controllable'] as int) == 1
+          : null,
+      oscillating: map['oscillating'] != null
+          ? (map['oscillating'] as int) == 1
+          : null,
       diameter: map['diameter'] as int?,
       coolingPower: map['cooling_power'] as int?,
       heatingPower: map['heating_power'] as int?,
       coverage: (map['coverage'] as num?)?.toDouble(),
-      hasThermostat: map['has_thermostat'] != null ? (map['has_thermostat'] as int) == 1 : null,
+      hasThermostat: map['has_thermostat'] != null
+          ? (map['has_thermostat'] as int) == 1
+          : null,
       humidificationRate: map['humidification_rate'] as int?,
       pumpRate: map['pump_rate'] as int?,
-      isDigital: map['is_digital'] != null ? (map['is_digital'] as int) == 1 : null,
+      isDigital: map['is_digital'] != null
+          ? (map['is_digital'] as int) == 1
+          : null,
       programCount: map['program_count'] as int?,
       dripperCount: map['dripper_count'] as int?,
       capacity: map['capacity'] as int?,
       material: map['material'] as String?,
-      hasChiller: map['has_chiller'] != null ? (map['has_chiller'] as int) == 1 : null,
-      hasAirPump: map['has_air_pump'] != null ? (map['has_air_pump'] as int) == 1 : null,
+      hasChiller: map['has_chiller'] != null
+          ? (map['has_chiller'] as int) == 1
+          : null,
+      hasAirPump: map['has_air_pump'] != null
+          ? (map['has_air_pump'] as int) == 1
+          : null,
       filterDiameter: map['filter_diameter'] as String?,
       filterLength: map['filter_length'] as int?,
       controllerType: map['controller_type'] as String?,
@@ -300,33 +312,73 @@ class Hardware {
       quantity: quantity == _undefined ? this.quantity : quantity as int?,
       airflow: airflow == _undefined ? this.airflow : airflow as int?,
       spectrum: spectrum == _undefined ? this.spectrum : spectrum as String?,
-      colorTemperature: colorTemperature == _undefined ? this.colorTemperature : colorTemperature as String?,
+      colorTemperature: colorTemperature == _undefined
+          ? this.colorTemperature
+          : colorTemperature as String?,
       dimmable: dimmable == _undefined ? this.dimmable : dimmable as bool?,
-      flangeSize: flangeSize == _undefined ? this.flangeSize : flangeSize as String?,
-      controllable: controllable == _undefined ? this.controllable : controllable as bool?,
-      oscillating: oscillating == _undefined ? this.oscillating : oscillating as bool?,
+      flangeSize: flangeSize == _undefined
+          ? this.flangeSize
+          : flangeSize as String?,
+      controllable: controllable == _undefined
+          ? this.controllable
+          : controllable as bool?,
+      oscillating: oscillating == _undefined
+          ? this.oscillating
+          : oscillating as bool?,
       diameter: diameter == _undefined ? this.diameter : diameter as int?,
-      coolingPower: coolingPower == _undefined ? this.coolingPower : coolingPower as int?,
-      heatingPower: heatingPower == _undefined ? this.heatingPower : heatingPower as int?,
+      coolingPower: coolingPower == _undefined
+          ? this.coolingPower
+          : coolingPower as int?,
+      heatingPower: heatingPower == _undefined
+          ? this.heatingPower
+          : heatingPower as int?,
       coverage: coverage == _undefined ? this.coverage : coverage as double?,
-      hasThermostat: hasThermostat == _undefined ? this.hasThermostat : hasThermostat as bool?,
-      humidificationRate: humidificationRate == _undefined ? this.humidificationRate : humidificationRate as int?,
+      hasThermostat: hasThermostat == _undefined
+          ? this.hasThermostat
+          : hasThermostat as bool?,
+      humidificationRate: humidificationRate == _undefined
+          ? this.humidificationRate
+          : humidificationRate as int?,
       pumpRate: pumpRate == _undefined ? this.pumpRate : pumpRate as int?,
       isDigital: isDigital == _undefined ? this.isDigital : isDigital as bool?,
-      programCount: programCount == _undefined ? this.programCount : programCount as int?,
-      dripperCount: dripperCount == _undefined ? this.dripperCount : dripperCount as int?,
+      programCount: programCount == _undefined
+          ? this.programCount
+          : programCount as int?,
+      dripperCount: dripperCount == _undefined
+          ? this.dripperCount
+          : dripperCount as int?,
       capacity: capacity == _undefined ? this.capacity : capacity as int?,
       material: material == _undefined ? this.material : material as String?,
-      hasChiller: hasChiller == _undefined ? this.hasChiller : hasChiller as bool?,
-      hasAirPump: hasAirPump == _undefined ? this.hasAirPump : hasAirPump as bool?,
-      filterDiameter: filterDiameter == _undefined ? this.filterDiameter : filterDiameter as String?,
-      filterLength: filterLength == _undefined ? this.filterLength : filterLength as int?,
-      controllerType: controllerType == _undefined ? this.controllerType : controllerType as String?,
-      outputCount: outputCount == _undefined ? this.outputCount : outputCount as int?,
-      controllerFunctions: controllerFunctions == _undefined ? this.controllerFunctions : controllerFunctions as String?,
-      specifications: specifications == _undefined ? this.specifications : specifications as String?,
-      purchaseDate: purchaseDate == _undefined ? this.purchaseDate : purchaseDate as DateTime?,
-      purchasePrice: purchasePrice == _undefined ? this.purchasePrice : purchasePrice as double?,
+      hasChiller: hasChiller == _undefined
+          ? this.hasChiller
+          : hasChiller as bool?,
+      hasAirPump: hasAirPump == _undefined
+          ? this.hasAirPump
+          : hasAirPump as bool?,
+      filterDiameter: filterDiameter == _undefined
+          ? this.filterDiameter
+          : filterDiameter as String?,
+      filterLength: filterLength == _undefined
+          ? this.filterLength
+          : filterLength as int?,
+      controllerType: controllerType == _undefined
+          ? this.controllerType
+          : controllerType as String?,
+      outputCount: outputCount == _undefined
+          ? this.outputCount
+          : outputCount as int?,
+      controllerFunctions: controllerFunctions == _undefined
+          ? this.controllerFunctions
+          : controllerFunctions as String?,
+      specifications: specifications == _undefined
+          ? this.specifications
+          : specifications as String?,
+      purchaseDate: purchaseDate == _undefined
+          ? this.purchaseDate
+          : purchaseDate as DateTime?,
+      purchasePrice: purchasePrice == _undefined
+          ? this.purchasePrice
+          : purchasePrice as double?,
       notes: notes == _undefined ? this.notes : notes as String?,
       active: active ?? this.active,
       createdAt: createdAt ?? this.createdAt,
@@ -369,14 +421,17 @@ class Hardware {
   /// Display info for lists
   String get displayInfo {
     final parts = <String>[];
-    
-    // Logic: 
+
+    // Logic:
     // - If both brand and model exist: brand + model
     // - If only brand exists: brand + name
     // - If only model exists: model
     // - If neither: name
-    
-    if (brand != null && brand!.isNotEmpty && model != null && model!.isNotEmpty) {
+
+    if (brand != null &&
+        brand!.isNotEmpty &&
+        model != null &&
+        model!.isNotEmpty) {
       // Both brand and model
       parts.add(brand!);
       parts.add(model!);
@@ -391,12 +446,12 @@ class Hardware {
       // Neither brand nor model - use name
       parts.add(name);
     }
-    
+
     // Add wattage if available
     if (wattage != null) {
       parts.add('(${wattage}W)');
     }
-    
+
     return parts.join(' ');
   }
 

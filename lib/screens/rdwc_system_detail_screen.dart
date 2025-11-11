@@ -158,7 +158,12 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
         onRefresh: _loadData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
+          padding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: 80,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -194,18 +199,18 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       } else {
         await _rdwcRepo.archiveSystem(_system.id!, true);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('System archiviert')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('System archiviert')));
           Navigator.of(context).pop(true);
         }
       }
     } catch (e) {
       AppLogger.error('RdwcSystemDetailScreen', 'Error archiving system', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Fehler: ${e.toString()}')));
       }
     }
   }
@@ -288,17 +293,17 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
     try {
       await _rdwcRepo.deleteSystem(_system.id!);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ ${_t['deleted_success']}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('✅ ${_t['deleted_success']}')));
         Navigator.of(context).pop(true); // Return to list
       }
     } catch (e) {
       AppLogger.error('RdwcSystemDetailScreen', 'Error deleting system', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Fehler: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('❌ Fehler: ${e.toString()}')));
       }
     }
   }
@@ -307,10 +312,10 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
     final Color statusColor = _system.isCriticallyLow
         ? Colors.red
         : _system.isLowWater
-            ? Colors.orange
-            : _system.isFull
-                ? Colors.blue
-                : Colors.green;
+        ? Colors.orange
+        : _system.isFull
+        ? Colors.blue
+        : Colors.green;
 
     return Card(
       child: Padding(
@@ -320,9 +325,9 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           children: [
             Text(
               _t['reservoir_status'],
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -340,7 +345,9 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                       child: CircularProgressIndicator(
                         value: _system.fillPercentage / 100,
                         strokeWidth: 14,
-                        backgroundColor: isDark ? Colors.grey[800] : Colors.grey[300],
+                        backgroundColor: isDark
+                            ? Colors.grey[800]
+                            : Colors.grey[300],
                         valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                       ),
                     ),
@@ -349,7 +356,8 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                       children: [
                         Text(
                           '${_system.fillPercentage.toStringAsFixed(0)}%',
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          style: Theme.of(context).textTheme.headlineLarge
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: statusColor,
                               ),
@@ -357,8 +365,11 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                         const SizedBox(height: 4),
                         Text(
                           _t['fill_percentage'],
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: isDark ? Colors.grey[500] : Colors.grey[600],
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: isDark
+                                    ? Colors.grey[500]
+                                    : Colors.grey[600],
                               ),
                         ),
                       ],
@@ -375,14 +386,20 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
               children: [
                 _buildOverviewStat(
                   _t['current_level'],
-                  UnitConverter.formatVolume(_system.currentLevel, _settings.volumeUnit),
+                  UnitConverter.formatVolume(
+                    _system.currentLevel,
+                    _settings.volumeUnit,
+                  ),
                   Icons.water_drop,
                   statusColor,
                   isDark,
                 ),
                 _buildOverviewStat(
                   _t['max_capacity'],
-                  UnitConverter.formatVolume(_system.maxCapacity, _settings.volumeUnit),
+                  UnitConverter.formatVolume(
+                    _system.maxCapacity,
+                    _settings.volumeUnit,
+                  ),
                   Icons.water,
                   Colors.blue,
                   isDark,
@@ -395,22 +412,28 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
     );
   }
 
-  Widget _buildOverviewStat(String label, String value, IconData icon, Color color, bool isDark) {
+  Widget _buildOverviewStat(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    bool isDark,
+  ) {
     return Column(
       children: [
         Icon(icon, color: color, size: 28),
         const SizedBox(height: 8),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: isDark ? Colors.grey[500] : Colors.grey[600],
-              ),
+            color: isDark ? Colors.grey[500] : Colors.grey[600],
+          ),
         ),
       ],
     );
@@ -425,9 +448,9 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           children: [
             Text(
               _t['statistics'],
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Row(
@@ -436,7 +459,11 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                   child: _buildStatCard(
                     _t['avg_daily_consumption'],
                     _avgConsumption != null
-                        ? UnitConverter.formatVolume(_avgConsumption!, _settings.volumeUnit, decimals: 2)
+                        ? UnitConverter.formatVolume(
+                            _avgConsumption!,
+                            _settings.volumeUnit,
+                            decimals: 2,
+                          )
                         : '-',
                     Icons.trending_down,
                     Colors.blue,
@@ -447,7 +474,10 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                 Expanded(
                   child: _buildStatCard(
                     _t['remaining_capacity'],
-                    UnitConverter.formatVolume(_system.remainingCapacity, _settings.volumeUnit),
+                    UnitConverter.formatVolume(
+                      _system.remainingCapacity,
+                      _settings.volumeUnit,
+                    ),
                     Icons.water_damage_outlined,
                     Colors.orange,
                     isDark,
@@ -461,7 +491,13 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color, bool isDark) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -475,15 +511,15 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: isDark ? Colors.grey[500] : Colors.grey[600],
-                ),
+              color: isDark ? Colors.grey[500] : Colors.grey[600],
+            ),
           ),
         ],
       ),
@@ -496,9 +532,9 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       children: [
         Text(
           _t['addback_log'],
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         if (_logs.isEmpty)
@@ -560,7 +596,8 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
     }
 
     // Check if there are fertilizers to display
-    final hasFertilizers = log.fertilizers != null && log.fertilizers!.isNotEmpty;
+    final hasFertilizers =
+        log.fertilizers != null && log.fertilizers!.isNotEmpty;
 
     if (!hasFertilizers) {
       // Simple tile without fertilizers
@@ -574,14 +611,23 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
             children: [
               Text(log.formattedDate),
               if (log.waterAdded != null)
-                Text('${_t['water_added']}: ${UnitConverter.formatVolume(log.waterAdded!, _settings.volumeUnit)}'),
+                Text(
+                  '${_t['water_added']}: ${UnitConverter.formatVolume(log.waterAdded!, _settings.volumeUnit)}',
+                ),
               if (log.waterConsumed != null)
-                Text('${_t['water_consumed']}: ${UnitConverter.formatVolume(log.waterConsumed!, _settings.volumeUnit)}'),
+                Text(
+                  '${_t['water_consumed']}: ${UnitConverter.formatVolume(log.waterConsumed!, _settings.volumeUnit)}',
+                ),
             ],
           ),
           trailing: log.ecAfter != null
               ? Text(
-                  UnitConverter.formatNutrient(log.ecAfter!, _settings.nutrientUnit, _settings.ppmScale, decimals: 1),
+                  UnitConverter.formatNutrient(
+                    log.ecAfter!,
+                    _settings.nutrientUnit,
+                    _settings.ppmScale,
+                    decimals: 1,
+                  ),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 )
               : null,
@@ -609,9 +655,13 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
             children: [
               Text(log.formattedDate),
               if (log.waterAdded != null)
-                Text('${_t['water_added']}: ${UnitConverter.formatVolume(log.waterAdded!, _settings.volumeUnit)}'),
+                Text(
+                  '${_t['water_added']}: ${UnitConverter.formatVolume(log.waterAdded!, _settings.volumeUnit)}',
+                ),
               if (log.waterConsumed != null)
-                Text('${_t['water_consumed']}: ${UnitConverter.formatVolume(log.waterConsumed!, _settings.volumeUnit)}'),
+                Text(
+                  '${_t['water_consumed']}: ${UnitConverter.formatVolume(log.waterConsumed!, _settings.volumeUnit)}',
+                ),
               Text(
                 '${log.fertilizers!.length} ${_t['nutrients']}',
                 style: const TextStyle(
@@ -624,13 +674,16 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
         ),
         trailing: log.ecAfter != null
             ? Text(
-                UnitConverter.formatNutrient(log.ecAfter!, _settings.nutrientUnit, _settings.ppmScale, decimals: 1),
+                UnitConverter.formatNutrient(
+                  log.ecAfter!,
+                  _settings.nutrientUnit,
+                  _settings.ppmScale,
+                  decimals: 1,
+                ),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               )
             : null,
-        children: [
-          _buildFertilizerDetails(log, isDark),
-        ],
+        children: [_buildFertilizerDetails(log, isDark)],
       ),
     );
   }
@@ -663,7 +716,9 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
             color: isDark ? Colors.grey[900] : Colors.grey[100],
             border: Border(
               top: BorderSide(
-                color: isDark ? Colors.grey[800] ?? Colors.grey : Colors.grey[300] ?? Colors.grey,
+                color: isDark
+                    ? Colors.grey[800] ?? Colors.grey
+                    : Colors.grey[300] ?? Colors.grey,
               ),
             ),
           ),
@@ -678,7 +733,9 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              ...fertilizerDisplays.map((display) => _buildFertilizerRow(display, log, isDark)),
+              ...fertilizerDisplays.map(
+                (display) => _buildFertilizerRow(display, log, isDark),
+              ),
             ],
           ),
         );
@@ -687,7 +744,11 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
   }
 
   /// Build a single fertilizer row
-  Widget _buildFertilizerRow(_FertilizerLogDisplay display, RdwcLog log, bool isDark) {
+  Widget _buildFertilizerRow(
+    _FertilizerLogDisplay display,
+    RdwcLog log,
+    bool isDark,
+  ) {
     final logFert = display.logFertilizer;
     final fert = display.fertilizer;
 
@@ -699,9 +760,11 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
     // Format amount display
     String amountText;
     if (logFert.amountType == FertilizerAmountType.perLiter) {
-      amountText = '${perLiterAmount.toStringAsFixed(1)}ml/L (${totalAmount.toStringAsFixed(0)}ml ${_t['total_amount']})';
+      amountText =
+          '${perLiterAmount.toStringAsFixed(1)}ml/L (${totalAmount.toStringAsFixed(0)}ml ${_t['total_amount']})';
     } else {
-      amountText = '${totalAmount.toStringAsFixed(0)}ml ${_t['total_amount']} (${perLiterAmount.toStringAsFixed(1)}ml/L)';
+      amountText =
+          '${totalAmount.toStringAsFixed(0)}ml ${_t['total_amount']} (${perLiterAmount.toStringAsFixed(1)}ml/L)';
     }
 
     // Calculate contribution
@@ -711,7 +774,10 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       if (_settings.nutrientUnit == NutrientUnit.ec) {
         contributionText = '→ ${ecContribution.toStringAsFixed(2)} mS/cm';
       } else {
-        final ppmContribution = UnitConverter.ecToPpm(ecContribution, _settings.ppmScale);
+        final ppmContribution = UnitConverter.ecToPpm(
+          ecContribution,
+          _settings.ppmScale,
+        );
         contributionText = '→ ${ppmContribution.toStringAsFixed(0)} PPM';
       }
     } else if (fert.ppmValue != null && fert.ppmValue! > 0) {
@@ -719,7 +785,10 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       if (_settings.nutrientUnit == NutrientUnit.ppm) {
         contributionText = '→ ${ppmContribution.toStringAsFixed(0)} PPM';
       } else {
-        final ecContribution = UnitConverter.ppmToEc(ppmContribution, _settings.ppmScale);
+        final ecContribution = UnitConverter.ppmToEc(
+          ppmContribution,
+          _settings.ppmScale,
+        );
         contributionText = '→ ${ecContribution.toStringAsFixed(2)} mS/cm';
       }
     }
@@ -775,7 +844,9 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
   }
 
   /// Load fertilizer data for display
-  Future<List<_FertilizerLogDisplay>> _loadFertilizerDisplayData(RdwcLog log) async {
+  Future<List<_FertilizerLogDisplay>> _loadFertilizerDisplayData(
+    RdwcLog log,
+  ) async {
     if (log.fertilizers == null || log.fertilizers!.isEmpty) {
       return [];
     }
@@ -784,10 +855,9 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
     for (final logFert in log.fertilizers!) {
       final fert = await _fertilizerRepo.findById(logFert.fertilizerId);
       if (fert != null) {
-        displays.add(_FertilizerLogDisplay(
-          logFertilizer: logFert,
-          fertilizer: fert,
-        ));
+        displays.add(
+          _FertilizerLogDisplay(logFertilizer: logFert, fertilizer: fert),
+        );
       }
     }
     return displays;
@@ -803,7 +873,10 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.orange[100],
                     borderRadius: BorderRadius.circular(4),
@@ -821,8 +894,8 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                 Text(
                   _t['quick_actions'],
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -841,7 +914,10 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                       );
                     },
                     icon: const Icon(Icons.science, size: 20),
-                    label: Text(_t['recipes'], style: const TextStyle(fontSize: 13)),
+                    label: Text(
+                      _t['recipes'],
+                      style: const TextStyle(fontSize: 13),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green[700],
                       foregroundColor: Colors.white,
@@ -856,12 +932,16 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => RdwcAnalyticsScreen(system: _system),
+                          builder: (context) =>
+                              RdwcAnalyticsScreen(system: _system),
                         ),
                       );
                     },
                     icon: const Icon(Icons.analytics, size: 20),
-                    label: Text(_t['analytics'], style: const TextStyle(fontSize: 13)),
+                    label: Text(
+                      _t['analytics'],
+                      style: const TextStyle(fontSize: 13),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[700],
                       foregroundColor: Colors.white,
@@ -881,13 +961,21 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => RdwcQuickMeasurementScreen(system: _system),
+                          builder: (context) =>
+                              RdwcQuickMeasurementScreen(system: _system),
                         ),
                       );
                       if (result == true) _loadData();
                     },
-                    icon: const Icon(Icons.science, size: 20, color: Colors.purple),
-                    label: Text(_t['quick_measurement'], style: const TextStyle(fontSize: 13)),
+                    icon: const Icon(
+                      Icons.science,
+                      size: 20,
+                      color: Colors.purple,
+                    ),
+                    label: Text(
+                      _t['quick_measurement'],
+                      style: const TextStyle(fontSize: 13),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple[50],
                       foregroundColor: Colors.purple[900],
@@ -902,13 +990,21 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => RdwcAddbackFormScreen(system: _system),
+                          builder: (context) =>
+                              RdwcAddbackFormScreen(system: _system),
                         ),
                       );
                       if (result == true) _loadData();
                     },
-                    icon: const Icon(Icons.add_circle, size: 20, color: Colors.green),
-                    label: Text(_t['add_addback'], style: const TextStyle(fontSize: 13)),
+                    icon: const Icon(
+                      Icons.add_circle,
+                      size: 20,
+                      color: Colors.green,
+                    ),
+                    label: Text(
+                      _t['add_addback'],
+                      style: const TextStyle(fontSize: 13),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green[50],
                       foregroundColor: Colors.green[900],
@@ -925,13 +1021,17 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => NutrientCalculatorScreen(system: _system),
+                    builder: (context) =>
+                        NutrientCalculatorScreen(system: _system),
                   ),
                 );
                 if (result == true) _loadData();
               },
               icon: const Icon(Icons.calculate, size: 20),
-              label: Text(_t['topup_calculator'], style: const TextStyle(fontSize: 13)),
+              label: Text(
+                _t['topup_calculator'],
+                style: const TextStyle(fontSize: 13),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange[600],
                 foregroundColor: Colors.white,
@@ -953,15 +1053,15 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           children: [
             Text(
               _t['plants_in_system'],
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
               '${_linkedPlants.length} / ${_system.bucketCount}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isDark ? Colors.grey[500] : Colors.grey[600],
-                  ),
+                color: isDark ? Colors.grey[500] : Colors.grey[600],
+              ),
             ),
           ],
         ),
@@ -991,24 +1091,28 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
             ),
           )
         else
-          ..._linkedPlants.map((plant) => Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: const Icon(Icons.local_florist, color: Colors.green),
-                  title: Text(plant.name),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('${_t['bucket_number']}: ${plant.bucketNumber ?? '-'}'),
-                      Text('${_t['phase']}: ${plant.phase.displayName}'),
-                    ],
-                  ),
-                  trailing: Text(
-                    '${_t['day']} ${plant.totalDays}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+          ..._linkedPlants.map(
+            (plant) => Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: const Icon(Icons.local_florist, color: Colors.green),
+                title: Text(plant.name),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${_t['bucket_number']}: ${plant.bucketNumber ?? '-'}',
+                    ),
+                    Text('${_t['phase']}: ${plant.phase.displayName}'),
+                  ],
                 ),
-              )),
+                trailing: Text(
+                  '${_t['day']} ${plant.totalDays}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -1017,10 +1121,8 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
   Future<void> _editLog(RdwcLog log) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => RdwcAddbackFormScreen(
-          system: _system,
-          existingLog: log,
-        ),
+        builder: (context) =>
+            RdwcAddbackFormScreen(system: _system, existingLog: log),
       ),
     );
 

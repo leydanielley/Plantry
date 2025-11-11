@@ -47,7 +47,10 @@ final Migration migrationV9 = Migration(
     // FIX 1: log_fertilizers table
     // ================================================================
 
-    AppLogger.info('Migration_v9', '1/4: Creating new log_fertilizers table...');
+    AppLogger.info(
+      'Migration_v9',
+      '1/4: Creating new log_fertilizers table...',
+    );
 
     // Step 1: Create new table with correct constraints
     await txn.execute('''
@@ -81,7 +84,9 @@ final Migration migrationV9 = Migration(
     await txn.execute('DROP TABLE log_fertilizers');
 
     // Step 4: Rename new table
-    await txn.execute('ALTER TABLE log_fertilizers_new RENAME TO log_fertilizers');
+    await txn.execute(
+      'ALTER TABLE log_fertilizers_new RENAME TO log_fertilizers',
+    );
 
     // Step 5: Recreate index
     await txn.execute(
@@ -94,7 +99,10 @@ final Migration migrationV9 = Migration(
     // FIX 2: template_fertilizers table
     // ================================================================
 
-    AppLogger.info('Migration_v9', '3/4: Creating new template_fertilizers table...');
+    AppLogger.info(
+      'Migration_v9',
+      '3/4: Creating new template_fertilizers table...',
+    );
 
     // Step 1: Create new table with correct constraints
     await txn.execute('''
@@ -122,13 +130,18 @@ final Migration migrationV9 = Migration(
     final templateFertCount = Sqflite.firstIntValue(
       await txn.rawQuery('SELECT COUNT(*) FROM template_fertilizers_new'),
     );
-    AppLogger.info('Migration_v9', 'Copied $templateFertCount template_fertilizers rows');
+    AppLogger.info(
+      'Migration_v9',
+      'Copied $templateFertCount template_fertilizers rows',
+    );
 
     // Step 3: Drop old table
     await txn.execute('DROP TABLE template_fertilizers');
 
     // Step 4: Rename new table
-    await txn.execute('ALTER TABLE template_fertilizers_new RENAME TO template_fertilizers');
+    await txn.execute(
+      'ALTER TABLE template_fertilizers_new RENAME TO template_fertilizers',
+    );
 
     // Step 5: Recreate index
     await txn.execute(
@@ -148,16 +161,23 @@ final Migration migrationV9 = Migration(
     await txn.rawQuery('PRAGMA foreign_key_check(template_fertilizers)');
 
     // Count records in both tables
-    final logFertTotal = Sqflite.firstIntValue(
-      await txn.rawQuery('SELECT COUNT(*) FROM log_fertilizers'),
-    ) ?? 0;
-    final templateFertTotal = Sqflite.firstIntValue(
-      await txn.rawQuery('SELECT COUNT(*) FROM template_fertilizers'),
-    ) ?? 0;
+    final logFertTotal =
+        Sqflite.firstIntValue(
+          await txn.rawQuery('SELECT COUNT(*) FROM log_fertilizers'),
+        ) ??
+        0;
+    final templateFertTotal =
+        Sqflite.firstIntValue(
+          await txn.rawQuery('SELECT COUNT(*) FROM template_fertilizers'),
+        ) ??
+        0;
 
     AppLogger.info('Migration_v9', '📊 Final counts:');
     AppLogger.info('Migration_v9', '  - log_fertilizers: $logFertTotal');
-    AppLogger.info('Migration_v9', '  - template_fertilizers: $templateFertTotal');
+    AppLogger.info(
+      'Migration_v9',
+      '  - template_fertilizers: $templateFertTotal',
+    );
 
     AppLogger.info(
       'Migration_v9',

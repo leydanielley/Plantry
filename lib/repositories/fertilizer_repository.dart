@@ -8,7 +8,9 @@ import 'package:growlog_app/models/fertilizer.dart';
 import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
 import 'package:growlog_app/repositories/repository_error_handler.dart'; // ✅ PHASE 2 FIX: Standardized error handling
 
-class FertilizerRepository with RepositoryErrorHandler implements IFertilizerRepository {
+class FertilizerRepository
+    with RepositoryErrorHandler
+    implements IFertilizerRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   @override
@@ -25,7 +27,7 @@ class FertilizerRepository with RepositoryErrorHandler implements IFertilizerRep
         final maps = await db.query(
           'fertilizers',
           orderBy: 'name ASC',
-          limit: limit ?? 1000,  // Reasonable default limit
+          limit: limit ?? 1000, // Reasonable default limit
         );
         return maps.map((map) => Fertilizer.fromMap(map)).toList();
       },
@@ -94,28 +96,34 @@ class FertilizerRepository with RepositoryErrorHandler implements IFertilizerRep
         final db = await _dbHelper.database;
 
         // Check RDWC recipes
-        final recipeCount = Sqflite.firstIntValue(
-          await db.rawQuery(
-            'SELECT COUNT(*) FROM rdwc_recipe_fertilizers WHERE fertilizer_id = ?',
-            [id],
-          ),
-        ) ?? 0;
+        final recipeCount =
+            Sqflite.firstIntValue(
+              await db.rawQuery(
+                'SELECT COUNT(*) FROM rdwc_recipe_fertilizers WHERE fertilizer_id = ?',
+                [id],
+              ),
+            ) ??
+            0;
 
         // Check RDWC logs
-        final rdwcLogCount = Sqflite.firstIntValue(
-          await db.rawQuery(
-            'SELECT COUNT(*) FROM rdwc_log_fertilizers WHERE fertilizer_id = ?',
-            [id],
-          ),
-        ) ?? 0;
+        final rdwcLogCount =
+            Sqflite.firstIntValue(
+              await db.rawQuery(
+                'SELECT COUNT(*) FROM rdwc_log_fertilizers WHERE fertilizer_id = ?',
+                [id],
+              ),
+            ) ??
+            0;
 
         // Check plant logs
-        final plantLogCount = Sqflite.firstIntValue(
-          await db.rawQuery(
-            'SELECT COUNT(*) FROM log_fertilizers WHERE fertilizer_id = ?',
-            [id],
-          ),
-        ) ?? 0;
+        final plantLogCount =
+            Sqflite.firstIntValue(
+              await db.rawQuery(
+                'SELECT COUNT(*) FROM log_fertilizers WHERE fertilizer_id = ?',
+                [id],
+              ),
+            ) ??
+            0;
 
         return (recipeCount + rdwcLogCount + plantLogCount) > 0;
       },
@@ -131,24 +139,30 @@ class FertilizerRepository with RepositoryErrorHandler implements IFertilizerRep
     final db = await _dbHelper.database;
 
     return {
-      'recipes': Sqflite.firstIntValue(
-        await db.rawQuery(
-          'SELECT COUNT(*) FROM rdwc_recipe_fertilizers WHERE fertilizer_id = ?',
-          [id],
-        ),
-      ) ?? 0,
-      'rdwc_logs': Sqflite.firstIntValue(
-        await db.rawQuery(
-          'SELECT COUNT(*) FROM rdwc_log_fertilizers WHERE fertilizer_id = ?',
-          [id],
-        ),
-      ) ?? 0,
-      'plant_logs': Sqflite.firstIntValue(
-        await db.rawQuery(
-          'SELECT COUNT(*) FROM log_fertilizers WHERE fertilizer_id = ?',
-          [id],
-        ),
-      ) ?? 0,
+      'recipes':
+          Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM rdwc_recipe_fertilizers WHERE fertilizer_id = ?',
+              [id],
+            ),
+          ) ??
+          0,
+      'rdwc_logs':
+          Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM rdwc_log_fertilizers WHERE fertilizer_id = ?',
+              [id],
+            ),
+          ) ??
+          0,
+      'plant_logs':
+          Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM log_fertilizers WHERE fertilizer_id = ?',
+              [id],
+            ),
+          ) ??
+          0,
     };
   }
 
@@ -170,13 +184,19 @@ class FertilizerRepository with RepositoryErrorHandler implements IFertilizerRep
           // Build helpful error message
           final parts = <String>[];
           if (usageDetails['recipes']! > 0) {
-            parts.add('${usageDetails['recipes']} Rezept${usageDetails['recipes']! > 1 ? 'en' : ''}');
+            parts.add(
+              '${usageDetails['recipes']} Rezept${usageDetails['recipes']! > 1 ? 'en' : ''}',
+            );
           }
           if (usageDetails['rdwc_logs']! > 0) {
-            parts.add('${usageDetails['rdwc_logs']} RDWC-Log${usageDetails['rdwc_logs']! > 1 ? 's' : ''}');
+            parts.add(
+              '${usageDetails['rdwc_logs']} RDWC-Log${usageDetails['rdwc_logs']! > 1 ? 's' : ''}',
+            );
           }
           if (usageDetails['plant_logs']! > 0) {
-            parts.add('${usageDetails['plant_logs']} Pflanzen-Log${usageDetails['plant_logs']! > 1 ? 's' : ''}');
+            parts.add(
+              '${usageDetails['plant_logs']} Pflanzen-Log${usageDetails['plant_logs']! > 1 ? 's' : ''}',
+            );
           }
 
           throw RepositoryException.conflict(
@@ -187,11 +207,7 @@ class FertilizerRepository with RepositoryErrorHandler implements IFertilizerRep
         }
 
         // Safe to delete
-        return await db.delete(
-          'fertilizers',
-          where: 'id = ?',
-          whereArgs: [id],
-        );
+        return await db.delete('fertilizers', where: 'id = ?', whereArgs: [id]);
       },
       operationName: 'delete',
       context: {'id': id},
@@ -205,7 +221,9 @@ class FertilizerRepository with RepositoryErrorHandler implements IFertilizerRep
     return handleQuery(
       operation: () async {
         final db = await _dbHelper.database;
-        final result = await db.rawQuery('SELECT COUNT(*) as count FROM fertilizers');
+        final result = await db.rawQuery(
+          'SELECT COUNT(*) as count FROM fertilizers',
+        );
         return Sqflite.firstIntValue(result) ?? 0;
       },
       operationName: 'count',

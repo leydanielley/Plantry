@@ -103,8 +103,7 @@ class WarningConfig {
       ph < phCriticalMin || ph > phCriticalMax;
 
   /// Check if pH should trigger warning
-  static bool isPhWarning(double ph) =>
-      ph < phWarningMin || ph > phWarningMax;
+  static bool isPhWarning(double ph) => ph < phWarningMin || ph > phWarningMax;
 
   /// Check if pH is in optimal range
   static bool isPhOptimal(double ph) =>
@@ -114,8 +113,7 @@ class WarningConfig {
   static bool isEcCritical(double ec) => ec > ecCriticalMax;
 
   /// Check if EC should trigger warning
-  static bool isEcWarning(double ec) =>
-      ec > ecWarningMax || ec < ecWarningMin;
+  static bool isEcWarning(double ec) => ec > ecWarningMax || ec < ecWarningMin;
 
   /// Check if pH fluctuation is concerning
   static bool isPhFluctuationConcerning(double range) =>

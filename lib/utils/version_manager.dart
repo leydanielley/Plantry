@@ -28,13 +28,19 @@ class VersionManager {
       final prefs = await SharedPreferences.getInstance();
 
       await prefs.setString(_keyLastVersion, currentVersion);
-      await prefs.setInt(_keyUpdateTimestamp, DateTime.now().millisecondsSinceEpoch);
+      await prefs.setInt(
+        _keyUpdateTimestamp,
+        DateTime.now().millisecondsSinceEpoch,
+      );
 
       if (dbVersion != null) {
         await prefs.setInt(_keyLastDbVersion, dbVersion);
       }
 
-      AppLogger.info('VersionManager', 'Version saved: $currentVersion (DB: $dbVersion)');
+      AppLogger.info(
+        'VersionManager',
+        'Version saved: $currentVersion (DB: $dbVersion)',
+      );
     } catch (e) {
       AppLogger.error('VersionManager', 'Failed to save version', e);
     }
@@ -76,7 +82,10 @@ class VersionManager {
     final isUpdated = lastVersion != currentVersion;
 
     if (isUpdated) {
-      AppLogger.info('VersionManager', 'Update detected: $lastVersion → $currentVersion');
+      AppLogger.info(
+        'VersionManager',
+        'Update detected: $lastVersion → $currentVersion',
+      );
     }
 
     return isUpdated;
@@ -103,11 +112,18 @@ class VersionManager {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_keyMigrationStatus, 'in_progress');
-      await prefs.setInt('migration_start_time', DateTime.now().millisecondsSinceEpoch);
+      await prefs.setInt(
+        'migration_start_time',
+        DateTime.now().millisecondsSinceEpoch,
+      );
 
       AppLogger.info('VersionManager', 'Migration marked as in progress');
     } catch (e) {
-      AppLogger.error('VersionManager', 'Failed to mark migration in progress', e);
+      AppLogger.error(
+        'VersionManager',
+        'Failed to mark migration in progress',
+        e,
+      );
     }
   }
 
@@ -120,9 +136,16 @@ class VersionManager {
 
       await saveCurrentVersion(dbVersion: dbVersion);
 
-      AppLogger.info('VersionManager', 'Migration marked as completed (DB v$dbVersion)');
+      AppLogger.info(
+        'VersionManager',
+        'Migration marked as completed (DB v$dbVersion)',
+      );
     } catch (e) {
-      AppLogger.error('VersionManager', 'Failed to mark migration completed', e);
+      AppLogger.error(
+        'VersionManager',
+        'Failed to mark migration completed',
+        e,
+      );
     }
   }
 
@@ -141,9 +164,16 @@ class VersionManager {
       failed.add('$fromVersion→$toVersion: $error');
       await prefs.setStringList(_keyFailedMigrations, failed);
 
-      AppLogger.error('VersionManager', 'Migration marked as failed: $fromVersion→$toVersion');
+      AppLogger.error(
+        'VersionManager',
+        'Migration marked as failed: $fromVersion→$toVersion',
+      );
     } catch (e) {
-      AppLogger.error('VersionManager', 'Failed to mark migration as failed', e);
+      AppLogger.error(
+        'VersionManager',
+        'Failed to mark migration as failed',
+        e,
+      );
     }
   }
 
@@ -162,7 +192,10 @@ class VersionManager {
           const timeoutMs = _migrationTimeoutMinutes * 60 * 1000;
           if (elapsed > timeoutMs) {
             // Migration stuck for too long
-            AppLogger.error('VersionManager', 'Migration appears stuck (>$_migrationTimeoutMinutes min)');
+            AppLogger.error(
+              'VersionManager',
+              'Migration appears stuck (>$_migrationTimeoutMinutes min)',
+            );
             await prefs.setString(_keyMigrationStatus, 'timeout');
             return false;
           }
@@ -209,10 +242,16 @@ class VersionManager {
     AppLogger.info('VersionManager', '═══════════════════════════════');
     AppLogger.info('VersionManager', 'Version Info:');
     AppLogger.info('VersionManager', '  Current: ${info.currentVersion}');
-    AppLogger.info('VersionManager', '  Previous: ${info.previousVersion ?? "N/A"}');
+    AppLogger.info(
+      'VersionManager',
+      '  Previous: ${info.previousVersion ?? "N/A"}',
+    );
     AppLogger.info('VersionManager', '  First Launch: ${info.isFirstLaunch}');
     AppLogger.info('VersionManager', '  Is Update: ${info.isUpdate}');
-    AppLogger.info('VersionManager', '  DB Version: ${info.previousDbVersion ?? "N/A"}');
+    AppLogger.info(
+      'VersionManager',
+      '  DB Version: ${info.previousDbVersion ?? "N/A"}',
+    );
     AppLogger.info('VersionManager', '═══════════════════════════════');
 
     if (info.isUpdate) {

@@ -16,18 +16,19 @@ class EditHarvestCuringScreen extends StatefulWidget {
   const EditHarvestCuringScreen({super.key, required this.harvest});
 
   @override
-  State<EditHarvestCuringScreen> createState() => _EditHarvestCuringScreenState();
+  State<EditHarvestCuringScreen> createState() =>
+      _EditHarvestCuringScreenState();
 }
 
 class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
-  
+
   DateTime? _curingStartDate;
   DateTime? _curingEndDate;
   final TextEditingController _methodController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  
+
   bool _isSaving = false;
 
   @override
@@ -56,7 +57,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
     if (!mounted) return;
     setState(() => _isSaving = true);
 
-    try{
+    try {
       int? curingDays;
       if (_curingStartDate != null && _curingEndDate != null) {
         curingDays = _curingEndDate!.difference(_curingStartDate!).inDays;
@@ -66,8 +67,12 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
         curingStartDate: _curingStartDate,
         curingEndDate: _curingEndDate,
         curingDays: curingDays,
-        curingMethod: _methodController.text.isNotEmpty ? _methodController.text : null,
-        curingNotes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        curingMethod: _methodController.text.isNotEmpty
+            ? _methodController.text
+            : null,
+        curingNotes: _notesController.text.isNotEmpty
+            ? _notesController.text
+            : null,
         updatedAt: DateTime.now(),
       );
 
@@ -80,8 +85,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        AppMessages.showError(context,
-'Fehler: $e');
+        AppMessages.showError(context, 'Fehler: $e');
       }
     }
   }
@@ -95,10 +99,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
         foregroundColor: Colors.white,
         actions: [
           if (!_isSaving)
-            IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: _save,
-            ),
+            IconButton(icon: const Icon(Icons.check), onPressed: _save),
         ],
       ),
       body: Form(
@@ -113,7 +114,9 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 decoration: BoxDecoration(
                   color: Colors.purple[50],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.purple[200] ?? Colors.purple),
+                  border: Border.all(
+                    color: Colors.purple[200] ?? Colors.purple,
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -132,7 +135,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               _buildDateField(
                 label: 'Start-Datum',
                 date: _curingStartDate,
@@ -142,7 +145,9 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                   final date = await showDatePicker(
                     context: context,
                     initialDate: _curingStartDate ?? DateTime.now(),
-                    firstDate: widget.harvest.dryingEndDate ?? widget.harvest.harvestDate,
+                    firstDate:
+                        widget.harvest.dryingEndDate ??
+                        widget.harvest.harvestDate,
                     lastDate: DateTime.now().add(const Duration(days: 180)),
                   );
                   if (date != null) setState(() => _curingStartDate = date);
@@ -150,7 +155,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 onClear: () => setState(() => _curingStartDate = null),
               ),
               const SizedBox(height: 16),
-              
+
               _buildDateField(
                 label: 'End-Datum',
                 date: _curingEndDate,
@@ -160,7 +165,10 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                   final date = await showDatePicker(
                     context: context,
                     initialDate: _curingEndDate ?? DateTime.now(),
-                    firstDate: _curingStartDate ?? widget.harvest.dryingEndDate ?? widget.harvest.harvestDate,
+                    firstDate:
+                        _curingStartDate ??
+                        widget.harvest.dryingEndDate ??
+                        widget.harvest.harvestDate,
                     lastDate: DateTime.now().add(const Duration(days: 270)),
                   );
                   if (date != null) setState(() => _curingEndDate = date);
@@ -168,7 +176,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 onClear: () => setState(() => _curingEndDate = null),
               ),
               const SizedBox(height: 20),
-              
+
               if (_curingStartDate != null && _curingEndDate != null)
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -192,7 +200,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                   ),
                 ),
               const SizedBox(height: 20),
-              
+
               TextFormField(
                 controller: _methodController,
                 decoration: InputDecoration(
@@ -205,18 +213,21 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               Wrap(
                 spacing: 8,
-                children: ['Glass Jars', 'Grove Bags', 'CVault', 'Vacuum Sealed'].map((method) {
-                  return ActionChip(
-                    label: Text(method),
-                    onPressed: () => _methodController.text = method,
-                  );
-                }).toList(),
+                children:
+                    ['Glass Jars', 'Grove Bags', 'CVault', 'Vacuum Sealed'].map(
+                      (method) {
+                        return ActionChip(
+                          label: Text(method),
+                          onPressed: () => _methodController.text = method,
+                        );
+                      },
+                    ).toList(),
               ),
               const SizedBox(height: 20),
-              
+
               TextFormField(
                 controller: _notesController,
                 decoration: InputDecoration(
@@ -230,20 +241,25 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 maxLines: 4,
               ),
               const SizedBox(height: 24),
-              
+
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.purple[50],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.purple[200] ?? Colors.purple),
+                  border: Border.all(
+                    color: Colors.purple[200] ?? Colors.purple,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.lightbulb_outline, color: Colors.purple[700]),
+                        Icon(
+                          Icons.lightbulb_outline,
+                          color: Colors.purple[700],
+                        ),
                         const SizedBox(width: 8),
                         const Text(
                           'Tipps',
@@ -257,16 +273,27 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                       'Täglich "burpen" in Woche 1-2',
                       'Luftfeuchtigkeit: 58-62% ideal',
                       'Dunkel und kühl lagern',
-                    ].map((tip) => Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.check, size: 16, color: Colors.green),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(tip, style: const TextStyle(fontSize: 13))),
-                        ],
+                    ].map(
+                      (tip) => Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check,
+                              size: 16,
+                              color: Colors.green,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                tip,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    )),
+                    ),
                   ],
                 ),
               ),
@@ -345,16 +372,19 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   Text(
-                    date != null ? DateFormat('dd.MM.yyyy').format(date) : AppTranslations(Localizations.localeOf(context).languageCode)['edit_harvest_not_set'],
+                    date != null
+                        ? DateFormat('dd.MM.yyyy').format(date)
+                        : AppTranslations(
+                            Localizations.localeOf(context).languageCode,
+                          )['edit_harvest_not_set'],
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: date != null ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: date != null
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       color: date != null ? Colors.black : Colors.grey[400],
                     ),
                   ),

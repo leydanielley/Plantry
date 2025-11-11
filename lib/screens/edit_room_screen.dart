@@ -49,17 +49,25 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.room.name);
-    _descriptionController = TextEditingController(text: widget.room.description ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.room.description ?? '',
+    );
 
     // ✅ BUG FIX #3: Meter → CM umrechnen beim Laden (multiplizieren mit 100)
     _widthController = TextEditingController(
-      text: widget.room.width > 0 ? (widget.room.width * 100).toStringAsFixed(0) : '',
+      text: widget.room.width > 0
+          ? (widget.room.width * 100).toStringAsFixed(0)
+          : '',
     );
     _depthController = TextEditingController(
-      text: widget.room.depth > 0 ? (widget.room.depth * 100).toStringAsFixed(0) : '',
+      text: widget.room.depth > 0
+          ? (widget.room.depth * 100).toStringAsFixed(0)
+          : '',
     );
     _heightController = TextEditingController(
-      text: widget.room.height > 0 ? (widget.room.height * 100).toStringAsFixed(0) : '',
+      text: widget.room.height > 0
+          ? (widget.room.height * 100).toStringAsFixed(0)
+          : '',
     );
 
     _growType = widget.room.growType;
@@ -113,15 +121,20 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
             : null,
         growType: _growType,
         wateringSystem: _wateringSystem,
-        rdwcSystemId: _wateringSystem == WateringSystem.rdwc ? _selectedRdwcSystemId : null,
+        rdwcSystemId: _wateringSystem == WateringSystem.rdwc
+            ? _selectedRdwcSystemId
+            : null,
         width: _widthController.text.trim().isNotEmpty
-            ? (double.tryParse(_widthController.text.trim()) ?? 0.0) / 100.0  // ✅ CM → Meter
+            ? (double.tryParse(_widthController.text.trim()) ?? 0.0) /
+                  100.0 // ✅ CM → Meter
             : 0.0,
         depth: _depthController.text.trim().isNotEmpty
-            ? (double.tryParse(_depthController.text.trim()) ?? 0.0) / 100.0  // ✅ CM → Meter
+            ? (double.tryParse(_depthController.text.trim()) ?? 0.0) /
+                  100.0 // ✅ CM → Meter
             : 0.0,
         height: _heightController.text.trim().isNotEmpty
-            ? (double.tryParse(_heightController.text.trim()) ?? 0.0) / 100.0  // ✅ CM → Meter
+            ? (double.tryParse(_heightController.text.trim()) ?? 0.0) /
+                  100.0 // ✅ CM → Meter
             : 0.0,
       );
 
@@ -165,21 +178,21 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildBasicInfo(),
-            const SizedBox(height: 24),
-            _buildGrowSettings(),
-            const SizedBox(height: 24),
-            _buildDimensions(),
-            const SizedBox(height: 24),
-            _buildSaveButton(),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildBasicInfo(),
+                  const SizedBox(height: 24),
+                  _buildGrowSettings(),
+                  const SizedBox(height: 24),
+                  _buildDimensions(),
+                  const SizedBox(height: 24),
+                  _buildSaveButton(),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
     );
   }
 
@@ -203,7 +216,8 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
             prefixIcon: const Icon(Icons.home),
             border: const OutlineInputBorder(),
           ),
-          validator: (value) => Validators.validateNotEmpty(value, fieldName: 'Name'),
+          validator: (value) =>
+              Validators.validateNotEmpty(value, fieldName: 'Name'),
           autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         const SizedBox(height: 12),
@@ -244,7 +258,10 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
             border: const OutlineInputBorder(),
           ),
           items: [
-            DropdownMenuItem(value: null, child: Text(_t['add_room_not_specified'])),
+            DropdownMenuItem(
+              value: null,
+              child: Text(_t['add_room_not_specified']),
+            ),
             ...GrowType.values.map((type) {
               return DropdownMenuItem(
                 value: type,
@@ -263,7 +280,10 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
             border: const OutlineInputBorder(),
           ),
           items: [
-            DropdownMenuItem(value: null, child: Text(_t['add_room_not_specified'])),
+            DropdownMenuItem(
+              value: null,
+              child: Text(_t['add_room_not_specified']),
+            ),
             ...WateringSystem.values.map((system) {
               return DropdownMenuItem(
                 value: system,
@@ -285,7 +305,10 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
               border: const OutlineInputBorder(),
             ),
             items: [
-              DropdownMenuItem(value: null, child: Text(_t['add_room_no_rdwc'])),
+              DropdownMenuItem(
+                value: null,
+                child: Text(_t['add_room_no_rdwc']),
+              ),
               ..._rdwcSystems.map((system) {
                 return DropdownMenuItem(
                   value: system.id,
@@ -316,10 +339,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
         // ✅ BUG FIX #2: Jetzt Zentimeter statt Meter
         Text(
           _t['add_room_dimensions_unit'],
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
         ),
         const SizedBox(height: 12),
         Row(
@@ -327,10 +347,12 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
             Expanded(
               child: TextFormField(
                 controller: _widthController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
-                  labelText: _t['add_room_width_label'],  // ✅ KORRIGIERT
-                  hintText: _t['add_room_width_hint'],      // ✅ KORRIGIERT
+                  labelText: _t['add_room_width_label'], // ✅ KORRIGIERT
+                  hintText: _t['add_room_width_hint'], // ✅ KORRIGIERT
                   border: const OutlineInputBorder(),
                 ),
                 // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
@@ -345,10 +367,12 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
             Expanded(
               child: TextFormField(
                 controller: _depthController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
-                  labelText: _t['add_room_depth_label'],   // ✅ KORRIGIERT
-                  hintText: _t['add_room_width_hint'],      // ✅ KORRIGIERT
+                  labelText: _t['add_room_depth_label'], // ✅ KORRIGIERT
+                  hintText: _t['add_room_width_hint'], // ✅ KORRIGIERT
                   border: const OutlineInputBorder(),
                 ),
                 // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
@@ -363,10 +387,12 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
             Expanded(
               child: TextFormField(
                 controller: _heightController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
-                  labelText: _t['add_room_height_label'],    // ✅ KORRIGIERT
-                  hintText: _t['add_room_height_hint'],      // ✅ KORRIGIERT
+                  labelText: _t['add_room_height_label'], // ✅ KORRIGIERT
+                  hintText: _t['add_room_height_hint'], // ✅ KORRIGIERT
                   border: const OutlineInputBorder(),
                 ),
                 // ✅ BUG FIX #2: Validator für CM (10-1000 cm)

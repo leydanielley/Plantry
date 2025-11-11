@@ -96,10 +96,10 @@ class ImageCacheHelper {
 
     if (await thumbFile.exists()) {
       final bytes = await thumbFile.readAsBytes();
-      
+
       // In Memory Cache speichern
       _addToCache(originalPath, bytes);
-      
+
       return bytes;
     }
 
@@ -122,14 +122,20 @@ class ImageCacheHelper {
 
       // ✅ FIX: Validate byte counter integrity BEFORE loop
       if (_currentCacheSizeBytes < 0) {
-        AppLogger.error('ImageCacheHelper', 'Byte counter corrupted, clearing cache');
+        AppLogger.error(
+          'ImageCacheHelper',
+          'Byte counter corrupted, clearing cache',
+        );
         clearMemoryCache();
         return;
       }
 
       // ✅ FIX: Validate dataSize is reasonable
       if (dataSize > maxCacheSizeBytes) {
-        AppLogger.warning('ImageCacheHelper', 'Image too large for cache ($dataSize bytes), skipping');
+        AppLogger.warning(
+          'ImageCacheHelper',
+          'Image too large for cache ($dataSize bytes), skipping',
+        );
         return;
       }
 

@@ -6,11 +6,11 @@ import 'dart:math';
 
 import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/health_score.dart';
-import 'package:growlog_app/models/enums.dart';  // For PlantPhase
+import 'package:growlog_app/models/enums.dart'; // For PlantPhase
 import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_photo_repository.dart';
 import 'package:growlog_app/utils/app_logger.dart';
-import 'package:growlog_app/config/health_score_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to HealthScoreConfig
+import 'package:growlog_app/config/health_score_config.dart'; // ✅ AUDIT FIX: Magic numbers extracted to HealthScoreConfig
 import 'package:growlog_app/services/interfaces/i_health_score_service.dart';
 
 class HealthScoreService implements IHealthScoreService {
@@ -32,34 +32,60 @@ class HealthScoreService implements IHealthScoreService {
       final recommendations = <String>[];
 
       // Factor 1: Watering Regularity (30%) - Phase-specific
-      final wateringScore = await _calculateWateringScore(plant.id!, plant.phase, warnings, recommendations);
+      final wateringScore = await _calculateWateringScore(
+        plant.id!,
+        plant.phase,
+        warnings,
+        recommendations,
+      );
       factors['watering'] = wateringScore;
 
       // Factor 2: pH Stability (25%)
-      final phScore = await _calculatePhScore(plant.id!, warnings, recommendations);
+      final phScore = await _calculatePhScore(
+        plant.id!,
+        warnings,
+        recommendations,
+      );
       factors['ph_stability'] = phScore;
 
       // Factor 3: EC/Nutrient Trends (20%) - Phase-specific
-      final ecScore = await _calculateEcScore(plant.id!, plant.phase, warnings, recommendations);
+      final ecScore = await _calculateEcScore(
+        plant.id!,
+        plant.phase,
+        warnings,
+        recommendations,
+      );
       factors['nutrient_health'] = ecScore;
 
       // Factor 4: Photo Documentation (15%)
-      final photoScore = await _calculatePhotoScore(plant.id!, warnings, recommendations);
+      final photoScore = await _calculatePhotoScore(
+        plant.id!,
+        warnings,
+        recommendations,
+      );
       factors['documentation'] = photoScore;
 
       // Factor 5: Log Activity (10%)
-      final activityScore = await _calculateActivityScore(plant.id!, warnings, recommendations);
+      final activityScore = await _calculateActivityScore(
+        plant.id!,
+        warnings,
+        recommendations,
+      );
       factors['activity'] = activityScore;
 
       // Calculate weighted total score
       // ✅ AUDIT FIX: Magic numbers extracted to HealthScoreConfig
-      final totalScore = (
-        (wateringScore * HealthScoreConfig.wateringWeight) +
-        (phScore * HealthScoreConfig.phStabilityWeight) +
-        (ecScore * HealthScoreConfig.ecWeight) +
-        (photoScore * HealthScoreConfig.photoWeight) +
-        (activityScore * HealthScoreConfig.activityWeight)
-      ).round().clamp(HealthScoreConfig.minScore.toInt(), HealthScoreConfig.maxScore.toInt());
+      final totalScore =
+          ((wateringScore * HealthScoreConfig.wateringWeight) +
+                  (phScore * HealthScoreConfig.phStabilityWeight) +
+                  (ecScore * HealthScoreConfig.ecWeight) +
+                  (photoScore * HealthScoreConfig.photoWeight) +
+                  (activityScore * HealthScoreConfig.activityWeight))
+              .round()
+              .clamp(
+                HealthScoreConfig.minScore.toInt(),
+                HealthScoreConfig.maxScore.toInt(),
+              );
 
       final level = HealthScore.getLevelFromScore(totalScore);
 
@@ -72,7 +98,11 @@ class HealthScoreService implements IHealthScoreService {
         calculatedAt: DateTime.now(),
       );
     } catch (e) {
-      AppLogger.error('HealthScoreService', 'Failed to calculate health score', e);
+      AppLogger.error(
+        'HealthScoreService',
+        'Failed to calculate health score',
+        e,
+      );
       return _getDefaultScore();
     }
   }
@@ -106,7 +136,9 @@ class HealthScoreService implements IHealthScoreService {
   ) async {
     try {
       final logs = await _logRepo.findByPlant(plantId);
-      final waterLogs = logs.where((l) => l.waterAmount != null && l.waterAmount! > 0).toList();
+      final waterLogs = logs
+          .where((l) => l.waterAmount != null && l.waterAmount! > 0)
+          .toList();
 
       // ✅ AUDIT FIX: Magic numbers extracted to HealthScoreConfig
       if (waterLogs.isEmpty) {
@@ -124,7 +156,9 @@ class HealthScoreService implements IHealthScoreService {
       final intervals = <int>[];
 
       for (int i = 1; i < waterLogs.length; i++) {
-        final daysDiff = waterLogs[i].logDate.difference(waterLogs[i - 1].logDate).inDays;
+        final daysDiff = waterLogs[i].logDate
+            .difference(waterLogs[i - 1].logDate)
+            .inDays;
         intervals.add(daysDiff);
       }
 
@@ -143,7 +177,11 @@ class HealthScoreService implements IHealthScoreService {
       }
 
       final mean = intervals.reduce((a, b) => a + b) / intervals.length;
-      final variance = intervals.map((i) => (i - mean) * (i - mean)).reduce((a, b) => a + b) / intervals.length;
+      final variance =
+          intervals
+              .map((i) => (i - mean) * (i - mean))
+              .reduce((a, b) => a + b) /
+          intervals.length;
       final stdDev = variance.isNaN ? 0.0 : sqrt(variance);
 
       // Get phase-specific thresholds
@@ -152,10 +190,14 @@ class HealthScoreService implements IHealthScoreService {
       final criticalDays = thresholds['critical']!;
 
       // Check last watering
-      final daysSinceLastWater = DateTime.now().difference(waterLogs.last.logDate).inDays;
+      final daysSinceLastWater = DateTime.now()
+          .difference(waterLogs.last.logDate)
+          .inDays;
 
       if (daysSinceLastWater > warningDays) {
-        warnings.add('Zuletzt vor $daysSinceLastWater Tagen gegossen (${phase.name} Phase)');
+        warnings.add(
+          'Zuletzt vor $daysSinceLastWater Tagen gegossen (${phase.name} Phase)',
+        );
         recommendations.add('Prüfe, ob die Pflanze Wasser braucht');
       }
 
@@ -179,7 +221,10 @@ class HealthScoreService implements IHealthScoreService {
         score -= HealthScoreConfig.wateringMinorPenalty;
       }
 
-      return score.clamp(HealthScoreConfig.minScore, HealthScoreConfig.maxScore);
+      return score.clamp(
+        HealthScoreConfig.minScore,
+        HealthScoreConfig.maxScore,
+      );
     } catch (e) {
       return HealthScoreConfig.defaultScore;
     }
@@ -201,12 +246,16 @@ class HealthScoreService implements IHealthScoreService {
       }
 
       if (phLogs.length < HealthScoreConfig.minPhLogsForTrend) {
-        return HealthScoreConfig.insufficientPhDataScore; // Not enough data for trend
+        return HealthScoreConfig
+            .insufficientPhDataScore; // Not enough data for trend
       }
 
       // Get recent pH values (last 10 logs)
       phLogs.sort((a, b) => b.logDate.compareTo(a.logDate));
-      final recentPh = phLogs.take(HealthScoreConfig.recentPhLogsCount).map((l) => l.phIn!).toList();
+      final recentPh = phLogs
+          .take(HealthScoreConfig.recentPhLogsCount)
+          .map((l) => l.phIn!)
+          .toList();
 
       // ✅ FIX: Additional safety check before reduce
       if (recentPh.isEmpty) return HealthScoreConfig.noPhLogsScore;
@@ -224,7 +273,9 @@ class HealthScoreService implements IHealthScoreService {
       if (HealthScoreConfig.isPhInCriticalRange(avgPh)) {
         score -= HealthScoreConfig.phCriticalRangePenalty;
         warnings.add('pH außerhalb optimal (Ø ${avgPh.toStringAsFixed(1)})');
-        recommendations.add('pH auf ${HealthScoreConfig.phOptimalMin}-${HealthScoreConfig.phOptimalMax} anpassen');
+        recommendations.add(
+          'pH auf ${HealthScoreConfig.phOptimalMin}-${HealthScoreConfig.phOptimalMax} anpassen',
+        );
       } else if (!HealthScoreConfig.isPhInOptimalRange(avgPh)) {
         score -= HealthScoreConfig.phAcceptableRangePenalty;
         warnings.add('pH kann optimiert werden');
@@ -233,14 +284,19 @@ class HealthScoreService implements IHealthScoreService {
       // Check pH stability
       if (range > HealthScoreConfig.phStabilityCriticalRange) {
         score -= HealthScoreConfig.phStabilityCriticalPenalty;
-        warnings.add('pH schwankt stark (${minPh.toStringAsFixed(1)} - ${maxPh.toStringAsFixed(1)})');
+        warnings.add(
+          'pH schwankt stark (${minPh.toStringAsFixed(1)} - ${maxPh.toStringAsFixed(1)})',
+        );
         recommendations.add('pH stabilisieren');
       } else if (range > HealthScoreConfig.phStabilityWarningRange) {
         score -= HealthScoreConfig.phStabilityWarningPenalty;
         warnings.add('pH schwankt leicht');
       }
 
-      return score.clamp(HealthScoreConfig.minScore, HealthScoreConfig.maxScore);
+      return score.clamp(
+        HealthScoreConfig.minScore,
+        HealthScoreConfig.maxScore,
+      );
     } catch (e) {
       return HealthScoreConfig.noPhLogsScore;
     }
@@ -268,7 +324,10 @@ class HealthScoreService implements IHealthScoreService {
 
       // Get recent EC values
       ecLogs.sort((a, b) => b.logDate.compareTo(a.logDate));
-      final recentEc = ecLogs.take(HealthScoreConfig.recentEcLogsCount).map((l) => l.ecIn!).toList();
+      final recentEc = ecLogs
+          .take(HealthScoreConfig.recentEcLogsCount)
+          .map((l) => l.ecIn!)
+          .toList();
 
       // ✅ FIX: Additional safety check before reduce
       if (recentEc.isEmpty) return HealthScoreConfig.noEcLogsScore;
@@ -298,15 +357,24 @@ class HealthScoreService implements IHealthScoreService {
       // Phase-specific EC range checking
       if (avgEc > maxEc) {
         score -= HealthScoreConfig.ecOutOfRangeHighPenalty;
-        warnings.add('EC zu hoch für ${phase.name} Phase (${avgEc.toStringAsFixed(2)} > $maxEc)');
-        recommendations.add('EC reduzieren, um Nährstoffverbrennung zu vermeiden');
+        warnings.add(
+          'EC zu hoch für ${phase.name} Phase (${avgEc.toStringAsFixed(2)} > $maxEc)',
+        );
+        recommendations.add(
+          'EC reduzieren, um Nährstoffverbrennung zu vermeiden',
+        );
       } else if (avgEc < minEc) {
         score -= HealthScoreConfig.ecOutOfRangeLowPenalty;
-        warnings.add('EC zu niedrig für ${phase.name} Phase (${avgEc.toStringAsFixed(2)} < $minEc)');
+        warnings.add(
+          'EC zu niedrig für ${phase.name} Phase (${avgEc.toStringAsFixed(2)} < $minEc)',
+        );
         recommendations.add('Mehr Nährstoffe geben');
       }
 
-      return score.clamp(HealthScoreConfig.minScore, HealthScoreConfig.maxScore);
+      return score.clamp(
+        HealthScoreConfig.minScore,
+        HealthScoreConfig.maxScore,
+      );
     } catch (e) {
       return HealthScoreConfig.noEcLogsScore;
     }
@@ -330,7 +398,9 @@ class HealthScoreService implements IHealthScoreService {
 
       // Check photo frequency
       photos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      final daysSinceLastPhoto = DateTime.now().difference(photos.first.createdAt).inDays;
+      final daysSinceLastPhoto = DateTime.now()
+          .difference(photos.first.createdAt)
+          .inDays;
 
       double score = HealthScoreConfig.baseScore;
 
@@ -348,7 +418,10 @@ class HealthScoreService implements IHealthScoreService {
         score += HealthScoreConfig.photoBonus;
       }
 
-      return score.clamp(HealthScoreConfig.minScore, HealthScoreConfig.maxScore);
+      return score.clamp(
+        HealthScoreConfig.minScore,
+        HealthScoreConfig.maxScore,
+      );
     } catch (e) {
       return HealthScoreConfig.defaultScore;
     }
@@ -371,7 +444,9 @@ class HealthScoreService implements IHealthScoreService {
       }
 
       logs.sort((a, b) => b.logDate.compareTo(a.logDate));
-      final daysSinceLastLog = DateTime.now().difference(logs.first.logDate).inDays;
+      final daysSinceLastLog = DateTime.now()
+          .difference(logs.first.logDate)
+          .inDays;
 
       double score = HealthScoreConfig.baseScore;
 
@@ -388,7 +463,10 @@ class HealthScoreService implements IHealthScoreService {
         score += HealthScoreConfig.activityBonus;
       }
 
-      return score.clamp(HealthScoreConfig.minScore, HealthScoreConfig.maxScore);
+      return score.clamp(
+        HealthScoreConfig.minScore,
+        HealthScoreConfig.maxScore,
+      );
     } catch (e) {
       return HealthScoreConfig.defaultScore;
     }

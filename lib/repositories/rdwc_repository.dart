@@ -46,15 +46,16 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
   /// Get systems by room
   @override
-  Future<List<RdwcSystem>> getSystemsByRoom(int roomId, {bool includeArchived = false}) async {
+  Future<List<RdwcSystem>> getSystemsByRoom(
+    int roomId, {
+    bool includeArchived = false,
+  }) async {
     try {
       final db = await _dbHelper.database;
       final where = includeArchived
           ? 'room_id = ?'
           : 'room_id = ? AND archived = ?';
-      final whereArgs = includeArchived
-          ? [roomId]
-          : [roomId, 0];
+      final whereArgs = includeArchived ? [roomId] : [roomId, 0];
 
       final maps = await db.query(
         'rdwc_systems',
@@ -72,15 +73,16 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
   /// Get systems by grow
   @override
-  Future<List<RdwcSystem>> getSystemsByGrow(int growId, {bool includeArchived = false}) async {
+  Future<List<RdwcSystem>> getSystemsByGrow(
+    int growId, {
+    bool includeArchived = false,
+  }) async {
     try {
       final db = await _dbHelper.database;
       final where = includeArchived
           ? 'grow_id = ?'
           : 'grow_id = ? AND archived = ?';
-      final whereArgs = includeArchived
-          ? [growId]
-          : [growId, 0];
+      final whereArgs = includeArchived ? [growId] : [growId, 0];
 
       final maps = await db.query(
         'rdwc_systems',
@@ -141,7 +143,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         where: 'id = ?',
         whereArgs: [system.id],
       );
-      AppLogger.info('RdwcRepository', 'Updated RDWC system', 'ID: ${system.id}');
+      AppLogger.info(
+        'RdwcRepository',
+        'Updated RDWC system',
+        'ID: ${system.id}',
+      );
       return count;
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error updating RDWC system', e);
@@ -160,7 +166,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         where: 'id = ?',
         whereArgs: [systemId],
       );
-      AppLogger.info('RdwcRepository', 'Updated system level', 'ID: $systemId, Level: $newLevel L');
+      AppLogger.info(
+        'RdwcRepository',
+        'Updated system level',
+        'ID: $systemId, Level: $newLevel L',
+      );
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error updating system level', e);
       rethrow;
@@ -178,7 +188,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         where: 'id = ?',
         whereArgs: [systemId],
       );
-      AppLogger.info('RdwcRepository', '${archived ? "Archived" : "Unarchived"} system', 'ID: $systemId');
+      AppLogger.info(
+        'RdwcRepository',
+        '${archived ? "Archived" : "Unarchived"} system',
+        'ID: $systemId',
+      );
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error archiving system', e);
       rethrow;
@@ -237,7 +251,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           whereArgs: [systemId],
         );
 
-        AppLogger.info('RdwcRepository', 'Deleted RDWC system and detached plants/rooms', 'ID: $systemId');
+        AppLogger.info(
+          'RdwcRepository',
+          'Deleted RDWC system and detached plants/rooms',
+          'ID: $systemId',
+        );
         return count;
       });
     } catch (e) {
@@ -323,7 +341,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
             where: 'id = ?',
             whereArgs: [log.systemId],
           );
-          AppLogger.info('RdwcRepository', 'Updated system level', 'ID: ${log.systemId}, Level: ${log.levelAfter} L');
+          AppLogger.info(
+            'RdwcRepository',
+            'Updated system level',
+            'ID: ${log.systemId}, Level: ${log.levelAfter} L',
+          );
         }
 
         return logId;
@@ -359,7 +381,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
             where: 'rdwc_log_id = ?',
             whereArgs: [log.id],
           );
-          AppLogger.info('RdwcRepository', 'Cleared old fertilizers for log', 'ID: ${log.id}');
+          AppLogger.info(
+            'RdwcRepository',
+            'Cleared old fertilizers for log',
+            'ID: ${log.id}',
+          );
         }
 
         // 3. Update system level if levelAfter changed
@@ -370,7 +396,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
             where: 'id = ?',
             whereArgs: [log.systemId],
           );
-          AppLogger.info('RdwcRepository', 'Updated system level', 'ID: ${log.systemId}, Level: ${log.levelAfter} L');
+          AppLogger.info(
+            'RdwcRepository',
+            'Updated system level',
+            'ID: ${log.systemId}, Level: ${log.levelAfter} L',
+          );
         }
 
         return count;
@@ -399,7 +429,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         );
 
         if (logResult.isEmpty) {
-          AppLogger.warning('RdwcRepository', 'Log not found for deletion', 'ID: $logId');
+          AppLogger.warning(
+            'RdwcRepository',
+            'Log not found for deletion',
+            'ID: $logId',
+          );
           return 0;
         }
 
@@ -426,23 +460,29 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           // Inline update within transaction instead of calling method
           await txn.update(
             'rdwc_systems',
-            {'current_level': newLevel},  // ✅ FIXED: correct column name
+            {'current_level': newLevel}, // ✅ FIXED: correct column name
             where: 'id = ?',
             whereArgs: [systemId],
           );
-          AppLogger.info('RdwcRepository', 'Updated system level after log deletion',
-            'SystemID: $systemId, NewLevel: $newLevel L');
+          AppLogger.info(
+            'RdwcRepository',
+            'Updated system level after log deletion',
+            'SystemID: $systemId, NewLevel: $newLevel L',
+          );
         } else {
           // ✅ FIX: No logs remaining - set level to 0 (no data) instead of max capacity
           // Resetting to max capacity is incorrect as it implies the system is full
           await txn.update(
             'rdwc_systems',
-            {'current_level': 0.0},  // ✅ FIXED: correct column name
+            {'current_level': 0.0}, // ✅ FIXED: correct column name
             where: 'id = ?',
             whereArgs: [systemId],
           );
-          AppLogger.info('RdwcRepository', 'Reset system level to 0 (no logs remaining)',
-            'SystemID: $systemId');
+          AppLogger.info(
+            'RdwcRepository',
+            'Reset system level to 0 (no logs remaining)',
+            'SystemID: $systemId',
+          );
         }
 
         AppLogger.info('RdwcRepository', 'Deleted RDWC log', 'ID: $logId');
@@ -456,19 +496,25 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
   /// Calculate average daily water consumption for a system
   @override
-  Future<double?> getAverageDailyConsumption(int systemId, {int days = 7}) async {
+  Future<double?> getAverageDailyConsumption(
+    int systemId, {
+    int days = 7,
+  }) async {
     try {
       final db = await _dbHelper.database;
       final cutoffDate = DateTime.now().subtract(Duration(days: days));
 
-      final result = await db.rawQuery('''
+      final result = await db.rawQuery(
+        '''
         SELECT AVG(water_consumed) as avg_consumption
         FROM rdwc_logs
         WHERE system_id = ?
           AND water_consumed IS NOT NULL
           AND log_date >= ?
           AND log_type = 'ADDBACK'
-      ''', [systemId, cutoffDate.toIso8601String()]);
+      ''',
+        [systemId, cutoffDate.toIso8601String()],
+      );
 
       if (result.isEmpty || result.first['avg_consumption'] == null) {
         return null;
@@ -476,27 +522,39 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
       return (result.first['avg_consumption'] as num).toDouble();
     } catch (e) {
-      AppLogger.error('RdwcRepository', 'Error calculating average consumption', e);
+      AppLogger.error(
+        'RdwcRepository',
+        'Error calculating average consumption',
+        e,
+      );
       return null;
     }
   }
 
   /// Get total water added in a time period
   @override
-  Future<double> getTotalWaterAdded(int systemId, {DateTime? startDate, DateTime? endDate}) async {
+  Future<double> getTotalWaterAdded(
+    int systemId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
       final db = await _dbHelper.database;
-      final start = startDate ?? DateTime.now().subtract(const Duration(days: 30));
+      final start =
+          startDate ?? DateTime.now().subtract(const Duration(days: 30));
       final end = endDate ?? DateTime.now();
 
-      final result = await db.rawQuery('''
+      final result = await db.rawQuery(
+        '''
         SELECT SUM(water_added) as total
         FROM rdwc_logs
         WHERE system_id = ?
           AND water_added IS NOT NULL
           AND log_date >= ?
           AND log_date <= ?
-      ''', [systemId, start.toIso8601String(), end.toIso8601String()]);
+      ''',
+        [systemId, start.toIso8601String(), end.toIso8601String()],
+      );
 
       if (result.isEmpty || result.first['total'] == null) {
         return 0.0;
@@ -504,7 +562,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
       return (result.first['total'] as num).toDouble();
     } catch (e) {
-      AppLogger.error('RdwcRepository', 'Error calculating total water added', e);
+      AppLogger.error(
+        'RdwcRepository',
+        'Error calculating total water added',
+        e,
+      );
       return 0.0;
     }
   }
@@ -519,7 +581,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
     try {
       final db = await _dbHelper.database;
       final id = await db.insert('rdwc_log_fertilizers', fertilizer.toMap());
-      AppLogger.info('RdwcRepository', 'Added fertilizer to RDWC log', 'ID: $id');
+      AppLogger.info(
+        'RdwcRepository',
+        'Added fertilizer to RDWC log',
+        'ID: $id',
+      );
       return id;
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error adding fertilizer to log', e);
@@ -537,10 +603,18 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         where: 'id = ?',
         whereArgs: [fertilizerId],
       );
-      AppLogger.info('RdwcRepository', 'Removed fertilizer from RDWC log', 'ID: $fertilizerId');
+      AppLogger.info(
+        'RdwcRepository',
+        'Removed fertilizer from RDWC log',
+        'ID: $fertilizerId',
+      );
       return count;
     } catch (e) {
-      AppLogger.error('RdwcRepository', 'Error removing fertilizer from log', e);
+      AppLogger.error(
+        'RdwcRepository',
+        'Error removing fertilizer from log',
+        e,
+      );
       rethrow;
     }
   }
@@ -588,7 +662,11 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
       // Return log with fertilizers
       return log.copyWith(fertilizers: fertilizers);
     } catch (e) {
-      AppLogger.error('RdwcRepository', 'Error loading log with fertilizers', e);
+      AppLogger.error(
+        'RdwcRepository',
+        'Error loading log with fertilizers',
+        e,
+      );
       return null;
     }
   }
@@ -596,12 +674,16 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
   /// Get recent logs with fertilizers loaded
   /// ✅ FIX: Optimized to prevent N+1 query problem using single JOIN
   @override
-  Future<List<RdwcLog>> getRecentLogsWithFertilizers(int systemId, {int limit = 10}) async {
+  Future<List<RdwcLog>> getRecentLogsWithFertilizers(
+    int systemId, {
+    int limit = 10,
+  }) async {
     try {
       final db = await _dbHelper.database;
 
       // Single JOIN query instead of N+1 queries
-      final maps = await db.rawQuery('''
+      final maps = await db.rawQuery(
+        '''
         SELECT
           rl.*,
           rlf.id as rlf_id,
@@ -617,7 +699,9 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         WHERE rl.system_id = ?
         ORDER BY rl.log_date DESC, rl.id DESC
         LIMIT ?
-      ''', [systemId, limit * 10]); // Multiply limit to account for multiple fertilizers per log
+      ''',
+        [systemId, limit * 10],
+      ); // Multiply limit to account for multiple fertilizers per log
 
       // Group results by log_id
       final logMap = <int, Map<String, dynamic>>{};
@@ -665,21 +749,26 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
       final logs = <RdwcLog>[];
       for (final logId in logMap.keys.take(limit)) {
         final logData = logMap[logId];
-        if (logData == null) continue;  // ✅ FIX: Skip if logData is null
+        if (logData == null) continue; // ✅ FIX: Skip if logData is null
 
         final log = RdwcLog.fromMap(logData);
 
         // Convert fertilizer maps to RdwcLogFertilizer objects
-        final fertilizers = (fertilizerMap[logId] ?? [])  // ✅ FIX: Use ?? [] for safety
-            .map((fMap) => RdwcLogFertilizer.fromMap(fMap))
-            .toList();
+        final fertilizers =
+            (fertilizerMap[logId] ?? []) // ✅ FIX: Use ?? [] for safety
+                .map((fMap) => RdwcLogFertilizer.fromMap(fMap))
+                .toList();
 
         logs.add(log.copyWith(fertilizers: fertilizers));
       }
 
       return logs;
     } catch (e) {
-      AppLogger.error('RdwcRepository', 'Error loading logs with fertilizers', e);
+      AppLogger.error(
+        'RdwcRepository',
+        'Error loading logs with fertilizers',
+        e,
+      );
       return [];
     }
   }
@@ -735,7 +824,10 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         recipes.add(recipe.copyWith(fertilizers: fertilizers));
       }
 
-      AppLogger.info('RdwcRepository', 'Loaded ${recipes.length} recipes with fertilizers (2 queries)');
+      AppLogger.info(
+        'RdwcRepository',
+        'Loaded ${recipes.length} recipes with fertilizers (2 queries)',
+      );
       return recipes;
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error loading recipes', e);
@@ -791,7 +883,10 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
   Future<int> createRecipeFertilizer(RecipeFertilizer recipeFertilizer) async {
     try {
       final db = await _dbHelper.database;
-      final id = await db.insert('rdwc_recipe_fertilizers', recipeFertilizer.toMap());
+      final id = await db.insert(
+        'rdwc_recipe_fertilizers',
+        recipeFertilizer.toMap(),
+      );
       AppLogger.info('RdwcRepository', 'Created recipe fertilizer', 'ID: $id');
       return id;
     } catch (e) {
@@ -912,12 +1007,16 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
   /// Get daily water consumption for the last N days
   @override
-  Future<Map<String, double>> getDailyConsumption(int systemId, {int days = 7}) async {
+  Future<Map<String, double>> getDailyConsumption(
+    int systemId, {
+    int days = 7,
+  }) async {
     try {
       final db = await _dbHelper.database;
       final cutoffDate = DateTime.now().subtract(Duration(days: days));
 
-      final result = await db.rawQuery('''
+      final result = await db.rawQuery(
+        '''
         SELECT
           DATE(log_date) as date,
           SUM(water_consumed) as total_consumed
@@ -928,7 +1027,9 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           AND log_date >= ?
         GROUP BY DATE(log_date)
         ORDER BY log_date DESC
-      ''', [systemId, cutoffDate.toIso8601String()]);
+      ''',
+        [systemId, cutoffDate.toIso8601String()],
+      );
 
       final Map<String, double> consumption = {};
       for (final row in result) {
@@ -946,7 +1047,10 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
   /// Get consumption statistics
   @override
-  Future<Map<String, dynamic>> getConsumptionStats(int systemId, {int days = 7}) async {
+  Future<Map<String, dynamic>> getConsumptionStats(
+    int systemId, {
+    int days = 7,
+  }) async {
     try {
       final dailyConsumption = await getDailyConsumption(systemId, days: days);
 
@@ -986,13 +1090,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
       };
     } catch (e) {
       AppLogger.error('RdwcRepository', 'Error getting consumption stats', e);
-      return {
-        'average': 0.0,
-        'total': 0.0,
-        'max': 0.0,
-        'min': 0.0,
-        'days': 0,
-      };
+      return {'average': 0.0, 'total': 0.0, 'max': 0.0, 'min': 0.0, 'days': 0};
     }
   }
 
@@ -1002,9 +1100,15 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
   /// Get EC drift analysis
   @override
-  Future<Map<String, dynamic>> getEcDriftAnalysis(int systemId, {int days = 7}) async {
+  Future<Map<String, dynamic>> getEcDriftAnalysis(
+    int systemId, {
+    int days = 7,
+  }) async {
     try {
-      final logs = await getRecentLogs(systemId, limit: days * 5); // ~5 logs per day estimate
+      final logs = await getRecentLogs(
+        systemId,
+        limit: days * 5,
+      ); // ~5 logs per day estimate
 
       final drifts = <double>[];
       for (final log in logs) {
@@ -1057,9 +1161,15 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
   /// Get pH drift analysis
   @override
-  Future<Map<String, dynamic>> getPhDriftAnalysis(int systemId, {int days = 7}) async {
+  Future<Map<String, dynamic>> getPhDriftAnalysis(
+    int systemId, {
+    int days = 7,
+  }) async {
     try {
-      final logs = await getRecentLogs(systemId, limit: days * 5); // ~5 logs per day estimate
+      final logs = await getRecentLogs(
+        systemId,
+        limit: days * 5,
+      ); // ~5 logs per day estimate
 
       final drifts = <double>[];
       for (final log in logs) {

@@ -36,8 +36,12 @@ class DriftChart extends StatelessWidget {
       allValues.addAll(phData.map((d) => d.value));
     }
 
-    final minY = allValues.isEmpty ? -1.0 : allValues.reduce((a, b) => a < b ? a : b) - 0.5;
-    final maxY = allValues.isEmpty ? 1.0 : allValues.reduce((a, b) => a > b ? a : b) + 0.5;
+    final minY = allValues.isEmpty
+        ? -1.0
+        : allValues.reduce((a, b) => a < b ? a : b) - 0.5;
+    final maxY = allValues.isEmpty
+        ? 1.0
+        : allValues.reduce((a, b) => a > b ? a : b) + 0.5;
 
     return Container(
       height: 300,
@@ -53,7 +57,9 @@ class DriftChart extends StatelessWidget {
                 showTitles: true,
                 reservedSize: 30,
                 getTitlesWidget: (value, meta) {
-                  final allData = mode == 'ec' ? ecData : (mode == 'ph' ? phData : ecData);
+                  final allData = mode == 'ec'
+                      ? ecData
+                      : (mode == 'ph' ? phData : ecData);
                   // ✅ CRITICAL FIX: Store toInt() result once to prevent TOCTOU race condition
                   final index = value.toInt();
                   if (allData.isEmpty || index >= allData.length) {
@@ -61,7 +67,15 @@ class DriftChart extends StatelessWidget {
                   }
                   final date = allData[index].date;
                   final dayOfWeek = date.weekday;
-                  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                  const days = [
+                    'Mon',
+                    'Tue',
+                    'Wed',
+                    'Thu',
+                    'Fri',
+                    'Sat',
+                    'Sun',
+                  ];
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
@@ -90,8 +104,12 @@ class DriftChart extends StatelessWidget {
                 },
               ),
             ),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: FlGridData(
             show: true,
@@ -100,7 +118,9 @@ class DriftChart extends StatelessWidget {
             getDrawingHorizontalLine: (value) {
               return FlLine(
                 // ✅ FIX: Replace force unwrap with null-aware operator
-                color: isDark ? (Colors.grey[800] ?? Colors.grey) : (Colors.grey[300] ?? Colors.grey),
+                color: isDark
+                    ? (Colors.grey[800] ?? Colors.grey)
+                    : (Colors.grey[300] ?? Colors.grey),
                 strokeWidth: 1,
               );
             },
@@ -144,7 +164,9 @@ class DriftChart extends StatelessWidget {
               HorizontalLine(
                 y: 0,
                 // ✅ FIX: Replace force unwrap with null-aware operator
-                color: isDark ? (Colors.grey[700] ?? Colors.grey) : (Colors.grey[400] ?? Colors.grey),
+                color: isDark
+                    ? (Colors.grey[700] ?? Colors.grey)
+                    : (Colors.grey[400] ?? Colors.grey),
                 strokeWidth: 2,
                 dashArray: [5, 5],
               ),
@@ -154,7 +176,8 @@ class DriftChart extends StatelessWidget {
             touchTooltipData: LineTouchTooltipData(
               getTooltipItems: (touchedSpots) {
                 return touchedSpots.map((spot) {
-                  final isEc = spot.barIndex == 0 && (mode == 'ec' || mode == 'both');
+                  final isEc =
+                      spot.barIndex == 0 && (mode == 'ec' || mode == 'both');
                   final data = isEc ? ecData : phData;
                   // ✅ CRITICAL FIX: Store toInt() result once to prevent TOCTOU race condition
                   final index = spot.x.toInt();
@@ -197,10 +220,7 @@ class DriftChart extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'No drift data yet',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -214,8 +234,5 @@ class DriftDataPoint {
   final DateTime date;
   final double value;
 
-  DriftDataPoint({
-    required this.date,
-    required this.value,
-  });
+  DriftDataPoint({required this.date, required this.value});
 }

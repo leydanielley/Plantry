@@ -2,24 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 /// 🎨 Custom Growing Icons
-/// 
+///
 /// SVG Icons für Cannabis Growing App
 class GrowIcon extends StatelessWidget {
   final String name;
   final double size;
   final Color? color;
 
-  const GrowIcon({
-    super.key,
-    required this.name,
-    this.size = 28,
-    this.color,
-  });
+  const GrowIcon({super.key, required this.name, this.size = 28, this.color});
 
   @override
   Widget build(BuildContext context) {
     final iconColor = color ?? Theme.of(context).iconTheme.color ?? Colors.grey;
-    
+
     return SvgPicture.asset(
       'assets/icons/$name.svg',
       width: size,

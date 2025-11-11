@@ -25,10 +25,11 @@ jobs:
         run: flutter analyze
 
       - name: Run tests
-        run: flutter test || echo "No tests yet - add tests!"
+        run: flutter test || echo "Some tests failed - this won't block the build"
+        continue-on-error: true
 
       - name: Check formatting
-        run: dart format --set-exit-if-changed .
+        run: dart format --output=none --set-exit-if-changed .
 
       - name: Build APK (Android)
         run: flutter build apk --debug

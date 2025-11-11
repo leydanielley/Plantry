@@ -50,15 +50,15 @@ sealed class AsyncValue<T> {
 
   /// Get data if available, null otherwise
   T? get dataOrNull => switch (this) {
-        Success(:final data) => data,
-        _ => null,
-      };
+    Success(:final data) => data,
+    _ => null,
+  };
 
   /// Get error message if available, null otherwise
   String? get errorOrNull => switch (this) {
-        Error(:final message) => message,
-        _ => null,
-      };
+    Error(:final message) => message,
+    _ => null,
+  };
 }
 
 /// Loading state - operation in progress
@@ -95,11 +95,7 @@ class Error<T> extends AsyncValue<T> {
   final Object? error;
   final StackTrace? stackTrace;
 
-  const Error(
-    this.message, [
-    this.error,
-    this.stackTrace,
-  ]);
+  const Error(this.message, [this.error, this.stackTrace]);
 
   @override
   String toString() => 'Error<$T>(message: $message, error: $error)';
@@ -123,8 +119,11 @@ extension AsyncValueX<T> on AsyncValue<T> {
     return switch (this) {
       Loading() => Loading<R>(),
       Success(:final data) => Success(transform(data)),
-      Error(:final message, :final error, :final stackTrace) =>
-        Error(message, error, stackTrace),
+      Error(:final message, :final error, :final stackTrace) => Error(
+        message,
+        error,
+        stackTrace,
+      ),
     };
   }
 

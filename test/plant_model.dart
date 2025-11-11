@@ -9,7 +9,6 @@ import 'package:growlog_app/models/enums.dart';
 
 void main() {
   group('Plant Model Unit Tests', () {
-
     test('Plant Creation - Minimale Parameter', () {
       // ARRANGE & ACT
       final plant = Plant(

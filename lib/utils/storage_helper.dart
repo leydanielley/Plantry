@@ -14,7 +14,8 @@ class StorageHelper {
   static const int _criticalThreshold = 50 * 1024 * 1024; // 50 MB critical
   // Note: _maxPhotoSizeBytes reserved for future photo validation feature
   // static const int _maxPhotoSizeBytes = 50 * 1024 * 1024; // 50 MB max photo size
-  static const int _thumbnailAgeDays = 30; // Delete thumbnails older than 30 days
+  static const int _thumbnailAgeDays =
+      30; // Delete thumbnails older than 30 days
   static const int _bytesPerKb = 1024;
 
   /// Check if enough storage is available
@@ -27,7 +28,10 @@ class StorageHelper {
     try {
       // ✅ MEDIUM FIX: Platform detection - iOS doesn't support df command
       if (Platform.isIOS) {
-        AppLogger.debug('StorageHelper', 'iOS: Skipping storage check (not supported), assuming sufficient');
+        AppLogger.debug(
+          'StorageHelper',
+          'iOS: Skipping storage check (not supported), assuming sufficient',
+        );
         return true; // Fail open on iOS
       }
 
@@ -60,7 +64,10 @@ class StorageHelper {
       }
 
       // Fallback: assume enough space if we can't determine
-      AppLogger.warning('StorageHelper', 'Could not determine storage, assuming sufficient');
+      AppLogger.warning(
+        'StorageHelper',
+        'Could not determine storage, assuming sufficient',
+      );
       return true;
     } catch (e) {
       AppLogger.error('StorageHelper', 'Error checking storage', e);
@@ -77,7 +84,10 @@ class StorageHelper {
     try {
       // ✅ MEDIUM FIX: Platform detection - iOS doesn't support df command
       if (Platform.isIOS) {
-        AppLogger.debug('StorageHelper', 'iOS: Cannot determine storage, returning safe default');
+        AppLogger.debug(
+          'StorageHelper',
+          'iOS: Cannot determine storage, returning safe default',
+        );
         return _minRequiredBytes; // Conservative default for iOS
       }
 
@@ -126,7 +136,10 @@ class StorageHelper {
     try {
       int totalSize = 0;
 
-      await for (final entity in dir.list(recursive: true, followLinks: false)) {
+      await for (final entity in dir.list(
+        recursive: true,
+        followLinks: false,
+      )) {
         if (entity is File) {
           try {
             final stat = await entity.stat();
@@ -148,7 +161,10 @@ class StorageHelper {
   static Future<void> cleanupIfNeeded() async {
     try {
       if (await isStorageCritical()) {
-        AppLogger.info('StorageHelper', 'Storage critical - cleaning up thumbnails');
+        AppLogger.info(
+          'StorageHelper',
+          'Storage critical - cleaning up thumbnails',
+        );
 
         final appDir = await getApplicationDocumentsDirectory();
         // ✅ FIX: Use path.join instead of string interpolation for cross-platform compatibility
@@ -171,7 +187,10 @@ class StorageHelper {
             }
           }
 
-          AppLogger.info('StorageHelper', 'Cleaned up $deletedCount old thumbnails');
+          AppLogger.info(
+            'StorageHelper',
+            'Cleaned up $deletedCount old thumbnails',
+          );
         }
       }
     } catch (e) {

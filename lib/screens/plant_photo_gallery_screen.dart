@@ -25,33 +25,34 @@ class PlantPhotoGalleryScreen extends StatefulWidget {
   const PlantPhotoGalleryScreen({super.key, required this.plant});
 
   @override
-  State<PlantPhotoGalleryScreen> createState() => _PlantPhotoGalleryScreenState();
+  State<PlantPhotoGalleryScreen> createState() =>
+      _PlantPhotoGalleryScreenState();
 }
 
 class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
   final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
   final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
   final ImageCacheHelper _imageCache = ImageCacheHelper();
-  
+
   final List<Photo> _photos = [];
   final Map<int, PlantLog> _logs = {};
   bool _isLoading = true;
   bool _isLoadingMore = false;
-  
+
   // ✅ FIX: Pagination
   static const int _pageSize = 20;
   int _currentPage = 0;
   bool _hasMore = true;
-  
+
   final ScrollController _scrollController = ScrollController();
-  
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
     _loadPhotos();
   }
-  
+
   @override
   void dispose() {
     // ✅ FIX: Remove listener before disposing to prevent memory leak
@@ -59,10 +60,11 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
     _scrollController.dispose();
     super.dispose();
   }
-  
+
   // ✅ FIX: Lazy Loading beim Scrollen
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.8) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.8) {
       if (!_isLoadingMore && _hasMore) {
         _loadMorePhotos();
       }
@@ -77,29 +79,29 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
       _logs.clear();
       _hasMore = true;
     });
-    
+
     await _loadMorePhotos();
   }
-  
+
   // ✅ FIX: Pagination mit Batch-Log-Loading (kein N+1 Problem!)
   Future<void> _loadMorePhotos() async {
     if (_isLoadingMore || !_hasMore) return;
-    
+
     setState(() => _isLoadingMore = true);
-    
+
     try {
       final newPhotos = await _photoRepo.getPhotosByPlantId(
         widget.plant.id!,
         limit: _pageSize,
         offset: _currentPage * _pageSize,
       );
-      
+
       // ✅ FIX: Batch-Loading aller Logs auf einmal!
       final logIds = newPhotos.map((p) => p.logId).toSet().toList();
       final newLogs = await _logRepo.findByIds(logIds);
-      
+
       final newLogsMap = {for (var log in newLogs) log.id!: log};
-      
+
       setState(() {
         _photos.addAll(newPhotos);
         _logs.addAll(newLogsMap);
@@ -119,7 +121,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
 
   void _showPhotoDetail(Photo photo) {
     final log = _logs[photo.logId];
-    
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -128,10 +130,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
           children: [
             Center(
               child: InteractiveViewer(
-                child: Image.file(
-                  File(photo.filePath),
-                  fit: BoxFit.contain,
-                ),
+                child: Image.file(File(photo.filePath), fit: BoxFit.contain),
               ),
             ),
             Positioned(
@@ -160,10 +159,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
                       const SizedBox(height: 4),
                       Text(
                         DateFormat('dd.MM.yyyy HH:mm').format(log.logDate),
-                        style: TextStyle(
-                          color: Colors.grey[300],
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.grey[300], fontSize: 12),
                       ),
                     ],
                   ],
@@ -197,8 +193,16 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppTranslations(Localizations.localeOf(context).languageCode)['plant_detail_delete_photo_title']),
-        content: Text(AppTranslations(Localizations.localeOf(context).languageCode)['plant_detail_delete_photo_confirm']),
+        title: Text(
+          AppTranslations(
+            Localizations.localeOf(context).languageCode,
+          )['plant_detail_delete_photo_title'],
+        ),
+        content: Text(
+          AppTranslations(
+            Localizations.localeOf(context).languageCode,
+          )['plant_detail_delete_photo_confirm'],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -207,7 +211,11 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(AppTranslations(Localizations.localeOf(context).languageCode)['delete']),
+            child: Text(
+              AppTranslations(
+                Localizations.localeOf(context).languageCode,
+              )['delete'],
+            ),
           ),
         ],
       ),
@@ -218,13 +226,13 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
         // ✅ CRITICAL FIX: Use repository's safe deletion that handles both file AND DB atomically
         // Don't manually delete file - repository handles it properly with error handling
         await _photoRepo.deletePhoto(photo.id!);
-        
+
         if (mounted) {
           Navigator.of(context).pop();
         }
-        
+
         _loadPhotos();
-        
+
         if (mounted) {
           AppMessages.showSuccess(context, 'Foto gelöscht! 🗑️');
         }
@@ -248,8 +256,8 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _photos.isEmpty
-              ? _buildEmptyState()
-              : _buildPhotoGrid(),
+          ? _buildEmptyState()
+          : _buildPhotoGrid(),
     );
   }
 
@@ -286,25 +294,25 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
         ),
         Expanded(
           child: GridView.builder(
-            controller: _scrollController,  // ✅ FIX: Scroll Controller attached
+            controller: _scrollController, // ✅ FIX: Scroll Controller attached
             padding: const EdgeInsets.all(8),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
-            itemCount: _photos.length + (_hasMore ? 1 : 0),  // ✅ FIX: +1 für Loading Indicator
+            itemCount:
+                _photos.length +
+                (_hasMore ? 1 : 0), // ✅ FIX: +1 für Loading Indicator
             itemBuilder: (context, index) {
               // ✅ FIX: Loading Indicator am Ende
               if (index == _photos.length) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
+                return const Center(child: CircularProgressIndicator());
               }
-              
+
               final photo = _photos[index];
               final log = _logs[photo.logId];
-              
+
               return GestureDetector(
                 onTap: () => _showPhotoDetail(photo),
                 child: Stack(
@@ -312,7 +320,9 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: _buildThumbnailImage(photo),  // ✅ FIX: Cached Thumbnail
+                      child: _buildThumbnailImage(
+                        photo,
+                      ), // ✅ FIX: Cached Thumbnail
                     ),
                     if (log != null)
                       Positioned(
@@ -354,7 +364,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
       ],
     );
   }
-  
+
   // ✅ FIX: Thumbnail mit Caching
   Widget _buildThumbnailImage(Photo photo) {
     return FutureBuilder<Uint8List?>(
@@ -372,14 +382,11 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
             ),
           );
         }
-        
+
         if (snapshot.hasData && snapshot.data != null) {
-          return Image.memory(
-            snapshot.data!,
-            fit: BoxFit.cover,
-          );
+          return Image.memory(snapshot.data!, fit: BoxFit.cover);
         }
-        
+
         // Fallback: Original Bild laden
         return Image.file(
           File(photo.filePath),
@@ -387,10 +394,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
-              child: const Icon(
-                Icons.broken_image,
-                color: Colors.grey,
-              ),
+              child: const Icon(Icons.broken_image, color: Colors.grey),
             );
           },
         );

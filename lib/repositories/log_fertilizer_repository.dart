@@ -8,7 +8,9 @@ import 'package:growlog_app/repositories/interfaces/i_log_fertilizer_repository.
 import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
-class LogFertilizerRepository with RepositoryErrorHandler implements ILogFertilizerRepository {
+class LogFertilizerRepository
+    with RepositoryErrorHandler
+    implements ILogFertilizerRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   @override
@@ -18,7 +20,7 @@ class LogFertilizerRepository with RepositoryErrorHandler implements ILogFertili
   @override
   Future<int> save(LogFertilizer logFertilizer) async {
     final db = await _dbHelper.database;
-    
+
     if (logFertilizer.id == null) {
       return await db.insert('log_fertilizers', logFertilizer.toMap());
     } else {
@@ -38,13 +40,17 @@ class LogFertilizerRepository with RepositoryErrorHandler implements ILogFertili
   @override
   Future<void> saveForLog(int logId, List<LogFertilizer> fertilizers) async {
     if (fertilizers.isEmpty) return;
-    
+
     final db = await _dbHelper.database;
-    
+
     await db.transaction((txn) async {
       // Erst alte löschen
-      await txn.delete('log_fertilizers', where: 'log_id = ?', whereArgs: [logId]);
-      
+      await txn.delete(
+        'log_fertilizers',
+        where: 'log_id = ?',
+        whereArgs: [logId],
+      );
+
       // ✅ NEU: Batch statt Loop!
       final batch = txn.batch();
       for (final fertilizer in fertilizers) {
@@ -57,19 +63,26 @@ class LogFertilizerRepository with RepositoryErrorHandler implements ILogFertili
   /// ✅ NEU: Batch-Methode für mehrere Logs auf einmal
   /// Nutzen: Beim Bulk-Log-Speichern oder beim Kopieren von Logs
   @override
-  Future<void> saveForLogs(List<int> logIds, Map<int, List<LogFertilizer>> fertilizersPerLog) async {
+  Future<void> saveForLogs(
+    List<int> logIds,
+    Map<int, List<LogFertilizer>> fertilizersPerLog,
+  ) async {
     if (logIds.isEmpty) return;
-    
+
     final db = await _dbHelper.database;
-    
+
     await db.transaction((txn) async {
       final batch = txn.batch();
-      
+
       // Alte löschen (Batch)
       for (final logId in logIds) {
-        batch.delete('log_fertilizers', where: 'log_id = ?', whereArgs: [logId]);
+        batch.delete(
+          'log_fertilizers',
+          where: 'log_id = ?',
+          whereArgs: [logId],
+        );
       }
-      
+
       // Neue einfügen (Batch)
       for (final logId in logIds) {
         final fertilizers = fertilizersPerLog[logId];
@@ -79,7 +92,7 @@ class LogFertilizerRepository with RepositoryErrorHandler implements ILogFertili
           }
         }
       }
-      
+
       await batch.commit(noResult: true);
     });
   }
@@ -102,9 +115,9 @@ class LogFertilizerRepository with RepositoryErrorHandler implements ILogFertili
   @override
   Future<Map<int, List<LogFertilizer>>> findByLogs(List<int> logIds) async {
     if (logIds.isEmpty) return {};
-    
+
     final db = await _dbHelper.database;
-    
+
     // SQL IN clause für batch lookup
     final placeholders = List.filled(logIds.length, '?').join(',');
     final maps = await db.query(
@@ -113,19 +126,19 @@ class LogFertilizerRepository with RepositoryErrorHandler implements ILogFertili
       whereArgs: logIds,
       orderBy: 'log_id, id', // Sortiert für effizientes Grouping
     );
-    
+
     // Gruppieren nach log_id
     final result = <int, List<LogFertilizer>>{};
     for (final map in maps) {
       final logId = map['log_id'] as int;
       final fert = LogFertilizer.fromMap(map);
-      
+
       if (result[logId] == null) {
         result[logId] = [];
       }
       result[logId]!.add(fert);
     }
-    
+
     return result;
   }
 
@@ -142,12 +155,12 @@ class LogFertilizerRepository with RepositoryErrorHandler implements ILogFertili
     final db = await _dbHelper.database;
     await db.delete('log_fertilizers', where: 'log_id = ?', whereArgs: [logId]);
   }
-  
+
   /// ✅ NEU: Lösche für mehrere Logs (Batch)
   @override
   Future<void> deleteByLogs(List<int> logIds) async {
     if (logIds.isEmpty) return;
-    
+
     final db = await _dbHelper.database;
     final placeholders = List.filled(logIds.length, '?').join(',');
     await db.delete(

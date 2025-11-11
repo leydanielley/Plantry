@@ -43,12 +43,18 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.recipe?.name ?? '');
-    _descriptionController = TextEditingController(text: widget.recipe?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.recipe?.description ?? '',
+    );
     _targetEcController = TextEditingController(
-      text: widget.recipe?.targetEc != null ? widget.recipe!.targetEc.toString() : '',
+      text: widget.recipe?.targetEc != null
+          ? widget.recipe!.targetEc.toString()
+          : '',
     );
     _targetPhController = TextEditingController(
-      text: widget.recipe?.targetPh != null ? widget.recipe!.targetPh.toString() : '',
+      text: widget.recipe?.targetPh != null
+          ? widget.recipe!.targetPh.toString()
+          : '',
     );
     _loadData();
   }
@@ -60,14 +66,20 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
 
       // Load existing recipe fertilizers if editing
       if (widget.recipe != null && widget.recipe!.id != null) {
-        final recipeFerts = await _rdwcRepo.getRecipeFertilizers(widget.recipe!.id!);
+        final recipeFerts = await _rdwcRepo.getRecipeFertilizers(
+          widget.recipe!.id!,
+        );
         for (final rf in recipeFerts) {
           final fert = await _fertilizerRepo.findById(rf.fertilizerId);
           if (fert != null) {
-            _addedFertilizers.add(_RecipeFertilizerEntry(
-              fertilizer: fert,
-              mlPerLiterController: TextEditingController(text: rf.mlPerLiter.toString()),
-            ));
+            _addedFertilizers.add(
+              _RecipeFertilizerEntry(
+                fertilizer: fert,
+                mlPerLiterController: TextEditingController(
+                  text: rf.mlPerLiter.toString(),
+                ),
+              ),
+            );
           }
         }
       }
@@ -101,10 +113,12 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
 
   void _addFertilizer(Fertilizer fertilizer) {
     setState(() {
-      _addedFertilizers.add(_RecipeFertilizerEntry(
-        fertilizer: fertilizer,
-        mlPerLiterController: TextEditingController(),
-      ));
+      _addedFertilizers.add(
+        _RecipeFertilizerEntry(
+          fertilizer: fertilizer,
+          mlPerLiterController: TextEditingController(),
+        ),
+      );
     });
   }
 
@@ -146,7 +160,9 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
       final recipe = RdwcRecipe(
         id: widget.recipe?.id,
         name: _nameController.text,
-        description: _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
+        description: _descriptionController.text.isNotEmpty
+            ? _descriptionController.text
+            : null,
         targetEc: targetEc,
         targetPh: targetPh,
       );
@@ -158,7 +174,9 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
       // Save fertilizers
       // Delete existing if updating
       if (widget.recipe != null && widget.recipe!.id != null) {
-        final existingFerts = await _rdwcRepo.getRecipeFertilizers(widget.recipe!.id!);
+        final existingFerts = await _rdwcRepo.getRecipeFertilizers(
+          widget.recipe!.id!,
+        );
         for (final fert in existingFerts) {
           if (fert.id != null) {
             await _rdwcRepo.deleteRecipeFertilizer(fert.id!);
@@ -207,7 +225,9 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.recipe == null ? _t['create_recipe'] : _t['edit_recipe']),
+        title: Text(
+          widget.recipe == null ? _t['create_recipe'] : _t['edit_recipe'],
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -240,9 +260,9 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
             // Basic Info
             Text(
               _t['basic_info'],
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -276,9 +296,9 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
             // Target Values
             Text(
               _t['target_values'],
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Row(
@@ -293,7 +313,9 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                       suffixText: 'mS/cm',
                       border: const OutlineInputBorder(),
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       if (value != null && value.isNotEmpty) {
                         final number = double.tryParse(value);
@@ -315,7 +337,9 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                       prefixIcon: const Icon(Icons.water_drop),
                       border: const OutlineInputBorder(),
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       if (value != null && value.isNotEmpty) {
                         final number = double.tryParse(value);
@@ -337,13 +361,16 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                 Text(
                   _t['fertilizers'],
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 if (_addedFertilizers.isEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.red[100],
                       borderRadius: BorderRadius.circular(4),
@@ -399,7 +426,11 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
     );
   }
 
-  Widget _buildFertilizerCard(_RecipeFertilizerEntry entry, int index, bool isDark) {
+  Widget _buildFertilizerCard(
+    _RecipeFertilizerEntry entry,
+    int index,
+    bool isDark,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -437,7 +468,9 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return _t['amount_required'];
@@ -480,7 +513,9 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
               return ListTile(
                 leading: const Icon(Icons.local_florist),
                 title: Text(fertilizer.name),
-                subtitle: fertilizer.npk != null ? Text('NPK: ${fertilizer.npk}') : null,
+                subtitle: fertilizer.npk != null
+                    ? Text('NPK: ${fertilizer.npk}')
+                    : null,
                 onTap: () => Navigator.pop(context, fertilizer),
               );
             },

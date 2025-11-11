@@ -32,9 +32,9 @@ class PlantIconShowcaseScreen extends StatelessWidget {
                 child: const PlantPotIcon(size: 200),
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Size variations
             const Text(
               'Size Variations',
@@ -49,24 +49,21 @@ class PlantIconShowcaseScreen extends StatelessWidget {
                 _buildVariation('Large', const PlantPotIcon(size: 120)),
               ],
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Color variations
             const Text(
               'Color Variations',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // Default colors
-            _buildColorVariation(
-              'Default',
-              const PlantPotIcon(size: 100),
-            ),
-            
+            _buildColorVariation('Default', const PlantPotIcon(size: 100)),
+
             const SizedBox(height: 16),
-            
+
             // Dark leaves
             _buildColorVariation(
               'Dark Green',
@@ -76,9 +73,9 @@ class PlantIconShowcaseScreen extends StatelessWidget {
                 potColor: Color(0xFF546E7A),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Light leaves
             _buildColorVariation(
               'Light Green',
@@ -88,9 +85,9 @@ class PlantIconShowcaseScreen extends StatelessWidget {
                 potColor: Color(0xFF90A4AE),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Purple variation
             _buildColorVariation(
               'Purple (Bloom)',
@@ -101,9 +98,9 @@ class PlantIconShowcaseScreen extends StatelessWidget {
                 potColor: Color(0xFF7E57C2),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Orange variation
             _buildColorVariation(
               'Orange (Harvest)',
@@ -114,16 +111,16 @@ class PlantIconShowcaseScreen extends StatelessWidget {
                 potColor: Color(0xFFFFB74D),
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Usage examples
             const Text(
               'Usage in App',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // Card with icon
             Card(
               child: ListTile(
@@ -134,9 +131,9 @@ class PlantIconShowcaseScreen extends StatelessWidget {
                 onTap: () {},
               ),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Empty state
             Container(
               height: 200,
@@ -166,7 +163,7 @@ class PlantIconShowcaseScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 32),
           ],
         ),
@@ -186,10 +183,7 @@ class PlantIconShowcaseScreen extends StatelessWidget {
           child: icon,
         ),
         const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12),
-        ),
+        Text(label, style: const TextStyle(fontSize: 12)),
       ],
     );
   }
@@ -207,10 +201,7 @@ class PlantIconShowcaseScreen extends StatelessWidget {
           const SizedBox(width: 16),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ],
       ),

@@ -11,7 +11,9 @@ import 'package:growlog_app/repositories/photo_repository.dart';
 import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
-class PlantLogRepository with RepositoryErrorHandler implements IPlantLogRepository {
+class PlantLogRepository
+    with RepositoryErrorHandler
+    implements IPlantLogRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final PhotoRepository _photoRepository = PhotoRepository();
 
@@ -20,7 +22,11 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
 
   /// Alle Logs einer Pflanze laden mit Pagination
   @override
-  Future<List<PlantLog>> findByPlant(int plantId, {int? limit, int? offset}) async {
+  Future<List<PlantLog>> findByPlant(
+    int plantId, {
+    int? limit,
+    int? offset,
+  }) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
       'plant_logs',
@@ -54,10 +60,10 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
   @override
   Future<List<PlantLog>> findByIds(List<int> ids) async {
     if (ids.isEmpty) return [];
-    
+
     final db = await _dbHelper.database;
     final placeholders = List.filled(ids.length, '?').join(',');
-    
+
     final maps = await db.query(
       'plant_logs',
       where: 'id IN ($placeholders)',
@@ -105,11 +111,7 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
       // 2. Delete log_fertilizers (handled by DB CASCADE)
 
       // 3. Delete the log itself
-      return await txn.delete(
-        'plant_logs',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      return await txn.delete('plant_logs', where: 'id = ?', whereArgs: [id]);
     });
   }
 
@@ -141,7 +143,7 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
   @override
   Future<int> getNextDayNumber(int plantId, {DateTime? forDate}) async {
     final db = await _dbHelper.database;
-    
+
     // Plant holen um seedDate zu bekommen
     final plantMaps = await db.query(
       'plants',
@@ -149,9 +151,9 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
       whereArgs: [plantId],
       limit: 1,
     );
-    
+
     if (plantMaps.isEmpty) return 1;
-    
+
     final seedDateStr = plantMaps.first['seed_date'] as String?;
     if (seedDateStr == null) return 1;
 
@@ -162,14 +164,19 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
       context: 'PlantLogRepository.getNextDayNumber',
     );
     final targetDate = forDate ?? DateTime.now();
-    
+
     // ✅ Nur Datums-Teil vergleichen (ohne Uhrzeit!)
-    final targetDay = DateTime(targetDate.year, targetDate.month, targetDate.day);
+    final targetDay = DateTime(
+      targetDate.year,
+      targetDate.month,
+      targetDate.day,
+    );
     final seedDay = DateTime(seedDate.year, seedDate.month, seedDate.day);
-    
+
     // Berechne Tage seit seedDate
-    final daysSinceSeed = targetDay.difference(seedDay).inDays + 1; // +1 weil Tag 1 = Start
-    
+    final daysSinceSeed =
+        targetDay.difference(seedDay).inDays + 1; // +1 weil Tag 1 = Start
+
     return daysSinceSeed > 0 ? daysSinceSeed : 1;
   }
 
@@ -205,7 +212,7 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
   }) async {
     final db = await _dbHelper.database;
     final placeholders = actionTypes.map((_) => '?').join(',');
-    
+
     final maps = await db.query(
       'plant_logs',
       where: 'action_type IN ($placeholders)',
@@ -216,7 +223,7 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
 
     return maps.map((map) => PlantLog.fromMap(map)).toList();
   }
-  
+
   /// Logs mit Details laden (JOIN statt N+1)
   /// Performance: Lädt Logs + Fertilizers + Photos in EINER Query!
   /// VORHER: 1 Query für Logs + N Queries für Fertilizers = N+1 Problem
@@ -224,7 +231,7 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
   @override
   Future<List<Map<String, dynamic>>> getLogsWithDetails(int plantId) async {
     final db = await _dbHelper.database;
-    
+
     // JOIN Query für Logs + LogFertilizers + Fertilizers
     // Nutzt den idx_log_fertilizers_lookup Index!
     const query = '''
@@ -243,15 +250,15 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
       WHERE pl.plant_id = ?
       ORDER BY pl.day_number DESC, lf.id
     ''';
-    
+
     final maps = await db.rawQuery(query, [plantId]);
-    
+
     // Gruppieren nach Log
     final logsMap = <int, Map<String, dynamic>>{};
-    
+
     for (final map in maps) {
       final logId = map['id'] as int;
-      
+
       // Log noch nicht verarbeitet? Dann erstellen
       if (!logsMap.containsKey(logId)) {
         logsMap[logId] = {
@@ -259,7 +266,7 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
           'fertilizers': <Map<String, dynamic>>[],
         };
       }
-      
+
       // Fertilizer hinzufügen (falls vorhanden)
       if (map['lf_id'] != null) {
         // ✅ FIX: Cast to avoid dynamic call error
@@ -274,22 +281,22 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
         });
       }
     }
-    
+
     return logsMap.values.toList();
   }
-  
+
   /// Batch Insert für Bulk-Logs
   /// Nutzen: Beim Anlegen mehrerer Logs gleichzeitig (z.B. Bulk-Log)
   @override
   Future<List<int>> saveBatch(List<PlantLog> logs) async {
     if (logs.isEmpty) return [];
-    
+
     final db = await _dbHelper.database;
     final ids = <int>[];
-    
+
     await db.transaction((txn) async {
       final batch = txn.batch();
-      
+
       for (final log in logs) {
         if (log.id == null) {
           // INSERT
@@ -304,9 +311,9 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
           );
         }
       }
-      
+
       final results = await batch.commit();
-      
+
       // IDs sammeln (nur bei INSERT)
       for (var i = 0; i < results.length; i++) {
         if (logs[i].id == null && results[i] is int) {
@@ -314,19 +321,19 @@ class PlantLogRepository with RepositoryErrorHandler implements IPlantLogReposit
         }
       }
     });
-    
+
     return ids;
   }
-  
+
   /// Batch Delete
   /// Nutzen: Beim Löschen mehrerer Logs auf einmal
   @override
   Future<void> deleteBatch(List<int> logIds) async {
     if (logIds.isEmpty) return;
-    
+
     final db = await _dbHelper.database;
     final placeholders = List.filled(logIds.length, '?').join(',');
-    
+
     await db.delete(
       'plant_logs',
       where: 'id IN ($placeholders)',
