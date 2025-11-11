@@ -150,7 +150,7 @@ void main() {
     );
 
     test(
-      'Updating plant seed date to after log date - should delete invalid logs',
+      'Updating plant seed date to after log date - should throw warning',
       () async {
         // Arrange - Create plant with seed date and a log
         final plant = Plant(
@@ -175,18 +175,18 @@ void main() {
         final updatedPlant = savedPlant.copyWith(
           seedDate: DateTime(2025, 1, 5), // After the log
         );
-        await repository.save(updatedPlant);
 
-        // Assert - Log should be deleted
-        final logs = await testDb.query(
-          'plant_logs',
-          where: 'plant_id = ?',
-          whereArgs: [savedPlant.id],
-        );
+        // Assert - Should throw exception warning about log deletion
         expect(
-          logs.length,
-          equals(0),
-          reason: 'Logs before seed date should be deleted',
+          () => repository.save(updatedPlant),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('SEED_DATE_CHANGE_WARNING'),
+            ),
+          ),
+          reason: 'Should warn before deleting logs',
         );
       },
     );

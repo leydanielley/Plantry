@@ -160,6 +160,11 @@ class LogService implements ILogService {
     required List<String> photoPaths,
     PlantPhase? newPhase,
   }) async {
+    // ✅ Validate INPUT dayNumber before auto-calculation
+    if (log.dayNumber < 1) {
+      throw ArgumentError('Day Number muss >= 1 sein: ${log.dayNumber}');
+    }
+
     // ✅ BUG FIX #7b: dayNumber automatisch berechnen für Sicherheit!
     int correctedDayNumber = log.dayNumber;
     if (plant.seedDate != null) {
@@ -175,17 +180,17 @@ class LogService implements ILogService {
     DateTime? phaseStartDate;
     switch (plant.phase) {
       case PlantPhase.veg:
-        phaseStartDate = plant.vegDate;
+        phaseStartDate = plant.vegDate ?? plant.phaseStartDate;
         break;
       case PlantPhase.bloom:
-        phaseStartDate = plant.bloomDate;
+        phaseStartDate = plant.bloomDate ?? plant.phaseStartDate;
         break;
       case PlantPhase.harvest:
-        phaseStartDate = plant.harvestDate;
+        phaseStartDate = plant.harvestDate ?? plant.phaseStartDate;
         break;
       case PlantPhase.seedling:
       case PlantPhase.archived:
-        phaseStartDate = plant.seedDate;
+        phaseStartDate = plant.seedDate ?? plant.phaseStartDate;
         break;
     }
     if (phaseStartDate != null) {
@@ -539,6 +544,10 @@ class LogService implements ILogService {
 
       return createdLogIds;
     } catch (e) {
+      // ✅ Re-throw ArgumentErrors directly (for validation errors)
+      if (e is ArgumentError) {
+        rethrow;
+      }
       throw Exception('Fehler beim Bulk-Speichern: $e');
     }
   }
@@ -709,16 +718,29 @@ class LogService implements ILogService {
   }
 
   /// Log löschen (mit allen Relationen)
-  /// CASCADE DELETE funktioniert durch Foreign Keys!
+  /// Löscht Log und alle zugehörigen Relationen
   @override
   Future<void> deleteLog(int logId) async {
     try {
       final db = await _dbHelper.database;
 
       await db.transaction((txn) async {
-        // Foreign Keys löschen automatisch:
-        // - log_fertilizers (ON DELETE CASCADE)
-        // - photos (ON DELETE CASCADE)
+        // ✅ Explicitly delete related records first (instead of relying on CASCADE)
+        // Delete fertilizers
+        await txn.delete(
+          'log_fertilizers',
+          where: 'log_id = ?',
+          whereArgs: [logId],
+        );
+
+        // Delete photos
+        await txn.delete(
+          'photos',
+          where: 'log_id = ?',
+          whereArgs: [logId],
+        );
+
+        // Finally delete the log itself
         await txn.delete('plant_logs', where: 'id = ?', whereArgs: [logId]);
       });
     } catch (e) {
@@ -736,6 +758,22 @@ class LogService implements ILogService {
       final placeholders = List.filled(logIds.length, '?').join(',');
 
       await db.transaction((txn) async {
+        // ✅ Explicitly delete related records first (instead of relying on CASCADE)
+        // Delete fertilizers
+        await txn.delete(
+          'log_fertilizers',
+          where: 'log_id IN ($placeholders)',
+          whereArgs: logIds,
+        );
+
+        // Delete photos
+        await txn.delete(
+          'photos',
+          where: 'log_id IN ($placeholders)',
+          whereArgs: logIds,
+        );
+
+        // Finally delete the logs
         await txn.delete(
           'plant_logs',
           where: 'id IN ($placeholders)',

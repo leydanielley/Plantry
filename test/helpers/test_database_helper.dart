@@ -7,7 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 /// Helper class for setting up test databases
 class TestDatabaseHelper {
   static const int currentVersion =
-      10; // Should match DatabaseHelper.currentVersion
+      13; // Should match DatabaseHelper version (v13)
 
   /// Initialize sqflite_ffi for tests
   static void initFfi() {
@@ -17,7 +17,7 @@ class TestDatabaseHelper {
 
   /// Creates an in-memory test database with full schema
   static Future<Database> createTestDatabase() async {
-    return await databaseFactoryFfi.openDatabase(
+    final db = await databaseFactoryFfi.openDatabase(
       inMemoryDatabasePath,
       options: OpenDatabaseOptions(
         version: currentVersion,
@@ -27,6 +27,12 @@ class TestDatabaseHelper {
         },
       ),
     );
+
+    // ✅ Enable foreign keys (required for CASCADE DELETE to work)
+    // Must be done AFTER opening the database
+    await db.execute('PRAGMA foreign_keys = ON');
+
+    return db;
   }
 
   /// Creates all tables with production schema
@@ -93,13 +99,14 @@ class TestDatabaseHelper {
       )
     ''');
 
-    // Plant logs table (v10/v13: Added phase, phase_day_number, and extended fields)
+    // Plant logs table (v10/v13: Added phase, phase_day_number, logged_by and extended fields)
     await db.execute('''
       CREATE TABLE plant_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         plant_id INTEGER NOT NULL,
         day_number INTEGER NOT NULL,
         log_date TEXT NOT NULL,
+        logged_by TEXT,
         action_type TEXT NOT NULL,
         phase TEXT,
         phase_day_number INTEGER,
