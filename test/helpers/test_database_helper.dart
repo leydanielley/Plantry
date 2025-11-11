@@ -44,11 +44,13 @@ class TestDatabaseHelper {
         name TEXT NOT NULL,
         description TEXT,
         grow_type TEXT,
-        width REAL,
-        length REAL,
-        height REAL,
+        watering_system TEXT,
         rdwc_system_id INTEGER,
-        created_at TEXT DEFAULT (datetime('now'))
+        width REAL DEFAULT 0.0,
+        depth REAL DEFAULT 0.0,
+        height REAL DEFAULT 0.0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
       )
     ''');
 
@@ -162,14 +164,46 @@ class TestDatabaseHelper {
     await db.execute('''
       CREATE TABLE hardware (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        room_id INTEGER NOT NULL,
         name TEXT NOT NULL,
-        category TEXT NOT NULL,
-        room_id INTEGER,
+        type TEXT NOT NULL,
+        brand TEXT,
+        model TEXT,
         wattage INTEGER,
-        details TEXT,
+        quantity INTEGER DEFAULT 1,
+        airflow INTEGER,
+        spectrum TEXT,
+        color_temperature TEXT,
+        dimmable INTEGER,
+        flange_size TEXT,
+        controllable INTEGER,
+        oscillating INTEGER,
+        diameter INTEGER,
+        cooling_power INTEGER,
+        heating_power INTEGER,
+        coverage REAL,
+        has_thermostat INTEGER,
+        humidification_rate INTEGER,
+        pump_rate INTEGER,
+        is_digital INTEGER,
+        program_count INTEGER,
+        dripper_count INTEGER,
+        capacity INTEGER,
+        material TEXT,
+        has_chiller INTEGER,
+        has_air_pump INTEGER,
+        filter_diameter TEXT,
+        filter_length INTEGER,
+        controller_type TEXT,
+        output_count INTEGER,
+        controller_functions TEXT,
+        specifications TEXT,
+        purchase_date TEXT,
+        purchase_price REAL,
+        notes TEXT,
         active INTEGER DEFAULT 1,
         created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE SET NULL
+        FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE
       )
     ''');
 
@@ -216,18 +250,26 @@ class TestDatabaseHelper {
         harvest_date TEXT NOT NULL,
         wet_weight REAL,
         dry_weight REAL,
-        quality_rating INTEGER,
-        quality_notes TEXT,
         drying_start_date TEXT,
         drying_end_date TEXT,
-        drying_location TEXT,
-        drying_temp REAL,
+        drying_days INTEGER,
+        drying_method TEXT,
+        drying_temperature REAL,
         drying_humidity REAL,
-        drying_notes TEXT,
         curing_start_date TEXT,
+        curing_end_date TEXT,
+        curing_days INTEGER,
+        curing_method TEXT,
         curing_notes TEXT,
-        storage_location TEXT,
+        thc_percentage REAL,
+        cbd_percentage REAL,
+        terpene_profile TEXT,
+        rating INTEGER CHECK(rating >= 1 AND rating <= 5),
+        taste_notes TEXT,
+        effect_notes TEXT,
+        overall_notes TEXT,
         created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT,
         FOREIGN KEY (plant_id) REFERENCES plants (id) ON DELETE CASCADE
       )
     ''');
@@ -259,6 +301,7 @@ class TestDatabaseHelper {
       CREATE TABLE rdwc_systems (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
+        room_id INTEGER,
         total_volume REAL NOT NULL,
         current_volume REAL NOT NULL,
         reservoir_volume REAL,
@@ -267,7 +310,8 @@ class TestDatabaseHelper {
         low_water_threshold REAL,
         critical_threshold REAL,
         archived INTEGER DEFAULT 0,
-        created_at TEXT DEFAULT (datetime('now'))
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE SET NULL
       )
     ''');
 
@@ -337,8 +381,9 @@ class TestDatabaseHelper {
       'name': 'Test Room',
       'grow_type': 'INDOOR',
       'width': 2.0,
-      'length': 1.0,
+      'depth': 1.0,
       'height': 2.0,
+      'updated_at': DateTime.now().toIso8601String(),
     });
 
     // Insert test grow
