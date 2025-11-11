@@ -488,7 +488,7 @@ class LogService implements ILogService {
         final logResults = await logBatch.commit();
 
         // IDs sammeln
-        for (var result in logResults) {
+        for (final result in logResults) {
           if (result is int) {
             createdLogIds.add(result);
           }
@@ -734,11 +734,7 @@ class LogService implements ILogService {
         );
 
         // Delete photos
-        await txn.delete(
-          'photos',
-          where: 'log_id = ?',
-          whereArgs: [logId],
-        );
+        await txn.delete('photos', where: 'log_id = ?', whereArgs: [logId]);
 
         // Finally delete the log itself
         await txn.delete('plant_logs', where: 'id = ?', whereArgs: [logId]);

@@ -454,6 +454,10 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
     }
 
     // Default to seedling phase
+    // ✅ BUG FIX: Handle missing seedDate gracefully
+    if (plant.seedDate == null) {
+      return {'phase': 'SEEDLING', 'phaseDayNumber': null};
+    }
     return {
       'phase': 'SEEDLING',
       'phaseDayNumber': Validators.calculateDayNumber(logDate, plant.seedDate!),

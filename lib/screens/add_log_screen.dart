@@ -149,7 +149,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             lastLog.systemBucketSize?.toStringAsFixed(0) ?? '';
 
         _selectedFertilizers = {
-          for (var fert in sourceFertilizers)
+          for (final fert in sourceFertilizers)
             fert['fertilizer_id'] as int: (fert['amount'] as num).toDouble(),
         };
       });
@@ -295,7 +295,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       }
 
       // Einzelnes Error Handling pro Foto
-      for (var photo in _selectedPhotos) {
+      for (final photo in _selectedPhotos) {
         try {
           final file = File(photo.path);
 

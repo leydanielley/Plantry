@@ -221,10 +221,12 @@ class DbfImportService {
   static bool? _parseBool(String? value) {
     if (value == null || value.isEmpty) return null;
     final lower = value.toLowerCase().trim();
-    if (lower == 'true' || lower == '1' || lower == 'yes' || lower == 't')
+    if (lower == 'true' || lower == '1' || lower == 'yes' || lower == 't') {
       return true;
-    if (lower == 'false' || lower == '0' || lower == 'no' || lower == 'f')
+    }
+    if (lower == 'false' || lower == '0' || lower == 'no' || lower == 'f') {
       return false;
+    }
     return null;
   }
 

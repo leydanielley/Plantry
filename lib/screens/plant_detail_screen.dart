@@ -126,7 +126,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
       final logs = results[0] as List<PlantLog>;
       final fertilizers = results[1] as List<Fertilizer>;
-      final fertilizerMap = {for (var f in fertilizers) f.id!: f};
+      final fertilizerMap = {for (final f in fertilizers) f.id!: f};
       final harvest = results[2] as Harvest?;
 
       // ✅ PERFORMANCE: Step 3 - Log Details parallel laden

@@ -88,7 +88,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
 
       // ✅ FIX: Load all fertilizers ONCE to prevent N+1 query
       final allFertilizers = await _fertilizerRepo.findAll();
-      final fertilizerMap = {for (var f in allFertilizers) f.id: f};
+      final fertilizerMap = {for (final f in allFertilizers) f.id: f};
 
       // Load fertilizers for each recipe using map lookup
       final Map<int, List<Fertilizer>> fertilizers = {};
@@ -1126,8 +1126,9 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
   }
 
   Widget _buildFertilizerBreakdown(bool isDark) {
-    if (_result == null || _selectedRecipe == null)
+    if (_result == null || _selectedRecipe == null) {
       return const SizedBox.shrink();
+    }
 
     final fertilizers = _recipeFertilizers[_selectedRecipe!.id] ?? [];
     final scaledAmounts = _result!.getScaledFertilizerAmounts();

@@ -130,7 +130,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
       if (mounted) {
         setState(() {
           _selectedFertilizers = {
-            for (var lf in logFerts) lf.fertilizerId: lf.amount,
+            for (final lf in logFerts) lf.fertilizerId: lf.amount,
           };
         });
       }
@@ -285,7 +285,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
         await photosDir.create(recursive: true);
       }
 
-      for (var photo in _newPhotos) {
+      for (final photo in _newPhotos) {
         // ✅ FIX: Validate file size (max 10MB per photo)
         final fileSize = await File(photo.path).length();
         if (fileSize > 10 * 1024 * 1024) {
@@ -422,7 +422,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
         await _logFertilizerRepo.saveForLog(widget.log.id!, logFertilizers);
       }
 
-      for (var photoId in _photosToDelete) {
+      for (final photoId in _photosToDelete) {
         // ✅ FIX: Add orElse to prevent StateError crash
         final photo = _existingPhotos.firstWhere(
           (p) => p.id == photoId,
@@ -435,7 +435,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
         await _photoRepo.deletePhoto(photoId);
       }
 
-      for (var photoPath in newPhotoPaths) {
+      for (final photoPath in newPhotoPaths) {
         final photo = Photo(logId: widget.log.id!, filePath: photoPath);
         await _photoRepo.save(photo);
       }

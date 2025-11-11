@@ -68,7 +68,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
         'Looking for plants with growId: ${widget.grow.id}',
       );
 
-      for (var plant in allPlants) {
+      for (final plant in allPlants) {
         AppLogger.debug(
           'GrowDetailScreen',
           'Plant "${plant.name}" has growId: ${plant.growId}',

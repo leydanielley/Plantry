@@ -125,8 +125,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
 
-      if (confirm != true)
+      if (confirm != true) {
         return; // User cancelled or chose to stay in normal mode
+      }
     }
 
     final newSettings = _settings.copyWith(isExpertMode: value);

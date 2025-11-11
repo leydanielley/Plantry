@@ -125,8 +125,9 @@ class WarningService implements IWarningService {
               .map((l) => l.waterAmount!)
               .toList();
 
-          if (waterAmounts.isEmpty)
+          if (waterAmounts.isEmpty) {
             return warnings; // ✅ FIX: No data to analyze
+          }
 
           final avgWater =
               waterAmounts.reduce((a, b) => a + b) / waterAmounts.length;

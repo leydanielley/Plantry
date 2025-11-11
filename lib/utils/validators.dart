@@ -141,8 +141,9 @@ class Validators {
 
     final parsed = double.tryParse(value);
     if (parsed == null) return 'Invalid temperature';
-    if (!isValidTemperature(parsed))
+    if (!isValidTemperature(parsed)) {
       return 'Temperature must be between -50°C and 50°C';
+    }
 
     return null;
   }
@@ -193,8 +194,9 @@ class Validators {
 
     final parsed = int.tryParse(value);
     if (parsed == null) return 'Invalid number';
-    if (parsed < min || parsed > max)
+    if (parsed < min || parsed > max) {
       return '$fieldName must be between $min and $max';
+    }
 
     return null;
   }

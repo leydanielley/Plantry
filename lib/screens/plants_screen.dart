@@ -67,7 +67,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
       // Create room map by id
       final Map<int, Room> roomMap = {};
-      for (var room in rooms) {
+      for (final room in rooms) {
         if (room.id != null) {
           roomMap[room.id!] = room;
         }
@@ -76,7 +76,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
       // Group plants by growId
       final Map<int?, List<Plant>> grouped = {};
 
-      for (var plant in plants) {
+      for (final plant in plants) {
         if (!grouped.containsKey(plant.growId)) {
           grouped[plant.growId] = [];
         }
@@ -171,13 +171,13 @@ class _PlantsScreenState extends State<PlantsScreen> {
         return 0;
       });
 
-    for (var growId in sortedGrowIds) {
+    for (final growId in sortedGrowIds) {
       final plants = _plantsByGrow[growId]!;
 
       items.add(_buildGrowHeader(growId, plants.length));
       items.add(const SizedBox(height: AppConstants.borderRadiusMedium));
 
-      for (var plant in plants) {
+      for (final plant in plants) {
         items.add(_buildPlantCard(plant));
         items.add(const SizedBox(height: AppConstants.spacingSmall));
       }

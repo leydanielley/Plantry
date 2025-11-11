@@ -100,7 +100,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
       final logIds = newPhotos.map((p) => p.logId).toSet().toList();
       final newLogs = await _logRepo.findByIds(logIds);
 
-      final newLogsMap = {for (var log in newLogs) log.id!: log};
+      final newLogsMap = {for (final log in newLogs) log.id!: log};
 
       setState(() {
         _photos.addAll(newPhotos);

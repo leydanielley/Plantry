@@ -119,8 +119,9 @@ class NutrientCalculation {
   /// This scales the recipe to match the actual PPM needed in the solution
   /// Returns map: fertilizerId → total ml needed (SCALED)
   Map<int, double> getScaledFertilizerAmounts() {
-    if (recipe == null || volumeToAdd <= 0 || recipe!.targetEc == null)
+    if (recipe == null || volumeToAdd <= 0 || recipe!.targetEc == null) {
       return {};
+    }
 
     final scaleFactor = scalingFactor;
     final originalAmounts = recipe!.getTotalAmounts(volumeToAdd);
@@ -147,8 +148,9 @@ class NutrientCalculation {
   /// Example: Recipe is 1260 PPM, but we need 1500 PPM → factor = 1.19
   double get scalingFactor {
     final recipeTarget = recipeTargetPPM;
-    if (recipeTarget == null || recipeTarget == 0 || requiredPPM == 0)
+    if (recipeTarget == null || recipeTarget == 0 || requiredPPM == 0) {
       return 1.0;
+    }
     return requiredPPM / recipeTarget;
   }
 

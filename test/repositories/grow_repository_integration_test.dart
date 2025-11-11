@@ -210,7 +210,8 @@ void main() {
         expect(
           grows.length,
           equals(3),
-          reason: 'Should include Test Grow from seed data + 2 new non-archived grows',
+          reason:
+              'Should include Test Grow from seed data + 2 new non-archived grows',
         );
         expect(grows.any((g) => g.name == 'Test Grow'), isTrue);
         expect(grows.any((g) => g.name == 'Grow 1'), isTrue);

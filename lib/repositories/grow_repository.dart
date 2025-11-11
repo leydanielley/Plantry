@@ -206,7 +206,7 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
 
       // Map erstellen: growId → count
       final counts = <int, int>{};
-      for (var row in result) {
+      for (final row in result) {
         counts[row['grow_id'] as int] = row['count'] as int;
       }
 

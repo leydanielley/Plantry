@@ -142,10 +142,12 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
     filtered.sort((a, b) {
       final aInvalid = FertilizerValidator.isInvalid(a);
       final bInvalid = FertilizerValidator.isInvalid(b);
-      if (aInvalid && !bInvalid)
+      if (aInvalid && !bInvalid) {
         return 1; // a is invalid, b is valid -> b comes first
-      if (!aInvalid && bInvalid)
+      }
+      if (!aInvalid && bInvalid) {
         return -1; // a is valid, b is invalid -> a comes first
+      }
       return 0; // both same validity -> keep original order
     });
 
