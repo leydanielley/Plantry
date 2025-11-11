@@ -7,6 +7,204 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:growlog_app/utils/form_validators.dart';
 
 void main() {
+  group('PlantFormValidator - Name Validation', () {
+    test('should return error for null', () {
+      expect(
+        PlantFormValidator.validateName(null),
+        equals('Name is required'),
+      );
+    });
+
+    test('should return error for empty string', () {
+      expect(
+        PlantFormValidator.validateName(''),
+        equals('Name is required'),
+      );
+    });
+
+    test('should return error for whitespace only', () {
+      expect(
+        PlantFormValidator.validateName('   '),
+        equals('Name is required'),
+      );
+    });
+
+    test('should return error for too long name', () {
+      final longName = 'A' * 101;
+      expect(
+        PlantFormValidator.validateName(longName),
+        equals('Name cannot exceed 100 characters'),
+      );
+    });
+
+    test('should return null for valid name', () {
+      expect(PlantFormValidator.validateName('My Plant'), isNull);
+    });
+
+    test('should return null for name with whitespace', () {
+      expect(PlantFormValidator.validateName('  Test  '), isNull);
+    });
+  });
+
+  group('PlantFormValidator - Bucket Number Validation', () {
+    test('should return null for null (optional)', () {
+      expect(PlantFormValidator.validateBucketNumber(null), isNull);
+    });
+
+    test('should return null for empty (optional)', () {
+      expect(PlantFormValidator.validateBucketNumber(''), isNull);
+    });
+
+    test('should return error for non-numeric', () {
+      expect(
+        PlantFormValidator.validateBucketNumber('abc'),
+        equals('Must be a valid number'),
+      );
+    });
+
+    test('should return error for less than 1', () {
+      expect(
+        PlantFormValidator.validateBucketNumber('0'),
+        equals('Must be at least 1'),
+      );
+      expect(
+        PlantFormValidator.validateBucketNumber('-5'),
+        equals('Must be at least 1'),
+      );
+    });
+
+    test('should return error for more than 50', () {
+      expect(
+        PlantFormValidator.validateBucketNumber('51'),
+        equals('Cannot exceed 50'),
+      );
+      expect(
+        PlantFormValidator.validateBucketNumber('999'),
+        equals('Cannot exceed 50'),
+      );
+    });
+
+    test('should return null for valid values', () {
+      expect(PlantFormValidator.validateBucketNumber('1'), isNull);
+      expect(PlantFormValidator.validateBucketNumber('25'), isNull);
+      expect(PlantFormValidator.validateBucketNumber('50'), isNull);
+    });
+  });
+
+  group('PlantFormValidator - Container Size Validation', () {
+    test('should return null for null (optional)', () {
+      expect(PlantFormValidator.validateContainerSize(null), isNull);
+    });
+
+    test('should return null for empty (optional)', () {
+      expect(PlantFormValidator.validateContainerSize(''), isNull);
+    });
+
+    test('should return error for non-numeric', () {
+      expect(
+        PlantFormValidator.validateContainerSize('abc'),
+        equals('Must be a valid number'),
+      );
+    });
+
+    test('should return error for less than 0.1', () {
+      expect(
+        PlantFormValidator.validateContainerSize('0.05'),
+        equals('Must be at least 0.1 L'),
+      );
+      expect(
+        PlantFormValidator.validateContainerSize('-10'),
+        equals('Must be at least 0.1 L'),
+      );
+    });
+
+    test('should return error for more than 1000', () {
+      expect(
+        PlantFormValidator.validateContainerSize('1001'),
+        equals('Cannot exceed 1000 L'),
+      );
+      expect(
+        PlantFormValidator.validateContainerSize('9999'),
+        equals('Cannot exceed 1000 L'),
+      );
+    });
+
+    test('should return null for valid values', () {
+      expect(PlantFormValidator.validateContainerSize('0.1'), isNull);
+      expect(PlantFormValidator.validateContainerSize('11'), isNull);
+      expect(PlantFormValidator.validateContainerSize('1000'), isNull);
+    });
+  });
+
+  group('PlantFormValidator - System Size Validation', () {
+    test('should return null for null (optional)', () {
+      expect(PlantFormValidator.validateSystemSize(null), isNull);
+    });
+
+    test('should return null for empty (optional)', () {
+      expect(PlantFormValidator.validateSystemSize(''), isNull);
+    });
+
+    test('should return error for non-numeric', () {
+      expect(
+        PlantFormValidator.validateSystemSize('xyz'),
+        equals('Must be a valid number'),
+      );
+    });
+
+    test('should return error for less than 1', () {
+      expect(
+        PlantFormValidator.validateSystemSize('0.5'),
+        equals('Must be at least 1 L'),
+      );
+      expect(
+        PlantFormValidator.validateSystemSize('-10'),
+        equals('Must be at least 1 L'),
+      );
+    });
+
+    test('should return error for more than 10000', () {
+      expect(
+        PlantFormValidator.validateSystemSize('10001'),
+        equals('Cannot exceed 10000 L'),
+      );
+      expect(
+        PlantFormValidator.validateSystemSize('99999'),
+        equals('Cannot exceed 10000 L'),
+      );
+    });
+
+    test('should return null for valid values', () {
+      expect(PlantFormValidator.validateSystemSize('1'), isNull);
+      expect(PlantFormValidator.validateSystemSize('100'), isNull);
+      expect(PlantFormValidator.validateSystemSize('10000'), isNull);
+    });
+  });
+
+  group('PlantFormValidator - Date Validation', () {
+    test('should return null for null (optional)', () {
+      expect(PlantFormValidator.validateNotFuture(null), isNull);
+    });
+
+    test('should return error for future date', () {
+      final tomorrow = DateTime.now().add(const Duration(days: 1));
+      expect(
+        PlantFormValidator.validateNotFuture(tomorrow),
+        equals('Date cannot be in the future'),
+      );
+    });
+
+    test('should return null for today', () {
+      final today = DateTime.now();
+      expect(PlantFormValidator.validateNotFuture(today), isNull);
+    });
+
+    test('should return null for past date', () {
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      expect(PlantFormValidator.validateNotFuture(yesterday), isNull);
+    });
+  });
+
   group('RdwcSystemFormValidator - Name Validation', () {
     test('should return error for null', () {
       expect(

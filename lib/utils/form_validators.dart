@@ -3,6 +3,89 @@
 // Centralized validation logic for all forms
 // =============================================
 
+/// Form validation functions for Plant forms
+class PlantFormValidator {
+  /// Validate plant name field
+  static String? validateName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Name is required';
+    }
+    if (value.trim().length > 100) {
+      return 'Name cannot exceed 100 characters';
+    }
+    return null;
+  }
+
+  /// Validate bucket number field
+  static String? validateBucketNumber(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Optional field
+    }
+    final number = int.tryParse(value);
+    if (number == null) {
+      return 'Must be a valid number';
+    }
+    if (number < 1) {
+      return 'Must be at least 1';
+    }
+    if (number > 50) {
+      return 'Cannot exceed 50';
+    }
+    return null;
+  }
+
+  /// Validate container size field
+  static String? validateContainerSize(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Optional field
+    }
+    final number = double.tryParse(value);
+    if (number == null) {
+      return 'Must be a valid number';
+    }
+    if (number < 0.1) {
+      return 'Must be at least 0.1 L';
+    }
+    if (number > 1000) {
+      return 'Cannot exceed 1000 L';
+    }
+    return null;
+  }
+
+  /// Validate system size field
+  static String? validateSystemSize(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Optional field
+    }
+    final number = double.tryParse(value);
+    if (number == null) {
+      return 'Must be a valid number';
+    }
+    if (number < 1.0) {
+      return 'Must be at least 1 L';
+    }
+    if (number > 10000) {
+      return 'Cannot exceed 10000 L';
+    }
+    return null;
+  }
+
+  /// Validate that date is not in the future
+  static String? validateNotFuture(DateTime? date) {
+    if (date == null) {
+      return null; // Optional field
+    }
+    final today = DateTime.now();
+    final todayDay = DateTime(today.year, today.month, today.day);
+    final dateDay = DateTime(date.year, date.month, date.day);
+
+    if (dateDay.isAfter(todayDay)) {
+      return 'Date cannot be in the future';
+    }
+    return null;
+  }
+}
+
 /// Form validation functions for RDWC System forms
 class RdwcSystemFormValidator {
   /// Validate system name field

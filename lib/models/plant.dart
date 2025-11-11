@@ -4,6 +4,7 @@
 
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/config/plant_config.dart'; // ✅ FIX: Validation config
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -41,7 +42,7 @@ class Plant {
 
   Plant({
     this.id,
-    required this.name,
+    required String name,
     this.breeder,
     this.strain,
     this.feminized = true,
@@ -51,7 +52,7 @@ class Plant {
     this.growId, // NEU: growId als optionaler Parameter
     this.roomId,
     this.rdwcSystemId,
-    this.bucketNumber,
+    int? bucketNumber,
     this.seedDate,
     this.phaseStartDate,
     this.vegDate,
@@ -59,11 +60,17 @@ class Plant {
     this.harvestDate,
     DateTime? createdAt,
     this.createdBy,
-    this.logProfileName = 'standard',
+    String logProfileName = 'standard',
     this.archived = false,
-    this.currentContainerSize,
-    this.currentSystemSize,
-  }) : createdAt = createdAt ?? DateTime.now();
+    double? currentContainerSize,
+    double? currentSystemSize,
+  }) : // ✅ VALIDATION: Apply validation from PlantConfig
+       name = PlantConfig.validateName(name),
+       bucketNumber = PlantConfig.validateBucketNumber(bucketNumber),
+       logProfileName = PlantConfig.validateLogProfileName(logProfileName),
+       currentContainerSize = PlantConfig.validateContainerSize(currentContainerSize),
+       currentSystemSize = PlantConfig.validateSystemSize(currentSystemSize),
+       createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
   /// ✅ FIX: All DateTime.parse and enum parsing now use safe parsers
