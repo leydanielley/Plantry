@@ -9,17 +9,11 @@ import 'package:growlog_app/utils/form_validators.dart';
 void main() {
   group('PlantFormValidator - Name Validation', () {
     test('should return error for null', () {
-      expect(
-        PlantFormValidator.validateName(null),
-        equals('Name is required'),
-      );
+      expect(PlantFormValidator.validateName(null), equals('Name is required'));
     });
 
     test('should return error for empty string', () {
-      expect(
-        PlantFormValidator.validateName(''),
-        equals('Name is required'),
-      );
+      expect(PlantFormValidator.validateName(''), equals('Name is required'));
     });
 
     test('should return error for whitespace only', () {
@@ -685,7 +679,9 @@ void main() {
 
     test('should handle unicode whitespace', () {
       expect(
-        RdwcSystemFormValidator.validateName('\u00A0\u00A0'), // Non-breaking spaces
+        RdwcSystemFormValidator.validateName(
+          '\u00A0\u00A0',
+        ), // Non-breaking spaces
         equals('Name is required'),
       );
     });

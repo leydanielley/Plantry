@@ -21,7 +21,9 @@ class GrowConfig {
       throw ArgumentError('Grow name cannot be empty');
     }
     if (name.trim().length > maximumNameLength) {
-      throw ArgumentError('Grow name cannot exceed $maximumNameLength characters');
+      throw ArgumentError(
+        'Grow name cannot exceed $maximumNameLength characters',
+      );
     }
   }
 

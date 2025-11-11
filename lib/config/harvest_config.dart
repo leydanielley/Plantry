@@ -153,7 +153,9 @@ class HarvestConfig {
   static void validateTemperatureStrict(double? temp) {
     if (temp != null) {
       if (temp < minimumDryingTemp) {
-        throw ArgumentError('Temperature must be at least $minimumDryingTemp °C');
+        throw ArgumentError(
+          'Temperature must be at least $minimumDryingTemp °C',
+        );
       }
       if (temp > maximumDryingTemp) {
         throw ArgumentError('Temperature cannot exceed $maximumDryingTemp °C');
@@ -228,21 +230,27 @@ class HarvestConfig {
     // Drying end must be after or same as drying start
     if (dryingStartDate != null && dryingEndDate != null) {
       if (dryingEndDate.isBefore(dryingStartDate)) {
-        throw ArgumentError('Drying end date cannot be before drying start date');
+        throw ArgumentError(
+          'Drying end date cannot be before drying start date',
+        );
       }
     }
 
     // Curing start should be after or same as drying end (if both set)
     if (dryingEndDate != null && curingStartDate != null) {
       if (curingStartDate.isBefore(dryingEndDate)) {
-        throw ArgumentError('Curing start date cannot be before drying end date');
+        throw ArgumentError(
+          'Curing start date cannot be before drying end date',
+        );
       }
     }
 
     // Curing end must be after or same as curing start
     if (curingStartDate != null && curingEndDate != null) {
       if (curingEndDate.isBefore(curingStartDate)) {
-        throw ArgumentError('Curing end date cannot be before curing start date');
+        throw ArgumentError(
+          'Curing end date cannot be before curing start date',
+        );
       }
     }
   }

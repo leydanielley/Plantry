@@ -1237,7 +1237,10 @@ class _EditLogScreenState extends State<EditLogScreen> {
   }
 
   // ✅ HIGH PRIORITY FIX: Made async to properly await dialog
-  Future<void> _editFertilizerAmount(int fertilizerId, double currentAmount) async {
+  Future<void> _editFertilizerAmount(
+    int fertilizerId,
+    double currentAmount,
+  ) async {
     final amountController = TextEditingController(
       text: currentAmount.toStringAsFixed(1),
     );

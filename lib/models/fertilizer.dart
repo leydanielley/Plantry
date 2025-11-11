@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/config/validation_config.dart'; // ✅ FIX: Validation config
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -48,7 +49,7 @@ class Fertilizer {
 
   Fertilizer({
     this.id,
-    required this.name,
+    required String name,
     this.brand,
     this.npk,
     this.type,
@@ -57,27 +58,45 @@ class Fertilizer {
     this.ppmValue,
     this.formula,
     this.source,
-    this.purity,
+    double? purity,
     this.isLiquid,
     this.density,
-    this.nNO3,
-    this.nNH4,
-    this.p,
-    this.k,
-    this.mg,
-    this.ca,
-    this.s,
-    this.b,
-    this.fe,
-    this.zn,
-    this.cu,
-    this.mn,
-    this.mo,
-    this.na,
-    this.si,
-    this.cl,
+    double? nNO3,
+    double? nNH4,
+    double? p,
+    double? k,
+    double? mg,
+    double? ca,
+    double? s,
+    double? b,
+    double? fe,
+    double? zn,
+    double? cu,
+    double? mn,
+    double? mo,
+    double? na,
+    double? si,
+    double? cl,
     DateTime? createdAt,
-  }) : assert(name.isNotEmpty, 'Name cannot be empty'),
+  }) : // ✅ VALIDATION: Apply validation from ValidationConfig
+       name = ValidationConfig.validateName(name),
+       purity = ValidationConfig.validatePurity(purity),
+       nNO3 = ValidationConfig.validatePercentage(nNO3),
+       nNH4 = ValidationConfig.validatePercentage(nNH4),
+       p = ValidationConfig.validatePercentage(p),
+       k = ValidationConfig.validatePercentage(k),
+       mg = ValidationConfig.validatePercentage(mg),
+       ca = ValidationConfig.validatePercentage(ca),
+       s = ValidationConfig.validatePercentage(s),
+       b = ValidationConfig.validatePercentage(b),
+       fe = ValidationConfig.validatePercentage(fe),
+       zn = ValidationConfig.validatePercentage(zn),
+       cu = ValidationConfig.validatePercentage(cu),
+       mn = ValidationConfig.validatePercentage(mn),
+       mo = ValidationConfig.validatePercentage(mo),
+       na = ValidationConfig.validatePercentage(na),
+       si = ValidationConfig.validatePercentage(si),
+       cl = ValidationConfig.validatePercentage(cl),
        createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)

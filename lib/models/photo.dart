@@ -4,6 +4,7 @@
 // =============================================
 
 import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/config/validation_config.dart'; // ✅ FIX: Validation config
 
 class Photo {
   final int? id;
@@ -14,10 +15,11 @@ class Photo {
   Photo({
     this.id,
     required this.logId,
-    required this.filePath,
+    required String filePath,
     DateTime? createdAt,
   }) : assert(logId > 0, 'Log ID must be greater than 0'),
-       assert(filePath.isNotEmpty, 'File path cannot be empty'),
+       // ✅ VALIDATION: Apply validation from ValidationConfig
+       filePath = ValidationConfig.validateFilePath(filePath),
        createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)

@@ -178,7 +178,8 @@ class DbfImportService {
         brand: 'HydroBuddy', // Mark as imported from HydroBuddy
         npk: npkString,
         type: type,
-        formula: chemicalFormula, // ✅ FIX: Use the chemical formula from FORMULA field
+        formula:
+            chemicalFormula, // ✅ FIX: Use the chemical formula from FORMULA field
         source: record['SOURCE'],
         purity: _parseDouble(record['PURITY']),
         isLiquid: isLiquid,

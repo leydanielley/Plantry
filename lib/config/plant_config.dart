@@ -93,10 +93,14 @@ class PlantConfig {
       throw ArgumentError('Plant name cannot be empty');
     }
     if (name.trim().length < minimumNameLength) {
-      throw ArgumentError('Plant name must be at least $minimumNameLength character');
+      throw ArgumentError(
+        'Plant name must be at least $minimumNameLength character',
+      );
     }
     if (name.trim().length > maximumNameLength) {
-      throw ArgumentError('Plant name cannot exceed $maximumNameLength characters');
+      throw ArgumentError(
+        'Plant name cannot exceed $maximumNameLength characters',
+      );
     }
   }
 
@@ -104,7 +108,9 @@ class PlantConfig {
   static void validateBucketNumberStrict(int? bucketNumber) {
     if (bucketNumber != null) {
       if (bucketNumber < minimumBucketNumber) {
-        throw ArgumentError('Bucket number must be at least $minimumBucketNumber');
+        throw ArgumentError(
+          'Bucket number must be at least $minimumBucketNumber',
+        );
       }
       if (bucketNumber > maximumBucketNumber) {
         throw ArgumentError('Bucket number cannot exceed $maximumBucketNumber');
@@ -116,10 +122,14 @@ class PlantConfig {
   static void validateContainerSizeStrict(double? size) {
     if (size != null) {
       if (size < minimumContainerSize) {
-        throw ArgumentError('Container size must be at least $minimumContainerSize L');
+        throw ArgumentError(
+          'Container size must be at least $minimumContainerSize L',
+        );
       }
       if (size > maximumContainerSize) {
-        throw ArgumentError('Container size cannot exceed $maximumContainerSize L');
+        throw ArgumentError(
+          'Container size cannot exceed $maximumContainerSize L',
+        );
       }
     }
   }
@@ -128,7 +138,9 @@ class PlantConfig {
   static void validateSystemSizeStrict(double? size) {
     if (size != null) {
       if (size < minimumSystemSize) {
-        throw ArgumentError('System size must be at least $minimumSystemSize L');
+        throw ArgumentError(
+          'System size must be at least $minimumSystemSize L',
+        );
       }
       if (size > maximumSystemSize) {
         throw ArgumentError('System size cannot exceed $maximumSystemSize L');
@@ -165,7 +177,9 @@ class PlantConfig {
       throw ArgumentError('Bloom date cannot be before seed date');
     }
 
-    if (seedDate != null && harvestDate != null && harvestDate.isBefore(seedDate)) {
+    if (seedDate != null &&
+        harvestDate != null &&
+        harvestDate.isBefore(seedDate)) {
       throw ArgumentError('Harvest date cannot be before seed date');
     }
 
@@ -175,12 +189,16 @@ class PlantConfig {
     }
 
     // Bloom must be before harvest
-    if (bloomDate != null && harvestDate != null && harvestDate.isBefore(bloomDate)) {
+    if (bloomDate != null &&
+        harvestDate != null &&
+        harvestDate.isBefore(bloomDate)) {
       throw ArgumentError('Harvest date cannot be before bloom date');
     }
 
     // Veg must be before harvest
-    if (vegDate != null && harvestDate != null && harvestDate.isBefore(vegDate)) {
+    if (vegDate != null &&
+        harvestDate != null &&
+        harvestDate.isBefore(vegDate)) {
       throw ArgumentError('Harvest date cannot be before veg date');
     }
   }

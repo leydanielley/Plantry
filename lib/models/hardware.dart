@@ -4,6 +4,7 @@
 
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/config/validation_config.dart'; // ✅ FIX: Validation config
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -67,13 +68,13 @@ class Hardware {
   Hardware({
     this.id,
     required this.roomId,
-    required this.name,
+    required String name,
     required this.type,
     this.brand,
     this.model,
-    this.wattage,
-    this.quantity = 1,
-    this.airflow,
+    int? wattage,
+    int? quantity = 1,
+    int? airflow,
     this.spectrum,
     this.colorTemperature,
     this.dimmable,
@@ -86,11 +87,11 @@ class Hardware {
     this.coverage,
     this.hasThermostat,
     this.humidificationRate,
-    this.pumpRate,
+    int? pumpRate,
     this.isDigital,
     this.programCount,
     this.dripperCount,
-    this.capacity,
+    int? capacity,
     this.material,
     this.hasChiller,
     this.hasAirPump,
@@ -106,7 +107,28 @@ class Hardware {
     this.active = true,
     DateTime? createdAt,
   }) : assert(roomId > 0, 'Room ID must be greater than 0'),
-       assert(name.isNotEmpty, 'Name cannot be empty'),
+       // ✅ VALIDATION: Apply validation from ValidationConfig
+       name = ValidationConfig.validateName(name),
+       wattage = ValidationConfig.validatePositiveInt(
+         wattage,
+         ValidationConfig.maxWattage,
+       ),
+       quantity = ValidationConfig.validatePositiveInt(
+         quantity,
+         ValidationConfig.maxQuantity,
+       ),
+       airflow = ValidationConfig.validatePositiveInt(
+         airflow,
+         ValidationConfig.maxAirflow,
+       ),
+       pumpRate = ValidationConfig.validatePositiveInt(
+         pumpRate,
+         ValidationConfig.maxPumpRate,
+       ),
+       capacity = ValidationConfig.validatePositiveInt(
+         capacity,
+         ValidationConfig.maxCapacity,
+       ),
        createdAt = createdAt ?? DateTime.now();
 
   /// Helper: Parse Hardware Type mit Fallback für alte DB-Einträge

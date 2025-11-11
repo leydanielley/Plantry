@@ -100,9 +100,17 @@ class NotificationRepository
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyWateringReminders, enabled);
-      AppLogger.debug('NotificationRepository', 'Watering reminders updated', enabled);
+      AppLogger.debug(
+        'NotificationRepository',
+        'Watering reminders updated',
+        enabled,
+      );
     } catch (e) {
-      AppLogger.error('NotificationRepository', 'Failed to set watering reminders', e);
+      AppLogger.error(
+        'NotificationRepository',
+        'Failed to set watering reminders',
+        e,
+      );
       rethrow;
     }
   }
@@ -112,9 +120,17 @@ class NotificationRepository
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyFertilizingReminders, enabled);
-      AppLogger.debug('NotificationRepository', 'Fertilizing reminders updated', enabled);
+      AppLogger.debug(
+        'NotificationRepository',
+        'Fertilizing reminders updated',
+        enabled,
+      );
     } catch (e) {
-      AppLogger.error('NotificationRepository', 'Failed to set fertilizing reminders', e);
+      AppLogger.error(
+        'NotificationRepository',
+        'Failed to set fertilizing reminders',
+        e,
+      );
       rethrow;
     }
   }
@@ -124,9 +140,17 @@ class NotificationRepository
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyPhotoReminders, enabled);
-      AppLogger.debug('NotificationRepository', 'Photo reminders updated', enabled);
+      AppLogger.debug(
+        'NotificationRepository',
+        'Photo reminders updated',
+        enabled,
+      );
     } catch (e) {
-      AppLogger.error('NotificationRepository', 'Failed to set photo reminders', e);
+      AppLogger.error(
+        'NotificationRepository',
+        'Failed to set photo reminders',
+        e,
+      );
       rethrow;
     }
   }
@@ -136,9 +160,17 @@ class NotificationRepository
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyHarvestReminders, enabled);
-      AppLogger.debug('NotificationRepository', 'Harvest reminders updated', enabled);
+      AppLogger.debug(
+        'NotificationRepository',
+        'Harvest reminders updated',
+        enabled,
+      );
     } catch (e) {
-      AppLogger.error('NotificationRepository', 'Failed to set harvest reminders', e);
+      AppLogger.error(
+        'NotificationRepository',
+        'Failed to set harvest reminders',
+        e,
+      );
       rethrow;
     }
   }
@@ -148,9 +180,17 @@ class NotificationRepository
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_keyWateringInterval, days);
-      AppLogger.debug('NotificationRepository', 'Watering interval updated', days);
+      AppLogger.debug(
+        'NotificationRepository',
+        'Watering interval updated',
+        days,
+      );
     } catch (e) {
-      AppLogger.error('NotificationRepository', 'Failed to set watering interval', e);
+      AppLogger.error(
+        'NotificationRepository',
+        'Failed to set watering interval',
+        e,
+      );
       rethrow;
     }
   }
@@ -160,9 +200,17 @@ class NotificationRepository
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_keyFertilizingInterval, days);
-      AppLogger.debug('NotificationRepository', 'Fertilizing interval updated', days);
+      AppLogger.debug(
+        'NotificationRepository',
+        'Fertilizing interval updated',
+        days,
+      );
     } catch (e) {
-      AppLogger.error('NotificationRepository', 'Failed to set fertilizing interval', e);
+      AppLogger.error(
+        'NotificationRepository',
+        'Failed to set fertilizing interval',
+        e,
+      );
       rethrow;
     }
   }
@@ -174,7 +222,11 @@ class NotificationRepository
       await prefs.setInt(_keyPhotoInterval, days);
       AppLogger.debug('NotificationRepository', 'Photo interval updated', days);
     } catch (e) {
-      AppLogger.error('NotificationRepository', 'Failed to set photo interval', e);
+      AppLogger.error(
+        'NotificationRepository',
+        'Failed to set photo interval',
+        e,
+      );
       rethrow;
     }
   }
@@ -184,9 +236,17 @@ class NotificationRepository
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_keyNotificationTime, time);
-      AppLogger.debug('NotificationRepository', 'Notification time updated', time);
+      AppLogger.debug(
+        'NotificationRepository',
+        'Notification time updated',
+        time,
+      );
     } catch (e) {
-      AppLogger.error('NotificationRepository', 'Failed to set notification time', e);
+      AppLogger.error(
+        'NotificationRepository',
+        'Failed to set notification time',
+        e,
+      );
       rethrow;
     }
   }

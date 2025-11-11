@@ -76,7 +76,9 @@ class Harvest {
        wetWeight = HarvestConfig.validateWeight(wetWeight),
        dryWeight = HarvestConfig.validateWeight(dryWeight),
        dryingDays = HarvestConfig.validateDryingDays(dryingDays),
-       dryingTemperature = HarvestConfig.validateDryingTemperature(dryingTemperature),
+       dryingTemperature = HarvestConfig.validateDryingTemperature(
+         dryingTemperature,
+       ),
        dryingHumidity = HarvestConfig.validateHumidity(dryingHumidity),
        curingDays = HarvestConfig.validateCuringDays(curingDays),
        thcPercentage = HarvestConfig.validatePercentage(thcPercentage),

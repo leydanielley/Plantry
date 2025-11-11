@@ -24,7 +24,10 @@ void main() {
 
     test('validateName() - should keep valid names', () {
       expect(PlantConfig.validateName('My Plant'), equals('My Plant'));
-      expect(PlantConfig.validateName('Gorilla Glue #4'), equals('Gorilla Glue #4'));
+      expect(
+        PlantConfig.validateName('Gorilla Glue #4'),
+        equals('Gorilla Glue #4'),
+      );
     });
 
     test('validateBucketNumber() - should return null for null', () {
@@ -93,12 +96,18 @@ void main() {
     });
 
     test('validateLogProfileName() - should trim whitespace', () {
-      expect(PlantConfig.validateLogProfileName('  custom  '), equals('custom'));
+      expect(
+        PlantConfig.validateLogProfileName('  custom  '),
+        equals('custom'),
+      );
     });
 
     test('validateLogProfileName() - should keep valid names', () {
       expect(PlantConfig.validateLogProfileName('custom'), equals('custom'));
-      expect(PlantConfig.validateLogProfileName('standard'), equals('standard'));
+      expect(
+        PlantConfig.validateLogProfileName('standard'),
+        equals('standard'),
+      );
     });
   });
 
@@ -129,7 +138,10 @@ void main() {
     });
 
     test('validateBucketNumberStrict() - should pass for null', () {
-      expect(() => PlantConfig.validateBucketNumberStrict(null), returnsNormally);
+      expect(
+        () => PlantConfig.validateBucketNumberStrict(null),
+        returnsNormally,
+      );
     });
 
     test('validateBucketNumberStrict() - should throw for too small', () {
@@ -161,7 +173,10 @@ void main() {
     });
 
     test('validateContainerSizeStrict() - should pass for null', () {
-      expect(() => PlantConfig.validateContainerSizeStrict(null), returnsNormally);
+      expect(
+        () => PlantConfig.validateContainerSizeStrict(null),
+        returnsNormally,
+      );
     });
 
     test('validateContainerSizeStrict() - should throw for too small', () {
@@ -187,9 +202,18 @@ void main() {
     });
 
     test('validateContainerSizeStrict() - should pass for valid values', () {
-      expect(() => PlantConfig.validateContainerSizeStrict(0.1), returnsNormally);
-      expect(() => PlantConfig.validateContainerSizeStrict(11.0), returnsNormally);
-      expect(() => PlantConfig.validateContainerSizeStrict(1000.0), returnsNormally);
+      expect(
+        () => PlantConfig.validateContainerSizeStrict(0.1),
+        returnsNormally,
+      );
+      expect(
+        () => PlantConfig.validateContainerSizeStrict(11.0),
+        returnsNormally,
+      );
+      expect(
+        () => PlantConfig.validateContainerSizeStrict(1000.0),
+        returnsNormally,
+      );
     });
 
     test('validateSystemSizeStrict() - should pass for null', () {
@@ -220,8 +244,14 @@ void main() {
 
     test('validateSystemSizeStrict() - should pass for valid values', () {
       expect(() => PlantConfig.validateSystemSizeStrict(1.0), returnsNormally);
-      expect(() => PlantConfig.validateSystemSizeStrict(100.0), returnsNormally);
-      expect(() => PlantConfig.validateSystemSizeStrict(10000.0), returnsNormally);
+      expect(
+        () => PlantConfig.validateSystemSizeStrict(100.0),
+        returnsNormally,
+      );
+      expect(
+        () => PlantConfig.validateSystemSizeStrict(10000.0),
+        returnsNormally,
+      );
     });
 
     test('validateNotFuture() - should throw for future dates', () {
@@ -289,50 +319,72 @@ void main() {
       final bloom = DateTime(2025, 1, 1);
 
       expect(
-        () => PlantConfig.validatePhaseChronology(seedDate: seed, bloomDate: bloom),
+        () => PlantConfig.validatePhaseChronology(
+          seedDate: seed,
+          bloomDate: bloom,
+        ),
         throwsA(isA<ArgumentError>()),
       );
     });
 
-    test('validatePhaseChronology() - should throw when harvest before seed', () {
-      final seed = DateTime(2025, 4, 1);
-      final harvest = DateTime(2025, 1, 1);
+    test(
+      'validatePhaseChronology() - should throw when harvest before seed',
+      () {
+        final seed = DateTime(2025, 4, 1);
+        final harvest = DateTime(2025, 1, 1);
 
-      expect(
-        () => PlantConfig.validatePhaseChronology(seedDate: seed, harvestDate: harvest),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
+        expect(
+          () => PlantConfig.validatePhaseChronology(
+            seedDate: seed,
+            harvestDate: harvest,
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      },
+    );
 
     test('validatePhaseChronology() - should throw when bloom before veg', () {
       final veg = DateTime(2025, 2, 1);
       final bloom = DateTime(2025, 1, 15);
 
       expect(
-        () => PlantConfig.validatePhaseChronology(vegDate: veg, bloomDate: bloom),
+        () =>
+            PlantConfig.validatePhaseChronology(vegDate: veg, bloomDate: bloom),
         throwsA(isA<ArgumentError>()),
       );
     });
 
-    test('validatePhaseChronology() - should throw when harvest before bloom', () {
-      final bloom = DateTime(2025, 3, 1);
-      final harvest = DateTime(2025, 2, 1);
+    test(
+      'validatePhaseChronology() - should throw when harvest before bloom',
+      () {
+        final bloom = DateTime(2025, 3, 1);
+        final harvest = DateTime(2025, 2, 1);
 
-      expect(
-        () => PlantConfig.validatePhaseChronology(bloomDate: bloom, harvestDate: harvest),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
+        expect(
+          () => PlantConfig.validatePhaseChronology(
+            bloomDate: bloom,
+            harvestDate: harvest,
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      },
+    );
 
-    test('validatePhaseChronology() - should throw when harvest before veg', () {
-      final veg = DateTime(2025, 2, 1);
-      final harvest = DateTime(2025, 1, 15);
+    test(
+      'validatePhaseChronology() - should throw when harvest before veg',
+      () {
+        final veg = DateTime(2025, 2, 1);
+        final harvest = DateTime(2025, 1, 15);
 
-      expect(
-        () => PlantConfig.validatePhaseChronology(vegDate: veg, harvestDate: harvest),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
+        expect(
+          () => PlantConfig.validatePhaseChronology(
+            vegDate: veg,
+            harvestDate: harvest,
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      },
+    );
 
     test('validatePhaseChronology() - should allow same dates', () {
       final date = DateTime(2025, 1, 1);

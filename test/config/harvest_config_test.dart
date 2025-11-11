@@ -199,43 +199,52 @@ void main() {
       );
     });
 
-    test('validateHarvestChronology() - should throw when dry start before harvest', () {
-      final harvest = DateTime(2025, 1, 10);
-      final dryStart = DateTime(2025, 1, 5);
+    test(
+      'validateHarvestChronology() - should throw when dry start before harvest',
+      () {
+        final harvest = DateTime(2025, 1, 10);
+        final dryStart = DateTime(2025, 1, 5);
 
-      expect(
-        () => HarvestConfig.validateHarvestChronology(
-          harvestDate: harvest,
-          dryingStartDate: dryStart,
-        ),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
+        expect(
+          () => HarvestConfig.validateHarvestChronology(
+            harvestDate: harvest,
+            dryingStartDate: dryStart,
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      },
+    );
 
-    test('validateHarvestChronology() - should throw when dry end before dry start', () {
-      final dryStart = DateTime(2025, 1, 10);
-      final dryEnd = DateTime(2025, 1, 5);
+    test(
+      'validateHarvestChronology() - should throw when dry end before dry start',
+      () {
+        final dryStart = DateTime(2025, 1, 10);
+        final dryEnd = DateTime(2025, 1, 5);
 
-      expect(
-        () => HarvestConfig.validateHarvestChronology(
-          dryingStartDate: dryStart,
-          dryingEndDate: dryEnd,
-        ),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
+        expect(
+          () => HarvestConfig.validateHarvestChronology(
+            dryingStartDate: dryStart,
+            dryingEndDate: dryEnd,
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      },
+    );
 
-    test('validateHarvestChronology() - should throw when cure start before dry end', () {
-      final dryEnd = DateTime(2025, 1, 20);
-      final cureStart = DateTime(2025, 1, 15);
+    test(
+      'validateHarvestChronology() - should throw when cure start before dry end',
+      () {
+        final dryEnd = DateTime(2025, 1, 20);
+        final cureStart = DateTime(2025, 1, 15);
 
-      expect(
-        () => HarvestConfig.validateHarvestChronology(
-          dryingEndDate: dryEnd,
-          curingStartDate: cureStart,
-        ),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
+        expect(
+          () => HarvestConfig.validateHarvestChronology(
+            dryingEndDate: dryEnd,
+            curingStartDate: cureStart,
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      },
+    );
   });
 }

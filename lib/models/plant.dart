@@ -68,7 +68,9 @@ class Plant {
        name = PlantConfig.validateName(name),
        bucketNumber = PlantConfig.validateBucketNumber(bucketNumber),
        logProfileName = PlantConfig.validateLogProfileName(logProfileName),
-       currentContainerSize = PlantConfig.validateContainerSize(currentContainerSize),
+       currentContainerSize = PlantConfig.validateContainerSize(
+         currentContainerSize,
+       ),
        currentSystemSize = PlantConfig.validateSystemSize(currentSystemSize),
        createdAt = createdAt ?? DateTime.now();
 

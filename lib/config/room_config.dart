@@ -29,7 +29,9 @@ class RoomConfig {
       throw ArgumentError('Room name cannot be empty');
     }
     if (name.trim().length > maximumNameLength) {
-      throw ArgumentError('Room name cannot exceed $maximumNameLength characters');
+      throw ArgumentError(
+        'Room name cannot exceed $maximumNameLength characters',
+      );
     }
   }
 
