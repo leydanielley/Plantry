@@ -1210,11 +1210,13 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         else
           ..._selectedFertilizers.entries.map((entry) {
             // ✅ SAFETY: orElse prevents crash if fertilizer was deleted
+            // ✅ BUG FIX: Replace hardcoded German string with i18n
             final fertilizer = _availableFertilizers.firstWhere(
               (f) => f.id == entry.key,
               orElse: () => Fertilizer(
                 id: entry.key,
-                name: 'Gelöschter Dünger #${entry.key}',
+                name: AppTranslations(Localizations.localeOf(context).languageCode)['deleted_fertilizer_id']
+                    .replaceAll('{id}', '${entry.key}'),
               ),
             );
             return Card(
@@ -1377,11 +1379,13 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
     );
 
     // ✅ SAFETY: Handle deleted fertilizer gracefully
+    // ✅ BUG FIX: Replace hardcoded German string with i18n
     final fertilizer = _availableFertilizers.firstWhere(
       (f) => f.id == fertilizerId,
       orElse: () => Fertilizer(
         id: fertilizerId,
-        name: 'Gelöschter Dünger #$fertilizerId',
+        name: AppTranslations(Localizations.localeOf(context).languageCode)['deleted_fertilizer_id']
+            .replaceAll('{id}', '$fertilizerId'),
       ),
     );
 

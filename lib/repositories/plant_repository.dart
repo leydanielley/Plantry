@@ -185,7 +185,11 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
             }
           });
         } else {
-          // Old plant not found, just update
+          // ✅ LOW PRIORITY BUG FIX: Log warning instead of silently updating when old plant not found
+          AppLogger.warning(
+            'PlantRepository',
+            'Old plant not found for update (ID: ${plant.id}). Updating without recalculation.',
+          );
           await db.update(
             'plants',
             plant.toMap(),

@@ -555,14 +555,14 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            // ✅ MEDIUM PRIORITY FIX: Validate positive number, not just empty
+            // ✅ BUG FIX: Validate positive number with i18n message
             validator: (value) {
               if (value?.isEmpty ?? true) {
                 return _t['add_hardware_required'];
               }
               final number = int.tryParse(value!);
               if (number == null || number <= 0) {
-                return 'Wattage muss eine positive Zahl sein';
+                return _t['add_hardware_wattage_validation'];
               }
               return null;
             },
@@ -600,14 +600,14 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            // ✅ MEDIUM PRIORITY FIX: Validate positive number, not just empty
+            // ✅ BUG FIX: Validate positive number with i18n message
             validator: (value) {
               if (value?.isEmpty ?? true) {
                 return _t['add_hardware_required'];
               }
               final number = int.tryParse(value!);
               if (number == null || number <= 0) {
-                return 'Wattage muss eine positive Zahl sein';
+                return _t['add_hardware_wattage_validation'];
               }
               return null;
             },

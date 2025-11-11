@@ -240,6 +240,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _nameController,
+          maxLength: 100, // ✅ MEDIUM PRIORITY BUG FIX: Add max-length validation
           decoration: InputDecoration(
             labelText: _t['add_room_name_label'], // ✅ i18n
             hintText: _t['add_room_name_hint'], // ✅ i18n
@@ -254,6 +255,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
         TextFormField(
           controller: _descriptionController,
           maxLines: 2,
+          maxLength: 500, // ✅ MEDIUM PRIORITY BUG FIX: Add max-length validation
           decoration: InputDecoration(
             labelText: _t['add_room_description_label'], // ✅ i18n
             hintText: _t['add_room_description_hint'], // ✅ i18n
