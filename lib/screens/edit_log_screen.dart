@@ -1182,7 +1182,8 @@ class _EditLogScreenState extends State<EditLogScreen> {
     );
   }
 
-  void _addFertilizer(Fertilizer fertilizer) {
+  // ✅ HIGH PRIORITY FIX: Made async to properly await dialog and dispose controller
+  Future<void> _addFertilizer(Fertilizer fertilizer) async {
     // ✅ Extra Null-Check für Sicherheit
     if (fertilizer.id == null) {
       AppMessages.showError(
@@ -1194,83 +1195,99 @@ class _EditLogScreenState extends State<EditLogScreen> {
 
     final amountController = TextEditingController(text: '10');
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(fertilizer.name),
-        content: TextFormField(
-          controller: amountController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            labelText: _t['amount_ml'],
-            border: const OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ), // ✅ i18n
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(_t['cancel']),
+    // ✅ HIGH PRIORITY FIX: Wrap in try-finally to ensure controller disposal
+    try {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(fertilizer.name),
+          content: TextFormField(
+            controller: amountController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: _t['amount_ml'],
+              border: const OutlineInputBorder(),
+            ),
+            autofocus: true,
           ), // ✅ i18n
-          ElevatedButton(
-            onPressed: () {
-              final amount = double.tryParse(amountController.text);
-              if (amount != null && amount > 0) {
-                setState(() => _selectedFertilizers[fertilizer.id!] = amount);
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(
-              _t['add_photo'],
-            ), // ✅ i18n (reusing add_photo = "Hinzufügen")
-          ),
-        ],
-      ),
-    );
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(_t['cancel']),
+            ), // ✅ i18n
+            ElevatedButton(
+              onPressed: () {
+                final amount = double.tryParse(amountController.text);
+                if (amount != null && amount > 0) {
+                  setState(() => _selectedFertilizers[fertilizer.id!] = amount);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text(
+                _t['add_photo'],
+              ), // ✅ i18n (reusing add_photo = "Hinzufügen")
+            ),
+          ],
+        ),
+      );
+    } finally {
+      // ✅ HIGH PRIORITY FIX: Dispose controller to prevent memory leak
+      amountController.dispose();
+    }
   }
 
-  void _editFertilizerAmount(int fertilizerId, double currentAmount) {
+  // ✅ HIGH PRIORITY FIX: Made async to properly await dialog
+  Future<void> _editFertilizerAmount(int fertilizerId, double currentAmount) async {
     final amountController = TextEditingController(
       text: currentAmount.toStringAsFixed(1),
     );
-    // ✅ Extra Null-Check für Sicherheit
+
+    // ✅ HIGH PRIORITY FIX: Handle deleted fertilizer gracefully instead of throwing
     final fertilizer = _availableFertilizers.firstWhere(
       (f) => f.id == fertilizerId,
-      orElse: () =>
-          throw Exception('Dünger mit ID $fertilizerId nicht gefunden'),
-    );
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(fertilizer.name),
-        content: TextFormField(
-          controller: amountController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            labelText: _t['amount_ml'],
-            border: const OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ), // ✅ i18n
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(_t['cancel']),
-          ), // ✅ i18n
-          ElevatedButton(
-            onPressed: () {
-              final amount = double.tryParse(amountController.text);
-              if (amount != null && amount > 0) {
-                setState(() => _selectedFertilizers[fertilizerId] = amount);
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(_t['save']), // ✅ i18n
-          ),
-        ],
+      orElse: () => Fertilizer(
+        id: fertilizerId,
+        name: 'Gelöschter Dünger #$fertilizerId',
       ),
     );
+
+    // ✅ HIGH PRIORITY FIX: Wrap in try-finally to ensure controller disposal
+    try {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(fertilizer.name),
+          content: TextFormField(
+            controller: amountController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: _t['amount_ml'],
+              border: const OutlineInputBorder(),
+            ),
+            autofocus: true,
+          ), // ✅ i18n
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(_t['cancel']),
+            ), // ✅ i18n
+            ElevatedButton(
+              onPressed: () {
+                final amount = double.tryParse(amountController.text);
+                if (amount != null && amount > 0) {
+                  setState(() => _selectedFertilizers[fertilizerId] = amount);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text(_t['save']), // ✅ i18n
+            ),
+          ],
+        ),
+      );
+    } finally {
+      // ✅ HIGH PRIORITY FIX: Dispose controller to prevent memory leak
+      amountController.dispose();
+    }
   }
 
   Widget _buildPhEcSection() {
