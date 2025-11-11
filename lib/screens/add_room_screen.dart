@@ -29,7 +29,8 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
-  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
+  bool _translationsInitialized = false;
 
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -47,10 +48,18 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(
-      Localizations.localeOf(context).languageCode,
-    ); // ✅ AUDIT FIX: i18n
     _loadInitialData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_translationsInitialized) {
+      _t = AppTranslations(
+        Localizations.localeOf(context).languageCode,
+      ); // ✅ AUDIT FIX: i18n - moved from initState
+      _translationsInitialized = true;
+    }
   }
 
   Future<void> _loadInitialData() async {

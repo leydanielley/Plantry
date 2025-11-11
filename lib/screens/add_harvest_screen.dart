@@ -28,7 +28,8 @@ class AddHarvestScreen extends StatefulWidget {
 class _AddHarvestScreenState extends State<AddHarvestScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
-  late final AppTranslations _t; // ✅ BUG FIX: i18n translations
+  late AppTranslations _t; // ✅ BUG FIX: i18n translations
+  bool _translationsInitialized = false;
 
   int _currentStep = 0;
 
@@ -49,13 +50,21 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(
-      Localizations.localeOf(context).languageCode,
-    ); // ✅ BUG FIX: Initialize translations
-    // ✅ BUG FIX: Initialize with i18n default value instead of hardcoded "Hängend"
-    _dryingMethodController = TextEditingController(
-      text: _t['drying_method_hanging'],
-    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_translationsInitialized) {
+      _t = AppTranslations(
+        Localizations.localeOf(context).languageCode,
+      ); // ✅ BUG FIX: Initialize translations - moved from initState
+      // ✅ BUG FIX: Initialize with i18n default value instead of hardcoded "Hängend"
+      _dryingMethodController = TextEditingController(
+        text: _t['drying_method_hanging'],
+      );
+      _translationsInitialized = true;
+    }
   }
 
   @override

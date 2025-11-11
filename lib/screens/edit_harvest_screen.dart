@@ -23,7 +23,8 @@ class EditHarvestScreen extends StatefulWidget {
 
 class _EditHarvestScreenState extends State<EditHarvestScreen>
     with SingleTickerProviderStateMixin {
-  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
+  bool _translationsInitialized = false;
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
   late TabController _tabController;
@@ -63,11 +64,19 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(
-      Localizations.localeOf(context).languageCode,
-    ); // ✅ AUDIT FIX: i18n
     _tabController = TabController(length: 5, vsync: this);
     _loadData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_translationsInitialized) {
+      _t = AppTranslations(
+        Localizations.localeOf(context).languageCode,
+      ); // ✅ AUDIT FIX: i18n - moved from initState
+      _translationsInitialized = true;
+    }
   }
 
   void _loadData() {

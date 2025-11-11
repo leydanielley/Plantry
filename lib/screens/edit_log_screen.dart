@@ -38,7 +38,8 @@ class EditLogScreen extends StatefulWidget {
 }
 
 class _EditLogScreenState extends State<EditLogScreen> {
-  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
+  bool _translationsInitialized = false;
   final _formKey = GlobalKey<FormState>();
   final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
@@ -83,12 +84,20 @@ class _EditLogScreenState extends State<EditLogScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(
-      Localizations.localeOf(context).languageCode,
-    ); // ✅ AUDIT FIX: i18n
     _loadExistingData();
     _loadFertilizers();
     _loadExistingPhotos();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_translationsInitialized) {
+      _t = AppTranslations(
+        Localizations.localeOf(context).languageCode,
+      ); // ✅ AUDIT FIX: i18n - moved from initState
+      _translationsInitialized = true;
+    }
   }
 
   Future<void> _loadExistingData() async {

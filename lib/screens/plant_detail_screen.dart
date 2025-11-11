@@ -49,7 +49,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       getIt<ILogFertilizerRepository>();
   final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
   final IHarvestService _harvestService = getIt<IHarvestService>();
-  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
+  bool _translationsInitialized = false;
 
   final ScrollController _scrollController = ScrollController();
 
@@ -70,12 +71,20 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(
-      Localizations.localeOf(context).languageCode,
-    ); // ✅ AUDIT FIX: i18n
     _currentPlant = widget.plant;
     _scrollController.addListener(_onScroll);
     _loadData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_translationsInitialized) {
+      _t = AppTranslations(
+        Localizations.localeOf(context).languageCode,
+      ); // ✅ AUDIT FIX: i18n - moved from initState
+      _translationsInitialized = true;
+    }
   }
 
   @override

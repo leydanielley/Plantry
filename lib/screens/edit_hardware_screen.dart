@@ -30,7 +30,8 @@ class _EditHardwareScreenState extends State<EditHardwareScreen>
   final _formKey = GlobalKey<FormState>();
   final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
-  late final AppTranslations _t; // ✅ BUG FIX: i18n translations
+  late AppTranslations _t; // ✅ BUG FIX: i18n translations
+  bool _translationsInitialized = false;
 
   Room? _room;
 
@@ -84,9 +85,6 @@ class _EditHardwareScreenState extends State<EditHardwareScreen>
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(
-      Localizations.localeOf(context).languageCode,
-    ); // ✅ BUG FIX: Initialize translations
 
     // Initialize controllers with existing hardware data
     _nameController = TextEditingController(text: widget.hardware.name);
@@ -110,6 +108,17 @@ class _EditHardwareScreenState extends State<EditHardwareScreen>
     _purchaseDate = widget.hardware.purchaseDate;
 
     _loadRoom();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_translationsInitialized) {
+      _t = AppTranslations(
+        Localizations.localeOf(context).languageCode,
+      ); // ✅ BUG FIX: Initialize translations - moved from initState
+      _translationsInitialized = true;
+    }
   }
 
   Future<void> _loadRoom() async {

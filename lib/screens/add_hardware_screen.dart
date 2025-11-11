@@ -27,7 +27,8 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
   final _formKey = GlobalKey<FormState>();
   final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
-  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
+  bool _translationsInitialized = false;
 
   Room? _room;
 
@@ -89,11 +90,19 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(
-      Localizations.localeOf(context).languageCode,
-    ); // ✅ AUDIT FIX: i18n
     _selectedType = HardwareType.ledPanel;
     _loadRoom();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_translationsInitialized) {
+      _t = AppTranslations(
+        Localizations.localeOf(context).languageCode,
+      ); // ✅ AUDIT FIX: i18n - moved from initState
+      _translationsInitialized = true;
+    }
   }
 
   Future<void> _loadRoom() async {

@@ -32,7 +32,8 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
-  late final AppTranslations _t; // ✅ AUDIT FIX: i18n
+  late AppTranslations _t; // ✅ AUDIT FIX: i18n
+  bool _translationsInitialized = false;
 
   // Form Controllers
   final _nameController = TextEditingController();
@@ -64,13 +65,21 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   @override
   void initState() {
     super.initState();
-    _t = AppTranslations(
-      Localizations.localeOf(context).languageCode,
-    ); // ✅ AUDIT FIX: i18n
     _selectedGrowId = widget.preselectedGrowId;
     _loadRooms();
     _loadGrows();
     _loadRdwcSystems();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_translationsInitialized) {
+      _t = AppTranslations(
+        Localizations.localeOf(context).languageCode,
+      ); // ✅ AUDIT FIX: i18n - moved from initState
+      _translationsInitialized = true;
+    }
   }
 
   Future<void> _loadRooms() async {
