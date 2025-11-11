@@ -4,7 +4,13 @@
       "Bash(git commit:*)",
       "Bash(flutter analyze:*)",
       "Bash(done)",
-      "Bash(dart format:*)"
+      "Bash(dart format:*)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(flutter test:*)",
+      "Bash(ldconfig:*)",
+      "Bash(flutter doctor:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

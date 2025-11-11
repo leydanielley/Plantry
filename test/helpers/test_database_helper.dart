@@ -436,7 +436,7 @@ class TestDatabaseHelper {
       'brand': 'Test Brand',
       'type': 'BASE',
       'npk': '3-1-2',
-      'unit': 'ml',
+      // ✅ FIX: 'unit' field removed - belongs to log_fertilizers, not fertilizers
     });
 
     await db.insert('fertilizers', {
@@ -445,7 +445,7 @@ class TestDatabaseHelper {
       'brand': 'Test Brand',
       'type': 'ADDITIVE',
       'npk': '0-0-1',
-      'unit': 'ml',
+      // ✅ FIX: 'unit' field removed - belongs to log_fertilizers, not fertilizers
     });
   }
 
