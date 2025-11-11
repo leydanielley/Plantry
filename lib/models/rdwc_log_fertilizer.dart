@@ -79,8 +79,9 @@ class RdwcLogFertilizer {
 
     return RdwcLogFertilizer(
       id: map['id'] as int?,
-      rdwcLogId: map['rdwc_log_id'] as int,
-      fertilizerId: map['fertilizer_id'] as int,
+      // ✅ CRITICAL FIX: Null-safe casts for required foreign keys
+      rdwcLogId: map['rdwc_log_id'] as int? ?? 0,
+      fertilizerId: map['fertilizer_id'] as int? ?? 0,
       amount: SafeParsers.parseDouble(
         map['amount'],
         fallback: 0.0,

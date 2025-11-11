@@ -555,9 +555,17 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            validator: (value) => value?.isEmpty ?? true
-                ? _t['add_hardware_required']
-                : null, // ✅ i18n
+            // ✅ BUG FIX: Validate positive number with i18n message
+            validator: (value) {
+              if (value?.isEmpty ?? true) {
+                return _t['add_hardware_required'];
+              }
+              final number = int.tryParse(value!);
+              if (number == null || number <= 0) {
+                return _t['add_hardware_wattage_validation'];
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -592,9 +600,17 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
               border: const OutlineInputBorder(),
               suffixText: 'W',
             ),
-            validator: (value) => value?.isEmpty ?? true
-                ? _t['add_hardware_required']
-                : null, // ✅ i18n
+            // ✅ BUG FIX: Validate positive number with i18n message
+            validator: (value) {
+              if (value?.isEmpty ?? true) {
+                return _t['add_hardware_required'];
+              }
+              final number = int.tryParse(value!);
+              if (number == null || number <= 0) {
+                return _t['add_hardware_wattage_validation'];
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 12),
           TextFormField(

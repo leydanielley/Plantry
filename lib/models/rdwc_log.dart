@@ -88,7 +88,8 @@ class RdwcLog {
 
     return RdwcLog(
       id: map['id'] as int?,
-      systemId: map['system_id'] as int,
+      // ✅ CRITICAL FIX: Null-safe cast for required foreign key
+      systemId: map['system_id'] as int? ?? 0,
       logDate: SafeParsers.parseDateTime(
         map['log_date'] as String?,
         fallback: DateTime.now(),

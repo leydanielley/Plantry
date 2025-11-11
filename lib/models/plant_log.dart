@@ -5,6 +5,7 @@
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/config/validation_config.dart'; // ✅ FIX: Validation config
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -63,25 +64,81 @@ class PlantLog {
     required this.actionType,
     this.phase,
     this.phaseDayNumber,
-    this.waterAmount,
-    this.phIn,
-    this.ecIn,
-    this.phOut,
-    this.ecOut,
-    this.temperature,
-    this.humidity,
+    double? waterAmount,
+    double? phIn,
+    double? ecIn,
+    double? phOut,
+    double? ecOut,
+    double? temperature,
+    double? humidity,
     this.runoff = false,
     this.cleanse = false,
-    this.containerSize,
-    this.containerMediumAmount,
+    double? containerSize,
+    double? containerMediumAmount,
     this.containerDrainage = false,
     this.containerDrainageMaterial,
-    this.systemReservoirSize,
+    double? systemReservoirSize,
     this.systemBucketCount,
-    this.systemBucketSize,
+    double? systemBucketSize,
     this.note,
     DateTime? createdAt,
-  }) : logDate = logDate ?? DateTime.now(),
+  }) : // ✅ VALIDATION: Apply validation from ValidationConfig
+       waterAmount = ValidationConfig.validateDouble(
+         waterAmount,
+         ValidationConfig.minWaterAmount,
+         ValidationConfig.maxWaterAmount,
+       ),
+       phIn = ValidationConfig.validateDouble(
+         phIn,
+         ValidationConfig.minPH,
+         ValidationConfig.maxPH,
+       ),
+       ecIn = ValidationConfig.validateDouble(
+         ecIn,
+         ValidationConfig.minEC,
+         ValidationConfig.maxEC,
+       ),
+       phOut = ValidationConfig.validateDouble(
+         phOut,
+         ValidationConfig.minPH,
+         ValidationConfig.maxPH,
+       ),
+       ecOut = ValidationConfig.validateDouble(
+         ecOut,
+         ValidationConfig.minEC,
+         ValidationConfig.maxEC,
+       ),
+       temperature = ValidationConfig.validateDouble(
+         temperature,
+         ValidationConfig.minTemperature,
+         ValidationConfig.maxTemperature,
+       ),
+       humidity = ValidationConfig.validateDouble(
+         humidity,
+         ValidationConfig.minHumidity,
+         ValidationConfig.maxHumidity,
+       ),
+       containerSize = ValidationConfig.validateDouble(
+         containerSize,
+         ValidationConfig.minContainerSize,
+         ValidationConfig.maxContainerSize,
+       ),
+       containerMediumAmount = ValidationConfig.validateDouble(
+         containerMediumAmount,
+         ValidationConfig.minContainerSize,
+         ValidationConfig.maxContainerSize,
+       ),
+       systemReservoirSize = ValidationConfig.validateDouble(
+         systemReservoirSize,
+         ValidationConfig.minContainerSize,
+         ValidationConfig.maxContainerSize,
+       ),
+       systemBucketSize = ValidationConfig.validateDouble(
+         systemBucketSize,
+         ValidationConfig.minContainerSize,
+         ValidationConfig.maxContainerSize,
+       ),
+       logDate = logDate ?? DateTime.now(),
        createdAt = createdAt ?? DateTime.now();
 
   /// ✅ Helper: Parse ActionType from database string
@@ -110,8 +167,9 @@ class PlantLog {
   factory PlantLog.fromMap(Map<String, dynamic> map) {
     return PlantLog(
       id: map['id'] as int?,
-      plantId: map['plant_id'] as int,
-      dayNumber: map['day_number'] as int,
+      // ✅ CRITICAL FIX: Null-safe casts for required fields
+      plantId: map['plant_id'] as int? ?? 0,
+      dayNumber: map['day_number'] as int? ?? 0,
       logDate: SafeParsers.parseDateTime(
         map['log_date'] as String?,
         fallback: DateTime.now(),

@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/config/grow_config.dart'; // ✅ FIX: Validation config
 
 // Sentinel value für copyWith
 const _undefined = Object();
@@ -19,14 +20,16 @@ class Grow {
 
   Grow({
     this.id,
-    required this.name,
+    required String name,
     this.description,
     DateTime? startDate,
     this.endDate,
     this.roomId, // NEU
     this.archived = false,
     DateTime? createdAt,
-  }) : startDate = startDate ?? DateTime.now(),
+  }) : // ✅ VALIDATION: Apply validation from GrowConfig
+       name = GrowConfig.validateName(name),
+       startDate = startDate ?? DateTime.now(),
        createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)

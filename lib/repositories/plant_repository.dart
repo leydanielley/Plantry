@@ -185,7 +185,11 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
             }
           });
         } else {
-          // Old plant not found, just update
+          // ✅ LOW PRIORITY BUG FIX: Log warning instead of silently updating when old plant not found
+          AppLogger.warning(
+            'PlantRepository',
+            'Old plant not found for update (ID: ${plant.id}). Updating without recalculation.',
+          );
           await db.update(
             'plants',
             plant.toMap(),
@@ -454,9 +458,9 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
     }
 
     // Default to seedling phase
-    // ✅ BUG FIX: Handle missing seedDate gracefully
+    // ✅ BUG FIX: Handle missing seedDate gracefully (return 0 instead of null)
     if (plant.seedDate == null) {
-      return {'phase': 'SEEDLING', 'phaseDayNumber': null};
+      return {'phase': 'SEEDLING', 'phaseDayNumber': 0};
     }
     return {
       'phase': 'SEEDLING',
@@ -550,7 +554,8 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
       // Step 3: Determine phase and phase_day_number using extracted helper
       final phaseInfo = _determinePhaseForLog(logDate, plant);
       final newPhase = phaseInfo['phase'] as String;
-      final newPhaseDayNumber = phaseInfo['phaseDayNumber'] as int;
+      // ✅ CRITICAL FIX: Handle null phaseDayNumber safely (can be null if seedDate is missing)
+      final newPhaseDayNumber = phaseInfo['phaseDayNumber'] as int? ?? 0;
 
       // Step 4: Update log with all recalculated data
       await txn.update(

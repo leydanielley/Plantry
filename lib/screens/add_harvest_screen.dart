@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/translations.dart'; // ✅ BUG FIX: i18n for hardcoded strings
 import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/models/enums.dart';
@@ -27,6 +28,7 @@ class AddHarvestScreen extends StatefulWidget {
 class _AddHarvestScreenState extends State<AddHarvestScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
   final _formKey = GlobalKey<FormState>();
+  late final AppTranslations _t; // ✅ BUG FIX: i18n translations
 
   int _currentStep = 0;
 
@@ -36,15 +38,21 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
 
   // Step 2: Drying Data
   final DateTime _dryingStartDate = DateTime.now();
-  final TextEditingController _dryingMethodController = TextEditingController(
-    text: 'Hängend',
-  );
+  late final TextEditingController _dryingMethodController;
   final TextEditingController _dryingTempController = TextEditingController();
   final TextEditingController _dryingHumidityController =
       TextEditingController();
 
   // Step 3: Optional
   final TextEditingController _notesController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ BUG FIX: Initialize translations
+    // ✅ BUG FIX: Initialize with i18n default value instead of hardcoded "Hängend"
+    _dryingMethodController = TextEditingController(text: _t['drying_method_hanging']);
+  }
 
   @override
   void dispose() {

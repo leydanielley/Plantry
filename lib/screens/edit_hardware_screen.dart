@@ -30,6 +30,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen>
   final _formKey = GlobalKey<FormState>();
   final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
+  late final AppTranslations _t; // ✅ BUG FIX: i18n translations
 
   Room? _room;
 
@@ -83,6 +84,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen>
   @override
   void initState() {
     super.initState();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode); // ✅ BUG FIX: Initialize translations
 
     // Initialize controllers with existing hardware data
     _nameController = TextEditingController(text: widget.hardware.name);
@@ -182,7 +184,8 @@ class _EditHardwareScreenState extends State<EditHardwareScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hardware bearbeiten'),
+        // ✅ BUG FIX: Replace hardcoded German string with i18n
+        title: Text(_t['edit_hardware_title']),
         backgroundColor: Colors.orange[700],
         foregroundColor: Colors.white,
       ),
