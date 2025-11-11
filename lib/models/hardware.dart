@@ -148,9 +148,10 @@ class Hardware {
   factory Hardware.fromMap(Map<String, dynamic> map) {
     return Hardware(
       id: map['id'] as int?,
-      roomId: map['room_id'] as int,
-      name: map['name'] as String,
-      type: _parseHardwareType(map['type'].toString()),
+      // ✅ CRITICAL FIX: Null-safe casts for required fields
+      roomId: map['room_id'] as int? ?? 0,
+      name: map['name'] as String? ?? 'Unknown',
+      type: _parseHardwareType(map['type']?.toString() ?? 'other'),
       brand: map['brand'] as String?,
       model: map['model'] as String?,
       wattage: map['wattage'] as int?,

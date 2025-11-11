@@ -70,10 +70,11 @@ class Plant {
   factory Plant.fromMap(Map<String, dynamic> map) {
     return Plant(
       id: map['id'] as int?,
-      name: map['name'] as String,
+      // ✅ CRITICAL FIX: Null-safe casts for required fields
+      name: map['name'] as String? ?? 'Unknown Plant',
       breeder: map['breeder'] as String?,
       strain: map['strain'] as String?,
-      feminized: (map['feminized'] as int) == 1,
+      feminized: (map['feminized'] as int? ?? 0) == 1,
       seedType: SafeParsers.parseEnum<SeedType>(
         SeedType.values,
         map['seed_type']?.toString(),

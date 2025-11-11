@@ -25,8 +25,9 @@ class Photo {
   factory Photo.fromMap(Map<String, dynamic> map) {
     return Photo(
       id: map['id'] as int?,
-      logId: map['log_id'] as int,
-      filePath: map['file_path'] as String,
+      // ✅ CRITICAL FIX: Null-safe casts for required fields
+      logId: map['log_id'] as int? ?? 0,
+      filePath: map['file_path'] as String? ?? '',
       createdAt: SafeParsers.parseDateTime(
         map['created_at'] as String?,
         fallback: DateTime.now(),
@@ -36,22 +37,13 @@ class Photo {
   }
 
   /// Zu Map konvertieren (für Datenbank)
+  /// ✅ HIGH PRIORITY FIX: Use ISO8601 format to match fromMap expectations
   Map<String, dynamic> toMap() {
-    // Format: '2024-01-15 10:30:00.000'
-    final formattedDate =
-        '${createdAt.year.toString().padLeft(4, '0')}-'
-        '${createdAt.month.toString().padLeft(2, '0')}-'
-        '${createdAt.day.toString().padLeft(2, '0')} '
-        '${createdAt.hour.toString().padLeft(2, '0')}:'
-        '${createdAt.minute.toString().padLeft(2, '0')}:'
-        '${createdAt.second.toString().padLeft(2, '0')}.'
-        '${createdAt.millisecond.toString().padLeft(3, '0')}';
-
     return {
       'id': id,
       'log_id': logId,
       'file_path': filePath,
-      'created_at': formattedDate,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 

@@ -62,7 +62,8 @@ class Room {
 
     return Room(
       id: map['id'] as int?,
-      name: map['name'] as String,
+      // ✅ CRITICAL FIX: Null-safe cast for required field
+      name: map['name'] as String? ?? 'Unknown Room',
       description: map['description'] as String?,
       growType: SafeParsers.parseEnumNullable<GrowType>(
         GrowType.values,

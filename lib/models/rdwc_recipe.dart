@@ -118,7 +118,8 @@ class RdwcRecipe {
   factory RdwcRecipe.fromMap(Map<String, dynamic> map) {
     return RdwcRecipe(
       id: map['id'] as int?,
-      name: map['name'] as String,
+      // ✅ CRITICAL FIX: Null-safe cast for required field
+      name: map['name'] as String? ?? 'Unknown Recipe',
       description: map['description'] as String?,
       targetEc: (map['target_ec'] as num?)?.toDouble(),
       targetPh: (map['target_ph'] as num?)?.toDouble(),

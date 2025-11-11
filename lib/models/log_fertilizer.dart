@@ -21,8 +21,9 @@ class LogFertilizer {
   factory LogFertilizer.fromMap(Map<String, dynamic> map) {
     return LogFertilizer(
       id: map['id'] as int?,
-      logId: map['log_id'] as int,
-      fertilizerId: map['fertilizer_id'] as int,
+      // ✅ CRITICAL FIX: Null-safe casts for required foreign keys
+      logId: map['log_id'] as int? ?? 0,
+      fertilizerId: map['fertilizer_id'] as int? ?? 0,
       // ✅ CRITICAL FIX: Null-safe cast to prevent crash on NULL/corrupted data
       amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
       unit: map['unit'] as String? ?? 'ml',

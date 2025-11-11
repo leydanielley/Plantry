@@ -84,7 +84,8 @@ class Fertilizer {
   factory Fertilizer.fromMap(Map<String, dynamic> map) {
     return Fertilizer(
       id: map['id'] as int?,
-      name: map['name'] as String,
+      // ✅ CRITICAL FIX: Null-safe cast for required field
+      name: map['name'] as String? ?? 'Unknown Fertilizer',
       brand: map['brand'] as String?,
       npk: map['npk'] as String?,
       type: map['type'] as String?,

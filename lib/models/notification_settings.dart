@@ -71,10 +71,11 @@ class NotificationSettings {
       fertilizingReminders: map['fertilizing_reminders'] == 1,
       photoReminders: map['photo_reminders'] == 1,
       harvestReminders: map['harvest_reminders'] == 1,
-      wateringIntervalDays: map['watering_interval_days'] as int,
-      fertilizingIntervalDays: map['fertilizing_interval_days'] as int,
-      photoIntervalDays: map['photo_interval_days'] as int,
-      notificationTime: map['notification_time'] as String,
+      // ✅ CRITICAL FIX: Null-safe casts with fallback defaults
+      wateringIntervalDays: map['watering_interval_days'] as int? ?? 2,
+      fertilizingIntervalDays: map['fertilizing_interval_days'] as int? ?? 7,
+      photoIntervalDays: map['photo_interval_days'] as int? ?? 7,
+      notificationTime: map['notification_time'] as String? ?? "09:00",
     );
   }
 }

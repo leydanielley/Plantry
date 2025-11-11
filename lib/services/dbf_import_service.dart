@@ -52,8 +52,9 @@ class DbfImportService {
             }
           } else {
             // Track why it was skipped
-            final name = record['FORMULA'] ?? '';
-            final formula = record['NAME'] ?? '';
+            // ✅ CRITICAL FIX: Correct field names (was reversed)
+            final name = record['NAME'] ?? '';
+            final formula = record['FORMULA'] ?? '';
             if (name.isEmpty) {
               skippedEmpty++;
             } else if (name.startsWith('*') || formula.startsWith('*')) {
@@ -173,11 +174,11 @@ class DbfImportService {
       );
 
       return Fertilizer(
-        name: readableName, // Use the readable name from FORMULA field
+        name: readableName, // ✅ FIX: Use the readable name from NAME field
         brand: 'HydroBuddy', // Mark as imported from HydroBuddy
         npk: npkString,
         type: type,
-        formula: chemicalFormula, // Use the chemical formula from NAME field
+        formula: chemicalFormula, // ✅ FIX: Use the chemical formula from FORMULA field
         source: record['SOURCE'],
         purity: _parseDouble(record['PURITY']),
         isLiquid: isLiquid,

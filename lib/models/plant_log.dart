@@ -110,8 +110,9 @@ class PlantLog {
   factory PlantLog.fromMap(Map<String, dynamic> map) {
     return PlantLog(
       id: map['id'] as int?,
-      plantId: map['plant_id'] as int,
-      dayNumber: map['day_number'] as int,
+      // ✅ CRITICAL FIX: Null-safe casts for required fields
+      plantId: map['plant_id'] as int? ?? 0,
+      dayNumber: map['day_number'] as int? ?? 0,
       logDate: SafeParsers.parseDateTime(
         map['log_date'] as String?,
         fallback: DateTime.now(),

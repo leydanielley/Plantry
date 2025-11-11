@@ -73,7 +73,8 @@ class RdwcSystem {
   factory RdwcSystem.fromMap(Map<String, dynamic> map) {
     return RdwcSystem(
       id: map['id'] as int?,
-      name: map['name'] as String,
+      // ✅ CRITICAL FIX: Null-safe cast for required field
+      name: map['name'] as String? ?? 'Unknown System',
       roomId: map['room_id'] as int?,
       growId: map['grow_id'] as int?,
       // ✅ CRITICAL FIX: Null-safe cast to prevent crash on NULL/corrupted data

@@ -79,57 +79,115 @@ class NotificationRepository
   }
 
   /// Update specific setting
+  /// ✅ CRITICAL FIX: Atomic operations to prevent race conditions
+  /// Previous implementation had read-modify-write race condition where concurrent
+  /// calls could overwrite each other's changes. Now each setter directly updates
+  /// only its specific field atomically via SharedPreferences.
   @override
   Future<void> setEnabled(bool enabled) async {
-    final settings = await getSettings();
-    await saveSettings(settings.copyWith(enabled: enabled));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyEnabled, enabled);
+      AppLogger.debug('NotificationRepository', 'Enabled updated', enabled);
+    } catch (e) {
+      AppLogger.error('NotificationRepository', 'Failed to set enabled', e);
+      rethrow;
+    }
   }
 
   @override
   Future<void> setWateringReminders(bool enabled) async {
-    final settings = await getSettings();
-    await saveSettings(settings.copyWith(wateringReminders: enabled));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyWateringReminders, enabled);
+      AppLogger.debug('NotificationRepository', 'Watering reminders updated', enabled);
+    } catch (e) {
+      AppLogger.error('NotificationRepository', 'Failed to set watering reminders', e);
+      rethrow;
+    }
   }
 
   @override
   Future<void> setFertilizingReminders(bool enabled) async {
-    final settings = await getSettings();
-    await saveSettings(settings.copyWith(fertilizingReminders: enabled));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyFertilizingReminders, enabled);
+      AppLogger.debug('NotificationRepository', 'Fertilizing reminders updated', enabled);
+    } catch (e) {
+      AppLogger.error('NotificationRepository', 'Failed to set fertilizing reminders', e);
+      rethrow;
+    }
   }
 
   @override
   Future<void> setPhotoReminders(bool enabled) async {
-    final settings = await getSettings();
-    await saveSettings(settings.copyWith(photoReminders: enabled));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyPhotoReminders, enabled);
+      AppLogger.debug('NotificationRepository', 'Photo reminders updated', enabled);
+    } catch (e) {
+      AppLogger.error('NotificationRepository', 'Failed to set photo reminders', e);
+      rethrow;
+    }
   }
 
   @override
   Future<void> setHarvestReminders(bool enabled) async {
-    final settings = await getSettings();
-    await saveSettings(settings.copyWith(harvestReminders: enabled));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyHarvestReminders, enabled);
+      AppLogger.debug('NotificationRepository', 'Harvest reminders updated', enabled);
+    } catch (e) {
+      AppLogger.error('NotificationRepository', 'Failed to set harvest reminders', e);
+      rethrow;
+    }
   }
 
   @override
   Future<void> setWateringInterval(int days) async {
-    final settings = await getSettings();
-    await saveSettings(settings.copyWith(wateringIntervalDays: days));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_keyWateringInterval, days);
+      AppLogger.debug('NotificationRepository', 'Watering interval updated', days);
+    } catch (e) {
+      AppLogger.error('NotificationRepository', 'Failed to set watering interval', e);
+      rethrow;
+    }
   }
 
   @override
   Future<void> setFertilizingInterval(int days) async {
-    final settings = await getSettings();
-    await saveSettings(settings.copyWith(fertilizingIntervalDays: days));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_keyFertilizingInterval, days);
+      AppLogger.debug('NotificationRepository', 'Fertilizing interval updated', days);
+    } catch (e) {
+      AppLogger.error('NotificationRepository', 'Failed to set fertilizing interval', e);
+      rethrow;
+    }
   }
 
   @override
   Future<void> setPhotoInterval(int days) async {
-    final settings = await getSettings();
-    await saveSettings(settings.copyWith(photoIntervalDays: days));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_keyPhotoInterval, days);
+      AppLogger.debug('NotificationRepository', 'Photo interval updated', days);
+    } catch (e) {
+      AppLogger.error('NotificationRepository', 'Failed to set photo interval', e);
+      rethrow;
+    }
   }
 
   @override
   Future<void> setNotificationTime(String time) async {
-    final settings = await getSettings();
-    await saveSettings(settings.copyWith(notificationTime: time));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_keyNotificationTime, time);
+      AppLogger.debug('NotificationRepository', 'Notification time updated', time);
+    } catch (e) {
+      AppLogger.error('NotificationRepository', 'Failed to set notification time', e);
+      rethrow;
+    }
   }
 }
