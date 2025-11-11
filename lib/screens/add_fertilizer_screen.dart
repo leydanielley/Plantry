@@ -321,7 +321,8 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
               if (number == null) {
                 return _t['add_fertilizer_validation_number'];
               }
-              if (number < 0) {
+              // ✅ MEDIUM PRIORITY FIX: Reject 0 and negative values (was: < 0)
+              if (number <= 0) {
                 return _t['add_fertilizer_validation_positive'];
               }
             }
@@ -346,7 +347,8 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
               if (number == null) {
                 return _t['add_fertilizer_validation_number'];
               }
-              if (number < 0) {
+              // ✅ MEDIUM PRIORITY FIX: Reject 0 and negative values (was: < 0)
+              if (number <= 0) {
                 return _t['add_fertilizer_validation_positive'];
               }
             }

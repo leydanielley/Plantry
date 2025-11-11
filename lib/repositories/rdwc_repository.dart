@@ -700,8 +700,12 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         ORDER BY rl.log_date DESC, rl.id DESC
         LIMIT ?
       ''',
-        [systemId, limit * 10],
-      ); // Multiply limit to account for multiple fertilizers per log
+        // ✅ MEDIUM PRIORITY FIX: Reduced multiplier from 10 to 3
+        // Previous: limit * 10 was too aggressive (100 logs → 1000 rows)
+        // New: limit * 3 is more reasonable (average 3 fertilizers per log)
+        // Still allows logs with multiple fertilizers while reducing over-fetch
+        [systemId, limit * 3],
+      );
 
       // Group results by log_id
       final logMap = <int, Map<String, dynamic>>{};
