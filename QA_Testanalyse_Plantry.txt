@@ -1,0 +1,913 @@
+================================================================================
+QA-TESTANALYSE: PLANTRY FLUTTER GROW-LOGGING APP
+Senior QA Engineer - Vollständiger Testbericht
+================================================================================
+
+================================================================================
+1. FUNKTIONSANALYSE
+================================================================================
+
+1.1 PFLANZENVERWALTUNG
+--------------------------------------------------------------------------------
+
+Zweck:
+- Komplettes Lifecycle-Management von Pflanzen (Seedling → Veg → Bloom → Harvest → Archived)
+- Tracking von Strain, Breeder, Seed-Typ (Photo/Auto), Medium (Erde, Coco, DWC, RDWC)
+- Container-Größen-Tracking und RDWC-Bucket-Zuordnung
+
+Akzeptanzkriterien:
+- Pflanze kann erstellt werden mit Pflichtfeldern: Name, Seed-Type, Medium
+- Phasenwechsel werden mit Datum getrackt (vegDate, bloomDate, harvestDate)
+- Tagesberechnung: totalDays (seit Seed) und phaseDays (seit Phase-Start)
+- RDWC-Pflanzen können Bucket-Nummern (1-n) zugeordnet werden
+- Archivierung ohne Datenlöschung möglich
+
+Risiken & Bug-Quellen:
+- Race Condition bei parallelem Speichern (FIXED: Mutex-Lock in database_helper.dart:17)
+- Inkonsistente Tagesberechnung wenn seedDate nachträglich geändert wird
+- Foreign Key Violations beim Löschen von verknüpften Rooms/Grows
+- Enum-Parsing-Fehler bei korrupten DB-Daten (FIXED: SafeParsers.parseEnum)
+- Null-Safety bei phaseStartDate vs. vegDate/bloomDate/harvestDate
+- RDWC-Bucket-Konflikte wenn zwei Pflanzen dieselbe Bucket-Nummer erhalten
+
+Performance-Risiken:
+- Lazy Loading bei Listen mit >100 Pflanzen
+- Plant.totalDays/phaseDays werden bei jedem Getter berechnet (kein Caching)
+- Keine Pagination in PlantRepository.findAll() bei großen Datasets
+
+--------------------------------------------------------------------------------
+
+1.2 MEDIUM-SYSTEM
+--------------------------------------------------------------------------------
+
+Zweck:
+- Unterscheidung zwischen 6 Medium-Typen: ERDE, COCO, HYDRO, AERO, DWC, RDWC
+- Medien-spezifische Validierung (z.B. Runoff nur bei Erde/Coco)
+- Automatische UI-Anpassung basierend auf Medium
+
+Akzeptanzkriterien:
+- Runoff-Messungen (pH_out, EC_out) nur bei Erde/Coco erforderlich
+- RDWC/DWC zeigen System-Größe statt Container-Größe
+- needsRunoffMeasurement Flag korrekt gesetzt
+
+Risiken & Bug-Quellen:
+- Datenvalidierung fehlt wenn User Medium wechselt (z.B. ERDE → RDWC)
+- Verwaiste Container-Daten wenn Medium von Topf zu Hydro wechselt
+- UI zeigt falsche Felder bei Medium-Wechsel ohne Page-Reload
+
+--------------------------------------------------------------------------------
+
+1.3 HARDWARE-DOKUMENTATION
+--------------------------------------------------------------------------------
+
+Zweck:
+- Equipment-Tracking pro Room: Lights, Fans, Pumps, Sensors, Controller
+- Spezifikationen: Wattage, Airflow, Spectrum, Dimmable, etc.
+- Purchase-Tracking (Datum, Preis)
+
+Akzeptanzkriterien:
+- Hardware kann Room zugeordnet werden (Foreign Key: room_id)
+- Hardware-Typ bestimmt verfügbare Felder (z.B. Spectrum nur bei Lights)
+- Active/Inactive Status für temporär nicht genutzte Hardware
+
+Risiken & Bug-Quellen:
+- Cascade Delete wenn Room gelöscht wird → Hardware wird mitgelöscht
+- Keine Validierung für wattage/airflow (können negativ sein?)
+- Verwaiste Hardware wenn Room-ID auf NULL gesetzt wird
+
+Performance-Risiken:
+- Keine Indizes für type-basierte Queries
+- JSON-Feld "controller_functions" kann sehr groß werden
+
+--------------------------------------------------------------------------------
+
+1.4 RDWC-SYSTEM (Recirculating Deep Water Culture)
+--------------------------------------------------------------------------------
+
+Zweck:
+- Wasserstands-Tracking (current_level, max_capacity)
+- Addback-Logging (Wasser nachfüllen)
+- Full-Change-Logging (kompletter Wasserwechsel)
+- Fertilizer-Tracking pro Log (Expert Mode)
+- Recipe-System für wiederverwendbare Nährstoff-Kombinationen
+- Hardware-Specs: Water Pump, Air Pump, Chiller
+
+Akzeptanzkriterien:
+- RDWC-System kann mehrere Pflanzen haben (1:n)
+- Wasserstands-Validierung: currentLevel <= maxCapacity
+- Log-Typen: ADDBACK, FULLCHANGE, MAINTENANCE, MEASUREMENT
+- EC/pH Before/After Tracking
+- Water-Consumption-Berechnung automatisch
+
+Risiken & Bug-Quellen:
+- Inkonsistente Wasserstände wenn Logs parallel erstellt werden
+- currentLevel out of sync wenn addback-Log fehlschlägt aber DB committed
+- Recipe-Fertilizer-Inkonsistenz wenn Fertilizer gelöscht wird (ON DELETE RESTRICT)
+- Bucket-Nummer-Kollisionen wenn bucketCount verringert wird aber Pflanzen noch zugeordnet
+- Negative Wasserstände bei falscher water_consumed Berechnung
+
+Performance-Risiken:
+- rdwc_logs Tabelle kann sehr groß werden (täglich 1-3 Logs × 365 Tage)
+- Keine Composite-Indizes für Analytics-Queries (system_id + log_date)
+- Recipe-Fertilizer-Joins können langsam werden
+
+--------------------------------------------------------------------------------
+
+1.5 PLANT LOGS (Tägliches Logging)
+--------------------------------------------------------------------------------
+
+Zweck:
+- Tägliche Aktivitäten tracken: WATER, FEED, TRIM, TRANSPLANT, TRAINING, HARVEST
+- Umweltdaten: Temperature, Humidity
+- Nährstoff-Daten: pH_in/out, EC_in/out
+- Dünger-Zuordnung (log_fertilizers)
+- Foto-Upload
+
+Akzeptanzkriterien:
+- day_number automatisch berechnet basierend auf seedDate
+- phase_day_number basierend auf aktueller Phase
+- Runoff-Flags nur bei Erde/Coco
+- Fertilizer per log_fertilizers verknüpft (n:m)
+- Fotos per photos.log_id verknüpft (1:n)
+
+Risiken & Bug-Quellen:
+- day_number Inkonsistenz wenn seedDate nachträglich geändert wird
+- Doppelte Logs bei doppeltem Button-Tap (kein Debouncing?)
+- Verwaiste Fotos wenn Log gelöscht wird (ON DELETE CASCADE sollte greifen)
+- EC/pH Validierung fehlt (können außerhalb realistischer Bereiche liegen)
+- Fertilizer-Deletion blockiert wegen ON DELETE RESTRICT
+
+Performance-Risiken:
+- plant_logs kann 1000+ Einträge pro Pflanze haben
+- Composite-Index (plant_id, log_date DESC) vorhanden
+- Foto-Pfade werden nicht validiert (tote Dateien?)
+
+--------------------------------------------------------------------------------
+
+1.6 HARVEST-TRACKING
+--------------------------------------------------------------------------------
+
+Zweck:
+- 3-Phasen-Tracking: Harvest → Drying → Curing
+- Weight-Tracking: wet_weight → dry_weight
+- Umweltdaten während Drying: Temperature, Humidity
+- Qualitäts-Assessment: THC%, CBD%, Terpene-Profile, Rating (1-5)
+
+Akzeptanzkriterien:
+- harvestDate pflicht, wet/dry weight optional
+- dryingDays automatisch berechnet (dryingEndDate - dryingStartDate)
+- curingDays automatisch berechnet
+- Rating 1-5 (CHECK constraint in DB)
+- Pro Pflanze mehrere Harvests möglich
+
+Risiken & Bug-Quellen:
+- dryingDays Inkonsistenz wenn Dates nachträglich geändert werden
+- Rating außerhalb 1-5 trotz CHECK constraint (Frontend-Validierung?)
+- Cascade Delete wenn Pflanze gelöscht wird → Harvests weg
+- Negative dryingDays wenn endDate < startDate
+
+--------------------------------------------------------------------------------
+
+1.7 SQLITE-PERSISTENZ & DATENBANK-ARCHITEKTUR
+--------------------------------------------------------------------------------
+
+Struktur:
+- 13 Tabellen mit Foreign Key Constraints
+- Version 13 (Migration System v1 → v13)
+- PRAGMA foreign_keys = ON erzwungen (database_helper.dart:110)
+- Mutex Lock für Thread-Safety (synchronized package)
+- Database Recovery bei Corruption
+
+Tabellenbeziehungen:
+rooms (1) ─────< plants (n)
+grows (1) ─────< plants (n)
+rdwc_systems (1) ─< plants (n)
+plants (1) ─────< plant_logs (n)
+plant_logs (1) ─< log_fertilizers (n) >─── fertilizers (1)
+plant_logs (1) ─< photos (n)
+plants (1) ─────< harvests (n)
+rooms (1) ─────< hardware (n)
+rdwc_systems (1) ─< rdwc_logs (n)
+rdwc_logs (1) ──< rdwc_log_fertilizers (n) >─ fertilizers (1)
+rdwc_recipes (1) < rdwc_recipe_fertilizers (n) > fertilizers (1)
+
+Risiken & Bug-Quellen:
+- Migration Failures von sehr alten Versionen (v1 → v13)
+- Foreign Key Violations bei Bulk-Deletes
+- Database Lock Timeouts bei langen Transaktionen
+- Corruption Recovery löscht Daten (DatabaseRecovery.performRecovery)
+- Schema Mismatch bei frischen Installs vs. Migrations
+
+--------------------------------------------------------------------------------
+
+1.8 DATENVALIDIERUNG
+--------------------------------------------------------------------------------
+
+Implementiert:
+- SafeParsers für DateTime/Enum-Parsing (safe_parsers.dart)
+- Validators für Input-Felder (validators.dart)
+- CHECK Constraints in DB (z.B. rating 1-5, seed_type IN (...))
+- RdwcSystemConfig für Capacity/Wattage/FlowRate Ranges
+
+Risiken:
+- Frontend-Validierung kann umgangen werden (direkter DB-Zugriff)
+- Partial Validation - nicht alle Felder haben Constraints
+- No min/max für pH/EC in Datenbank
+
+--------------------------------------------------------------------------------
+
+1.9 NAVIGATION & BACK-BEHAVIOR
+--------------------------------------------------------------------------------
+
+Implementierung:
+- Navigator.push/pop für Standard-Navigation
+- Provider-basiertes State Management (plant_provider, grow_provider, etc.)
+- AppLifecycle-Handling in main.dart (Pause → Save Settings)
+
+Risiken:
+- Ungespeicherte Änderungen bei Back-Button
+- Provider nicht disposed bei Navigation (Memory Leaks?)
+- Deep Links fehlen (Navigation-Stack kann inkonsistent sein)
+
+--------------------------------------------------------------------------------
+
+1.10 FEHLERBEHANDLUNG
+--------------------------------------------------------------------------------
+
+Implementiert:
+- Global Error Handler (FlutterError.onError + PlatformDispatcher.onError)
+- AppLogger mit Levels (info, warning, error)
+- RepositoryErrorHandler Mixin für standardisierte Error-Behandlung
+- AsyncValue Pattern in Providers für Loading/Error/Data States
+- Database Recovery bei Corruption
+
+Risiken:
+- Silent Failures in einigen Repositories (return [] bei Fehler)
+- Keine User-Notification bei DB-Errors (nur Logs)
+- Crash Loop Detection fehlt für wiederholte Fehler
+
+--------------------------------------------------------------------------------
+
+1.11 OFFLINE-BEDIENBARKEIT
+--------------------------------------------------------------------------------
+
+Status: Vollständig offline (SQLite-basiert)
+- Keine Cloud-Sync
+- Backup/Restore via File-Export
+
+Risiken:
+- Kein Backup-Reminder (User kann Daten verlieren)
+- File Permission Errors bei Backup
+
+--------------------------------------------------------------------------------
+
+1.12 LIFECYCLE-STABILITÄT
+--------------------------------------------------------------------------------
+
+Implementiert:
+- WidgetsBindingObserver in main.dart
+- didChangeAppLifecycleState mit Auto-Save bei Pause
+- Timeout-Handling beim Settings-Laden (10s)
+
+Risiken:
+- App-Kill während Transaction → Inkonsistente Daten
+- Memory Leaks bei Provider-Listeners
+- Rotate/Fold kann State zurücksetzen
+
+
+================================================================================
+2. TESTSTRATEGIE
+================================================================================
+
+2.1 TEST-PYRAMIDE
+--------------------------------------------------------------------------------
+
+        ┌─────────────────┐
+        │   E2E Tests     │  10% - Integration Tests
+        │    (10 TCs)     │
+        ├─────────────────┤
+        │ Widget Tests    │  30% - UI Component Tests
+        │    (25 TCs)     │
+        ├─────────────────┤
+        │  Unit Tests     │  60% - DB, Repositories, Models
+        │    (35 TCs)     │
+        └─────────────────┘
+
+2.2 TEST-ARTEN
+--------------------------------------------------------------------------------
+
+BLACK-BOX TESTS:
+- Funktionale Tests ohne Code-Kenntnis
+- User-Journey-Tests
+- Input-Validierung
+
+EXPLORATIVE TESTS:
+- Stress-Tests (1000+ Pflanzen)
+- Edge-Cases (negative Werte, Null-Inputs)
+- Rapid-Fire Inputs (Doppel-Taps)
+
+SQLITE-DATENBANKTESTS:
+
+Write/Read/Update/Delete:
+- Create Plant → findById → Update → Delete
+- Foreign Key Cascade (Room löschen → Plants?)
+- Batch-Operations
+
+Foreign Key Integrity:
+- Plant mit ungültiger room_id → Reject
+- Fertilizer löschen mit aktiven log_fertilizers → Blocked (RESTRICT)
+
+Datenverlust nach App-Neustart:
+- Plant erstellen → App killen → Wiederstarten → Plant noch da?
+
+Gleichzeitige DB-Operationen (async):
+- 10× parallel Plant erstellen → Alle gespeichert?
+- Race Condition Test (FIXED: Mutex sollte verhindern)
+
+Migrationen:
+- DB v8 → v13 Migration Test
+- Schema-Validierung nach Migration
+
+NEGATIVE TESTS:
+
+Validierungsfehler:
+- Plant ohne Name
+- RDWC mit currentLevel > maxCapacity
+- Harvest rating = 6 (außerhalb 1-5)
+
+Ungültige Eingaben:
+- pH = -1
+- EC = 999999
+- bucketNumber = 0
+
+Fehler beim Speichern:
+- DB geschlossen während Save
+- Disk full
+- Permission denied
+
+GERÄTE-/OS-VARIANTEN:
+- Android 10, 11, 12, 13, 14, 15
+- DPI: ldpi, mdpi, hdpi, xhdpi, xxhdpi
+- Dark/Light Mode
+- Landscape/Portrait
+- Foldables (Galaxy Fold)
+
+
+================================================================================
+3. TESTPLAN / TESTFALLTABELLE
+================================================================================
+
+TC-ID | Feature | Vorbedingungen | Aktion / Eingabe | Erwartetes Ergebnis | Randfälle | Priorität | Status
+------|---------|----------------|------------------|---------------------|-----------|-----------|--------
+
+PLANTS
+------
+TC-001 | Plant erstellen | App geöffnet | Name="Test", SeedType=Photo, Medium=ERDE | Plant in DB gespeichert, ID zugewiesen | Name leer, Name 255 Zeichen, Sonderzeichen | P0 | OFFEN
+
+TC-002 | Plant mit RDWC | RDWC-System existiert | Medium=RDWC, rdwcSystemId=1, bucketNumber=2 | Plant gespeichert, Bucket-Zuordnung korrekt | bucketNumber > bucketCount, bucketNumber=0 | P0 | OFFEN
+
+TC-003 | Phasenwechsel | Plant in Seedling | Phase → VEG setzen | vegDate=heute, phase='VEG', phaseDays=1 | Phase-Rückwärts (VEG→Seedling), Datums-Inkonsistenz | P0 | OFFEN
+
+TC-004 | seedDate ändern | Plant mit 10 Logs | seedDate +7 Tage ändern | Alle log.day_number neu berechnet | seedDate in Zukunft, seedDate=null | P1 | OFFEN
+
+TC-005 | totalDays Berechnung | Plant mit seedDate vor 30 Tagen | Öffne Plant-Detail | totalDays = 31 (1-indexed) | seedDate=heute, seedDate=gestern | P1 | OFFEN
+
+TC-006 | Archivierung | Aktive Plant | Archivieren | archived=1, nicht mehr in Hauptliste | Bereits archiviert, mit Logs | P2 | OFFEN
+
+TC-007 | Plant löschen | Plant mit Logs | Plant löschen | Plant + Logs + Photos gelöscht (CASCADE) | Plant mit Harvest, Plant in RDWC | P0 | OFFEN
+
+TC-008 | Duplicate bucketNumber | RDWC mit 2 Plants | Plant 2 bucketNumber=1 (wie Plant 1) | Warnung oder Fehler | 4 Plants in 4-Bucket System | P1 | OFFEN
+
+RDWC
+----
+TC-009 | RDWC erstellen | - | Name="System 1", maxCapacity=100L, bucketCount=4 | RDWC gespeichert | maxCapacity=0, bucketCount=-1 | P0 | OFFEN
+
+TC-010 | Addback Log | RDWC currentLevel=50L | water_added=20L | currentLevel=70L, water_consumed=0 | water_added > maxCapacity, negativ | P0 | OFFEN
+
+TC-011 | Full Change Log | RDWC currentLevel=80L | log_type=FULLCHANGE, level_after=100L | currentLevel=100L | level_after > maxCapacity | P0 | OFFEN
+
+TC-012 | Water-Consumption | Addback: level_before=80, water_added=30, level_after=100 | - | water_consumed = 10L (80+30-100) | Negative consumption | P1 | OFFEN
+
+TC-013 | Recipe anwenden | Recipe mit 3 Fertilizers | Recipe auf Addback-Log anwenden | 3 rdwc_log_fertilizers entries | Recipe ohne Fertilizers | P1 | OFFEN
+
+TC-014 | currentLevel Overflow | currentLevel=95L, maxCapacity=100L | water_added=20L | Fehler ODER automatisch clamping auf 100L | - | P0 | OFFEN
+
+TC-015 | Parallel Addbacks | - | 5× gleichzeitig Addback-Logs | Alle Logs gespeichert, currentLevel korrekt | Race Condition Test | P0 | OFFEN
+
+TC-016 | RDWC löschen | RDWC mit 3 Plants | RDWC löschen | Plants.rdwcSystemId=NULL (SET NULL) | Mit Logs, mit Recipes | P1 | OFFEN
+
+LOGS
+----
+TC-017 | Water Log | Plant existiert | ActionType=WATER, water_amount=2L | Log gespeichert, day_number korrekt | water_amount=0, negativ | P0 | OFFEN
+
+TC-018 | Feed Log + Fertilizers | 2 Fertilizers existieren | ActionType=FEED, Fertilizer A 5ml, Fertilizer B 10ml | 2 log_fertilizers entries | Fertilizer 0ml | P0 | OFFEN
+
+TC-019 | Runoff bei ERDE | Plant medium=ERDE | pH_in=6.0, pH_out=5.5, EC_in=1.2, EC_out=1.5 | Runoff-Werte gespeichert | pH_out ohne pH_in | P1 | OFFEN
+
+TC-020 | Runoff bei RDWC | Plant medium=RDWC | pH_out/EC_out Felder | Felder ausgeblendet (needsRunoff=false) | - | P1 | OFFEN
+
+TC-021 | Foto-Upload | Log existiert | 3 Fotos hochladen | 3 photos entries mit log_id | Foto >10MB, ungültiges Format | P1 | OFFEN
+
+TC-022 | Log löschen | Log mit Fotos | Log löschen | Log + Fotos gelöscht (CASCADE) | Log mit 50 Fotos | P1 | OFFEN
+
+TC-023 | day_number Inkonsistenz | Plant mit seedDate geändert | - | Alle Logs haben korrekte day_numbers | - | P0 | OFFEN
+
+TC-024 | Doppel-Tap | Log-Formular | 2× schnell Save-Button | Nur 1 Log gespeichert | - | P0 | OFFEN
+
+HARVEST
+-------
+TC-025 | Harvest erstellen | Plant in HARVEST Phase | harvestDate=heute, wetWeight=500g | Harvest gespeichert | wetWeight=0, negativ | P0 | OFFEN
+
+TC-026 | Drying Phase | Harvest existiert | dryingStartDate, dryingEndDate=+7 Tage | dryingDays=7 automatisch | endDate < startDate | P0 | OFFEN
+
+TC-027 | Curing Phase | Drying abgeschlossen | curingStartDate, curingEndDate=+14 Tage, method="Glass Jars" | curingDays=14 | - | P1 | OFFEN
+
+TC-028 | Quality Rating | Harvest existiert | rating=5, thc=22.5%, cbd=0.1%, terpene="Myrcene" | Gespeichert | rating=0, rating=6, thc=100% | P1 | OFFEN
+
+TC-029 | Multiple Harvests | Plant existiert | 2× Harvest erstellen | 2 Harvests für dieselbe Plant | - | P2 | OFFEN
+
+DATABASE
+--------
+TC-030 | Foreign Key Constraint | - | Plant mit room_id=9999 (nicht existent) | Fehler ODER room_id=NULL | - | P0 | OFFEN
+
+TC-031 | Cascade Delete | Room mit 5 Plants | Room löschen | Plants.room_id=NULL (SET NULL) | Room mit Hardware | P0 | OFFEN
+
+TC-032 | Fertilizer Deletion | Fertilizer in log_fertilizers verwendet | Fertilizer löschen | RESTRICT: Fehler | - | P0 | OFFEN
+
+TC-033 | Migration v12→v13 | DB v12 | App-Update auf v13 | Migration erfolgreich, Daten erhalten | v1→v13, v8→v13 | P0 | OFFEN
+
+TC-034 | Schema Integrity | Frische Installation | onCreate ausführen | Alle 13 Tabellen + Indizes erstellt | - | P0 | OFFEN
+
+TC-035 | Database Recovery | Korrupte DB | App-Start | Recovery erfolgreich ODER DB neu erstellt | - | P0 | OFFEN
+
+TC-036 | Race Condition | - | 10× parallel Plant erstellen | Alle 10 Plants gespeichert, keine Duplikate | - | P0 | OFFEN
+
+TC-037 | Transaction Rollback | - | Plant + 5 Logs in Transaction, Log 3 fails | Rollback: Plant nicht gespeichert | - | P1 | OFFEN
+
+TC-038 | DB Lock Timeout | - | Long-Running Query + parallel Write | Timeout ODER Queue | - | P2 | OFFEN
+
+TC-039 | Batch Insert | - | 100 Plants auf einmal | Alle gespeichert, <5 Sekunden | 1000 Plants | P1 | OFFEN
+
+TC-040 | NULL Handling | - | Plant mit allen optionalen Feldern=NULL | Gespeichert | - | P1 | OFFEN
+
+UI/NAVIGATION
+-------------
+TC-041 | Back ohne Speichern | Plant-Formular ausgefüllt | Back-Button | Warnung "Ungespeicherte Änderungen"? | Direkt verwerfen | P1 | OFFEN
+
+TC-042 | Deep Link | App im Hintergrund | Notification → Plant öffnen | Korrekte Plant angezeigt | Stack-Konsistenz | P2 | OFFEN
+
+TC-043 | Provider Dispose | Plant-Detail → zurück | - | Provider disposed, kein Memory Leak | 10× hin/zurück | P1 | OFFEN
+
+TC-044 | Rotation | Plant-Liste | Device rotieren | State erhalten, Scrollposition | Mid-Scroll rotieren | P1 | OFFEN
+
+TC-045 | Dark/Light Mode | - | Theme wechseln | Alle Screens korrekt gerendert | Während Navigation | P2 | OFFEN
+
+LIFECYCLE
+---------
+TC-046 | App Pause | Plant-Formular ausgefüllt | Home-Button | Settings gespeichert | Während DB-Write | P0 | OFFEN
+
+TC-047 | App Kill | Plant-Formular ausgefüllt | Force-Stop | Ungespeicherte Daten verloren | Mid-Transaction | P0 | OFFEN
+
+TC-048 | Resume | App pausiert | App öffnen | State wiederhergestellt | Nach 24h | P1 | OFFEN
+
+TC-049 | Low Memory | 500 Plants geladen | Android Low-Memory-Kill | Graceful Shutdown ODER Restart | - | P1 | OFFEN
+
+TC-050 | Foldable Fold | App geöffnet | Fold schließen | App inactive → paused → resumed | Mid-Animation | P2 | OFFEN
+
+VALIDATION
+----------
+TC-051 | pH Range | Log-Formular | pH = -1 | Fehler "pH 0-14" | pH=14.1 | P1 | OFFEN
+
+TC-052 | EC Range | Log-Formular | EC = 99999 | Fehler "EC unrealistisch" | EC=0 | P1 | OFFEN
+
+TC-053 | Name Length | Plant-Formular | Name mit 300 Zeichen | Fehler ODER Truncate | Leerzeichen-Name | P2 | OFFEN
+
+TC-054 | Date in Future | Plant-Formular | seedDate = +30 Tage | Warnung ODER erlaubt | seedDate=1900 | P2 | OFFEN
+
+TC-055 | Decimal Precision | RDWC-Formular | maxCapacity = 100.123456 | Auf 2 Dezimalstellen runden | - | P2 | OFFEN
+
+PERFORMANCE
+-----------
+TC-056 | 1000 Plants | 1000 Plants in DB | Plant-Liste öffnen | <2 Sekunden, Pagination | 10.000 Plants | P1 | OFFEN
+
+TC-057 | 500 Logs | Plant mit 500 Logs | Log-Liste öffnen | <1 Sekunde, Lazy Load | 5000 Logs | P1 | OFFEN
+
+TC-058 | 100 Photos | Log mit 100 Fotos | Gallery öffnen | <3 Sekunden, Thumbnails | 500 Photos | P2 | OFFEN
+
+TC-059 | DB Query Optimization | - | Plant-Liste mit 1000 Einträgen | Index verwendet (EXPLAIN QUERY PLAN) | - | P1 | OFFEN
+
+TC-060 | Memory Leak | - | 100× Plant-Detail öffnen/schließen | Memory stabil, keine Leaks | - | P0 | OFFEN
+
+EDGE CASES
+----------
+TC-061 | Emoji in Name | Plant-Formular | Name="🌿 Plant 🌱" | Gespeichert, korrekt angezeigt | Nur Emojis | P2 | OFFEN
+
+TC-062 | Timezone Wechsel | Plant mit seedDate | Timezone ändern | Datums-Berechnung korrekt | seedDate UTC vs. Local | P1 | OFFEN
+
+TC-063 | Offline Backup | Kein Internet | Backup erstellen | Lokal gespeichert | - | P1 | OFFEN
+
+TC-064 | File Permission | Backup-Ordner schreibgeschützt | Backup erstellen | Fehler-Dialog | - | P1 | OFFEN
+
+TC-065 | System Language | - | Device-Sprache ändern | App-Sprache passt sich an | Unsupported Language | P2 | OFFEN
+
+TOTAL: 65 Testfälle
+
+
+================================================================================
+4. FEHLERFOKUS
+================================================================================
+
+4.1 WO SIND BUGS AM WAHRSCHEINLICHSTEN?
+--------------------------------------------------------------------------------
+
+KRITISCH (P0)
+-------------
+
+1. RDWC currentLevel Inkonsistenz
+----------------------------------
+Wo: rdwc_repository.dart beim Addback-Log-Speichern
+Warum: Async Race Condition zwischen Read → Calculate → Update
+Reproduktion:
+  1. RDWC mit currentLevel=50L
+  2. 2× parallel Addback-Log mit je 20L water_added
+  3. Erwartung: currentLevel=90L
+  4. Bug: currentLevel=70L (ein Update geht verloren)
+Status: Mutex schützt nur DB-Init, nicht Business-Logic
+
+2. day_number Inkonsistenz nach seedDate-Änderung
+--------------------------------------------------
+Wo: plant_repository.dart:148 recalculateAllLogData
+Warum: Funktion existiert, wird aber möglicherweise nicht aufgerufen
+Reproduktion:
+  1. Plant mit seedDate=2024-01-01, 10 Logs
+  2. seedDate ändern auf 2024-01-08
+  3. Logs haben noch alte day_numbers
+Check: Ist anyDateChanged Logik aktiv?
+
+3. Doppel-Tap → Doppeltes Speichern
+------------------------------------
+Wo: Alle *_form_screen.dart Save-Buttons
+Warum: Kein Debouncing/Disabled-State während async Save
+Reproduktion:
+  1. Plant-Formular ausfüllen
+  2. 2× schnell Save-Button tippen
+  3. Bug: 2 Plants mit identischen Daten
+
+4. Foreign Key Violation bei Room-Deletion
+-------------------------------------------
+Wo: room_repository.dart delete()
+Warum: ON DELETE SET NULL für Plants, aber CASCADE für Hardware
+Reproduktion:
+  1. Room mit 5 Plants + 3 Hardware
+  2. Room löschen
+  3. Erwartung: Plants.room_id=NULL, Hardware gelöscht
+  4. Potenzieller Bug: Transaction-Inkonsistenz
+
+5. App-Kill während Transaction
+--------------------------------
+Wo: Alle Repositories bei langen Batch-Operations
+Warum: didChangeAppLifecycleState.paused kommt zu spät
+Reproduktion:
+  1. 100 Plants in Transaction einfügen
+  2. Force-Stop App nach 50
+  3. Bug: DB inkonsistent (50 Plants, keine Rollback)
+
+
+HOCH (P1)
+---------
+
+6. bucketNumber-Kollisionen in RDWC
+------------------------------------
+Wo: plant_repository.dart save()
+Warum: Keine Uniqueness-Validierung für (rdwc_system_id, bucket_number)
+Reproduktion:
+  1. RDWC mit bucketCount=4
+  2. Plant A: bucketNumber=1
+  3. Plant B: bucketNumber=1 (in demselben System)
+  4. Bug: Beide gespeichert, keine Warnung
+
+7. "Geisterdaten" im Provider nach Delete
+------------------------------------------
+Wo: plant_provider.dart cached State
+Warum: Provider wird nicht invalidiert nach Repository.delete()
+Reproduktion:
+  1. Plant-Liste laden (Provider cached)
+  2. Plant löschen
+  3. Zurück zur Liste
+  4. Bug: Gelöschte Plant noch sichtbar
+
+8. Medium-Wechsel → Verwaiste Daten
+------------------------------------
+Wo: plant_repository.dart update()
+Warum: Keine Daten-Cleanup bei Medium ERDE→RDWC
+Reproduktion:
+  1. Plant mit medium=ERDE, currentContainerSize=10L
+  2. Medium ändern auf RDWC
+  3. Bug: currentContainerSize=10L bleibt (sollte NULL/0 sein)
+
+9. Fertilizer-Deletion blockiert
+---------------------------------
+Wo: fertilizer_repository.dart delete()
+Warum: ON DELETE RESTRICT bei log_fertilizers
+Reproduktion:
+  1. Fertilizer in 50 Logs verwendet
+  2. Fertilizer löschen
+  3. Bug: SQLite FOREIGN KEY constraint failed
+  4. User bekommt kryptische Fehlermeldung
+
+10. Negative water_consumed
+----------------------------
+Wo: rdwc_log Berechnung
+Warum: Formula: consumed = level_before + water_added - level_after
+Reproduktion:
+  1. level_before=80, water_added=10, level_after=95
+  2. consumed = 80+10-95 = -5L
+  3. Bug: Physikalisch unmöglich, keine Validierung
+
+
+MITTEL (P2)
+-----------
+
+11. Settings-Load Timeout → Default-Settings
+--------------------------------------------
+Wo: main.dart:136 timeout 10s
+Warum: DB-Lock kann länger dauern
+Reproduktion:
+  1. Lange DB-Operation im Hintergrund
+  2. App starten
+  3. Settings-Load timeout
+  4. User-Settings verloren (Dark Mode, Expert Mode, etc.)
+
+12. Photo-Pfade werden nicht validiert
+---------------------------------------
+Wo: photo_repository.dart save()
+Warum: file_path wird nicht geprüft ob Datei existiert
+Reproduktion:
+  1. Photo hochladen
+  2. Datei manuell aus Filesystem löschen
+  3. Bug: DB hat Pfad, Datei existiert nicht → Crash beim Laden
+
+13. Provider Memory Leaks
+--------------------------
+Wo: Alle Screens mit Provider.of(context, listen: true)
+Warum: Listener möglicherweise nicht disposed
+Reproduktion:
+  1. 100× Plant-Detail öffnen/schließen
+  2. Memory-Profiler zeigen steigendes Memory
+
+14. Harvest rating außerhalb 1-5
+---------------------------------
+Wo: harvest_form_screen.dart
+Warum: Frontend-Validierung fehlt, CHECK constraint in DB vorhanden
+Reproduktion:
+  1. Rating-Slider manipulieren (Developer Tools?)
+  2. rating=0 speichern
+  3. Bug: SQLite CHECK constraint failed (falls nicht validiert)
+
+
+4.2 SQLITE-SPEZIFISCHE RISIKEN
+--------------------------------------------------------------------------------
+
+Risiko                              | Wahrscheinlichkeit | Impact     | Reproduktion
+------------------------------------|-------------------|------------|---------------------------
+Inkonsistente Foreign Keys          | MITTEL            | KRITISCH   | Room löschen während Plant-Insert
+Double-Saves (Doppel-Tap)           | HOCH              | HOCH       | Schnelles Tippen ohne Debounce
+Lost Updates (async Navigation)     | MITTEL            | HOCH       | Save + Zurück-Navigation gleichzeitig
+"Geisterdaten" im UI-State          | HOCH              | MITTEL     | Provider-Cache nach Delete
+Datenverluste nach App-Crash        | NIEDRIG           | KRITISCH   | Force-Stop während Transaction
+Sortierung/Filtern vs. DB-Realität  | NIEDRIG           | MITTEL     | ORDER BY vs. in-memory Sort
+
+
+================================================================================
+5. EMPFEHLUNGEN
+================================================================================
+
+5.1 NUTZERFÜHRUNG VERBESSERN
+--------------------------------------------------------------------------------
+
+QUICK WINS
+----------
+
+1. Ungespeicherte Änderungen Dialog
+   Wo: Alle *_form_screen.dart
+   Was: WillPopScope mit Bestätigung
+
+2. Doppel-Tap Prevention
+   Wo: Alle Save-Buttons
+   Was: Disabled-State während async Operation
+
+3. Field-Specific Validation Messages
+   Wo: Alle TextFormFields
+   Was: Statt "Invalid input" → "pH muss zwischen 0 und 14 liegen"
+
+4. Loading Indicators
+   Wo: Alle Async-Operationen
+   Was: CircularProgressIndicator während DB-Operationen
+
+5. Success Feedback
+   Wo: Nach Save-Operationen
+   Was: SnackBar "Pflanze gespeichert ✓"
+
+
+MITTELFRISTIG
+--------------
+
+6. Undo-Funktion für Delete
+   Was: Soft-Delete mit undo_timestamp
+   Wie: deleted_at Column, Cleanup nach 30 Tagen
+
+7. Conflict Resolution bei bucketNumber
+   Was: Validierung + Dialog "Bucket 1 ist bereits belegt"
+   Wo: RDWC Plant-Form
+
+8. Fertilizer Dependency-Check vor Delete
+   Was: Query: SELECT COUNT(*) FROM log_fertilizers WHERE fertilizer_id=?
+   UI: "Dünger wird in 47 Logs verwendet. Wirklich löschen? Alternative: Archivieren"
+
+9. Backup-Reminder
+   Was: Notification nach 30 Tagen ohne Backup
+   Wo: Settings-Screen + Push-Notification
+
+10. Photo-Validation
+    Was: File.exists() Check beim Load
+    Fallback: Placeholder-Image bei 404
+
+
+5.2 FEHLERDIALOGE STATT STILLER FEHLER
+--------------------------------------------------------------------------------
+
+Aktuell: Repositories returnen [] oder null bei Fehlern → User merkt nichts
+
+Empfehlung: Exception werfen + UI-Dialog mit Retry-Option
+
+
+5.3 UNDO-FUNKTION FÜR DELETE
+--------------------------------------------------------------------------------
+
+Implementierung:
+
+1. Soft Delete:
+   ALTER TABLE plants ADD COLUMN deleted_at TEXT;
+
+2. Repository:
+   Future<void> softDelete(int id) async {
+     await db.update(
+       'plants',
+       {'deleted_at': DateTime.now().toIso8601String()},
+       where: 'id = ?',
+       whereArgs: [id],
+     );
+   }
+
+   Future<void> restore(int id) async {
+     await db.update(
+       'plants',
+       {'deleted_at': null},
+       where: 'id = ?',
+       whereArgs: [id],
+     );
+   }
+
+3. UI: SnackBar mit UNDO-Button (5 Sekunden)
+
+4. Cleanup-Job: Alte deleted_at > 30 Tage permanent löschen
+
+
+5.4 AUTOMATISIERUNGS-VORSCHLÄGE
+--------------------------------------------------------------------------------
+
+A) UNIT TESTS (flutter_test)
+-----------------------------
+
+Priorität 1: Repository-Tests
+- save plant → findById returns same plant
+- delete plant with logs → logs also deleted (CASCADE)
+- seedDate change → day_numbers recalculated
+- Foreign Key validation
+- NULL handling
+
+Priorität 2: Model-Tests
+- totalDays calculation
+- Plant.fromMap with corrupted enum
+- copyWith nullable fields
+
+Priorität 3: Validator-Tests
+- pH validator (0-14)
+- EC validator
+- Name length
+- Date ranges
+
+
+B) WIDGET TESTS
+---------------
+
+- Save button disabled during save
+- Validation error shown for empty name
+- Form fields hide/show based on Medium
+- Dark/Light mode rendering
+- Rotation state preservation
+
+
+C) INTEGRATION TESTS (integration_test)
+----------------------------------------
+
+- Full plant lifecycle: Create → View → Edit → Delete
+- RDWC addback flow: Create system → Add plant → Log addback → Verify currentLevel
+- Photo upload and gallery
+- Harvest 3-phase workflow
+- Recipe apply to addback log
+
+
+D) GOLDEN TESTS (Layout-Regression)
+------------------------------------
+
+- Plant detail screen
+- Plant list screen
+- Add plant form
+- RDWC analytics screen
+- Dark mode variants
+
+
+E) MOCK-DB FÜR EDGE CASES
+--------------------------
+
+- Simulate corruption
+- Simulate timeout
+- Simulate disk full
+- Foreign key violations
+- Race conditions
+
+
+5.5 TEST-AUTOMATISIERUNG ROADMAP
+--------------------------------------------------------------------------------
+
+Phase                  | Zeitrahmen  | Tests            | Ziel
+-----------------------|-------------|------------------|--------------------------------
+Phase 1: Foundation    | Woche 1-2   | 35 Unit Tests    | Repository + Model Coverage
+Phase 2: UI Testing    | Woche 3     | 25 Widget Tests  | Form Validation Coverage
+Phase 3: E2E           | Woche 4     | 10 Integration   | Critical User Journeys
+Phase 4: Visual        | Woche 5     | 10 Golden Tests  | Layout-Stabilität
+Phase 5: Edge Cases    | Woche 6     | 15 Mock-DB Tests | Error-Handling Coverage
+
+Total: 95 automatisierte Tests
+
+
+5.6 TOOLING-EMPFEHLUNGEN
+--------------------------------------------------------------------------------
+
+1. flutter_test (built-in) - Unit + Widget Tests
+2. integration_test (built-in) - E2E Tests
+3. mockito - Mocking (bereits vorhanden)
+4. golden_toolkit - Golden Tests mit Themes
+5. test_coverage - Coverage-Report:
+   flutter test --coverage
+   genhtml coverage/lcov.info -o coverage/html
+
+6. CI/CD Integration:
+   GitHub Actions für automatische Tests bei jedem Push/PR
+
+
+================================================================================
+ZUSAMMENFASSUNG
+================================================================================
+
+APP-QUALITÄT: PRODUKTIONSREIF
+--------------------------------------------------------------------------------
+
+STÄRKEN:
+- Professionelle Architektur (Repository Pattern, DI, Provider)
+- 385+ existierende Tests
+- Race Condition FIXED (Mutex-Lock)
+- Foreign Key Constraints enforced
+- Database Recovery implementiert
+- Safe Parsing für Enums/DateTime
+- Multi-Layer Error Handling
+
+KRITISCHE RISIKEN:
+- RDWC currentLevel Race Conditions (Business-Logic-Ebene)
+- Doppel-Tap → Doppelte Saves
+- "Geisterdaten" im Provider-Cache
+- Keine Frontend-Validierung für pH/EC Ranges
+
+EMPFOHLENE SOFORT-MASSNAHMEN:
+1. Debouncing für alle Save-Buttons (2h)
+2. Dialog für ungespeicherte Änderungen (4h)
+3. Provider-Invalidierung nach Delete (2h)
+4. RDWC currentLevel Transaction-Locking (8h)
+5. pH/EC Frontend-Validierung (2h)
+
+TESTABDECKUNG:
+- Existierend: 385+ Tests (Repository, Service, Model)
+- Empfohlen: +95 Tests (Widget, Integration, Golden, Edge-Cases)
+- Ziel: >80% Coverage
+
+
+================================================================================
+ENDE DER QA-TESTANALYSE
+================================================================================
+
+Erstellt: 2025-11-11
+Version: 1.0
+Senior QA Engineer: Claude Code
+App: Plantry - Flutter Grow Logging App
+Codebase Version: v13 (Database)
