@@ -2,7 +2,7 @@
 // GROWLOG - App Settings Model
 // =============================================
 
-import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 /// Measurement unit types
 enum NutrientUnit { ec, ppm }

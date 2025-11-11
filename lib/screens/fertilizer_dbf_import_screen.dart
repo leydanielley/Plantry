@@ -4,13 +4,13 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../models/fertilizer.dart';
-import '../services/dbf_import_service.dart';
-import '../repositories/interfaces/i_fertilizer_repository.dart';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../utils/fertilizer_validator.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/fertilizer.dart';
+import 'package:growlog_app/services/dbf_import_service.dart';
+import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/fertilizer_validator.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class FertilizerDbfImportScreen extends StatefulWidget {
   final File dbfFile;
@@ -126,7 +126,7 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
   /// This should be called whenever _parsedFertilizers or _filterMode changes
   void _recalculateCache() {
     // Calculate filtered list
-    var filtered = _parsedFertilizers.where((fertilizer) {
+    final filtered = _parsedFertilizers.where((fertilizer) {
       if (_filterMode == 'substances') {
         return !FertilizerValidator.isLikelyRecipe(fertilizer);
       } else if (_filterMode == 'recipes') {

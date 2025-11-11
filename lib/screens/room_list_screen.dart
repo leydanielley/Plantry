@@ -3,20 +3,20 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../models/room.dart';
-import '../models/enums.dart';
-import '../repositories/interfaces/i_room_repository.dart';
-import '../repositories/interfaces/i_plant_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../utils/translations.dart';
-import '../utils/app_constants.dart';
-import '../widgets/empty_state_widget.dart'; // ✅ PHASE 3: Shared widget
-import 'add_room_screen.dart';
-import 'edit_room_screen.dart';
-import 'room_detail_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/models/room.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/app_constants.dart';
+import 'package:growlog_app/widgets/empty_state_widget.dart'; // ✅ PHASE 3: Shared widget
+import 'package:growlog_app/screens/add_room_screen.dart';
+import 'package:growlog_app/screens/edit_room_screen.dart';
+import 'package:growlog_app/screens/room_detail_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class RoomListScreen extends StatefulWidget {
   const RoomListScreen({super.key});

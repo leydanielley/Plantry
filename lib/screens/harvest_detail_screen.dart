@@ -7,17 +7,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
-import '../models/harvest.dart';
-import '../repositories/interfaces/i_harvest_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
-import 'edit_harvest_screen.dart';
-import 'harvest_drying_screen.dart';
-import 'harvest_curing_screen.dart';
-import 'harvest_quality_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/models/harvest.dart';
+import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/screens/edit_harvest_screen.dart';
+import 'package:growlog_app/screens/harvest_drying_screen.dart';
+import 'package:growlog_app/screens/harvest_curing_screen.dart';
+import 'package:growlog_app/screens/harvest_quality_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class HarvestDetailScreen extends StatefulWidget {
   final int harvestId;
@@ -422,7 +422,7 @@ _t['harvest_detail_deleted']);
 
   // ✅ UPDATED VERSION - Only show buttons when previous phase is complete
   Widget _buildQuickActions() {
-    List<Widget> actions = [];
+    final List<Widget> actions = [];
 
     // Always show Drying button
     actions.add(

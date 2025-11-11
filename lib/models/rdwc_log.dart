@@ -2,8 +2,8 @@
 // GROWLOG - RDWC Log Model (Water Addback Tracking)
 // =============================================
 
-import 'rdwc_log_fertilizer.dart';
-import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/models/rdwc_log_fertilizer.dart';
+import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 enum RdwcLogType {
   addback,        // Water addback/refill

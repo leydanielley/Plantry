@@ -4,10 +4,10 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:synchronized/synchronized.dart';
-import '../models/plant.dart';
-import '../repositories/interfaces/i_plant_repository.dart';
-import '../utils/app_logger.dart';
-import '../utils/async_value.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/async_value.dart';
 
 /// Provider for managing plant state across the app
 ///

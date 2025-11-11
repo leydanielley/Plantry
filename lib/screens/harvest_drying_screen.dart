@@ -3,13 +3,13 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../utils/app_messages.dart';
+import 'package:growlog_app/utils/app_messages.dart';
 import 'package:intl/intl.dart';
-import '../models/harvest.dart';
-import '../repositories/interfaces/i_harvest_repository.dart';
-import 'edit_harvest_drying_screen.dart';
-import 'harvest_curing_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/harvest.dart';
+import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
+import 'package:growlog_app/screens/edit_harvest_drying_screen.dart';
+import 'package:growlog_app/screens/harvest_curing_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class HarvestDryingScreen extends StatefulWidget {
   final int harvestId;

@@ -2,7 +2,7 @@
 // GROWLOG - HardwareRepository Interface
 // =============================================
 
-import '../../models/hardware.dart';
+import 'package:growlog_app/models/hardware.dart';
 
 abstract class IHardwareRepository {
   Future<List<Hardware>> findByRoom(int roomId);

@@ -3,21 +3,21 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import 'plants_screen.dart';
-import 'grow_list_screen.dart';
-import 'room_list_screen.dart';
-import 'fertilizer_list_screen.dart';
-import 'harvest_list_screen.dart';
-import 'settings_screen.dart';
-import 'rdwc_systems_screen.dart';
-import 'nutrient_calculator_screen.dart';
-import '../models/app_settings.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../utils/translations.dart';
-import '../utils/app_state_recovery.dart';
-import '../widgets/battery_optimization_dialog.dart';
-import '../main.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/screens/plants_screen.dart';
+import 'package:growlog_app/screens/grow_list_screen.dart';
+import 'package:growlog_app/screens/room_list_screen.dart';
+import 'package:growlog_app/screens/fertilizer_list_screen.dart';
+import 'package:growlog_app/screens/harvest_list_screen.dart';
+import 'package:growlog_app/screens/settings_screen.dart';
+import 'package:growlog_app/screens/rdwc_systems_screen.dart';
+import 'package:growlog_app/screens/nutrient_calculator_screen.dart';
+import 'package:growlog_app/models/app_settings.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/app_state_recovery.dart';
+import 'package:growlog_app/widgets/battery_optimization_dialog.dart';
+import 'package:growlog_app/main.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

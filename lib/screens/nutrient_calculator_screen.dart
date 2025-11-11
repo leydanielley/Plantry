@@ -3,21 +3,21 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../models/rdwc_system.dart';
-import '../models/rdwc_recipe.dart';
-import '../models/rdwc_log.dart';
-import '../models/rdwc_log_fertilizer.dart';
-import '../models/fertilizer.dart';
-import '../models/app_settings.dart';
-import '../models/nutrient_calculation.dart';
-import '../repositories/interfaces/i_rdwc_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../repositories/interfaces/i_fertilizer_repository.dart';
-import '../utils/translations.dart';
-import '../utils/unit_converter.dart';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/rdwc_system.dart';
+import 'package:growlog_app/models/rdwc_recipe.dart';
+import 'package:growlog_app/models/rdwc_log.dart';
+import 'package:growlog_app/models/rdwc_log_fertilizer.dart';
+import 'package:growlog_app/models/fertilizer.dart';
+import 'package:growlog_app/models/app_settings.dart';
+import 'package:growlog_app/models/nutrient_calculation.dart';
+import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/unit_converter.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class NutrientCalculatorScreen extends StatefulWidget {
   final RdwcSystem? system;  // Optional - null for standalone mode

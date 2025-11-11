@@ -3,10 +3,10 @@
 // =============================================
 
 import 'package:sqflite/sqflite.dart';
-import '../database/database_helper.dart';
-import '../models/fertilizer.dart';
-import 'interfaces/i_fertilizer_repository.dart';
-import 'repository_error_handler.dart'; // ✅ PHASE 2 FIX: Standardized error handling
+import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/models/fertilizer.dart';
+import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/repository_error_handler.dart'; // ✅ PHASE 2 FIX: Standardized error handling
 
 class FertilizerRepository with RepositoryErrorHandler implements IFertilizerRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;

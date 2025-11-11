@@ -2,12 +2,12 @@
 // GROWLOG - Warning Service
 // =============================================
 
-import '../models/plant.dart';
-import '../repositories/interfaces/i_plant_log_repository.dart';
-import '../repositories/interfaces/i_photo_repository.dart';
-import '../utils/app_logger.dart';
-import '../config/warning_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to WarningConfig
-import 'interfaces/i_warning_service.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_photo_repository.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/config/warning_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to WarningConfig
+import 'package:growlog_app/services/interfaces/i_warning_service.dart';
 
 enum WarningLevel {
   info,

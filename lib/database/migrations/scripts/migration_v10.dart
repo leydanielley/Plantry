@@ -4,8 +4,8 @@
 // =============================================
 
 import 'package:sqflite/sqflite.dart';
-import '../migration.dart';
-import '../../../utils/app_logger.dart';
+import 'package:growlog_app/database/migrations/migration.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 
 /// Migration v10: Phase History System
 ///
@@ -88,7 +88,7 @@ final Migration migrationV10 = Migration(
         orderBy: 'log_date ASC',
       );
 
-      Map<String, dynamic> updates = {};
+      final Map<String, dynamic> updates = {};
 
       if (logs.isNotEmpty) {
         plantsWithLogs++;

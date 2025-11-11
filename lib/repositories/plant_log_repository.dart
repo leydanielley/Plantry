@@ -3,12 +3,12 @@
 // =============================================
 
 import 'package:sqflite/sqflite.dart';
-import '../database/database_helper.dart';
-import '../models/plant_log.dart';
-import '../utils/safe_parsers.dart';
-import 'interfaces/i_plant_log_repository.dart';
-import 'photo_repository.dart';
-import 'repository_error_handler.dart';
+import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/models/plant_log.dart';
+import 'package:growlog_app/utils/safe_parsers.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
+import 'package:growlog_app/repositories/photo_repository.dart';
+import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
 class PlantLogRepository with RepositoryErrorHandler implements IPlantLogRepository {

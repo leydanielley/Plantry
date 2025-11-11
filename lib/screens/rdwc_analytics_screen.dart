@@ -3,18 +3,18 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../models/rdwc_system.dart';
-import '../models/rdwc_log.dart';
-import '../models/app_settings.dart';
-import '../repositories/interfaces/i_rdwc_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../utils/translations.dart';
-import '../utils/unit_converter.dart';
-import '../utils/app_logger.dart';
-import '../widgets/rdwc/stats_card.dart';
-import '../widgets/rdwc/consumption_chart.dart';
-import '../widgets/rdwc/drift_chart.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/rdwc_system.dart';
+import 'package:growlog_app/models/rdwc_log.dart';
+import 'package:growlog_app/models/app_settings.dart';
+import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/unit_converter.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/widgets/rdwc/stats_card.dart';
+import 'package:growlog_app/widgets/rdwc/consumption_chart.dart';
+import 'package:growlog_app/widgets/rdwc/drift_chart.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class RdwcAnalyticsScreen extends StatefulWidget {
   final RdwcSystem system;

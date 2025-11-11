@@ -6,9 +6,9 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import 'app_logger.dart';
-import 'version_manager.dart';
-import '../helpers/image_cache_helper.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/version_manager.dart';
+import 'package:growlog_app/helpers/image_cache_helper.dart';
 
 class UpdateCleanup {
   /// Perform cleanup tasks after update

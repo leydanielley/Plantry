@@ -3,11 +3,11 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../models/enums.dart';
-import '../models/room.dart';
-import '../models/grow.dart';
-import '../utils/input_constraints.dart';
-import '../utils/translations.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/models/room.dart';
+import 'package:growlog_app/models/grow.dart';
+import 'package:growlog_app/utils/input_constraints.dart';
+import 'package:growlog_app/utils/translations.dart';
 
 /// Reusable form fields for plant creation and editing
 ///

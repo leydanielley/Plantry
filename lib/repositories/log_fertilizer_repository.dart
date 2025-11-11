@@ -2,10 +2,10 @@
 // GROWLOG - LogFertilizer Repository (OPTIMIZED)
 // =============================================
 
-import '../database/database_helper.dart';
-import '../models/log_fertilizer.dart';
-import 'interfaces/i_log_fertilizer_repository.dart';
-import 'repository_error_handler.dart';
+import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/models/log_fertilizer.dart';
+import 'package:growlog_app/repositories/interfaces/i_log_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
 class LogFertilizerRepository with RepositoryErrorHandler implements ILogFertilizerRepository {

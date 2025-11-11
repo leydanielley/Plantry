@@ -3,16 +3,16 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../models/grow.dart';
-import '../models/room.dart';
-import '../repositories/interfaces/i_grow_repository.dart';
-import '../repositories/interfaces/i_room_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
-import '../utils/validators.dart';
-import '../utils/app_messages.dart';
-import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
-import '../utils/mounted_state_mixin.dart'; // ✅ FIX: Added for safe setState
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/grow.dart';
+import 'package:growlog_app/models/room.dart';
+import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/utils/validators.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/utils/mounted_state_mixin.dart'; // ✅ FIX: Added for safe setState
+import 'package:growlog_app/di/service_locator.dart';
 
 class EditGrowScreen extends StatefulWidget {
   final Grow grow;

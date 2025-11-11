@@ -3,12 +3,12 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../utils/app_messages.dart';
-import '../utils/translations.dart';
-import '../models/harvest.dart';
-import '../repositories/interfaces/i_harvest_repository.dart';
-import 'edit_harvest_quality_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/models/harvest.dart';
+import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
+import 'package:growlog_app/screens/edit_harvest_quality_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class HarvestQualityScreen extends StatefulWidget {
   final int harvestId;
@@ -134,10 +134,10 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
   }
 
   Widget _buildStatusCard(bool isComplete) {
-    Color color = isComplete ? Colors.green : Colors.grey;
-    IconData icon = isComplete ? Icons.check_circle : Icons.pending;
-    String status = isComplete ? 'Daten erfasst' : 'Offen';
-    String subtitle = isComplete 
+    final Color color = isComplete ? Colors.green : Colors.grey;
+    final IconData icon = isComplete ? Icons.check_circle : Icons.pending;
+    final String status = isComplete ? 'Daten erfasst' : 'Offen';
+    final String subtitle = isComplete 
         ? 'Quality-Daten wurden erfasst'
         : 'Noch keine Daten erfasst';
 

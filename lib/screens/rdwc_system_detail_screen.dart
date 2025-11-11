@@ -3,26 +3,26 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../repositories/interfaces/i_rdwc_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../repositories/interfaces/i_plant_repository.dart';
-import '../repositories/interfaces/i_fertilizer_repository.dart';
-import '../models/rdwc_system.dart';
-import '../models/rdwc_log.dart';
-import '../models/rdwc_log_fertilizer.dart';
-import '../models/fertilizer.dart';
-import '../models/plant.dart';
-import '../models/app_settings.dart';
-import '../utils/translations.dart';
-import '../utils/unit_converter.dart';
-import '../utils/app_logger.dart';
-import 'rdwc_addback_form_screen.dart';
-import 'rdwc_system_form_screen.dart';
-import 'rdwc_recipes_screen.dart';
-import 'rdwc_analytics_screen.dart';
-import 'rdwc_quick_measurement_screen.dart';
-import 'nutrient_calculator_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
+import 'package:growlog_app/models/rdwc_system.dart';
+import 'package:growlog_app/models/rdwc_log.dart';
+import 'package:growlog_app/models/rdwc_log_fertilizer.dart';
+import 'package:growlog_app/models/fertilizer.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/app_settings.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/unit_converter.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/screens/rdwc_addback_form_screen.dart';
+import 'package:growlog_app/screens/rdwc_system_form_screen.dart';
+import 'package:growlog_app/screens/rdwc_recipes_screen.dart';
+import 'package:growlog_app/screens/rdwc_analytics_screen.dart';
+import 'package:growlog_app/screens/rdwc_quick_measurement_screen.dart';
+import 'package:growlog_app/screens/nutrient_calculator_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class RdwcSystemDetailScreen extends StatefulWidget {
   final RdwcSystem system;
@@ -304,7 +304,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
   }
 
   Widget _buildSystemOverview(bool isDark) {
-    Color statusColor = _system.isCriticallyLow
+    final Color statusColor = _system.isCriticallyLow
         ? Colors.red
         : _system.isLowWater
             ? Colors.orange

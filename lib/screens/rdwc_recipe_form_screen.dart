@@ -3,15 +3,15 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../models/rdwc_recipe.dart';
-import '../models/fertilizer.dart';
-import '../repositories/interfaces/i_rdwc_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../repositories/interfaces/i_fertilizer_repository.dart';
-import '../utils/translations.dart';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/rdwc_recipe.dart';
+import 'package:growlog_app/models/fertilizer.dart';
+import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class RdwcRecipeFormScreen extends StatefulWidget {
   final RdwcRecipe? recipe;

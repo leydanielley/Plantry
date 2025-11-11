@@ -4,7 +4,7 @@
 // =============================================
 
 import 'dart:io';
-import 'app_logger.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 
 class DeviceInfoHelper {
   /// Check if device is Samsung

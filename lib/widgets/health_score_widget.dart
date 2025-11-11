@@ -3,13 +3,13 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../models/health_score.dart';
-import '../models/plant.dart';
-import '../services/interfaces/i_health_score_service.dart';
-import '../services/interfaces/i_warning_service.dart';
-import '../services/warning_service.dart';
-import '../../di/service_locator.dart';
-import '../utils/translations.dart';
+import 'package:growlog_app/models/health_score.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/services/interfaces/i_health_score_service.dart';
+import 'package:growlog_app/services/interfaces/i_warning_service.dart';
+import 'package:growlog_app/services/warning_service.dart';
+import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/utils/translations.dart';
 
 class HealthScoreWidget extends StatefulWidget {
   final Plant plant;

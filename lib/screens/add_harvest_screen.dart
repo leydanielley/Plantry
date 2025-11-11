@@ -4,16 +4,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../utils/app_logger.dart';
-import '../models/plant.dart';
-import '../models/harvest.dart';
-import '../models/enums.dart';
-import '../repositories/interfaces/i_harvest_repository.dart';
-import '../repositories/interfaces/i_plant_repository.dart';
-import '../utils/validators.dart';
-import '../utils/app_messages.dart';
-import 'harvest_detail_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/harvest.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/utils/validators.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/screens/harvest_detail_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class AddHarvestScreen extends StatefulWidget {
   final Plant plant;

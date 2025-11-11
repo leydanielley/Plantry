@@ -4,8 +4,8 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../utils/device_info_helper.dart';
-import '../utils/translations.dart';
+import 'package:growlog_app/utils/device_info_helper.dart';
+import 'package:growlog_app/utils/translations.dart';
 
 class BatteryOptimizationDialog extends StatelessWidget {
   final int crashCount;

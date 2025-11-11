@@ -2,7 +2,7 @@
 // GROWLOG - GrowRepository Interface
 // =============================================
 
-import '../../models/grow.dart';
+import 'package:growlog_app/models/grow.dart';
 
 abstract class IGrowRepository {
   Future<List<Grow>> getAll({bool includeArchived = false});

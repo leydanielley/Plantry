@@ -7,9 +7,9 @@ import 'package:synchronized/synchronized.dart';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../utils/app_logger.dart';
-import 'migrations/migration_manager.dart';
-import 'database_recovery.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/database/migrations/migration_manager.dart';
+import 'package:growlog_app/database/database_recovery.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();

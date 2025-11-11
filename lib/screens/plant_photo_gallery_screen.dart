@@ -6,18 +6,18 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../utils/translations.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/translations.dart';
 import 'package:intl/intl.dart';
-import '../models/plant.dart';
-import '../models/photo.dart';
-import '../models/plant_log.dart';
-import '../repositories/interfaces/i_photo_repository.dart';
-import '../repositories/interfaces/i_plant_log_repository.dart';
-import '../helpers/image_cache_helper.dart';
-import '../widgets/empty_state_widget.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/photo.dart';
+import 'package:growlog_app/models/plant_log.dart';
+import 'package:growlog_app/repositories/interfaces/i_photo_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
+import 'package:growlog_app/helpers/image_cache_helper.dart';
+import 'package:growlog_app/widgets/empty_state_widget.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class PlantPhotoGalleryScreen extends StatefulWidget {
   final Plant plant;

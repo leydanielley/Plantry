@@ -2,17 +2,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
-import 'models/app_settings.dart';
-import 'repositories/interfaces/i_settings_repository.dart';
-import 'screens/splash_screen.dart';
-import 'screens/privacy_policy_screen.dart';
-import 'utils/app_theme.dart';
-import 'utils/app_logger.dart';
-import 'di/service_locator.dart';
-import 'providers/plant_provider.dart';
-import 'providers/grow_provider.dart';
-import 'providers/room_provider.dart';
-import 'providers/log_provider.dart';
+import 'package:growlog_app/models/app_settings.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/screens/splash_screen.dart';
+import 'package:growlog_app/screens/privacy_policy_screen.dart';
+import 'package:growlog_app/utils/app_theme.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/providers/plant_provider.dart';
+import 'package:growlog_app/providers/grow_provider.dart';
+import 'package:growlog_app/providers/room_provider.dart';
+import 'package:growlog_app/providers/log_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

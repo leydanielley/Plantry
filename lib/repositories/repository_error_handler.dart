@@ -3,7 +3,7 @@
 // =============================================
 // ✅ PHASE 2 FIX: Standardized error handling for all repositories
 
-import '../utils/app_logger.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 
 /// Mixin providing standardized error handling for repositories
 ///

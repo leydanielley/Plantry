@@ -3,10 +3,10 @@
 // =============================================
 
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/notification_settings.dart';
-import '../utils/app_logger.dart';
-import 'interfaces/i_notification_repository.dart';
-import 'repository_error_handler.dart';
+import 'package:growlog_app/models/notification_settings.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/repositories/interfaces/i_notification_repository.dart';
+import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
 class NotificationRepository with RepositoryErrorHandler implements INotificationRepository {

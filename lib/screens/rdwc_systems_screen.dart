@@ -3,17 +3,17 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../repositories/interfaces/i_rdwc_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../models/rdwc_system.dart';
-import '../models/app_settings.dart';
-import '../utils/translations.dart';
-import '../utils/unit_converter.dart';
-import '../utils/app_logger.dart';
-import '../widgets/empty_state_widget.dart';
-import 'rdwc_system_detail_screen.dart';
-import 'rdwc_system_form_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/models/rdwc_system.dart';
+import 'package:growlog_app/models/app_settings.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/unit_converter.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/widgets/empty_state_widget.dart';
+import 'package:growlog_app/screens/rdwc_system_detail_screen.dart';
+import 'package:growlog_app/screens/rdwc_system_form_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class RdwcSystemsScreen extends StatefulWidget {
   const RdwcSystemsScreen({super.key});

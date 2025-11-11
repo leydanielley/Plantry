@@ -2,10 +2,10 @@
 // GROWLOG - RdwcRepository Interface
 // =============================================
 
-import '../../models/rdwc_system.dart';
-import '../../models/rdwc_log.dart';
-import '../../models/rdwc_log_fertilizer.dart';
-import '../../models/rdwc_recipe.dart';
+import 'package:growlog_app/models/rdwc_system.dart';
+import 'package:growlog_app/models/rdwc_log.dart';
+import 'package:growlog_app/models/rdwc_log_fertilizer.dart';
+import 'package:growlog_app/models/rdwc_recipe.dart';
 
 abstract class IRdwcRepository {
   // RDWC Systems

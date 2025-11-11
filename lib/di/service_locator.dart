@@ -3,53 +3,53 @@
 // =============================================
 
 import 'package:get_it/get_it.dart';
-import '../database/database_helper.dart';
+import 'package:growlog_app/database/database_helper.dart';
 
 // Repository Interfaces
-import '../repositories/interfaces/i_plant_repository.dart';
-import '../repositories/interfaces/i_grow_repository.dart';
-import '../repositories/interfaces/i_room_repository.dart';
-import '../repositories/interfaces/i_plant_log_repository.dart';
-import '../repositories/interfaces/i_fertilizer_repository.dart';
-import '../repositories/interfaces/i_log_fertilizer_repository.dart';
-import '../repositories/interfaces/i_photo_repository.dart';
-import '../repositories/interfaces/i_hardware_repository.dart';
-import '../repositories/interfaces/i_harvest_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../repositories/interfaces/i_rdwc_repository.dart';
-import '../repositories/interfaces/i_notification_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_log_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_photo_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_hardware_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_notification_repository.dart';
 
 // Repository Implementations
-import '../repositories/plant_repository.dart';
-import '../repositories/grow_repository.dart';
-import '../repositories/room_repository.dart';
-import '../repositories/plant_log_repository.dart';
-import '../repositories/fertilizer_repository.dart';
-import '../repositories/log_fertilizer_repository.dart';
-import '../repositories/photo_repository.dart';
-import '../repositories/hardware_repository.dart';
-import '../repositories/harvest_repository.dart';
-import '../repositories/settings_repository.dart';
-import '../repositories/rdwc_repository.dart';
-import '../repositories/notification_repository.dart';
+import 'package:growlog_app/repositories/plant_repository.dart';
+import 'package:growlog_app/repositories/grow_repository.dart';
+import 'package:growlog_app/repositories/room_repository.dart';
+import 'package:growlog_app/repositories/plant_log_repository.dart';
+import 'package:growlog_app/repositories/fertilizer_repository.dart';
+import 'package:growlog_app/repositories/log_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/photo_repository.dart';
+import 'package:growlog_app/repositories/hardware_repository.dart';
+import 'package:growlog_app/repositories/harvest_repository.dart';
+import 'package:growlog_app/repositories/settings_repository.dart';
+import 'package:growlog_app/repositories/rdwc_repository.dart';
+import 'package:growlog_app/repositories/notification_repository.dart';
 
 // Service Interfaces
-import '../services/interfaces/i_log_service.dart';
-import '../services/interfaces/i_backup_service.dart';
-import '../services/interfaces/i_health_score_service.dart';
-import '../services/interfaces/i_warning_service.dart';
-import '../services/interfaces/i_harvest_service.dart';
-import '../services/interfaces/i_notification_service.dart';
+import 'package:growlog_app/services/interfaces/i_log_service.dart';
+import 'package:growlog_app/services/interfaces/i_backup_service.dart';
+import 'package:growlog_app/services/interfaces/i_health_score_service.dart';
+import 'package:growlog_app/services/interfaces/i_warning_service.dart';
+import 'package:growlog_app/services/interfaces/i_harvest_service.dart';
+import 'package:growlog_app/services/interfaces/i_notification_service.dart';
 
 // Service Implementations
-import '../services/log_service.dart';
-import '../services/backup_service.dart';
-import '../services/health_score_service.dart';
-import '../services/warning_service.dart';
-import '../services/harvest_service.dart';
-import '../services/notification_service.dart';
+import 'package:growlog_app/services/log_service.dart';
+import 'package:growlog_app/services/backup_service.dart';
+import 'package:growlog_app/services/health_score_service.dart';
+import 'package:growlog_app/services/warning_service.dart';
+import 'package:growlog_app/services/harvest_service.dart';
+import 'package:growlog_app/services/notification_service.dart';
 
-import '../utils/app_logger.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 
 /// Global service locator instance
 final getIt = GetIt.instance;

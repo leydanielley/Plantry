@@ -3,14 +3,14 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../models/notification_settings.dart';
-import '../repositories/interfaces/i_notification_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../services/interfaces/i_notification_service.dart';
-import '../utils/translations.dart';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/notification_settings.dart';
+import 'package:growlog_app/repositories/interfaces/i_notification_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/services/interfaces/i_notification_service.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});

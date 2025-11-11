@@ -6,7 +6,7 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import 'app_logger.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 
 class StorageHelper {
   // ✅ AUDIT FIX: Storage threshold constants already properly extracted

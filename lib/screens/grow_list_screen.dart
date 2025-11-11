@@ -3,18 +3,18 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../utils/app_logger.dart';
-import '../models/grow.dart';
-import '../repositories/interfaces/i_grow_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../utils/translations.dart';
-import '../utils/app_constants.dart';
-import '../widgets/empty_state_widget.dart'; // ✅ PHASE 3: Shared widget
-import 'add_grow_screen.dart';
-import 'edit_grow_screen.dart';
-import 'grow_detail_screen.dart';
-import '../utils/app_messages.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/models/grow.dart';
+import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/app_constants.dart';
+import 'package:growlog_app/widgets/empty_state_widget.dart'; // ✅ PHASE 3: Shared widget
+import 'package:growlog_app/screens/add_grow_screen.dart';
+import 'package:growlog_app/screens/edit_grow_screen.dart';
+import 'package:growlog_app/screens/grow_detail_screen.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class GrowListScreen extends StatefulWidget {
   const GrowListScreen({super.key});

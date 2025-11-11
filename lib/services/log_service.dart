@@ -4,17 +4,17 @@
 // =============================================
 
 import 'dart:io';
-import '../database/database_helper.dart';
-import '../models/plant.dart';
-import '../models/plant_log.dart';
-import '../models/log_fertilizer.dart';
-import '../models/photo.dart';
-import '../models/enums.dart';
-import '../repositories/interfaces/i_plant_repository.dart';
-import '../utils/validators.dart';
-import '../utils/app_logger.dart';
-import '../utils/safe_parsers.dart';
-import 'interfaces/i_log_service.dart';
+import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/plant_log.dart';
+import 'package:growlog_app/models/log_fertilizer.dart';
+import 'package:growlog_app/models/photo.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/utils/validators.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/safe_parsers.dart';
+import 'package:growlog_app/services/interfaces/i_log_service.dart';
 
 // Service-Layer für alle Log-Operationen
 // Vorteile:

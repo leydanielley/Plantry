@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../utils/unit_converter.dart';
-import '../../models/app_settings.dart';
+import 'package:growlog_app/utils/unit_converter.dart';
+import 'package:growlog_app/models/app_settings.dart';
 
 class ConsumptionChart extends StatelessWidget {
   final Map<String, dynamic> dailyConsumption; // date -> liters

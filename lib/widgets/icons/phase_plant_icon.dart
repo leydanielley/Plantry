@@ -3,8 +3,8 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../../models/enums.dart';
-import 'plant_pot_icon.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/widgets/icons/plant_pot_icon.dart';
 
 /// ✅ AUDIT FIX: Consolidated color definitions to eliminate duplication
 /// Phase color definitions used by both PhasePlantIcon widget and helper function

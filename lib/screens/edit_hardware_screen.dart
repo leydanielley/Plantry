@@ -3,17 +3,17 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../utils/mounted_state_mixin.dart'; // ✅ FIX: Added for safe setState
-import '../utils/translations.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/mounted_state_mixin.dart'; // ✅ FIX: Added for safe setState
+import 'package:growlog_app/utils/translations.dart';
 import 'package:intl/intl.dart';
-import '../models/hardware.dart';
-import '../models/room.dart';
-import '../models/enums.dart';
-import '../repositories/interfaces/i_hardware_repository.dart';
-import '../repositories/interfaces/i_room_repository.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/hardware.dart';
+import 'package:growlog_app/models/room.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_hardware_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class EditHardwareScreen extends StatefulWidget {
   final Hardware hardware;

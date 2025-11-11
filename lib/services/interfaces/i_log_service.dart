@@ -2,9 +2,9 @@
 // GROWLOG - LogService Interface
 // =============================================
 
-import '../../models/plant.dart';
-import '../../models/plant_log.dart';
-import '../../models/enums.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/plant_log.dart';
+import 'package:growlog_app/models/enums.dart';
 
 abstract class ILogService {
   /// Single Log speichern mit allen Relationen (Fertilizers + Photos)

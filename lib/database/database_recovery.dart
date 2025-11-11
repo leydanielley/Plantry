@@ -8,9 +8,9 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import '../utils/app_logger.dart';
-import '../utils/app_version.dart';
-import '../config/backup_config.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/app_version.dart';
+import 'package:growlog_app/config/backup_config.dart';
 
 class DatabaseRecovery {
   /// Check if database is corrupted

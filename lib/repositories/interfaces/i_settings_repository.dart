@@ -2,7 +2,7 @@
 // GROWLOG - SettingsRepository Interface
 // =============================================
 
-import '../../models/app_settings.dart';
+import 'package:growlog_app/models/app_settings.dart';
 
 abstract class ISettingsRepository {
   Future<AppSettings> getSettings();

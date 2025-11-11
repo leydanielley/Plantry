@@ -2,8 +2,8 @@
 // GROWLOG - Migration v8: RDWC Expert Mode Logging
 // =============================================
 
-import '../../../utils/app_logger.dart';
-import '../migration.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/database/migrations/migration.dart';
 
 /// Migration v8: RDWC Expert Mode Logging
 ///

@@ -2,16 +2,16 @@
 // GROWLOG - Notification Helper
 // =============================================
 
-import '../models/plant.dart';
-import '../models/plant_log.dart';
-import '../models/enums.dart';
-import '../repositories/interfaces/i_plant_log_repository.dart';
-import '../repositories/interfaces/i_photo_repository.dart';
-import '../repositories/interfaces/i_notification_repository.dart';
-import '../repositories/interfaces/i_log_fertilizer_repository.dart';
-import '../services/interfaces/i_notification_service.dart';
-import '../utils/app_logger.dart';
-import '../../di/service_locator.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/plant_log.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_photo_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_notification_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_log_fertilizer_repository.dart';
+import 'package:growlog_app/services/interfaces/i_notification_service.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class NotificationHelper {
   static final INotificationService _notificationService = getIt<INotificationService>();

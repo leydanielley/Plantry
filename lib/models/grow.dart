@@ -2,7 +2,7 @@
 // GROWLOG - Grow Model (Mehrere Pflanzen zusammenfassen)
 // =============================================
 
-import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 // Sentinel value für copyWith
 const _undefined = Object();

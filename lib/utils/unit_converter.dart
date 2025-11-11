@@ -2,7 +2,7 @@
 // GROWLOG - Unit Converter Utility
 // =============================================
 
-import '../models/app_settings.dart';
+import 'package:growlog_app/models/app_settings.dart';
 
 class UnitConverter {
   // ✅ AUDIT FIX: Extracted conversion factor constants

@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:synchronized/synchronized.dart';
-import '../../utils/app_logger.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 
 class ImageCacheHelper {
   static final ImageCacheHelper _instance = ImageCacheHelper._internal();

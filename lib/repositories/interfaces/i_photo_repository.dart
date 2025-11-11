@@ -2,7 +2,7 @@
 // GROWLOG - PhotoRepository Interface
 // =============================================
 
-import '../../models/photo.dart';
+import 'package:growlog_app/models/photo.dart';
 
 abstract class IPhotoRepository {
   Future<int> save(Photo photo);

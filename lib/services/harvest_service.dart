@@ -2,10 +2,10 @@
 // GROWLOG - Harvest Service
 // =============================================
 
-import '../models/plant.dart';
-import '../models/harvest.dart';
-import '../repositories/interfaces/i_harvest_repository.dart';
-import 'interfaces/i_harvest_service.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/harvest.dart';
+import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
+import 'package:growlog_app/services/interfaces/i_harvest_service.dart';
 
 class HarvestService implements IHarvestService {
   final IHarvestRepository _harvestRepo;

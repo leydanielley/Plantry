@@ -5,14 +5,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/hardware.dart';
-import '../models/room.dart';
-import '../models/enums.dart';
-import '../repositories/interfaces/i_hardware_repository.dart';
-import '../repositories/interfaces/i_room_repository.dart';
-import '../utils/app_messages.dart';
-import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/hardware.dart';
+import 'package:growlog_app/models/room.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_hardware_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/di/service_locator.dart';
 
 class AddHardwareScreen extends StatefulWidget {
   final int roomId;

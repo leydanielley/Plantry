@@ -5,18 +5,18 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../models/fertilizer.dart';
-import '../repositories/interfaces/i_fertilizer_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../utils/translations.dart';
-import '../utils/app_constants.dart';
-import '../widgets/empty_state_widget.dart';
-import 'add_fertilizer_screen.dart';
-import 'edit_fertilizer_screen.dart';
-import 'fertilizer_dbf_import_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/models/fertilizer.dart';
+import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/app_constants.dart';
+import 'package:growlog_app/widgets/empty_state_widget.dart';
+import 'package:growlog_app/screens/add_fertilizer_screen.dart';
+import 'package:growlog_app/screens/edit_fertilizer_screen.dart';
+import 'package:growlog_app/screens/fertilizer_dbf_import_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class FertilizerListScreen extends StatefulWidget {
   const FertilizerListScreen({super.key});

@@ -2,7 +2,7 @@
 // GROWLOG - FertilizerRepository Interface
 // =============================================
 
-import '../../models/fertilizer.dart';
+import 'package:growlog_app/models/fertilizer.dart';
 
 abstract class IFertilizerRepository {
   Future<List<Fertilizer>> findAll();

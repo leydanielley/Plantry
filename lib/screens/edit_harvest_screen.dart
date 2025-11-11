@@ -4,13 +4,13 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import 'package:intl/intl.dart';
-import '../models/harvest.dart';
-import '../repositories/interfaces/i_harvest_repository.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/harvest.dart';
+import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class EditHarvestScreen extends StatefulWidget {
   final Harvest harvest;

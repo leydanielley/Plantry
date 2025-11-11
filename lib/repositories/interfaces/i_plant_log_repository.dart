@@ -2,7 +2,7 @@
 // GROWLOG - PlantLogRepository Interface
 // =============================================
 
-import '../../models/plant_log.dart';
+import 'package:growlog_app/models/plant_log.dart';
 
 abstract class IPlantLogRepository {
   Future<List<PlantLog>> findByPlant(int plantId, {int? limit, int? offset});

@@ -4,14 +4,14 @@
 
 import 'dart:math';
 
-import '../models/plant.dart';
-import '../models/health_score.dart';
-import '../models/enums.dart';  // For PlantPhase
-import '../repositories/interfaces/i_plant_log_repository.dart';
-import '../repositories/interfaces/i_photo_repository.dart';
-import '../utils/app_logger.dart';
-import '../config/health_score_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to HealthScoreConfig
-import 'interfaces/i_health_score_service.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/health_score.dart';
+import 'package:growlog_app/models/enums.dart';  // For PlantPhase
+import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_photo_repository.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/config/health_score_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to HealthScoreConfig
+import 'package:growlog_app/services/interfaces/i_health_score_service.dart';
 
 class HealthScoreService implements IHealthScoreService {
   final IPlantLogRepository _logRepo;

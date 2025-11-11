@@ -4,12 +4,12 @@
 
 import 'dart:async';
 import 'package:sqflite/sqflite.dart';
-import '../../utils/app_logger.dart';
-import '../../utils/version_manager.dart';
-import '../../services/interfaces/i_backup_service.dart';
-import '../../di/service_locator.dart';
-import 'migration.dart';
-import 'scripts/all_migrations.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/version_manager.dart';
+import 'package:growlog_app/services/interfaces/i_backup_service.dart';
+import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/database/migrations/migration.dart';
+import 'package:growlog_app/database/migrations/scripts/all_migrations.dart';
 
 /// Manages database migrations for seamless app updates
 ///

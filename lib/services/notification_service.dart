@@ -7,9 +7,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
-import '../utils/app_logger.dart';
-import '../config/notification_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
-import 'interfaces/i_notification_service.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/config/notification_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
+import 'package:growlog_app/services/interfaces/i_notification_service.dart';
 
 class NotificationService implements INotificationService {
   static final NotificationService _instance = NotificationService._internal();

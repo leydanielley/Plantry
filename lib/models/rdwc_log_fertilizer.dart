@@ -2,7 +2,7 @@
 // GROWLOG - RDWC Log Fertilizer Model
 // =============================================
 
-import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 /// Type of fertilizer amount entry
 enum FertilizerAmountType {

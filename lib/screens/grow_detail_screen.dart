@@ -4,19 +4,19 @@
 
 import 'package:flutter/material.dart';
 
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
-import '../models/grow.dart';
-import '../models/plant.dart';
-import '../models/enums.dart';
-import '../repositories/interfaces/i_plant_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
-import '../widgets/empty_state_widget.dart';
-import 'plant_detail_screen.dart';
-import 'add_log_screen.dart';
-import 'add_plant_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/models/grow.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/widgets/empty_state_widget.dart';
+import 'package:growlog_app/screens/plant_detail_screen.dart';
+import 'package:growlog_app/screens/add_log_screen.dart';
+import 'package:growlog_app/screens/add_plant_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class GrowDetailScreen extends StatefulWidget {
   final Grow grow;

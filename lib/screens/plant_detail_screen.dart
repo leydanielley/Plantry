@@ -6,30 +6,30 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../utils/app_logger.dart';
-import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
-import '../models/plant.dart';
-import '../models/plant_log.dart';
-import '../models/fertilizer.dart';
-import '../models/log_fertilizer.dart';
-import '../models/photo.dart';
-import '../models/enums.dart';
-import 'add_log_screen.dart';
-import 'edit_plant_screen.dart';
-import 'edit_log_screen.dart';
-import 'plant_photo_gallery_screen.dart';
-import 'add_harvest_screen.dart';
-import 'harvest_detail_screen.dart';
-import '../models/harvest.dart';
-import '../repositories/interfaces/i_plant_log_repository.dart';
-import '../repositories/interfaces/i_plant_repository.dart';
-import '../repositories/interfaces/i_grow_repository.dart';
-import '../repositories/interfaces/i_fertilizer_repository.dart';
-import '../repositories/interfaces/i_log_fertilizer_repository.dart';
-import '../repositories/interfaces/i_photo_repository.dart';
-import '../services/interfaces/i_harvest_service.dart';
-import '../utils/app_messages.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/plant_log.dart';
+import 'package:growlog_app/models/fertilizer.dart';
+import 'package:growlog_app/models/log_fertilizer.dart';
+import 'package:growlog_app/models/photo.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/screens/add_log_screen.dart';
+import 'package:growlog_app/screens/edit_plant_screen.dart';
+import 'package:growlog_app/screens/edit_log_screen.dart';
+import 'package:growlog_app/screens/plant_photo_gallery_screen.dart';
+import 'package:growlog_app/screens/add_harvest_screen.dart';
+import 'package:growlog_app/screens/harvest_detail_screen.dart';
+import 'package:growlog_app/models/harvest.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_log_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_photo_repository.dart';
+import 'package:growlog_app/services/interfaces/i_harvest_service.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class PlantDetailScreen extends StatefulWidget {
   final Plant plant;

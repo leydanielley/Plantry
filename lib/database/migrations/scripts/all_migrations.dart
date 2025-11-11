@@ -2,13 +2,13 @@
 // GROWLOG - All Database Migrations Registry
 // =============================================
 
-import '../migration.dart';
-import 'migration_v8.dart';
-import 'migration_v9.dart';
-import 'migration_v10.dart';
-import 'migration_v11.dart';
-import 'migration_v12.dart';
-import 'migration_v13.dart';
+import 'package:growlog_app/database/migrations/migration.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v8.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v9.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v10.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v11.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v12.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v13.dart';
 
 /// All migrations in chronological order
 ///

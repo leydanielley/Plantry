@@ -2,8 +2,8 @@
 // GROWLOG - Hardware Model
 // =============================================
 
-import 'enums.dart';
-import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();

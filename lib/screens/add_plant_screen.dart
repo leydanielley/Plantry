@@ -3,19 +3,19 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../utils/app_logger.dart';
-import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
-import '../models/plant.dart';
-import '../models/room.dart';
-import '../models/grow.dart';
-import '../models/rdwc_system.dart';
-import '../models/enums.dart';
-import '../repositories/interfaces/i_plant_repository.dart';
-import '../repositories/interfaces/i_room_repository.dart';
-import '../repositories/interfaces/i_grow_repository.dart';
-import '../repositories/interfaces/i_rdwc_repository.dart';
-import '../utils/app_messages.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/room.dart';
+import 'package:growlog_app/models/grow.dart';
+import 'package:growlog_app/models/rdwc_system.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class AddPlantScreen extends StatefulWidget {
   final int? preselectedGrowId;

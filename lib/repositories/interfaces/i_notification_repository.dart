@@ -2,7 +2,7 @@
 // GROWLOG - NotificationRepository Interface
 // =============================================
 
-import '../../models/notification_settings.dart';
+import 'package:growlog_app/models/notification_settings.dart';
 
 abstract class INotificationRepository {
   Future<NotificationSettings> getSettings();

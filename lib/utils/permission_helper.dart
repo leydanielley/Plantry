@@ -5,7 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'app_logger.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 
 class PermissionHelper {
   /// Check and request camera permission

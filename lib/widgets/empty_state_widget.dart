@@ -4,7 +4,7 @@
 // ✅ PHASE 3 FIX: Extracted shared empty state pattern
 
 import 'package:flutter/material.dart';
-import '../utils/app_constants.dart';
+import 'package:growlog_app/utils/app_constants.dart';
 
 /// Reusable empty state widget
 ///

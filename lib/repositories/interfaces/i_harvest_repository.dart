@@ -2,7 +2,7 @@
 // GROWLOG - HarvestRepository Interface
 // =============================================
 
-import '../../models/harvest.dart';
+import 'package:growlog_app/models/harvest.dart';
 
 abstract class IHarvestRepository {
   Future<int> createHarvest(Harvest harvest);

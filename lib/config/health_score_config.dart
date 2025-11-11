@@ -3,7 +3,7 @@
 // ✅ AUDIT FIX: Centralized magic numbers from health_score_service.dart
 // =============================================
 
-import '../models/enums.dart';
+import 'package:growlog_app/models/enums.dart';
 
 /// Configuration constants for health score calculations
 ///

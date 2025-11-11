@@ -9,12 +9,12 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 import 'package:sqflite/sqflite.dart';
-import '../database/database_helper.dart';
-import '../utils/app_logger.dart';
-import '../utils/app_version.dart';
-import '../utils/storage_helper.dart';
-import '../config/backup_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
-import 'interfaces/i_backup_service.dart';
+import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/app_version.dart';
+import 'package:growlog_app/utils/storage_helper.dart';
+import 'package:growlog_app/config/backup_config.dart';  // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
+import 'package:growlog_app/services/interfaces/i_backup_service.dart';
 
 // ✅ FIX: Custom exception for security violations
 class SecurityException implements Exception {
@@ -496,11 +496,11 @@ class BackupService implements IBackupService {
       final data = backup['data'] as Map<String, dynamic>;
 
       // Count records
-      int totalPlants = (data['plants'] as List?)?.length ?? 0;
-      int totalLogs = (data['plant_logs'] as List?)?.length ?? 0;
-      int totalPhotos = (data['photos'] as List?)?.length ?? 0;
-      int totalRooms = (data['rooms'] as List?)?.length ?? 0;
-      int totalGrows = (data['grows'] as List?)?.length ?? 0;
+      final int totalPlants = (data['plants'] as List?)?.length ?? 0;
+      final int totalLogs = (data['plant_logs'] as List?)?.length ?? 0;
+      final int totalPhotos = (data['photos'] as List?)?.length ?? 0;
+      final int totalRooms = (data['rooms'] as List?)?.length ?? 0;
+      final int totalGrows = (data['grows'] as List?)?.length ?? 0;
 
       return {
         'version': backup['version'],

@@ -3,18 +3,18 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../models/hardware.dart';
-import '../models/enums.dart';
-import '../repositories/interfaces/i_hardware_repository.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../utils/translations.dart';
-import '../utils/app_constants.dart';
-import '../widgets/empty_state_widget.dart';
-import 'add_hardware_screen.dart';
-import 'edit_hardware_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/models/hardware.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_hardware_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/app_constants.dart';
+import 'package:growlog_app/widgets/empty_state_widget.dart';
+import 'package:growlog_app/screens/add_hardware_screen.dart';
+import 'package:growlog_app/screens/edit_hardware_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class HardwareListScreen extends StatefulWidget {
   final int roomId;

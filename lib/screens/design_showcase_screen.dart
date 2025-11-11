@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/app_messages.dart';
+import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/widgets/widgets.dart';
 import 'package:growlog_app/utils/app_theme.dart';
 

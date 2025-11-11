@@ -5,13 +5,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
-import 'dashboard_screen.dart';
-import '../database/database_helper.dart';
-import '../widgets/widgets.dart';
-import '../utils/app_logger.dart';
-import '../utils/app_state_recovery.dart';
-import '../utils/version_manager.dart';
-import '../utils/update_cleanup.dart';
+import 'package:growlog_app/screens/dashboard_screen.dart';
+import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/widgets/widgets.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/app_state_recovery.dart';
+import 'package:growlog_app/utils/version_manager.dart';
+import 'package:growlog_app/utils/update_cleanup.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

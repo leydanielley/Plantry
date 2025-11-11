@@ -2,8 +2,8 @@
 // GROWLOG - WarningService Interface
 // =============================================
 
-import '../../models/plant.dart';
-import '../warning_service.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/services/warning_service.dart';
 
 abstract class IWarningService {
   /// Check for all warnings for a plant

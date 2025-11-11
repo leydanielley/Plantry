@@ -3,7 +3,7 @@
 // Prevents crashes from invalid data during deserialization
 // =============================================
 
-import 'app_logger.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 
 class SafeParsers {
   /// Safely parse DateTime string, returns fallback on error

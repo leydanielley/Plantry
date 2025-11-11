@@ -3,7 +3,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
-import '../widgets/icons/plant_pot_icon.dart';
+import 'package:growlog_app/widgets/icons/plant_pot_icon.dart';
 
 class PlantIconShowcaseScreen extends StatelessWidget {
   const PlantIconShowcaseScreen({super.key});

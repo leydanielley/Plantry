@@ -4,7 +4,7 @@
 
 import 'dart:io';
 import 'dart:typed_data';
-import '../utils/app_logger.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 
 class RawDbfParser {
   /// Parse DBF file manually by reading bytes
@@ -38,7 +38,7 @@ class RawDbfParser {
       AppLogger.info('RawDbfParser', 'Using hardcoded HydroBuddy structure (${fields.length} fields)');
 
       // Calculate total field size for validation
-      int totalFieldSize = fields.fold(0, (sum, field) => sum + field.length);
+      final int totalFieldSize = fields.fold(0, (sum, field) => sum + field.length);
       AppLogger.debug('RawDbfParser', 'Total field size: $totalFieldSize bytes (record size: ${recordLength - 1} bytes)');
 
       for (int i = 0; i < 5 && i < fields.length; i++) {

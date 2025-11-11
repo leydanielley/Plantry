@@ -2,7 +2,7 @@
 // GROWLOG - LogFertilizerRepository Interface
 // =============================================
 
-import '../../models/log_fertilizer.dart';
+import 'package:growlog_app/models/log_fertilizer.dart';
 
 abstract class ILogFertilizerRepository {
   Future<int> save(LogFertilizer logFertilizer);

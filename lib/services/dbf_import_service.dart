@@ -3,9 +3,9 @@
 // =============================================
 
 import 'dart:io';
-import '../models/fertilizer.dart';
-import '../utils/app_logger.dart';
-import 'raw_dbf_parser.dart';
+import 'package:growlog_app/models/fertilizer.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/services/raw_dbf_parser.dart';
 
 class DbfImportService {
   /// Parse HydroBuddy DBF file and return list of Fertilizers

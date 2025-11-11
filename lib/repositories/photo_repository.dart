@@ -4,11 +4,11 @@
 
 import 'dart:io';
 import 'package:sqflite/sqflite.dart';
-import '../models/photo.dart';
-import '../database/database_helper.dart';
-import '../utils/app_logger.dart';
-import 'interfaces/i_photo_repository.dart';
-import 'repository_error_handler.dart';
+import 'package:growlog_app/models/photo.dart';
+import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/repositories/interfaces/i_photo_repository.dart';
+import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
 class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
@@ -175,7 +175,7 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
   ORDER BY photos.created_at DESC
 ''';
     
-    List<dynamic> args = [plantId];
+    final List<dynamic> args = [plantId];
     
     if (limit != null) {
       query += ' LIMIT ?';

@@ -3,10 +3,10 @@
 // =============================================
 
 import 'package:sqflite/sqflite.dart';
-import '../database/database_helper.dart';
-import '../models/harvest.dart';
-import 'interfaces/i_harvest_repository.dart';
-import 'repository_error_handler.dart';
+import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/models/harvest.dart';
+import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
+import 'package:growlog_app/repositories/repository_error_handler.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
 class HarvestRepository with RepositoryErrorHandler implements IHarvestRepository {

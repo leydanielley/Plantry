@@ -3,7 +3,7 @@
 // ✅ AUDIT FIX: Null safety for lastIndexOf operations
 // =============================================
 
-import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 class Photo {
   final int? id;

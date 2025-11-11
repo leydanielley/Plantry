@@ -2,8 +2,8 @@
 // GROWLOG - RDWC Recipe Models
 // =============================================
 
-import 'rdwc_log_fertilizer.dart';
-import '../utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/models/rdwc_log_fertilizer.dart';
+import 'package:growlog_app/utils/safe_parsers.dart';  // ✅ FIX: Safe parsing utilities
 
 /// Fertilizer entry in a recipe
 ///

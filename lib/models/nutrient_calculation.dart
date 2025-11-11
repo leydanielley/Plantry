@@ -3,10 +3,10 @@
 // ✅ AUDIT FIX: Magic numbers extracted to NutrientCalculationConfig
 // =============================================
 
-import 'rdwc_recipe.dart';
-import 'app_settings.dart';
-import '../utils/unit_converter.dart';
-import '../config/nutrient_calculation_config.dart';
+import 'package:growlog_app/models/rdwc_recipe.dart';
+import 'package:growlog_app/models/app_settings.dart';
+import 'package:growlog_app/utils/unit_converter.dart';
+import 'package:growlog_app/config/nutrient_calculation_config.dart';
 
 /// Calculator modes
 enum CalculatorMode {

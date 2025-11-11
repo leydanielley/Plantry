@@ -4,7 +4,7 @@
 // Validates and classifies fertilizers from DBF imports
 // Extracted from UI layer for testability and reusability
 
-import '../models/fertilizer.dart';
+import 'package:growlog_app/models/fertilizer.dart';
 
 class FertilizerValidator {
   // =============================================

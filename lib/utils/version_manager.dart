@@ -4,8 +4,8 @@
 // =============================================
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'app_logger.dart';
-import 'app_version.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/app_version.dart';
 
 class VersionManager {
   // ✅ AUDIT FIX: Extracted timeout constants

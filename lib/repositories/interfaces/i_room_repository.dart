@@ -2,7 +2,7 @@
 // GROWLOG - RoomRepository Interface
 // =============================================
 
-import '../../models/room.dart';
+import 'package:growlog_app/models/room.dart';
 
 abstract class IRoomRepository {
   Future<List<Room>> findAll();

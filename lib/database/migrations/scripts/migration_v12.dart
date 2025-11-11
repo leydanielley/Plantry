@@ -4,8 +4,8 @@
 // =============================================
 
 import 'package:sqflite/sqflite.dart';
-import '../migration.dart';
-import '../../../utils/app_logger.dart';
+import 'package:growlog_app/database/migrations/migration.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 
 /// Migration v12: Add UNIQUE Constraints
 ///

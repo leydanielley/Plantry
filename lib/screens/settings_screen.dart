@@ -5,17 +5,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import '../utils/app_messages.dart';
-import '../utils/app_logger.dart';
-import '../main.dart';
-import '../models/app_settings.dart';
-import '../utils/translations.dart';
-import '../database/database_helper.dart';
-import '../repositories/interfaces/i_settings_repository.dart';
-import '../services/interfaces/i_backup_service.dart';
-import '../utils/app_version.dart';
-import 'privacy_policy_screen.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/main.dart';
+import 'package:growlog_app/models/app_settings.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
+import 'package:growlog_app/services/interfaces/i_backup_service.dart';
+import 'package:growlog_app/utils/app_version.dart';
+import 'package:growlog_app/screens/privacy_policy_screen.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(AppSettings)? onSettingsChanged;

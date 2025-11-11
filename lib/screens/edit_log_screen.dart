@@ -5,27 +5,27 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../utils/app_messages.dart';
+import 'package:growlog_app/utils/app_messages.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import '../models/plant.dart';
-import '../models/plant_log.dart';
-import '../models/fertilizer.dart';
-import '../models/log_fertilizer.dart';
-import '../models/photo.dart';
-import '../models/enums.dart';
-import '../repositories/interfaces/i_plant_log_repository.dart';
-import '../repositories/interfaces/i_plant_repository.dart';
-import '../repositories/interfaces/i_fertilizer_repository.dart';
-import '../repositories/interfaces/i_log_fertilizer_repository.dart';
-import '../repositories/interfaces/i_photo_repository.dart';
-import '../utils/validators.dart';
-import '../utils/translations.dart'; // ✅ AUDIT FIX: i18n
-import '../utils/storage_helper.dart';
-import '../utils/app_logger.dart';
-import '../di/service_locator.dart';
+import 'package:growlog_app/models/plant.dart';
+import 'package:growlog_app/models/plant_log.dart';
+import 'package:growlog_app/models/fertilizer.dart';
+import 'package:growlog_app/models/log_fertilizer.dart';
+import 'package:growlog_app/models/photo.dart';
+import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_log_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_photo_repository.dart';
+import 'package:growlog_app/utils/validators.dart';
+import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/utils/storage_helper.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/di/service_locator.dart';
 
 class EditLogScreen extends StatefulWidget {
   final Plant plant;
