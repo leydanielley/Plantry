@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/config/harvest_config.dart'; // ✅ FIX: Validation config
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -49,29 +50,39 @@ class Harvest {
     this.id,
     required this.plantId,
     required this.harvestDate,
-    this.wetWeight,
-    this.dryWeight,
+    double? wetWeight,
+    double? dryWeight,
     this.dryingStartDate,
     this.dryingEndDate,
-    this.dryingDays,
+    int? dryingDays,
     this.dryingMethod,
-    this.dryingTemperature,
-    this.dryingHumidity,
+    double? dryingTemperature,
+    double? dryingHumidity,
     this.curingStartDate,
     this.curingEndDate,
-    this.curingDays,
+    int? curingDays,
     this.curingMethod,
     this.curingNotes,
-    this.thcPercentage,
-    this.cbdPercentage,
+    double? thcPercentage,
+    double? cbdPercentage,
     this.terpeneProfile,
-    this.rating,
+    int? rating,
     this.tasteNotes,
     this.effectNotes,
     this.overallNotes,
     DateTime? createdAt,
     this.updatedAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+  }) : // ✅ VALIDATION: Apply validation from HarvestConfig
+       wetWeight = HarvestConfig.validateWeight(wetWeight),
+       dryWeight = HarvestConfig.validateWeight(dryWeight),
+       dryingDays = HarvestConfig.validateDryingDays(dryingDays),
+       dryingTemperature = HarvestConfig.validateDryingTemperature(dryingTemperature),
+       dryingHumidity = HarvestConfig.validateHumidity(dryingHumidity),
+       curingDays = HarvestConfig.validateCuringDays(curingDays),
+       thcPercentage = HarvestConfig.validatePercentage(thcPercentage),
+       cbdPercentage = HarvestConfig.validatePercentage(cbdPercentage),
+       rating = HarvestConfig.validateRating(rating),
+       createdAt = createdAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
   /// ✅ FIX: All 7 DateTime.parse now use safe parsers

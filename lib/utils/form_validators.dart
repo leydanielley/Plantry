@@ -3,6 +3,126 @@
 // Centralized validation logic for all forms
 // =============================================
 
+/// Form validation functions for Harvest forms
+class HarvestFormValidator {
+  /// Validate weight field (wet or dry)
+  static String? validateWeight(String? value, String fieldName) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Optional field
+    }
+    final number = double.tryParse(value);
+    if (number == null) {
+      return 'Must be a valid number';
+    }
+    if (number < 0.1) {
+      return 'Must be at least 0.1 g';
+    }
+    if (number > 10000) {
+      return 'Cannot exceed 10000 g';
+    }
+    return null;
+  }
+
+  /// Validate that dry weight does not exceed wet weight
+  static String? validateDryWeight(String? dryValue, String? wetValue) {
+    if (dryValue == null || dryValue.trim().isEmpty) {
+      return null; // Optional
+    }
+    final dry = double.tryParse(dryValue);
+    if (dry == null) {
+      return 'Must be a valid number';
+    }
+    if (dry < 0.1) {
+      return 'Must be at least 0.1 g';
+    }
+    if (dry > 10000) {
+      return 'Cannot exceed 10000 g';
+    }
+
+    // Check against wet weight if provided
+    if (wetValue != null && wetValue.trim().isNotEmpty) {
+      final wet = double.tryParse(wetValue);
+      if (wet != null && dry > wet) {
+        return 'Cannot exceed wet weight';
+      }
+    }
+
+    return null;
+  }
+
+  /// Validate temperature field
+  static String? validateTemperature(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Optional
+    }
+    final number = double.tryParse(value);
+    if (number == null) {
+      return 'Must be a valid number';
+    }
+    if (number < 10) {
+      return 'Must be at least 10 °C';
+    }
+    if (number > 35) {
+      return 'Cannot exceed 35 °C';
+    }
+    return null;
+  }
+
+  /// Validate humidity field
+  static String? validateHumidity(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Optional
+    }
+    final number = double.tryParse(value);
+    if (number == null) {
+      return 'Must be a valid number';
+    }
+    if (number < 0) {
+      return 'Must be at least 0 %';
+    }
+    if (number > 100) {
+      return 'Cannot exceed 100 %';
+    }
+    return null;
+  }
+
+  /// Validate percentage field (THC, CBD)
+  static String? validatePercentage(String? value, String fieldName) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Optional
+    }
+    final number = double.tryParse(value);
+    if (number == null) {
+      return 'Must be a valid number';
+    }
+    if (number < 0) {
+      return 'Must be at least 0 %';
+    }
+    if (number > 100) {
+      return 'Cannot exceed 100 %';
+    }
+    return null;
+  }
+
+  /// Validate rating field
+  static String? validateRating(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Optional
+    }
+    final number = int.tryParse(value);
+    if (number == null) {
+      return 'Must be a valid number';
+    }
+    if (number < 1) {
+      return 'Must be at least 1 star';
+    }
+    if (number > 5) {
+      return 'Cannot exceed 5 stars';
+    }
+    return null;
+  }
+}
+
 /// Form validation functions for Plant forms
 class PlantFormValidator {
   /// Validate plant name field
