@@ -4,6 +4,7 @@
 
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
+import 'package:growlog_app/config/room_config.dart'; // ✅ FIX: Validation config
 
 /// Sentinel object for copyWith to distinguish between null and undefined
 const Object _undefined = Object();
@@ -23,18 +24,23 @@ class Room {
 
   Room({
     this.id,
-    required this.name,
+    required String name,
     this.description,
     this.growType,
     this.wateringSystem,
     this.rdwcSystemId,
     // ✅ AUDIT FIX: Default values 0.0 are intentional for optional room dimensions
-    this.width = 0.0,
-    this.depth = 0.0,
-    this.height = 0.0,
+    double width = 0.0,
+    double depth = 0.0,
+    double height = 0.0,
     DateTime? createdAt,
     DateTime? updatedAt,
-  }) : createdAt = createdAt ?? DateTime.now(),
+  }) : // ✅ VALIDATION: Apply validation from RoomConfig
+       name = RoomConfig.validateName(name),
+       width = RoomConfig.validateDimension(width),
+       depth = RoomConfig.validateDimension(depth),
+       height = RoomConfig.validateDimension(height),
+       createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
 
   /// Factory: Aus Map erstellen (von Datenbank)
