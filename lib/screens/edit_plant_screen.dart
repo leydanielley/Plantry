@@ -958,11 +958,16 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
 
                 final totalBuckets = selectedSystem.bucketCount;
                 // Include current bucket number in available list
-                final allBuckets = List.generate(totalBuckets, (index) => index + 1);
+                final allBuckets = List.generate(
+                  totalBuckets,
+                  (index) => index + 1,
+                );
                 final availableBuckets = allBuckets
-                    .where((bucket) =>
-                        !_occupiedBuckets.contains(bucket) ||
-                        bucket == _selectedBucketNumber)
+                    .where(
+                      (bucket) =>
+                          !_occupiedBuckets.contains(bucket) ||
+                          bucket == _selectedBucketNumber,
+                    )
                     .toList();
 
                 return DropdownButtonFormField<int?>(
@@ -981,7 +986,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                       child: Text('Kein Bucket'),
                     ),
                     ...availableBuckets.map((bucket) {
-                      final isCurrentBucket = bucket == widget.plant.bucketNumber;
+                      final isCurrentBucket =
+                          bucket == widget.plant.bucketNumber;
                       return DropdownMenuItem(
                         value: bucket,
                         child: Text(
@@ -1000,7 +1006,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                     }
                     return null;
                   },
-                  onChanged: (value) => setState(() => _selectedBucketNumber = value),
+                  onChanged: (value) =>
+                      setState(() => _selectedBucketNumber = value),
                 );
               },
             ),
@@ -1025,7 +1032,10 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                   child: Text(t['edit_plant_no_room']),
                 ), // ✅ i18n
                 ..._rooms.map((room) {
-                  return DropdownMenuItem(value: room.id, child: Text(room.name));
+                  return DropdownMenuItem(
+                    value: room.id,
+                    child: Text(room.name),
+                  );
                 }),
               ],
               onChanged: (value) => setState(() => _selectedRoomId = value),

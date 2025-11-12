@@ -64,8 +64,15 @@ class MockPlantLogRepository implements IPlantLogRepository {
   }
 
   @override
-  Future<PlantLog?> findLastLog(int plantId, {bool includeArchived = false}) async {
-    final logs = await findByPlant(plantId, includeArchived: includeArchived, limit: 1);
+  Future<PlantLog?> findLastLog(
+    int plantId, {
+    bool includeArchived = false,
+  }) async {
+    final logs = await findByPlant(
+      plantId,
+      includeArchived: includeArchived,
+      limit: 1,
+    );
     return logs.isEmpty ? null : logs.first;
   }
 
@@ -91,7 +98,10 @@ class MockPlantLogRepository implements IPlantLogRepository {
   }
 
   @override
-  Future<List<PlantLog>> getRecentActivity({bool includeArchived = false, int limit = 10}) async {
+  Future<List<PlantLog>> getRecentActivity({
+    bool includeArchived = false,
+    int limit = 10,
+  }) async {
     final logs = _logs.values.toList()
       ..sort((a, b) => b.logDate.compareTo(a.logDate));
     return logs.take(limit).toList();
@@ -112,7 +122,10 @@ class MockPlantLogRepository implements IPlantLogRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getLogsWithDetails(int plantId, {bool includeArchived = false}) async {
+  Future<List<Map<String, dynamic>>> getLogsWithDetails(
+    int plantId, {
+    bool includeArchived = false,
+  }) async {
     final logs = await findByPlant(plantId, includeArchived: includeArchived);
     return logs
         .map((log) => {'log': log, 'fertilizers': [], 'photos': []})

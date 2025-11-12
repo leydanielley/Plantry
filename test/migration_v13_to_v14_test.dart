@@ -45,10 +45,7 @@ void main() {
       expect(beforeCount, greaterThan(0), reason: 'Should have test data');
 
       // Get sample log to verify data integrity
-      final sampleLogBefore = await testDb.query(
-        'plant_logs',
-        limit: 1,
-      );
+      final sampleLogBefore = await testDb.query('plant_logs', limit: 1);
       expect(sampleLogBefore, isNotEmpty);
 
       final sampleId = sampleLogBefore.first['id'] as int;

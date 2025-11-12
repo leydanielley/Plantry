@@ -2039,8 +2039,7 @@ class AppTranslations {
 
       // ✅ AUDIT FIX: Add Fertilizer screen translations
       'add_fertilizer_title': 'New Fertilizer',
-      'add_fertilizer_info_text':
-          'Add fertilizers to use them later in logs.',
+      'add_fertilizer_info_text': 'Add fertilizers to use them later in logs.',
       'add_fertilizer_basic_section': 'Basic Information',
       'add_fertilizer_name_label': 'Name *',
       'add_fertilizer_name_hint': 'e.g. Bloom A+B',
@@ -2171,8 +2170,7 @@ class AppTranslations {
       'settings_expert_mode_drift': '• EC/pH Drift Analysis',
       'settings_expert_mode_question':
           'Would you like to activate Expert Mode?',
-      'settings_expert_mode_unsure':
-          'If you are unsure, stay in Normal Mode.',
+      'settings_expert_mode_unsure': 'If you are unsure, stay in Normal Mode.',
       'settings_normal_mode_keep': 'Keep Normal Mode',
       'settings_expert_mode_activate': 'Activate Expert Mode',
       'settings_creating_backup': 'Creating backup...\nPlease wait!',
