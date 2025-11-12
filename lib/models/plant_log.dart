@@ -53,6 +53,9 @@ class PlantLog {
   // Notiz
   final String? note;
 
+  // ✅ v14: Soft-Delete Flag
+  final bool archived;
+
   final DateTime createdAt;
 
   PlantLog({
@@ -81,6 +84,7 @@ class PlantLog {
     this.systemBucketCount,
     double? systemBucketSize,
     this.note,
+    this.archived = false,
     DateTime? createdAt,
   }) : // ✅ VALIDATION: Apply validation from ValidationConfig
        waterAmount = ValidationConfig.validateDouble(
@@ -201,6 +205,7 @@ class PlantLog {
       systemBucketCount: map['system_bucket_count'] as int?,
       systemBucketSize: (map['system_bucket_size'] as num?)?.toDouble(),
       note: map['note'] as String?,
+      archived: (map['archived'] as int?) == 1,
       createdAt: SafeParsers.parseDateTime(
         map['created_at'] as String?,
         fallback: DateTime.now(),
@@ -269,6 +274,7 @@ class PlantLog {
       'system_bucket_count': systemBucketCount,
       'system_bucket_size': systemBucketSize,
       'note': note,
+      'archived': archived ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -301,6 +307,7 @@ class PlantLog {
     Object? systemBucketCount = _undefined,
     Object? systemBucketSize = _undefined,
     Object? note = _undefined,
+    bool? archived,
     DateTime? createdAt,
   }) {
     return PlantLog(
@@ -347,6 +354,7 @@ class PlantLog {
           ? this.systemBucketSize
           : systemBucketSize as double?,
       note: note == _undefined ? this.note : note as String?,
+      archived: archived ?? this.archived,
       createdAt: createdAt ?? this.createdAt,
     );
   }

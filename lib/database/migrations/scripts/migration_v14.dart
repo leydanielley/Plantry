@@ -63,34 +63,77 @@ final Migration migrationV14 = Migration(
       '📝 Step 2/9: Rebuilding plant_logs (CASCADE → RESTRICT)',
     );
 
+    // ✅ CRITICAL FIX: Use correct v14 schema with all required columns
     await db.execute('''
       CREATE TABLE plant_logs_new (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        plant_id INTEGER,
-        log_date TEXT NOT NULL DEFAULT (datetime('now')),
+        plant_id INTEGER NOT NULL,
+        day_number INTEGER NOT NULL,
+        log_date TEXT NOT NULL,
+        logged_by TEXT,
+        action_type TEXT NOT NULL,
         phase TEXT,
-        phase_day INTEGER,
-        watering_ml REAL,
-        nutrient_ppm REAL,
-        nutrient_ec REAL,
-        ph REAL,
+        phase_day_number INTEGER,
+        water_amount REAL,
+        ph_in REAL,
+        ph_out REAL,
+        ec_in REAL,
+        ec_out REAL,
         temperature REAL,
         humidity REAL,
-        light_hours REAL,
+        runoff INTEGER DEFAULT 0,
+        cleanse INTEGER DEFAULT 0,
+        container_size REAL,
+        container_medium_amount REAL,
+        container_drainage INTEGER DEFAULT 0,
+        container_drainage_material TEXT,
+        system_reservoir_size REAL,
+        system_bucket_count INTEGER,
+        system_bucket_size REAL,
         note TEXT,
-        training TEXT,
-        defoliation INTEGER DEFAULT 0,
         archived INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE RESTRICT
       )
     ''');
 
+    // ✅ CRITICAL FIX: Map v13 columns to v14 schema
+    // v13 had: id, plant_id, log_date, action_type, day_number, phase, phase_day_number,
+    //          watering_ml, nutrient_ppm, nutrient_ec, ph, temperature, humidity,
+    //          light_hours, note, training, defoliation, created_at
+    // v14 has: All above PLUS logged_by, water_amount (renamed), ph_in/ph_out (split),
+    //          ec_in/ec_out (split), runoff, cleanse, container_*, system_*, archived
+    // Dropped: nutrient_ppm, nutrient_ec, light_hours, training, defoliation
     await db.execute('''
-      INSERT INTO plant_logs_new
-      SELECT id, plant_id, log_date, phase, phase_day, watering_ml, nutrient_ppm,
-             nutrient_ec, ph, temperature, humidity, light_hours, note, training,
-             defoliation, archived, created_at
+      INSERT INTO plant_logs_new (
+        id, plant_id, day_number, log_date, logged_by, action_type, phase, phase_day_number,
+        water_amount, ph_in, ph_out, ec_in, ec_out, temperature, humidity,
+        runoff, cleanse, container_size, container_medium_amount, container_drainage,
+        container_drainage_material, system_reservoir_size, system_bucket_count,
+        system_bucket_size, note, archived, created_at
+      )
+      SELECT
+        id, plant_id, day_number, log_date,
+        NULL as logged_by,  -- NEW column
+        action_type, phase, phase_day_number,
+        watering_ml as water_amount,  -- RENAMED
+        ph as ph_in,  -- SPLIT: old ph becomes ph_in
+        NULL as ph_out,  -- SPLIT: ph_out is NULL for old data
+        nutrient_ec as ec_in,  -- SPLIT: nutrient_ec becomes ec_in
+        NULL as ec_out,  -- SPLIT: ec_out is NULL for old data
+        temperature, humidity,
+        0 as runoff,  -- NEW column with default
+        0 as cleanse,  -- NEW column with default
+        NULL as container_size,  -- NEW column
+        NULL as container_medium_amount,  -- NEW column
+        0 as container_drainage,  -- NEW column with default
+        NULL as container_drainage_material,  -- NEW column
+        NULL as system_reservoir_size,  -- NEW column
+        NULL as system_bucket_count,  -- NEW column
+        NULL as system_bucket_size,  -- NEW column
+        note,
+        archived,  -- Column already added in STEP 1
+        created_at
       FROM plant_logs
     ''');
 
@@ -159,7 +202,14 @@ final Migration migrationV14 = Migration(
       )
     ''');
 
-    await db.execute('INSERT INTO harvests_new SELECT * FROM harvests');
+    // ✅ CRITICAL FIX: Explicitly list v13 columns to prevent data loss
+    // v13 harvests has: id, plant_id, harvest_date, wet_weight, dry_weight, created_at
+    // v14 adds 11 new columns which will get NULL/default values
+    await db.execute('''
+      INSERT INTO harvests_new (id, plant_id, harvest_date, wet_weight, dry_weight, created_at)
+      SELECT id, plant_id, harvest_date, wet_weight, dry_weight, created_at
+      FROM harvests
+    ''');
     await db.execute('DROP TABLE harvests');
     await db.execute('ALTER TABLE harvests_new RENAME TO harvests');
 
