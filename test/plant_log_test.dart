@@ -270,7 +270,7 @@ void main() {
   });
 
   group('TC-022: Log Deletion with RESTRICT (v14)', () {
-    test('should prevent log deletion when photos exist', () async {
+    test('soft delete archives log even when photos exist', () async {
       // Arrange
       final plant = await plantRepo.save(
         Plant(
@@ -303,11 +303,15 @@ void main() {
         'created_at': DateTime.now().toIso8601String(),
       });
 
-      // Act & Assert - Should throw due to RESTRICT constraint
-      expect(
-        () => logRepo.delete(log.id!),
-        throwsA(isA<Exception>()),
-      );
+      // Act - With soft delete, this doesn't throw, it archives
+      final deleted = await logRepo.delete(log.id!);
+
+      // Assert - Log is archived, photos remain linked
+      expect(deleted, equals(1));
+
+      final archivedLog = await logRepo.findById(log.id!);
+      expect(archivedLog, isNotNull);
+      expect(archivedLog!.archived, isTrue);
 
       // Verify photos still exist
       final photos = await testDb.query(
@@ -319,7 +323,7 @@ void main() {
       expect(photos.length, 2);
     });
 
-    test('should allow log deletion after photos are deleted', () async {
+    test('soft delete archives log even after photos are deleted', () async {
       // Arrange
       final plant = await plantRepo.save(
         Plant(
@@ -346,13 +350,14 @@ void main() {
         'created_at': DateTime.now().toIso8601String(),
       });
 
-      // Act - Delete photo first, then log
+      // Act - Delete photo first, then archive log
       await testDb.delete('photos', where: 'id = ?', whereArgs: [photoId]);
       await logRepo.delete(log.id!);
 
-      // Assert - Log should be deleted
+      // Assert - Log is archived (not permanently deleted)
       final deletedLog = await logRepo.findById(log.id!);
-      expect(deletedLog, isNull);
+      expect(deletedLog, isNotNull);
+      expect(deletedLog!.archived, isTrue);
     });
   });
 

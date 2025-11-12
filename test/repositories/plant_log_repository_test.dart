@@ -117,7 +117,7 @@ void main() {
       expect(found, isNull);
     });
 
-    test('delete() - should remove log', () async {
+    test('delete() - should archive log (soft delete)', () async {
       // Arrange
       final log = PlantLog(
         plantId: testPlantId,
@@ -133,8 +133,10 @@ void main() {
       // Assert
       expect(deleted, equals(1));
 
+      // Log should still exist but be archived
       final found = await repository.findById(saved.id!);
-      expect(found, isNull);
+      expect(found, isNotNull);
+      expect(found!.archived, isTrue);
     });
 
     test('delete() - should return 0 for non-existent log', () async {

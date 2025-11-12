@@ -155,7 +155,7 @@ void main() {
       expect(found.width, equals(5.0));
     });
 
-    test('delete() - should remove unused room', () async {
+    test('delete() - should archive unused room (soft delete)', () async {
       // Arrange
       final room = Room(name: 'To Delete');
       final saved = await repository.save(room);
@@ -166,8 +166,19 @@ void main() {
       // Assert
       expect(deleted, equals(1));
 
+      // Room should still exist (Room model doesn't expose archived field)
+      // but the DB record is marked as archived
       final found = await repository.findById(saved.id!);
-      expect(found, isNull);
+      expect(found, isNotNull);
+
+      // Verify archived status directly in database
+      final db = await testDb;
+      final archivedCheck = await db.query(
+        'rooms',
+        where: 'id = ?',
+        whereArgs: [saved.id],
+      );
+      expect(archivedCheck.first['archived'], equals(1));
     });
 
     test('delete() - should return 0 for non-existent room', () async {

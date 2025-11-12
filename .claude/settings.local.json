@@ -13,7 +13,12 @@
       "Bash(cat:*)",
       "Bash(git push:*)",
       "Bash(git log:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(comm:*)",
+      "Bash(for key in dashboard_harvests_title settings_expert_mode_title phase settings_saved add_grow_title harvest_detail_title)",
+      "Bash(do echo -n \"$key: \")",
+      "Bash(dart analyze:*)"
     ],
     "deny": [],
     "ask": []

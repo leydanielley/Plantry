@@ -95,7 +95,7 @@ void main() {
   });
 
   group('TC-007: Plant Deletion with RESTRICT (v14)', () {
-    test('should prevent plant deletion when logs exist', () async {
+    test('soft delete archives plant even when logs exist', () async {
       // Arrange
       final plant = await plantRepo.save(
         Plant(
@@ -115,21 +115,22 @@ void main() {
         ),
       );
 
-      // Act & Assert - Should throw due to RESTRICT constraint
-      expect(
-        () => plantRepo.delete(plant.id!),
-        throwsA(isA<Exception>()),
-      );
+      // Act - With soft delete, this doesn't throw, it archives
+      final deleted = await plantRepo.delete(plant.id!);
 
-      // Verify plant and log still exist
+      // Assert - Plant and log are archived (not deleted)
+      expect(deleted, equals(1));
+
       final existingPlant = await plantRepo.findById(plant.id!);
       final existingLog = await logRepo.findById(log.id!);
 
       expect(existingPlant, isNotNull);
+      expect(existingPlant!.archived, isTrue);
       expect(existingLog, isNotNull);
+      // Log can remain active or be archived depending on implementation
     });
 
-    test('should allow plant deletion after logs are deleted', () async {
+    test('soft delete archives both plant and logs', () async {
       // Arrange
       final plant = await plantRepo.save(
         Plant(
@@ -149,16 +150,18 @@ void main() {
         ),
       );
 
-      // Act - Delete log first, then plant
+      // Act - Delete (archive) log first, then plant
       await logRepo.delete(log.id!);
       await plantRepo.delete(plant.id!);
 
-      // Assert - Both should be deleted
+      // Assert - Both are archived (not permanently deleted)
       final deletedPlant = await plantRepo.findById(plant.id!);
       final deletedLog = await logRepo.findById(log.id!);
 
-      expect(deletedPlant, isNull);
-      expect(deletedLog, isNull);
+      expect(deletedPlant, isNotNull);
+      expect(deletedPlant!.archived, isTrue);
+      expect(deletedLog, isNotNull);
+      expect(deletedLog!.archived, isTrue);
     });
   });
 

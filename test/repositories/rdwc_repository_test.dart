@@ -170,7 +170,7 @@ void main() {
       expect(found, isNull);
     });
 
-    test('deleteSystem() - should remove system', () async {
+    test('deleteSystem() - should archive system (soft delete)', () async {
       // Arrange
       final system = RdwcSystem(
         name: 'To Delete',
@@ -186,8 +186,10 @@ void main() {
       // Assert
       expect(deleted, equals(1));
 
+      // System should still exist but be archived
       final found = await repository.getSystemById(id);
-      expect(found, isNull);
+      expect(found, isNotNull);
+      expect(found!.archived, isTrue);
     });
 
     test('deleteSystem() - should return 0 for non-existent system', () async {
@@ -637,7 +639,7 @@ void main() {
       expect(found!.isCriticallyLow, isTrue);
     });
 
-    test('deleteSystem() - should detach plants from system', () async {
+    test('deleteSystem() - soft delete keeps plant associations', () async {
       // Arrange
       final systemId = await repository.createSystem(
         RdwcSystem(
@@ -660,10 +662,11 @@ void main() {
         'bucket_number': 1,
       });
 
-      // Act
+      // Act - Soft delete the system
       await repository.deleteSystem(systemId);
 
-      // Assert
+      // Assert - With soft delete, plant associations remain
+      // (they're only cleared on permanent delete)
       final plants = await testDb.query(
         'plants',
         where: 'name = ?',
@@ -671,8 +674,9 @@ void main() {
       );
 
       expect(plants, isNotEmpty);
-      expect(plants.first['rdwc_system_id'], isNull);
-      expect(plants.first['bucket_number'], isNull);
+      // Plant stays attached to archived system
+      expect(plants.first['rdwc_system_id'], equals(systemId));
+      expect(plants.first['bucket_number'], equals(1));
     });
   });
 }

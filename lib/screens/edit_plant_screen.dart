@@ -904,8 +904,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
             const Center(child: CircularProgressIndicator())
           else
             DropdownButtonFormField<int?>(
-              key: ValueKey('rdwc_system_${_selectedRdwcSystemId}'),
-              value: _selectedRdwcSystemId,
+              key: ValueKey('rdwc_system_$_selectedRdwcSystemId'),
+              initialValue: _selectedRdwcSystemId,
               decoration: const InputDecoration(
                 labelText: 'RDWC System',
                 prefixIcon: Icon(Icons.water),
@@ -966,8 +966,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                     .toList();
 
                 return DropdownButtonFormField<int?>(
-                  key: ValueKey('bucket_${_selectedBucketNumber}'),
-                  value: _selectedBucketNumber,
+                  key: ValueKey('bucket_$_selectedBucketNumber'),
+                  initialValue: _selectedBucketNumber,
                   decoration: InputDecoration(
                     labelText: 'Bucket Nummer',
                     prefixIcon: const Icon(Icons.shower),

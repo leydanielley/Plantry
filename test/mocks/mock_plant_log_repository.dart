@@ -12,6 +12,7 @@ class MockPlantLogRepository implements IPlantLogRepository {
   @override
   Future<List<PlantLog>> findByPlant(
     int plantId, {
+    bool includeArchived = false,
     int? limit,
     int? offset,
   }) async {
@@ -63,8 +64,8 @@ class MockPlantLogRepository implements IPlantLogRepository {
   }
 
   @override
-  Future<PlantLog?> findLastLog(int plantId) async {
-    final logs = await findByPlant(plantId, limit: 1);
+  Future<PlantLog?> findLastLog(int plantId, {bool includeArchived = false}) async {
+    final logs = await findByPlant(plantId, includeArchived: includeArchived, limit: 1);
     return logs.isEmpty ? null : logs.first;
   }
 
@@ -85,12 +86,12 @@ class MockPlantLogRepository implements IPlantLogRepository {
   }
 
   @override
-  Future<int> countByPlant(int plantId) async {
+  Future<int> countByPlant(int plantId, {bool includeArchived = false}) async {
     return _logs.values.where((log) => log.plantId == plantId).length;
   }
 
   @override
-  Future<List<PlantLog>> getRecentActivity({int limit = 10}) async {
+  Future<List<PlantLog>> getRecentActivity({bool includeArchived = false, int limit = 10}) async {
     final logs = _logs.values.toList()
       ..sort((a, b) => b.logDate.compareTo(a.logDate));
     return logs.take(limit).toList();
@@ -99,6 +100,7 @@ class MockPlantLogRepository implements IPlantLogRepository {
   @override
   Future<List<PlantLog>> getRecentActivityByAction({
     required List<String> actionTypes,
+    bool includeArchived = false,
     int limit = 10,
   }) async {
     final logs =
@@ -110,8 +112,8 @@ class MockPlantLogRepository implements IPlantLogRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getLogsWithDetails(int plantId) async {
-    final logs = await findByPlant(plantId);
+  Future<List<Map<String, dynamic>>> getLogsWithDetails(int plantId, {bool includeArchived = false}) async {
+    final logs = await findByPlant(plantId, includeArchived: includeArchived);
     return logs
         .map((log) => {'log': log, 'fertilizers': [], 'photos': []})
         .toList();
