@@ -92,10 +92,19 @@ class NutrientCalculation {
 
   /// Calculate required PPM of solution to add
   /// Formula: (target_ppm × target_vol - current_ppm × current_vol) / vol_to_add
+  /// 🔒 SAFETY: Returns 0 if volumeToAdd <= 0 to prevent division by zero
+  /// 🔒 SAFETY: Capped at maximumSafeRequiredPpm to prevent unrealistic values
   double get requiredPPM {
     if (volumeToAdd <= 0) return 0;
-    return (targetPPM * targetVolume - currentPPM * currentVolume) /
-        volumeToAdd;
+    final calculated =
+        (targetPPM * targetVolume - currentPPM * currentVolume) / volumeToAdd;
+
+    // Cap at maximum safe PPM to prevent calculation errors with small volumes
+    if (calculated > NutrientCalculationConfig.maximumSafeRequiredPpm) {
+      return NutrientCalculationConfig.maximumSafeRequiredPpm;
+    }
+
+    return calculated;
   }
 
   /// Calculate required EC of solution to add
@@ -197,11 +206,28 @@ class NutrientCalculation {
 
   bool get hasRecipeWithoutEC => recipe != null && recipe!.targetEc == null;
 
+  /// 🔒 BUG FIX: Check if volume to add is too small for practical calculations
+  /// When volume is < 1L, required PPM can become unrealistically high (50k+)
+  bool get isVolumeTooSmall =>
+      NutrientCalculationConfig.isVolumeTooSmall(volumeToAdd);
+
+  /// 🔒 BUG FIX: Check if calculated required PPM exceeds safe maximum
+  /// This happens when trying to add very small volumes with high PPM increase
+  bool get isRequiredPpmTooHigh {
+    // Calculate uncapped value to check if it exceeds limit
+    if (volumeToAdd <= 0) return false;
+    final uncapped =
+        (targetPPM * targetVolume - currentPPM * currentVolume) / volumeToAdd;
+    return NutrientCalculationConfig.isRequiredPpmTooHigh(uncapped);
+  }
+
   /// Get warning level color
   WarningLevel get warningLevel {
     if (needsDilution) return WarningLevel.error;
     if (isExtremePPM) return WarningLevel.error;
     if (isHighScaling) return WarningLevel.error;
+    if (isVolumeTooSmall) return WarningLevel.error; // 🔒 BUG FIX
+    if (isRequiredPpmTooHigh) return WarningLevel.error; // 🔒 BUG FIX
     if (isHighPPM) return WarningLevel.warning;
     if (isModerateScaling) return WarningLevel.warning;
     return WarningLevel.safe;
@@ -214,6 +240,14 @@ class NutrientCalculation {
     }
     if (isSystemFull) {
       return translate('error_system_full');
+    }
+    if (isVolumeTooSmall) {
+      // 🔒 BUG FIX: New warning for too-small volumes
+      return translate('error_volume_too_small');
+    }
+    if (isRequiredPpmTooHigh) {
+      // 🔒 BUG FIX: New warning for unrealistic PPM calculations
+      return translate('error_required_ppm_too_high');
     }
     if (needsDilution) {
       return translate('warning_dilution_needed');

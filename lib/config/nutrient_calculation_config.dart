@@ -58,8 +58,18 @@ class NutrientCalculationConfig {
   /// Below this, no nutrients need to be added
   static const double minimumVolumeToAdd = 0.0;
 
+  /// Minimum practical volume to add for top-up calculations (1.0 liter)
+  /// Below this threshold, the required PPM becomes unrealistically high
+  /// Example: Adding 0.1L to reach higher PPM can require 50,000+ PPM solution
+  static const double minimumPracticalVolumeToAdd = 1.0;
+
   /// Minimum volume for batch mix mode (0 liters starting point)
   static const double batchMixStartVolume = 0.0;
+
+  /// Maximum safe required PPM for solution (10,000 PPM)
+  /// Above this is physically impractical and dangerous
+  /// Most concentrated nutrients are around 5,000-8,000 PPM maximum
+  static const double maximumSafeRequiredPpm = 10000.0;
 
   // ═══════════════════════════════════════════
   // HELPER METHODS
@@ -94,5 +104,16 @@ class NutrientCalculationConfig {
   /// Check if dilution is needed (negative required PPM)
   static bool needsDilution(double requiredPpm) {
     return requiredPpm < dilutionNeededThreshold;
+  }
+
+  /// Check if volume to add is too small for practical calculations
+  static bool isVolumeTooSmall(double volumeToAdd) {
+    return volumeToAdd > minimumVolumeToAdd &&
+        volumeToAdd < minimumPracticalVolumeToAdd;
+  }
+
+  /// Check if required PPM exceeds safe maximum
+  static bool isRequiredPpmTooHigh(double requiredPpm) {
+    return requiredPpm > maximumSafeRequiredPpm;
   }
 }

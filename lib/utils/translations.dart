@@ -317,6 +317,10 @@ class AppTranslations {
       'required_field': 'Pflichtfeld',
       'error_volume_exceeds_capacity': 'Volumen überschreitet Systemkapazität',
       'error_system_full': 'System ist bereits voll',
+      'error_volume_too_small':
+          '⚠️ Zu wenig Volumen! Bitte mindestens 1L hinzufügen, sonst wird die benötigte PPM-Konzentration unrealistisch hoch.',
+      'error_required_ppm_too_high':
+          '⚠️ Berechnete Konzentration zu hoch! Bitte mehr Wasser hinzufügen oder in mehreren Schritten auffüllen.',
       'warning_dilution_needed':
           'Ziel-PPM ist niedriger als aktuell. Verdünnung statt Auffüllung erforderlich.',
       'warning_high_ppm':
@@ -1222,6 +1226,10 @@ class AppTranslations {
       'required_field': 'Required field',
       'error_volume_exceeds_capacity': 'Volume exceeds system capacity',
       'error_system_full': 'System is already full',
+      'error_volume_too_small':
+          '⚠️ Volume too small! Please add at least 1L, otherwise the required PPM concentration becomes unrealistically high.',
+      'error_required_ppm_too_high':
+          '⚠️ Calculated concentration too high! Please add more water or top up in multiple steps.',
       'warning_dilution_needed':
           'Target PPM is lower than current. Dilution needed instead of top-up.',
       'warning_high_ppm': 'High PPM concentration! Consider adding in steps.',
