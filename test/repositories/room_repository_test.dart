@@ -172,8 +172,7 @@ void main() {
       expect(found, isNotNull);
 
       // Verify archived status directly in database
-      final db = await testDb;
-      final archivedCheck = await db.query(
+      final archivedCheck = await testDb.query(
         'rooms',
         where: 'id = ?',
         whereArgs: [saved.id],
