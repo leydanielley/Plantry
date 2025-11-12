@@ -19,11 +19,12 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
   /// Alle Räume laden
   /// ✅ CRITICAL FIX: Added limit parameter to prevent memory overflow
   @override
-  Future<List<Room>> findAll({int? limit}) async {
+  Future<List<Room>> findAll({int? limit, bool includeArchived = false}) async {
     try {
       final db = await _dbHelper.database;
       final maps = await db.query(
         'rooms',
+        where: includeArchived ? null : 'archived = 0',
         orderBy: 'name ASC',
         limit: limit ?? 1000, // Reasonable default limit
       );
@@ -193,8 +194,76 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
     }
   }
 
-  /// Raum löschen
+  /// Raum archivieren (Soft-Delete)
+  /// ✅ SOFT-DELETE: Archiviert Raum statt zu löschen (archived = 1)
+  @override
+  Future<int> delete(int id) async {
+    try {
+      final db = await _dbHelper.database;
+      return await db.update(
+        'rooms',
+        {'archived': 1},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'RoomRepository',
+        'Failed to archive room',
+        e,
+        stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  /// ✅ RESTORE: Restores archived room
+  Future<int> restore(int id) async {
+    try {
+      final db = await _dbHelper.database;
+      return await db.update(
+        'rooms',
+        {'archived': 0},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'RoomRepository',
+        'Failed to restore room',
+        e,
+        stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  /// Get all archived rooms
+  Future<List<Room>> findArchived({int? limit}) async {
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'rooms',
+        where: 'archived = ?',
+        whereArgs: [1],
+        orderBy: 'name ASC',
+        limit: limit ?? 1000,
+      );
+      return maps.map((map) => Room.fromMap(map)).toList();
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'RoomRepository',
+        'Failed to load archived rooms',
+        e,
+        stackTrace,
+      );
+      return [];
+    }
+  }
+
+  /// Raum permanent löschen
   ///
+  /// ⚠️ DANGER: Echtes Löschen! Nur nach Warnung + Backup verwenden
   /// ⚠️ WICHTIG: Blockiert Löschung wenn Raum in Verwendung ist!
   ///
   /// Die Methode prüft ob der Raum noch verwendet wird von:
@@ -209,8 +278,7 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
   /// Architektonische Entscheidung:
   /// ❌ KEINE automatische Kaskadierung - verhindert versehentlichen Datenverlust
   /// ✅ Explizite Benutzer-Aktion erforderlich für maximale Kontrolle
-  @override
-  Future<int> delete(int id) async {
+  Future<int> deletePermanently(int id) async {
     try {
       final db = await _dbHelper.database;
 
@@ -252,17 +320,25 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
       // Safe to delete
       return await db.delete('rooms', where: 'id = ?', whereArgs: [id]);
     } catch (e, stackTrace) {
-      AppLogger.error('RoomRepository', 'Failed to delete room', e, stackTrace);
+      AppLogger.error(
+        'RoomRepository',
+        'Failed to delete room permanently',
+        e,
+        stackTrace,
+      );
       rethrow;
     }
   }
 
   /// Anzahl Räume
   @override
-  Future<int> count() async {
+  Future<int> count({bool includeArchived = false}) async {
     try {
       final db = await _dbHelper.database;
-      final result = await db.rawQuery('SELECT COUNT(*) as count FROM rooms');
+      final whereClause = includeArchived ? '' : ' WHERE archived = 0';
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM rooms$whereClause',
+      );
       return Sqflite.firstIntValue(result) ?? 0;
     } catch (e, stackTrace) {
       AppLogger.error('RoomRepository', 'Failed to count rooms', e, stackTrace);

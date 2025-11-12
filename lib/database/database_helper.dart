@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            13, // ✅ v13: Database integrity & performance (FK constraints, composite indexes)
+            14, // ✅ v14: Soft-Delete System - Prevent data loss on deletion (CASCADE → RESTRICT)
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onConfigure: _onConfigure,
@@ -91,7 +91,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 13,
+          version: 14,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onConfigure: _onConfigure,

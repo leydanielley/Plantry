@@ -19,4 +19,7 @@ abstract class IPlantRepository {
   Future<int> getLogCount(int plantId);
   Future<List<Plant>> findByRdwcSystem(int systemId);
   Future<int> countLogsToBeDeleted(int plantId, DateTime newSeedDate);
+
+  // ✅ SOFT-DELETE: Get counts of related data for warning dialog
+  Future<Map<String, int>> getRelatedDataCounts(int plantId);
 }

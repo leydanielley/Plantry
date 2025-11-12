@@ -206,28 +206,144 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
     }
   }
 
-  /// ✅ FIX v11: Cascading delete with transaction
-  /// Deletes plant and ALL related data to prevent orphaned records
-  ///
-  /// Deletion order (to respect foreign key constraints):
-  /// 1. Photos (via plant_logs.log_id)
-  /// 2. Plant logs
-  /// 3. Harvests
-  /// 4. Plant itself
+  /// 🔒 SOFT DELETE: Archive plant instead of deleting
+  /// After migration v14, this method archives the plant and its logs
+  /// Use deletePermanently() for actual deletion
   @override
   Future<int> delete(int id) async {
     try {
       final db = await _dbHelper.database;
 
-      // Use transaction for atomic cascading delete
+      // Archive plant and all its logs
       return await db.transaction((txn) async {
         AppLogger.info(
           'PlantRepo',
-          'Starting cascading delete for plant',
+          'Archiving plant (soft delete)',
           'plantId=$id',
         );
 
-        // Step 1: Get all log IDs for this plant (needed to delete photos)
+        // Archive all plant logs
+        await txn.update(
+          'plant_logs',
+          {'archived': 1},
+          where: 'plant_id = ?',
+          whereArgs: [id],
+        );
+
+        // Archive the plant itself
+        final result = await txn.update(
+          'plants',
+          {'archived': 1},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+
+        AppLogger.info('PlantRepo', '✅ Plant archived (soft delete completed)');
+        return result;
+      });
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to archive plant',
+        e,
+        stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  /// ✅ RESTORE: Restores archived plant and all its logs
+  Future<int> restore(int id) async {
+    try {
+      final db = await _dbHelper.database;
+
+      // Restore plant and all its logs
+      return await db.transaction((txn) async {
+        AppLogger.info(
+          'PlantRepo',
+          'Restoring plant from archive',
+          'plantId=$id',
+        );
+
+        // Restore all plant logs
+        await txn.update(
+          'plant_logs',
+          {'archived': 0},
+          where: 'plant_id = ?',
+          whereArgs: [id],
+        );
+
+        // Restore the plant itself
+        final result = await txn.update(
+          'plants',
+          {'archived': 0},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+
+        AppLogger.info('PlantRepo', '✅ Plant restored from archive');
+        return result;
+      });
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to restore plant',
+        e,
+        stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  /// Get all archived plants
+  Future<List<Plant>> findArchived({int? limit, int? offset}) async {
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'plants',
+        where: 'archived = ?',
+        whereArgs: [1],
+        orderBy: 'id DESC',
+        limit: limit,
+        offset: offset,
+      );
+
+      return maps.map((map) => Plant.fromMap(map)).toList();
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to load archived plants',
+        e,
+        stackTrace,
+      );
+      return [];
+    }
+  }
+
+  /// ⚠️ PERMANENT DELETE: Deletes plant and ALL related data
+  /// This is irreversible! Use with caution.
+  ///
+  /// After migration v14, you must manually delete related data first
+  /// due to RESTRICT constraints. This method handles that.
+  ///
+  /// Deletion order (to respect foreign key constraints):
+  /// 1. Log fertilizers
+  /// 2. Photos
+  /// 3. Plant logs
+  /// 4. Harvests
+  /// 5. Plant itself
+  Future<int> deletePermanently(int id) async {
+    try {
+      final db = await _dbHelper.database;
+
+      return await db.transaction((txn) async {
+        AppLogger.warning(
+          'PlantRepo',
+          '⚠️ PERMANENT DELETE: Starting cascading delete',
+          'plantId=$id',
+        );
+
+        // Step 1: Get all log IDs for this plant
         final logs = await txn.query(
           'plant_logs',
           columns: ['id'],
@@ -236,40 +352,42 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
         );
         final logIds = logs.map((log) => log['id'] as int).toList();
 
-        // Step 2: Delete all photos associated with these logs
-        // First, get photo file paths to delete physical files
+        int deletedLogFertilizers = 0;
         int deletedPhotos = 0;
         int deletedPhotoFiles = 0;
+
         if (logIds.isNotEmpty) {
           for (final logId in logIds) {
-            // Get photo records before deleting
+            // Delete log_fertilizers first (FK to plant_logs)
+            final fertCount = await txn.delete(
+              'log_fertilizers',
+              where: 'log_id = ?',
+              whereArgs: [logId],
+            );
+            deletedLogFertilizers += fertCount;
+
+            // Get photo records
             final photos = await txn.query(
               'photos',
               where: 'log_id = ?',
               whereArgs: [logId],
             );
 
-            // Delete physical photo files from filesystem
+            // Delete physical photo files
             for (final photo in photos) {
               try {
-                final filePath = photo['file_path'] as String;
+                final filePath = photo['image_path'] as String;
                 final file = File(filePath);
                 if (await file.exists()) {
                   await file.delete();
                   deletedPhotoFiles++;
-                  AppLogger.debug(
-                    'PlantRepo',
-                    'Deleted photo file',
-                    'path=$filePath',
-                  );
                 }
               } catch (e) {
                 AppLogger.error('PlantRepo', 'Failed to delete photo file', e);
-                // Continue with database deletion even if file deletion fails
               }
             }
 
-            // Delete photo database records
+            // Delete photo records
             final photoCount = await txn.delete(
               'photos',
               where: 'log_id = ?',
@@ -279,31 +397,32 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
           }
         }
 
-        // Step 3: Delete all plant logs
+        // Step 2: Delete all plant logs
         final deletedLogs = await txn.delete(
           'plant_logs',
           where: 'plant_id = ?',
           whereArgs: [id],
         );
 
-        // Step 4: Delete all harvests
+        // Step 3: Delete all harvests
         final deletedHarvests = await txn.delete(
           'harvests',
           where: 'plant_id = ?',
           whereArgs: [id],
         );
 
-        // Step 5: Finally, delete the plant itself
+        // Step 4: Finally, delete the plant itself
         final deletedPlant = await txn.delete(
           'plants',
           where: 'id = ?',
           whereArgs: [id],
         );
 
-        AppLogger.info(
+        AppLogger.warning(
           'PlantRepo',
-          '✅ Cascading delete completed',
-          'plant=$deletedPlant, logs=$deletedLogs, harvests=$deletedHarvests, photos=$deletedPhotos, photoFiles=$deletedPhotoFiles',
+          '⚠️ PERMANENT DELETE completed',
+          'plant=$deletedPlant, logs=$deletedLogs, harvests=$deletedHarvests, '
+              'photos=$deletedPhotos, photoFiles=$deletedPhotoFiles, fertilizers=$deletedLogFertilizers',
         );
 
         return deletedPlant;
@@ -311,11 +430,57 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
     } catch (e, stackTrace) {
       AppLogger.error(
         'PlantRepository',
-        'Failed to delete plant with cascading',
+        'Failed to permanently delete plant',
         e,
         stackTrace,
       );
       rethrow;
+    }
+  }
+
+  /// Get count of related data for a plant (for delete warning dialog)
+  @override
+  Future<Map<String, int>> getRelatedDataCounts(int plantId) async {
+    try {
+      final db = await _dbHelper.database;
+
+      // Count logs
+      final logsResult = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM plant_logs WHERE plant_id = ?',
+        [plantId],
+      );
+      final logsCount = Sqflite.firstIntValue(logsResult) ?? 0;
+
+      // Count photos (via logs)
+      final photosResult = await db.rawQuery(
+        '''
+        SELECT COUNT(*) as count FROM photos
+        WHERE log_id IN (SELECT id FROM plant_logs WHERE plant_id = ?)
+      ''',
+        [plantId],
+      );
+      final photosCount = Sqflite.firstIntValue(photosResult) ?? 0;
+
+      // Count harvests
+      final harvestsResult = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM harvests WHERE plant_id = ?',
+        [plantId],
+      );
+      final harvestsCount = Sqflite.firstIntValue(harvestsResult) ?? 0;
+
+      return {
+        'logs': logsCount,
+        'photos': photosCount,
+        'harvests': harvestsCount,
+      };
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to count related data',
+        e,
+        stackTrace,
+      );
+      return {'logs': 0, 'photos': 0, 'harvests': 0};
     }
   }
 

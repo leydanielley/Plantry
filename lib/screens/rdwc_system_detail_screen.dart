@@ -216,90 +216,102 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
   }
 
   Future<void> _deleteSystem() async {
-    // Check if system has logs
-    if (_logs.isNotEmpty) {
-      if (!mounted) return;
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.orange),
-              SizedBox(width: 12),
-              Text('System hat Logs'),
-            ],
-          ),
-          content: Text(
-            'Dieses RDWC System hat ${_logs.length} Log-Einträge. '
-            'Beim Löschen werden ALLE Logs und Daten unwiderruflich gelöscht!\n\n'
-            'Möchten Sie stattdessen archivieren?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Abbrechen'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop(false);
-                await _archiveSystem();
-              },
-              child: const Text('Archivieren'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: Text(_t['yes_delete']),
-            ),
-          ],
-        ),
-      );
+    // ✅ SOFT-DELETE: Get counts of related data before showing dialog
+    final counts = await _rdwcRepo.getSystemRelatedDataCounts(_system.id!);
+    final totalData = (counts['logs'] ?? 0) + (counts['plants'] ?? 0);
 
-      if (confirm != true) return;
-    }
-
-    // Final confirmation
     if (!mounted) return;
-    final finalConfirm = await showDialog<bool>(
+    final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.delete_forever, color: Colors.red),
+            Icon(Icons.archive, color: Colors.orange[700]),
             const SizedBox(width: 12),
-            Text(_t['delete_confirm']),
+            const Text('System archivieren?'),
           ],
         ),
-        content: Text(
-          'RDWC System "${_system.name}" wird unwiderruflich gelöscht.\n\n'
-          'Diese Aktion kann nicht rückgängig gemacht werden!',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Möchten Sie das RDWC System "${_system.name}" archivieren?',
+                style: const TextStyle(fontSize: 16),
+              ),
+              if (totalData > 0) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange[300]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.orange[700],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Diese Daten werden archiviert:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if ((counts['logs'] ?? 0) > 0)
+                        Text('📝 ${counts['logs']} Log-Einträge'),
+                      if ((counts['plants'] ?? 0) > 0)
+                        Text('🌱 ${counts['plants']} verbundene Pflanzen'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Das System und alle Daten werden archiviert (nicht gelöscht) und können später wiederhergestellt werden.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                ),
+              ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Abbrechen'),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(_t['delete']),
+            style: TextButton.styleFrom(foregroundColor: Colors.orange[700]),
+            child: const Text('Archivieren'),
           ),
         ],
       ),
     );
 
-    if (finalConfirm != true) return;
+    if (confirm != true) return;
 
     try {
       await _rdwcRepo.deleteSystem(_system.id!);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('✅ ${_t['deleted_success']}')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ ${_system.name} wurde archiviert'),
+            backgroundColor: Colors.orange[700],
+          ),
+        );
         Navigator.of(context).pop(true); // Return to list
       }
     } catch (e) {
-      AppLogger.error('RdwcSystemDetailScreen', 'Error deleting system', e);
+      AppLogger.error('RdwcSystemDetailScreen', 'Error archiving system', e);
       if (mounted) {
         ScaffoldMessenger.of(
           context,

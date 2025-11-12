@@ -26,11 +26,16 @@ class PlantLogRepository
     int plantId, {
     int? limit,
     int? offset,
+    bool includeArchived = false,
   }) async {
     final db = await _dbHelper.database;
+    final whereClause = includeArchived
+        ? 'plant_id = ?'
+        : 'plant_id = ? AND archived = 0';
+
     final maps = await db.query(
       'plant_logs',
-      where: 'plant_id = ?',
+      where: whereClause,
       whereArgs: [plantId],
       orderBy: 'day_number DESC',
       limit: limit,
@@ -94,10 +99,22 @@ class PlantLogRepository
     }
   }
 
-  /// Log löschen (mit Cascading Delete für Fotos)
-  /// ✅ FIX: Deletes photos (filesystem + DB) before deleting log
+  /// Log archivieren (Soft-Delete)
+  /// ✅ SOFT-DELETE: Archiviert Log statt zu löschen (archived = 1)
   @override
   Future<int> delete(int id) async {
+    final db = await _dbHelper.database;
+    return await db.update(
+      'plant_logs',
+      {'archived': 1},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Log permanent löschen (mit Cascading Delete für Fotos)
+  /// ⚠️ DANGER: Echtes Löschen! Nur nach Warnung + Backup verwenden
+  Future<int> deletePermanently(int id) async {
     final db = await _dbHelper.database;
 
     // Use transaction to ensure atomicity
@@ -108,7 +125,8 @@ class PlantLogRepository
       // ✅ MEDIUM FIX: Use transaction-safe method to prevent nested transaction deadlock
       await _photoRepository.deleteByLogIdInTransaction(txn, id);
 
-      // 2. Delete log_fertilizers (handled by DB CASCADE)
+      // 2. Delete log_fertilizers manually (RESTRICT constraint)
+      await txn.delete('log_fertilizers', where: 'log_id = ?', whereArgs: [id]);
 
       // 3. Delete the log itself
       return await txn.delete('plant_logs', where: 'id = ?', whereArgs: [id]);
@@ -117,11 +135,18 @@ class PlantLogRepository
 
   /// Letzten Log einer Pflanze laden
   @override
-  Future<PlantLog?> findLastLog(int plantId) async {
+  Future<PlantLog?> findLastLog(
+    int plantId, {
+    bool includeArchived = false,
+  }) async {
     final db = await _dbHelper.database;
+    final whereClause = includeArchived
+        ? 'plant_id = ?'
+        : 'plant_id = ? AND archived = 0';
+
     final maps = await db.query(
       'plant_logs',
-      where: 'plant_id = ?',
+      where: whereClause,
       whereArgs: [plantId],
       orderBy: 'day_number DESC',
       limit: 1,
@@ -182,10 +207,14 @@ class PlantLogRepository
 
   /// Anzahl Logs einer Pflanze
   @override
-  Future<int> countByPlant(int plantId) async {
+  Future<int> countByPlant(int plantId, {bool includeArchived = false}) async {
     final db = await _dbHelper.database;
+    final whereClause = includeArchived
+        ? 'plant_id = ?'
+        : 'plant_id = ? AND archived = 0';
+
     final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM plant_logs WHERE plant_id = ?',
+      'SELECT COUNT(*) as count FROM plant_logs WHERE $whereClause',
       [plantId],
     );
     return Sqflite.firstIntValue(result) ?? 0;
@@ -193,10 +222,14 @@ class PlantLogRepository
 
   /// Recent Activity Feed - Letzte Logs über alle Pflanzen
   @override
-  Future<List<PlantLog>> getRecentActivity({int limit = 20}) async {
+  Future<List<PlantLog>> getRecentActivity({
+    int limit = 20,
+    bool includeArchived = false,
+  }) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
       'plant_logs',
+      where: includeArchived ? null : 'archived = 0',
       orderBy: 'log_date DESC',
       limit: limit,
     );
@@ -209,13 +242,17 @@ class PlantLogRepository
   Future<List<PlantLog>> getRecentActivityByAction({
     required List<String> actionTypes,
     int limit = 20,
+    bool includeArchived = false,
   }) async {
     final db = await _dbHelper.database;
     final placeholders = actionTypes.map((_) => '?').join(',');
+    final whereClause = includeArchived
+        ? 'action_type IN ($placeholders)'
+        : 'action_type IN ($placeholders) AND archived = 0';
 
     final maps = await db.query(
       'plant_logs',
-      where: 'action_type IN ($placeholders)',
+      where: whereClause,
       whereArgs: actionTypes,
       orderBy: 'log_date DESC',
       limit: limit,
@@ -229,13 +266,18 @@ class PlantLogRepository
   /// VORHER: 1 Query für Logs + N Queries für Fertilizers = N+1 Problem
   /// NACHHER: 1 JOIN Query = massiv schneller!
   @override
-  Future<List<Map<String, dynamic>>> getLogsWithDetails(int plantId) async {
+  Future<List<Map<String, dynamic>>> getLogsWithDetails(
+    int plantId, {
+    bool includeArchived = false,
+  }) async {
     final db = await _dbHelper.database;
 
     // JOIN Query für Logs + LogFertilizers + Fertilizers
     // Nutzt den idx_log_fertilizers_lookup Index!
-    const query = '''
-      SELECT 
+    final archivedFilter = includeArchived ? '' : 'AND pl.archived = 0';
+    final query =
+        '''
+      SELECT
         pl.*,
         lf.id as lf_id,
         lf.fertilizer_id,
@@ -247,7 +289,7 @@ class PlantLogRepository
       FROM plant_logs pl
       LEFT JOIN log_fertilizers lf ON pl.id = lf.log_id
       LEFT JOIN fertilizers f ON lf.fertilizer_id = f.id
-      WHERE pl.plant_id = ?
+      WHERE pl.plant_id = ? $archivedFilter
       ORDER BY pl.day_number DESC, lf.id
     ''';
 
@@ -325,8 +367,8 @@ class PlantLogRepository
     return ids;
   }
 
-  /// Batch Delete
-  /// Nutzen: Beim Löschen mehrerer Logs auf einmal
+  /// Batch Archive (Soft-Delete)
+  /// Nutzen: Beim Archivieren mehrerer Logs auf einmal
   @override
   Future<void> deleteBatch(List<int> logIds) async {
     if (logIds.isEmpty) return;
@@ -334,10 +376,41 @@ class PlantLogRepository
     final db = await _dbHelper.database;
     final placeholders = List.filled(logIds.length, '?').join(',');
 
-    await db.delete(
+    await db.update(
       'plant_logs',
+      {'archived': 1},
       where: 'id IN ($placeholders)',
       whereArgs: logIds,
     );
+  }
+
+  /// Batch Delete Permanent
+  /// ⚠️ DANGER: Echtes Löschen! Nur nach Warnung + Backup verwenden
+  Future<void> deleteBatchPermanently(List<int> logIds) async {
+    if (logIds.isEmpty) return;
+
+    final db = await _dbHelper.database;
+    final placeholders = List.filled(logIds.length, '?').join(',');
+
+    await db.transaction((txn) async {
+      // 1. Delete photos for all logs
+      for (final logId in logIds) {
+        await _photoRepository.deleteByLogIdInTransaction(txn, logId);
+      }
+
+      // 2. Delete log_fertilizers manually (RESTRICT constraint)
+      await txn.delete(
+        'log_fertilizers',
+        where: 'log_id IN ($placeholders)',
+        whereArgs: logIds,
+      );
+
+      // 3. Delete logs
+      await txn.delete(
+        'plant_logs',
+        where: 'id IN ($placeholders)',
+        whereArgs: logIds,
+      );
+    });
   }
 }

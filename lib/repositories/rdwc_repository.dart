@@ -2,6 +2,7 @@
 // GROWLOG - RDWC System Repository
 // =============================================
 
+import 'package:sqflite/sqflite.dart';
 import 'package:growlog_app/database/database_helper.dart';
 import 'package:growlog_app/models/rdwc_system.dart';
 import 'package:growlog_app/models/rdwc_log.dart';
@@ -212,16 +213,124 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
   /// ✅ Datensicherheit: Versehentliches Löschen ist umkehrbar
   /// ✅ Flexibilität: Pflanzen/Räume können später neu zugeordnet werden
   /// ✅ Konsistenz: Gleiches Verhalten wie Grow/Room
-  /// ✅ Historienschutz: Wertvolle Wachstumsdaten bleiben erhalten
-  ///
-  /// ✅ MEDIUM FIX: Use transaction to prevent race condition and ensure atomicity
+  /// 🔒 SOFT DELETE: Archive RDWC system instead of deleting
+  /// After migration v14, this method archives the system and its logs
+  /// Use deleteSystemPermanently() for actual deletion
   @override
   Future<int> deleteSystem(int systemId) async {
     try {
       final db = await _dbHelper.database;
 
       return await db.transaction((txn) async {
-        // 1. First, detach all plants from this RDWC system
+        AppLogger.info(
+          'RdwcRepo',
+          'Archiving RDWC system (soft delete)',
+          'systemId=$systemId',
+        );
+
+        // Archive all logs for this system
+        await txn.update(
+          'rdwc_logs',
+          {'archived': 1},
+          where: 'system_id = ?',
+          whereArgs: [systemId],
+        );
+
+        // Archive the system itself
+        final result = await txn.update(
+          'rdwc_systems',
+          {'archived': 1},
+          where: 'id = ?',
+          whereArgs: [systemId],
+        );
+
+        AppLogger.info(
+          'RdwcRepo',
+          '✅ RDWC system archived (soft delete completed)',
+        );
+        return result;
+      });
+    } catch (e) {
+      AppLogger.error('RdwcRepository', 'Failed to archive RDWC system', e);
+      rethrow;
+    }
+  }
+
+  /// ✅ RESTORE: Restores archived RDWC system and all its logs
+  Future<int> restoreSystem(int systemId) async {
+    try {
+      final db = await _dbHelper.database;
+
+      return await db.transaction((txn) async {
+        AppLogger.info(
+          'RdwcRepo',
+          'Restoring RDWC system from archive',
+          'systemId=$systemId',
+        );
+
+        // Restore all logs for this system
+        await txn.update(
+          'rdwc_logs',
+          {'archived': 0},
+          where: 'system_id = ?',
+          whereArgs: [systemId],
+        );
+
+        // Restore the system itself
+        final result = await txn.update(
+          'rdwc_systems',
+          {'archived': 0},
+          where: 'id = ?',
+          whereArgs: [systemId],
+        );
+
+        AppLogger.info('RdwcRepo', '✅ RDWC system restored from archive');
+        return result;
+      });
+    } catch (e) {
+      AppLogger.error('RdwcRepository', 'Failed to restore RDWC system', e);
+      rethrow;
+    }
+  }
+
+  /// Get all archived systems
+  Future<List<RdwcSystem>> getArchivedSystems() async {
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'rdwc_systems',
+        where: 'archived = ?',
+        whereArgs: [1],
+        orderBy: 'name ASC',
+      );
+
+      return maps.map((map) => RdwcSystem.fromMap(map)).toList();
+    } catch (e) {
+      AppLogger.error('RdwcRepository', 'Failed to load archived systems', e);
+      return [];
+    }
+  }
+
+  /// ⚠️ PERMANENT DELETE: Deletes RDWC system and ALL related data
+  /// This is irreversible! Use with caution.
+  ///
+  /// Deletion order:
+  /// 1. Detach plants from system
+  /// 2. Delete log fertilizers
+  /// 3. Delete logs
+  /// 4. Delete system itself
+  Future<int> deleteSystemPermanently(int systemId) async {
+    try {
+      final db = await _dbHelper.database;
+
+      return await db.transaction((txn) async {
+        AppLogger.warning(
+          'RdwcRepo',
+          '⚠️ PERMANENT DELETE: Starting cascading delete',
+          'systemId=$systemId',
+        );
+
+        // Step 1: Detach all plants from this system
         await txn.update(
           'plants',
           {'rdwc_system_id': null, 'bucket_number': null},
@@ -229,38 +338,85 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           whereArgs: [systemId],
         );
 
-        // 2. Detach all rooms from this RDWC system
-        await txn.update(
-          'rooms',
-          {'rdwc_system_id': null},
-          where: 'rdwc_system_id = ?',
+        // Step 2: Get all log IDs for this system
+        final logs = await txn.query(
+          'rdwc_logs',
+          columns: ['id'],
+          where: 'system_id = ?',
           whereArgs: [systemId],
         );
+        final logIds = logs.map((log) => log['id'] as int).toList();
 
-        // 3. Delete all logs (if not handled by CASCADE)
-        await txn.delete(
+        int deletedLogFertilizers = 0;
+
+        // Step 3: Delete all log_fertilizers for these logs
+        if (logIds.isNotEmpty) {
+          for (final logId in logIds) {
+            final count = await txn.delete(
+              'rdwc_log_fertilizers',
+              where: 'rdwc_log_id = ?',
+              whereArgs: [logId],
+            );
+            deletedLogFertilizers += count;
+          }
+        }
+
+        // Step 4: Delete all logs
+        final deletedLogs = await txn.delete(
           'rdwc_logs',
           where: 'system_id = ?',
           whereArgs: [systemId],
         );
 
-        // 4. Finally, delete the system itself
-        final count = await txn.delete(
+        // Step 5: Finally, delete the system itself
+        final deletedSystem = await txn.delete(
           'rdwc_systems',
           where: 'id = ?',
           whereArgs: [systemId],
         );
 
-        AppLogger.info(
-          'RdwcRepository',
-          'Deleted RDWC system and detached plants/rooms',
-          'ID: $systemId',
+        AppLogger.warning(
+          'RdwcRepo',
+          '⚠️ PERMANENT DELETE completed',
+          'system=$deletedSystem, logs=$deletedLogs, fertilizers=$deletedLogFertilizers',
         );
-        return count;
+
+        return deletedSystem;
       });
     } catch (e) {
-      AppLogger.error('RdwcRepository', 'Error deleting RDWC system', e);
+      AppLogger.error(
+        'RdwcRepository',
+        'Failed to permanently delete system',
+        e,
+      );
       rethrow;
+    }
+  }
+
+  /// Get count of related data for a system (for delete warning dialog)
+  @override
+  Future<Map<String, int>> getSystemRelatedDataCounts(int systemId) async {
+    try {
+      final db = await _dbHelper.database;
+
+      // Count logs
+      final logsResult = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM rdwc_logs WHERE system_id = ?',
+        [systemId],
+      );
+      final logsCount = Sqflite.firstIntValue(logsResult) ?? 0;
+
+      // Count plants attached to system
+      final plantsResult = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM plants WHERE rdwc_system_id = ?',
+        [systemId],
+      );
+      final plantsCount = Sqflite.firstIntValue(plantsResult) ?? 0;
+
+      return {'logs': logsCount, 'plants': plantsCount};
+    } catch (e) {
+      AppLogger.error('RdwcRepository', 'Failed to count related data', e);
+      return {'logs': 0, 'plants': 0};
     }
   }
 
@@ -268,15 +424,25 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
   // RDWC LOGS (Water Addback Tracking)
   // ==========================================
 
-  /// Get all logs for a system
+  /// Get all logs for a system (excluding archived)
   @override
   /// ✅ FIX: Add limit parameter to prevent loading thousands of logs
-  Future<List<RdwcLog>> getLogsBySystem(int systemId, {int? limit}) async {
+  /// ✅ v14: Filter archived logs by default
+  Future<List<RdwcLog>> getLogsBySystem(
+    int systemId, {
+    int? limit,
+    bool includeArchived = false,
+  }) async {
     try {
       final db = await _dbHelper.database;
+
+      final whereClause = includeArchived
+          ? 'system_id = ?'
+          : 'system_id = ? AND archived = 0';
+
       final maps = await db.query(
         'rdwc_logs',
-        where: 'system_id = ?',
+        where: whereClause,
         whereArgs: [systemId],
         orderBy: 'log_date DESC',
         limit: limit, // ✅ FIX: Add LIMIT clause

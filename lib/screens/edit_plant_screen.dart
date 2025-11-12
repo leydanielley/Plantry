@@ -533,15 +533,81 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     // ✅ AUDIT FIX: i18n - Get translations for delete dialog
     final t = AppTranslations(Localizations.localeOf(context).languageCode);
 
+    // ✅ SOFT-DELETE: Get counts of related data before showing dialog
+    final counts = await _plantRepo.getRelatedDataCounts(widget.plant.id!);
+    final totalData =
+        (counts['logs'] ?? 0) +
+        (counts['photos'] ?? 0) +
+        (counts['harvests'] ?? 0);
+
+    if (!mounted) return;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(t['edit_plant_delete_title']), // ✅ i18n
-        content: Text(
-          t['edit_plant_delete_message'].replaceAll(
-            '{name}',
-            widget.plant.name,
-          ), // ✅ i18n
+        title: Row(
+          children: [
+            Icon(Icons.archive, color: Colors.orange[700]),
+            const SizedBox(width: 12),
+            Text(t['edit_plant_delete_title']), // ✅ i18n
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                t['edit_plant_delete_message'].replaceAll(
+                  '{name}',
+                  widget.plant.name,
+                ), // ✅ i18n
+                style: const TextStyle(fontSize: 16),
+              ),
+              if (totalData > 0) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange[300]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.orange[700],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Diese Daten werden archiviert:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if ((counts['logs'] ?? 0) > 0)
+                        Text('📝 ${counts['logs']} Log-Einträge'),
+                      if ((counts['photos'] ?? 0) > 0)
+                        Text('📸 ${counts['photos']} Fotos'),
+                      if ((counts['harvests'] ?? 0) > 0)
+                        Text('🌿 ${counts['harvests']} Ernten'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Die Pflanze und alle Daten werden archiviert (nicht gelöscht) und können später wiederhergestellt werden.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                ),
+              ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -550,8 +616,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(t['delete']), // ✅ i18n
+            style: TextButton.styleFrom(foregroundColor: Colors.orange[700]),
+            child: const Text('Archivieren'), // Changed from "Delete"
           ),
         ],
       ),
@@ -570,7 +636,13 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         // ✅ FIX: Only pop once to close edit screen
         // The confirmation dialog was already popped when user clicked delete button
         Navigator.of(context).pop(true);
-        AppMessages.deletedSuccessfully(context, t['plant']); // ✅ i18n
+        // ✅ SOFT-DELETE: Show "archived" message instead of "deleted"
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ ${widget.plant.name} wurde archiviert'),
+            backgroundColor: Colors.orange[700],
+          ),
+        );
       }
     } catch (e) {
       AppLogger.error('EditPlantScreen', 'Error deleting: $e');

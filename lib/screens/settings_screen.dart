@@ -15,6 +15,7 @@ import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/services/interfaces/i_backup_service.dart';
 import 'package:growlog_app/utils/app_version.dart';
 import 'package:growlog_app/screens/privacy_policy_screen.dart';
+import 'package:growlog_app/screens/archive_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -445,6 +446,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // Data Management Section
           _buildSectionHeader(_t['data_management'], isDark),
+          Card(
+            child: ListTile(
+              leading: Icon(Icons.archive, color: Colors.orange[700]),
+              title: const Text(
+                'Archiv',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text(
+                'Archivierte Pflanzen, RDWC-Systeme und Räume anzeigen und wiederherstellen',
+                style: TextStyle(fontSize: 12),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ArchiveScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
           Card(
             color: Colors.red[50],
             child: ListTile(

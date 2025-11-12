@@ -25,6 +25,9 @@ abstract class IRdwcRepository {
   Future<void> archiveSystem(int systemId, bool archived);
   Future<int> deleteSystem(int systemId);
 
+  // ✅ SOFT-DELETE: Get counts of related data for warning dialog
+  Future<Map<String, int>> getSystemRelatedDataCounts(int systemId);
+
   // RDWC Logs
   Future<List<RdwcLog>> getLogsBySystem(int systemId, {int? limit});
   Future<List<RdwcLog>> getRecentLogs(int systemId, {int limit = 10});

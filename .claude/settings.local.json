@@ -10,7 +10,10 @@
       "Bash(flutter test:*)",
       "Bash(ldconfig:*)",
       "Bash(flutter doctor:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git push:*)",
+      "Bash(git log:*)",
+      "Bash(git config:*)"
     ],
     "deny": [],
     "ask": []

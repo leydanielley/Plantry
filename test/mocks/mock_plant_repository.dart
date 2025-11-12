@@ -108,6 +108,12 @@ class MockPlantRepository implements IPlantRepository {
     return 0; // Mock implementation
   }
 
+  @override
+  Future<Map<String, int>> getRelatedDataCounts(int plantId) async {
+    // Mock implementation - return zero counts
+    return {'logs': 0, 'photos': 0, 'harvests': 0};
+  }
+
   // Helper methods for testing
   void clear() {
     _plants.clear();
