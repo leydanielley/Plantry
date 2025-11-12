@@ -94,8 +94,8 @@ void main() {
     });
   });
 
-  group('TC-007: Plant Deletion with Cascade', () {
-    test('should delete plant and cascade delete logs', () async {
+  group('TC-007: Plant Deletion with RESTRICT (v14)', () {
+    test('should prevent plant deletion when logs exist', () async {
       // Arrange
       final plant = await plantRepo.save(
         Plant(
@@ -115,10 +115,45 @@ void main() {
         ),
       );
 
-      // Act
+      // Act & Assert - Should throw due to RESTRICT constraint
+      expect(
+        () => plantRepo.delete(plant.id!),
+        throwsA(isA<Exception>()),
+      );
+
+      // Verify plant and log still exist
+      final existingPlant = await plantRepo.findById(plant.id!);
+      final existingLog = await logRepo.findById(log.id!);
+
+      expect(existingPlant, isNotNull);
+      expect(existingLog, isNotNull);
+    });
+
+    test('should allow plant deletion after logs are deleted', () async {
+      // Arrange
+      final plant = await plantRepo.save(
+        Plant(
+          name: 'Delete Test 2',
+          seedType: SeedType.photo,
+          medium: Medium.erde,
+          seedDate: DateTime.now(),
+        ),
+      );
+
+      final log = await logRepo.save(
+        PlantLog(
+          plantId: plant.id!,
+          logDate: DateTime.now(),
+          dayNumber: 1,
+          actionType: ActionType.water,
+        ),
+      );
+
+      // Act - Delete log first, then plant
+      await logRepo.delete(log.id!);
       await plantRepo.delete(plant.id!);
 
-      // Assert
+      // Assert - Both should be deleted
       final deletedPlant = await plantRepo.findById(plant.id!);
       final deletedLog = await logRepo.findById(log.id!);
 

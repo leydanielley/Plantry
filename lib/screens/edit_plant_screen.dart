@@ -10,10 +10,12 @@ import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/room.dart';
 import 'package:growlog_app/models/grow.dart';
+import 'package:growlog_app/models/rdwc_system.dart';
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
 
 class EditPlantScreen extends StatefulWidget {
@@ -30,6 +32,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
 
   late TextEditingController _nameController;
   late TextEditingController _strainController;
@@ -43,6 +46,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   late PlantPhase _phase;
   int? _selectedRoomId;
   int? _selectedGrowId;
+  int? _selectedRdwcSystemId;
+  int? _selectedBucketNumber;
   DateTime? _seedDate;
 
   // ✅ v10: Phase History Dates
@@ -52,9 +57,12 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
 
   List<Room> _rooms = [];
   List<Grow> _grows = [];
+  List<RdwcSystem> _rdwcSystems = [];
+  List<int> _occupiedBuckets = [];
   bool _isLoading = false;
   bool _loadingRooms = true;
   bool _loadingGrows = true;
+  bool _loadingRdwcSystems = true;
 
   @override
   void initState() {
@@ -84,6 +92,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     _phase = widget.plant.phase;
     _selectedRoomId = widget.plant.roomId;
     _selectedGrowId = widget.plant.growId;
+    _selectedRdwcSystemId = widget.plant.rdwcSystemId;
+    _selectedBucketNumber = widget.plant.bucketNumber;
     _seedDate = widget.plant.seedDate;
 
     // ✅ v10: Load phase history dates
@@ -93,6 +103,12 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
 
     _loadRooms();
     _loadGrows();
+    _loadRdwcSystems();
+
+    // Load occupied buckets if RDWC system is selected
+    if (_selectedRdwcSystemId != null) {
+      _loadOccupiedBuckets(_selectedRdwcSystemId!);
+    }
   }
 
   // ✅ BUG FIX #7: mounted-checks hinzugefügt
@@ -128,6 +144,39 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       if (mounted) {
         setState(() => _loadingGrows = false);
       }
+    }
+  }
+
+  Future<void> _loadRdwcSystems() async {
+    try {
+      final systems = await _rdwcRepo.getAllSystems();
+      if (mounted) {
+        setState(() {
+          _rdwcSystems = systems;
+          _loadingRdwcSystems = false;
+        });
+      }
+    } catch (e) {
+      AppLogger.error('EditPlantScreen', 'Error loading RDWC systems: $e');
+      if (mounted) {
+        setState(() => _loadingRdwcSystems = false);
+      }
+    }
+  }
+
+  Future<void> _loadOccupiedBuckets(int systemId) async {
+    try {
+      final plants = await _plantRepo.findByRdwcSystem(systemId);
+      if (mounted) {
+        setState(() {
+          _occupiedBuckets = plants
+              .where((p) => p.bucketNumber != null && p.id != widget.plant.id)
+              .map((p) => p.bucketNumber!)
+              .toList();
+        });
+      }
+    } catch (e) {
+      AppLogger.error('EditPlantScreen', 'Error loading occupied buckets: $e');
     }
   }
 
@@ -356,11 +405,11 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         vegDate: newVegDate,
         bloomDate: newBloomDate,
         harvestDate: newHarvestDate,
-        roomId: _selectedRoomId,
+        roomId: _medium == Medium.rdwc ? null : _selectedRoomId,
         growId: _selectedGrowId,
-        // ✅ FIX: Wenn Medium nicht RDWC ist, RDWC Felder auf null setzen
-        rdwcSystemId: _medium == Medium.rdwc ? widget.plant.rdwcSystemId : null,
-        bucketNumber: _medium == Medium.rdwc ? widget.plant.bucketNumber : null,
+        // ✅ FIX: Use selected RDWC values from state
+        rdwcSystemId: _medium == Medium.rdwc ? _selectedRdwcSystemId : null,
+        bucketNumber: _medium == Medium.rdwc ? _selectedBucketNumber : null,
         seedDate: effectiveSeedDate,
         currentContainerSize: _containerSizeController.text.isNotEmpty
             ? double.tryParse(_containerSizeController.text)
@@ -804,7 +853,18 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           label: t['edit_plant_medium_label'], // ✅ i18n
           value: _medium,
           items: Medium.values,
-          onChanged: (value) => setState(() => _medium = value!),
+          onChanged: (value) {
+            setState(() {
+              _medium = value!;
+              // Reset values when switching medium
+              if (_medium != Medium.rdwc) {
+                _selectedRdwcSystemId = null;
+                _selectedBucketNumber = null;
+              } else {
+                _selectedRoomId = null;
+              }
+            });
+          },
         ),
         const SizedBox(height: 12),
         _buildDropdown<PlantPhase>(
@@ -837,27 +897,140 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
             onChanged: (value) => setState(() => _selectedGrowId = value),
           ),
         const SizedBox(height: 12),
-        if (_loadingRooms)
-          const Center(child: CircularProgressIndicator())
-        else
-          DropdownButtonFormField<int?>(
-            initialValue: _selectedRoomId,
-            decoration: InputDecoration(
-              labelText: t['edit_plant_room_label'], // ✅ i18n
-              prefixIcon: const Icon(Icons.home),
-              border: const OutlineInputBorder(),
+
+        // RDWC System Selection (only when Medium = RDWC)
+        if (_medium == Medium.rdwc) ...[
+          if (_loadingRdwcSystems)
+            const Center(child: CircularProgressIndicator())
+          else
+            DropdownButtonFormField<int?>(
+              key: ValueKey('rdwc_system_${_selectedRdwcSystemId}'),
+              value: _selectedRdwcSystemId,
+              decoration: const InputDecoration(
+                labelText: 'RDWC System',
+                prefixIcon: Icon(Icons.water),
+                border: OutlineInputBorder(),
+                helperText: 'Wähle RDWC-System für diese Pflanze',
+              ),
+              items: [
+                const DropdownMenuItem(
+                  value: null,
+                  child: Text('Kein RDWC System'),
+                ),
+                ..._rdwcSystems.where((s) => !s.archived).map((system) {
+                  return DropdownMenuItem(
+                    value: system.id,
+                    child: Text(system.name),
+                  );
+                }),
+              ],
+              validator: (value) {
+                if (_medium == Medium.rdwc && value == null) {
+                  return 'RDWC System muss ausgewählt werden';
+                }
+                return null;
+              },
+              onChanged: (value) async {
+                setState(() {
+                  _selectedRdwcSystemId = value;
+                  _selectedBucketNumber = null;
+                  _occupiedBuckets = [];
+                });
+                if (value != null) {
+                  await _loadOccupiedBuckets(value);
+                }
+              },
             ),
-            items: [
-              DropdownMenuItem(
-                value: null,
-                child: Text(t['edit_plant_no_room']),
-              ), // ✅ i18n
-              ..._rooms.map((room) {
-                return DropdownMenuItem(value: room.id, child: Text(room.name));
-              }),
-            ],
-            onChanged: (value) => setState(() => _selectedRoomId = value),
-          ),
+          const SizedBox(height: 12),
+
+          // Bucket Number Selection (only when System selected)
+          if (_selectedRdwcSystemId != null)
+            Builder(
+              builder: (context) {
+                final selectedSystem = _rdwcSystems.firstWhere(
+                  (s) => s.id == _selectedRdwcSystemId,
+                  orElse: () => RdwcSystem(
+                    name: 'Unknown',
+                    maxCapacity: 100,
+                    bucketCount: 1,
+                  ),
+                );
+
+                final totalBuckets = selectedSystem.bucketCount;
+                // Include current bucket number in available list
+                final allBuckets = List.generate(totalBuckets, (index) => index + 1);
+                final availableBuckets = allBuckets
+                    .where((bucket) =>
+                        !_occupiedBuckets.contains(bucket) ||
+                        bucket == _selectedBucketNumber)
+                    .toList();
+
+                return DropdownButtonFormField<int?>(
+                  key: ValueKey('bucket_${_selectedBucketNumber}'),
+                  value: _selectedBucketNumber,
+                  decoration: InputDecoration(
+                    labelText: 'Bucket Nummer',
+                    prefixIcon: const Icon(Icons.shower),
+                    border: const OutlineInputBorder(),
+                    helperText:
+                        'Wähle Bucket (${availableBuckets.length} verfügbar)',
+                  ),
+                  items: [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('Kein Bucket'),
+                    ),
+                    ...availableBuckets.map((bucket) {
+                      final isCurrentBucket = bucket == widget.plant.bucketNumber;
+                      return DropdownMenuItem(
+                        value: bucket,
+                        child: Text(
+                          isCurrentBucket
+                              ? 'Bucket $bucket (aktuell)'
+                              : 'Bucket $bucket',
+                        ),
+                      );
+                    }),
+                  ],
+                  validator: (value) {
+                    if (_medium == Medium.rdwc &&
+                        _selectedRdwcSystemId != null &&
+                        value == null) {
+                      return 'Bucket-Nummer muss ausgewählt werden';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) => setState(() => _selectedBucketNumber = value),
+                );
+              },
+            ),
+          const SizedBox(height: 12),
+        ],
+
+        // Room Selection (only when Medium != RDWC)
+        if (_medium != Medium.rdwc) ...[
+          if (_loadingRooms)
+            const Center(child: CircularProgressIndicator())
+          else
+            DropdownButtonFormField<int?>(
+              initialValue: _selectedRoomId,
+              decoration: InputDecoration(
+                labelText: t['edit_plant_room_label'], // ✅ i18n
+                prefixIcon: const Icon(Icons.home),
+                border: const OutlineInputBorder(),
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(t['edit_plant_no_room']),
+                ), // ✅ i18n
+                ..._rooms.map((room) {
+                  return DropdownMenuItem(value: room.id, child: Text(room.name));
+                }),
+              ],
+              onChanged: (value) => setState(() => _selectedRoomId = value),
+            ),
+        ],
       ],
     );
   }

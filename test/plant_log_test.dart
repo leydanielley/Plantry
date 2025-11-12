@@ -269,8 +269,8 @@ void main() {
     });
   });
 
-  group('TC-022: Log Deletion Cascades to Photos', () {
-    test('should delete photos when log is deleted', () async {
+  group('TC-022: Log Deletion with RESTRICT (v14)', () {
+    test('should prevent log deletion when photos exist', () async {
       // Arrange
       final plant = await plantRepo.save(
         Plant(
@@ -303,17 +303,56 @@ void main() {
         'created_at': DateTime.now().toIso8601String(),
       });
 
-      // Act - Delete log
-      await logRepo.delete(log.id!);
+      // Act & Assert - Should throw due to RESTRICT constraint
+      expect(
+        () => logRepo.delete(log.id!),
+        throwsA(isA<Exception>()),
+      );
 
-      // Assert - Photos should be deleted (CASCADE)
+      // Verify photos still exist
       final photos = await testDb.query(
         'photos',
         where: 'log_id = ?',
         whereArgs: [log.id],
       );
 
-      expect(photos.length, 0);
+      expect(photos.length, 2);
+    });
+
+    test('should allow log deletion after photos are deleted', () async {
+      // Arrange
+      final plant = await plantRepo.save(
+        Plant(
+          name: 'Photo Test 2',
+          seedType: SeedType.photo,
+          medium: Medium.erde,
+          seedDate: DateTime.now(),
+        ),
+      );
+
+      final log = await logRepo.save(
+        PlantLog(
+          plantId: plant.id!,
+          logDate: DateTime.now(),
+          dayNumber: 1,
+          actionType: ActionType.water,
+        ),
+      );
+
+      // Create photo linked to log
+      final photoId = await testDb.insert('photos', {
+        'log_id': log.id,
+        'file_path': '/test/photo1.jpg',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      // Act - Delete photo first, then log
+      await testDb.delete('photos', where: 'id = ?', whereArgs: [photoId]);
+      await logRepo.delete(log.id!);
+
+      // Assert - Log should be deleted
+      final deletedLog = await logRepo.findById(log.id!);
+      expect(deletedLog, isNull);
     });
   });
 
