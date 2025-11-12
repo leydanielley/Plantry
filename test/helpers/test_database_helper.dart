@@ -7,7 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 /// Helper class for setting up test databases
 class TestDatabaseHelper {
   static const int currentVersion =
-      13; // Should match DatabaseHelper version (v13)
+      14; // Should match DatabaseHelper version (v14)
 
   /// Initialize sqflite_ffi for tests
   static void initFfi() {
@@ -49,6 +49,7 @@ class TestDatabaseHelper {
         width REAL DEFAULT 0.0,
         depth REAL DEFAULT 0.0,
         height REAL DEFAULT 0.0,
+        archived INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
       )
@@ -101,7 +102,7 @@ class TestDatabaseHelper {
       )
     ''');
 
-    // Plant logs table (v10/v13: Added phase, phase_day_number, logged_by and extended fields)
+    // Plant logs table (v14: Added archived, ON DELETE RESTRICT)
     await db.execute('''
       CREATE TABLE plant_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -129,8 +130,9 @@ class TestDatabaseHelper {
         system_bucket_count INTEGER,
         system_bucket_size REAL,
         note TEXT,
+        archived INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (plant_id) REFERENCES plants (id) ON DELETE CASCADE
+        FOREIGN KEY (plant_id) REFERENCES plants (id) ON DELETE RESTRICT
       )
     ''');
 
@@ -183,7 +185,7 @@ class TestDatabaseHelper {
       )
     ''');
 
-    // Hardware table
+    // Hardware table (v14: ON DELETE RESTRICT)
     await db.execute('''
       CREATE TABLE hardware (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -226,18 +228,18 @@ class TestDatabaseHelper {
         notes TEXT,
         active INTEGER DEFAULT 1,
         created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE
+        FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE RESTRICT
       )
     ''');
 
-    // Photos table
+    // Photos table (v14: ON DELETE RESTRICT)
     await db.execute('''
       CREATE TABLE photos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         log_id INTEGER NOT NULL,
         file_path TEXT NOT NULL,
         created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (log_id) REFERENCES plant_logs (id) ON DELETE CASCADE
+        FOREIGN KEY (log_id) REFERENCES plant_logs (id) ON DELETE RESTRICT
       )
     ''');
 
@@ -265,7 +267,7 @@ class TestDatabaseHelper {
       )
     ''');
 
-    // Harvests table
+    // Harvests table (v14: ON DELETE RESTRICT)
     await db.execute('''
       CREATE TABLE harvests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -293,7 +295,7 @@ class TestDatabaseHelper {
         overall_notes TEXT,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT,
-        FOREIGN KEY (plant_id) REFERENCES plants (id) ON DELETE CASCADE
+        FOREIGN KEY (plant_id) REFERENCES plants (id) ON DELETE RESTRICT
       )
     ''');
 
@@ -350,7 +352,7 @@ class TestDatabaseHelper {
       )
     ''');
 
-    // RDWC Logs table
+    // RDWC Logs table (v14: Added archived, ON DELETE RESTRICT)
     await db.execute('''
       CREATE TABLE rdwc_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -364,20 +366,21 @@ class TestDatabaseHelper {
         ec_before REAL,
         ec_after REAL,
         notes TEXT,
+        archived INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (system_id) REFERENCES rdwc_systems (id) ON DELETE CASCADE
+        FOREIGN KEY (system_id) REFERENCES rdwc_systems (id) ON DELETE RESTRICT
       )
     ''');
 
-    // RDWC Log Fertilizers junction table
+    // RDWC Log Fertilizers junction table (v14: ON DELETE RESTRICT)
     await db.execute('''
       CREATE TABLE rdwc_log_fertilizers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         rdwc_log_id INTEGER NOT NULL,
         fertilizer_id INTEGER NOT NULL,
         amount REAL NOT NULL,
-        FOREIGN KEY (rdwc_log_id) REFERENCES rdwc_logs (id) ON DELETE CASCADE,
-        FOREIGN KEY (fertilizer_id) REFERENCES fertilizers (id) ON DELETE CASCADE
+        FOREIGN KEY (rdwc_log_id) REFERENCES rdwc_logs (id) ON DELETE RESTRICT,
+        FOREIGN KEY (fertilizer_id) REFERENCES fertilizers (id) ON DELETE RESTRICT
       )
     ''');
 
@@ -418,6 +421,7 @@ class TestDatabaseHelper {
       'width': 2.0,
       'depth': 1.0,
       'height': 2.0,
+      'archived': 0,
       'updated_at': DateTime.now().toIso8601String(),
     });
 
