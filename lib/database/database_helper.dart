@@ -67,9 +67,10 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            14, // ✅ v14: Soft-Delete System - Prevent data loss on deletion (CASCADE → RESTRICT)
+            15, // ✅ v15: Data Integrity - NOT NULL constraints, UNIQUE indexes
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
+        onDowngrade: _onDowngradeError,
         onConfigure: _onConfigure,
       );
     } catch (e) {
@@ -82,24 +83,81 @@ class DatabaseHelper {
       // Attempt database recovery
       final recoveryResult = await DatabaseRecovery.performRecovery(path);
 
-      if (recoveryResult.isSuccess || recoveryResult.wasRecreated) {
+      if (recoveryResult.isSuccess) {
+        // Database was repaired (data preserved)
         AppLogger.info(
           'DatabaseHelper',
-          'Recovery successful, reopening database...',
+          '✅ Recovery successful (data preserved), reopening database...',
         );
 
         // Try opening again
         return await openDatabase(
           path,
-          version: 14,
+          version: 15,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
+          onDowngrade: _onDowngradeError,
+          onConfigure: _onConfigure,
+        );
+      } else if (recoveryResult.wasRecreated) {
+        // ⚠️ CRITICAL: Database was deleted and recreated (DATA LOSS!)
+        AppLogger.error(
+          'DatabaseHelper',
+          '⚠️⚠️⚠️ CRITICAL: Database was corrupted and had to be recreated.',
+        );
+        AppLogger.error('DatabaseHelper', '❌ ALL DATA HAS BEEN LOST!');
+        AppLogger.error(
+          'DatabaseHelper',
+          'Recovery message: ${recoveryResult.message}',
+        );
+
+        // Check if emergency backup exists
+        if (recoveryResult.message.contains('Emergency backup saved to:')) {
+          final backupPath = recoveryResult.message
+              .split('Emergency backup saved to:')[1]
+              .split('\n')[0]
+              .trim();
+          AppLogger.warning(
+            'DatabaseHelper',
+            '💾 Emergency backup available at:\n$backupPath',
+          );
+          AppLogger.warning(
+            'DatabaseHelper',
+            'You may be able to recover data from this JSON file.',
+          );
+        } else {
+          AppLogger.error(
+            'DatabaseHelper',
+            '⚠️ No emergency backup was created (database was too corrupted).',
+          );
+          AppLogger.error(
+            'DatabaseHelper',
+            'Check for manual backups in Settings > Backup if available.',
+          );
+        }
+
+        // Create fresh database (required for app to continue)
+        AppLogger.info(
+          'DatabaseHelper',
+          'Creating fresh database (app needs to function)...',
+        );
+        return await openDatabase(
+          path,
+          version: 15,
+          onCreate: _createDB,
+          onUpgrade: _upgradeDB,
+          onDowngrade: _onDowngradeError,
           onConfigure: _onConfigure,
         );
       } else {
+        // Recovery failed completely - cannot open database
         AppLogger.error(
           'DatabaseHelper',
-          'Database recovery failed completely',
+          '❌ Database recovery failed completely - cannot open database',
+        );
+        AppLogger.error(
+          'DatabaseHelper',
+          'Failure reason: ${recoveryResult.message}',
         );
         rethrow;
       }
@@ -108,6 +166,30 @@ class DatabaseHelper {
 
   Future<void> _onConfigure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  /// ✅ CRITICAL FIX: Prevent data loss from app downgrades
+  /// If user installs older version, refuse to open DB instead of triggering recovery
+  Future<void> _onDowngradeError(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    AppLogger.error(
+      'DatabaseHelper',
+      '❌ DOWNGRADE BLOCKED: Database v$oldVersion cannot be downgraded to v$newVersion',
+    );
+
+    throw Exception(
+      'Cannot downgrade database from version $oldVersion to $newVersion.\n\n'
+      'This would cause data loss!\n\n'
+      'Please reinstall the latest version of the app.\n\n'
+      'If you intentionally want to downgrade, you must first:\n'
+      '1. Export your data via Settings > Backup\n'
+      '2. Uninstall the app\n'
+      '3. Install the older version\n'
+      '4. Import your backup',
+    );
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -432,15 +514,15 @@ class DatabaseHelper {
       'CREATE INDEX IF NOT EXISTS idx_plants_harvest_date ON plants(harvest_date)',
     );
 
-    // Plant Logs Table
+    // Plant Logs Table (v15: NOT NULL constraints, UNIQUE index)
     await db.execute('''
       CREATE TABLE IF NOT EXISTS plant_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         plant_id INTEGER NOT NULL,
         day_number INTEGER NOT NULL,
-        log_date TEXT DEFAULT (datetime('now')),
+        log_date TEXT NOT NULL DEFAULT (datetime('now')),
         logged_by TEXT,
-        action_type TEXT CHECK(action_type IN ('WATER', 'FEED', 'NOTE', 'PHASE_CHANGE', 'TRANSPLANT', 'HARVEST', 'TRAINING', 'TRIM', 'OTHER')),
+        action_type TEXT NOT NULL CHECK(action_type IN ('WATER', 'FEED', 'NOTE', 'PHASE_CHANGE', 'TRANSPLANT', 'HARVEST', 'TRAINING', 'TRIM', 'OTHER')),
         phase TEXT CHECK(phase IN ('SEEDLING', 'VEG', 'BLOOM', 'HARVEST', 'ARCHIVED')),
         phase_day_number INTEGER,
         water_amount REAL,
@@ -460,8 +542,9 @@ class DatabaseHelper {
         system_reservoir_size REAL,
         system_bucket_count INTEGER,
         system_bucket_size REAL,
+        archived INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE
+        FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE RESTRICT
       )
     ''');
     await db.execute(
@@ -478,6 +561,16 @@ class DatabaseHelper {
     );
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_plant_logs_action_date ON plant_logs(action_type, log_date DESC)',
+    );
+    // v15: UNIQUE constraint on plant_id + day_number (only for non-archived)
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_plant_logs_plant_day_unique ON plant_logs(plant_id, day_number) WHERE archived = 0',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plant_logs_plant_archived ON plant_logs(plant_id, archived)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_plant_logs_archived_date ON plant_logs(archived, log_date DESC)',
     );
 
     // Fertilizers Table (v8: added ec_value, ppm_value for RDWC calculations)
@@ -728,7 +821,7 @@ class DatabaseHelper {
       'CREATE INDEX IF NOT EXISTS idx_rdwc_systems_archived ON rdwc_systems(archived)',
     );
 
-    // RDWC Logs Table (Water Addback Tracking)
+    // RDWC Logs Table (Water Addback Tracking, v15: NOT NULL archived)
     await db.execute('''
       CREATE TABLE IF NOT EXISTS rdwc_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -745,8 +838,9 @@ class DatabaseHelper {
         ec_after REAL,
         note TEXT,
         logged_by TEXT,
+        archived INTEGER NOT NULL DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (system_id) REFERENCES rdwc_systems(id) ON DELETE CASCADE
+        FOREIGN KEY (system_id) REFERENCES rdwc_systems(id) ON DELETE RESTRICT
       )
     ''');
     await db.execute(

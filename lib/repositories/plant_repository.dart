@@ -2,6 +2,7 @@
 // GROWLOG - Plant Repository
 // =============================================
 
+import 'dart:async';
 import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:growlog_app/database/database_helper.dart';
@@ -11,6 +12,7 @@ import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/safe_parsers.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
 import 'package:growlog_app/repositories/repository_error_handler.dart';
+import 'package:growlog_app/config/database_config.dart';
 
 // ✅ AUDIT FIX: Error handling standardized with RepositoryErrorHandler mixin
 class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
@@ -170,20 +172,31 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
           }
 
           // ✅ FIX v11: All updates in transaction for consistency
-          await db.transaction((txn) async {
-            // 1. Update plant
-            await txn.update(
-              'plants',
-              plant.toMap(),
-              where: 'id = ?',
-              whereArgs: [plant.id],
-            );
+          await db
+              .transaction((txn) async {
+                // 1. Update plant
+                await txn.update(
+                  'plants',
+                  plant.toMap(),
+                  where: 'id = ?',
+                  whereArgs: [plant.id],
+                );
 
-            // 2. Recalculate log data if any date changed
-            if (anyDateChanged && plant.seedDate != null) {
-              await _recalculateAllLogDataInTransaction(txn, plant.id!, plant);
-            }
-          });
+                // 2. Recalculate log data if any date changed
+                if (anyDateChanged && plant.seedDate != null) {
+                  await _recalculateAllLogDataInTransaction(
+                    txn,
+                    plant.id!,
+                    plant,
+                  );
+                }
+              })
+              .timeout(
+                DatabaseConfig.complexTransactionTimeout,
+                onTimeout: () => throw TimeoutException(
+                  'Plant update transaction timeout after ${DatabaseConfig.complexTransactionTimeout.inSeconds}s',
+                ),
+              );
         } else {
           // ✅ LOW PRIORITY BUG FIX: Log warning instead of silently updating when old plant not found
           AppLogger.warning(
@@ -336,97 +349,131 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
     try {
       final db = await _dbHelper.database;
 
-      return await db.transaction((txn) async {
-        AppLogger.warning(
-          'PlantRepo',
-          '⚠️ PERMANENT DELETE: Starting cascading delete',
-          'plantId=$id',
-        );
-
-        // Step 1: Get all log IDs for this plant
-        final logs = await txn.query(
-          'plant_logs',
-          columns: ['id'],
-          where: 'plant_id = ?',
-          whereArgs: [id],
-        );
-        final logIds = logs.map((log) => log['id'] as int).toList();
-
-        int deletedLogFertilizers = 0;
-        int deletedPhotos = 0;
-        int deletedPhotoFiles = 0;
-
-        if (logIds.isNotEmpty) {
-          for (final logId in logIds) {
-            // Delete log_fertilizers first (FK to plant_logs)
-            final fertCount = await txn.delete(
-              'log_fertilizers',
-              where: 'log_id = ?',
-              whereArgs: [logId],
-            );
-            deletedLogFertilizers += fertCount;
-
-            // Get photo records
-            final photos = await txn.query(
-              'photos',
-              where: 'log_id = ?',
-              whereArgs: [logId],
+      return await db
+          .transaction((txn) async {
+            AppLogger.warning(
+              'PlantRepo',
+              '⚠️ PERMANENT DELETE: Starting cascading delete',
+              'plantId=$id',
             );
 
-            // Delete physical photo files
-            for (final photo in photos) {
-              try {
-                final filePath = photo['image_path'] as String;
-                final file = File(filePath);
-                if (await file.exists()) {
-                  await file.delete();
-                  deletedPhotoFiles++;
+            // Step 1: Get all log IDs for this plant
+            final logs = await txn.query(
+              'plant_logs',
+              columns: ['id'],
+              where: 'plant_id = ?',
+              whereArgs: [id],
+            );
+            final logIds = logs.map((log) => log['id'] as int).toList();
+
+            int deletedLogFertilizers = 0;
+            int deletedPhotos = 0;
+            int deletedPhotoFiles = 0;
+            final List<String> failedPhotoDeletes = [];
+
+            if (logIds.isNotEmpty) {
+              for (final logId in logIds) {
+                // Delete log_fertilizers first (FK to plant_logs)
+                final fertCount = await txn.delete(
+                  'log_fertilizers',
+                  where: 'log_id = ?',
+                  whereArgs: [logId],
+                );
+                deletedLogFertilizers += fertCount;
+
+                // Get photo records
+                final photos = await txn.query(
+                  'photos',
+                  where: 'log_id = ?',
+                  whereArgs: [logId],
+                );
+
+                // Delete physical photo files
+                for (final photo in photos) {
+                  try {
+                    final filePath = photo['image_path'] as String;
+                    final file = File(filePath);
+                    if (await file.exists()) {
+                      await file.delete();
+                      deletedPhotoFiles++;
+                    } else {
+                      // File doesn't exist - log warning but don't fail
+                      AppLogger.warning(
+                        'PlantRepo',
+                        'Photo file not found (already deleted?): $filePath',
+                      );
+                    }
+                  } catch (e) {
+                    // Collect failed deletes to abort transaction
+                    final filePath = photo['image_path'] as String;
+                    failedPhotoDeletes.add(filePath);
+                    AppLogger.error(
+                      'PlantRepo',
+                      'Failed to delete photo file: $filePath',
+                      e,
+                    );
+                  }
                 }
-              } catch (e) {
-                AppLogger.error('PlantRepo', 'Failed to delete photo file', e);
+
+                // Delete photo records
+                final photoCount = await txn.delete(
+                  'photos',
+                  where: 'log_id = ?',
+                  whereArgs: [logId],
+                );
+                deletedPhotos += photoCount;
               }
             }
 
-            // Delete photo records
-            final photoCount = await txn.delete(
-              'photos',
-              where: 'log_id = ?',
-              whereArgs: [logId],
+            // ✅ CRITICAL FIX: Abort transaction if photo file deletion failed
+            if (failedPhotoDeletes.isNotEmpty) {
+              final errorMsg =
+                  'Failed to delete ${failedPhotoDeletes.length} photo files:\n'
+                  '${failedPhotoDeletes.take(5).join("\n")}'
+                  '${failedPhotoDeletes.length > 5 ? "\n... and ${failedPhotoDeletes.length - 5} more" : ""}';
+              AppLogger.error('PlantRepo', errorMsg);
+              throw Exception(
+                'Cannot permanently delete plant: Failed to delete photo files. '
+                'This prevents orphaned files in filesystem. Please check file permissions.',
+              );
+            }
+
+            // Step 2: Delete all plant logs
+            final deletedLogs = await txn.delete(
+              'plant_logs',
+              where: 'plant_id = ?',
+              whereArgs: [id],
             );
-            deletedPhotos += photoCount;
-          }
-        }
 
-        // Step 2: Delete all plant logs
-        final deletedLogs = await txn.delete(
-          'plant_logs',
-          where: 'plant_id = ?',
-          whereArgs: [id],
-        );
+            // Step 3: Delete all harvests
+            final deletedHarvests = await txn.delete(
+              'harvests',
+              where: 'plant_id = ?',
+              whereArgs: [id],
+            );
 
-        // Step 3: Delete all harvests
-        final deletedHarvests = await txn.delete(
-          'harvests',
-          where: 'plant_id = ?',
-          whereArgs: [id],
-        );
+            // Step 4: Finally, delete the plant itself
+            final deletedPlant = await txn.delete(
+              'plants',
+              where: 'id = ?',
+              whereArgs: [id],
+            );
 
-        // Step 4: Finally, delete the plant itself
-        final deletedPlant = await txn.delete(
-          'plants',
-          where: 'id = ?',
-          whereArgs: [id],
-        );
+            AppLogger.warning(
+              'PlantRepo',
+              '⚠️ PERMANENT DELETE completed',
+              'plant=$deletedPlant, logs=$deletedLogs, harvests=$deletedHarvests, '
+                  'photos=$deletedPhotos, photoFiles=$deletedPhotoFiles, fertilizers=$deletedLogFertilizers',
+            );
 
-        AppLogger.warning(
-          'PlantRepo',
-          '⚠️ PERMANENT DELETE completed',
-          'plant=$deletedPlant, logs=$deletedLogs, harvests=$deletedHarvests, '
-              'photos=$deletedPhotos, photoFiles=$deletedPhotoFiles, fertilizers=$deletedLogFertilizers',
-        );
-
-        return deletedPlant;
-      });
+            return deletedPlant;
+          })
+          .timeout(
+            DatabaseConfig.heavyOperationTimeout,
+            onTimeout: () => throw TimeoutException(
+              'Permanent delete transaction timeout after ${DatabaseConfig.heavyOperationTimeout.inSeconds}s',
+            ),
+          );
     } catch (e, stackTrace) {
       AppLogger.error(
         'PlantRepository',
@@ -651,6 +698,12 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
 
   /// Internal helper: Recalculate log data within an existing transaction
   /// This allows safe use when already inside a transaction (called from save())
+  ///
+  /// ⚠️ CRITICAL TRANSACTION SAFETY (BUG #1.2):
+  /// This method MUST receive a DatabaseExecutor (transaction) parameter
+  /// to avoid nested transactions. SQLite does NOT support nested transactions.
+  ///
+  /// ALWAYS pass the `txn` parameter from the parent transaction.
   Future<void> _recalculateAllLogDataInTransaction(
     DatabaseExecutor txn,
     int plantId,

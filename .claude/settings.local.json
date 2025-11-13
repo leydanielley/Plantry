@@ -19,7 +19,8 @@
       "Bash(for key in dashboard_harvests_title settings_expert_mode_title phase settings_saved add_grow_title harvest_detail_title)",
       "Bash(do echo -n \"$key: \")",
       "Bash(dart analyze:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(adb shell:*)"
     ],
     "deny": [],
     "ask": []

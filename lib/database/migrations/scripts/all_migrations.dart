@@ -10,6 +10,7 @@ import 'package:growlog_app/database/migrations/scripts/migration_v11.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v12.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v13.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v14.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v15.dart';
 
 /// All migrations in chronological order
 ///
@@ -47,6 +48,9 @@ final List<Migration> allMigrations = [
 
   // v14: CRITICAL FIX - Soft-Delete System: Prevent data loss on deletion (CASCADE → RESTRICT, archived flags)
   migrationV14,
+
+  // v15: CRITICAL FIX - Data Integrity: NOT NULL constraints, UNIQUE indexes, CHECK normalization
+  migrationV15,
 ];
 
 /// Get the latest migration version

@@ -382,6 +382,11 @@ class BackupService implements IBackupService {
     final data = backup['data'] as Map<String, dynamic>;
     final db = await DatabaseHelper.instance.database;
 
+    // ✅ CRITICAL FIX: Pre-validate backup data BEFORE deleting existing data
+    AppLogger.info('BackupService', 'Pre-validating backup data...');
+    await _preValidateBackupData(data);
+    AppLogger.info('BackupService', '✅ Backup data validation passed');
+
     // ✅ CRITICAL FIX: Wrap entire import in transaction for atomicity
     // If anything fails, database rolls back to pre-import state
     try {
@@ -632,5 +637,102 @@ class BackupService implements IBackupService {
       AppLogger.error('BackupService', 'Failed to read backup info', e);
       rethrow;
     }
+  }
+
+  /// ✅ CRITICAL FIX: Pre-validate backup data before importing
+  ///
+  /// This method validates backup data structure and content BEFORE
+  /// deleting existing database data. If validation fails, the import
+  /// is aborted without touching existing data.
+  ///
+  /// Validates:
+  /// - Required tables exist in backup
+  /// - Data structure is valid (List of Maps)
+  /// - Critical fields are present
+  /// - FK references are consistent
+  Future<void> _preValidateBackupData(Map<String, dynamic> data) async {
+    // Step 1: Validate all required tables exist
+    const requiredTables = BackupConfig.importOrderTables;
+    for (final table in requiredTables) {
+      if (!data.containsKey(table)) {
+        throw Exception('Invalid backup: Missing required table "$table"');
+      }
+
+      final tableData = data[table];
+      if (tableData is! List) {
+        throw Exception(
+          'Invalid backup: Table "$table" must be a list, got ${tableData.runtimeType}',
+        );
+      }
+    }
+
+    // Step 2: Validate data structure for critical tables
+    final plants = data['plants'] as List?;
+    if (plants != null && plants.isNotEmpty) {
+      for (final plant in plants) {
+        if (plant is! Map) {
+          throw Exception('Invalid backup: Plant record must be a Map');
+        }
+
+        // Validate required fields
+        final requiredFields = ['id', 'name', 'seed_type', 'medium'];
+        for (final field in requiredFields) {
+          if (!plant.containsKey(field) || plant[field] == null) {
+            throw Exception(
+              'Invalid backup: Plant missing required field "$field"',
+            );
+          }
+        }
+      }
+    }
+
+    // Step 3: Validate FK references (plant_logs → plants)
+    final plantLogs = data['plant_logs'] as List?;
+    if (plantLogs != null && plantLogs.isNotEmpty && plants != null) {
+      final plantIds = plants
+          .cast<Map<String, dynamic>>()
+          .map((p) => p['id'] as int?)
+          .whereType<int>()
+          .toSet();
+
+      for (final log in plantLogs) {
+        if (log is! Map) continue;
+
+        final plantId = log['plant_id'] as int?;
+        if (plantId != null && !plantIds.contains(plantId)) {
+          throw Exception(
+            'Invalid backup: plant_log references non-existent plant_id=$plantId',
+          );
+        }
+      }
+    }
+
+    // Step 4: Validate photos references
+    final photos = data['photos'] as List?;
+    if (photos != null && photos.isNotEmpty && plantLogs != null) {
+      final logIds = plantLogs
+          .cast<Map<String, dynamic>>()
+          .map((l) => l['id'] as int?)
+          .whereType<int>()
+          .toSet();
+
+      for (final photo in photos) {
+        if (photo is! Map) continue;
+
+        final logId = photo['log_id'] as int?;
+        if (logId != null && !logIds.contains(logId)) {
+          AppLogger.warning(
+            'BackupService',
+            'Photo references non-existent log_id=$logId (will be skipped)',
+          );
+        }
+      }
+    }
+
+    AppLogger.info(
+      'BackupService',
+      'Pre-validation complete: ${plants?.length ?? 0} plants, '
+          '${plantLogs?.length ?? 0} logs, ${photos?.length ?? 0} photos',
+    );
   }
 }

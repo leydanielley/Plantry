@@ -15,6 +15,7 @@ import 'package:growlog_app/models/app_settings.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/utils/app_state_recovery.dart';
+import 'package:growlog_app/utils/app_version.dart';
 import 'package:growlog_app/widgets/battery_optimization_dialog.dart';
 import 'package:growlog_app/main.dart';
 import 'package:growlog_app/di/service_locator.dart';
@@ -218,7 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 const Text('🌿', style: TextStyle(fontSize: 16)),
                 const SizedBox(width: 8),
                 Text(
-                  _t['dashboard_app_version'], // ✅ i18n
+                  'Plantry v${AppVersion.versionWithoutBuild}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isDark ? Colors.grey[600] : Colors.grey[500],
                   ),

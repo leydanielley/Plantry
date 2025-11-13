@@ -41,6 +41,69 @@ final Migration migrationV14 = Migration(
     );
 
     // ===========================================
+    // STEP 0: Pre-Migration Schema Validation
+    // ===========================================
+    AppLogger.info('Migration_v14', '🔍 Step 0/9: Validating v13 schema');
+
+    try {
+      // Validate plant_logs schema (most complex migration)
+      final plantLogsColumns = await db.rawQuery(
+        'PRAGMA table_info(plant_logs)',
+      );
+      final columnNames = plantLogsColumns
+          .map((col) => col['name'] as String)
+          .toSet();
+
+      final requiredColumns = {
+        'id',
+        'plant_id',
+        'log_date',
+        'action_type',
+        'day_number',
+        'watering_ml', // v13 column that gets renamed to water_amount in v14
+        'nutrient_ec', // v13 column that gets mapped to ec_in in v14
+        'ph', // v13 column that gets mapped to ph_in in v14
+        'created_at',
+      };
+
+      final missingColumns = requiredColumns.difference(columnNames);
+
+      if (missingColumns.isNotEmpty) {
+        final error =
+            '❌ Schema validation failed!\n'
+            'Required v13 columns missing: ${missingColumns.join(", ")}\n'
+            'Found columns: ${columnNames.join(", ")}\n'
+            'This indicates database corruption or version mismatch.';
+        AppLogger.error('Migration_v14', error);
+        throw Exception(error);
+      }
+
+      // Validate other critical tables exist
+      final tables = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('plants', 'photos', 'harvests', 'rdwc_logs', 'rdwc_systems')",
+      );
+
+      if (tables.length < 5) {
+        final foundTables = tables.map((t) => t['name']).join(', ');
+        final error =
+            '❌ Critical tables missing!\n'
+            'Expected: plants, photos, harvests, rdwc_logs, rdwc_systems\n'
+            'Found: $foundTables';
+        AppLogger.error('Migration_v14', error);
+        throw Exception(error);
+      }
+
+      AppLogger.info('Migration_v14', '  ✅ Schema validation passed');
+    } catch (e) {
+      AppLogger.error(
+        'Migration_v14',
+        '❌ Pre-migration validation failed - aborting migration!',
+        e,
+      );
+      rethrow; // Abort migration - will trigger database recovery
+    }
+
+    // ===========================================
     // STEP 1: Add archived flags
     // ===========================================
     AppLogger.info('Migration_v14', '📝 Step 1/9: Adding archived columns');
@@ -205,6 +268,17 @@ final Migration migrationV14 = Migration(
     // ✅ CRITICAL FIX: Explicitly list v13 columns to prevent data loss
     // v13 harvests has: id, plant_id, harvest_date, wet_weight, dry_weight, created_at
     // v14 adds 11 new columns which will get NULL/default values
+    //
+    // ⚠️ SCHEMA MISMATCH NOTE (BUG #6.1):
+    // After migration, harvests will have NULL values for new v14 fields:
+    // - drying_start_date, drying_end_date, drying_days, drying_method,
+    //   drying_temperature, drying_humidity
+    // - curing_start_date, curing_end_date, curing_days, curing_method, curing_notes
+    // - thc_percentage, cbd_percentage, terpene_profile
+    // - rating, taste_notes, effect_notes, overall_notes, updated_at
+    //
+    // This is EXPECTED BEHAVIOR and does NOT cause data loss.
+    // Users can fill in these values after migration via the UI.
     await db.execute('''
       INSERT INTO harvests_new (id, plant_id, harvest_date, wet_weight, dry_weight, created_at)
       SELECT id, plant_id, harvest_date, wet_weight, dry_weight, created_at
