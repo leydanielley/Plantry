@@ -64,13 +64,31 @@ final Migration migrationV14 = Migration(
       final v14Columns = {'water_amount', 'ph_in', 'ec_in'};
       final hasV14Schema = v14Columns.every((col) => columnNames.contains(col));
 
+      // Also check photos table schema
+      final photosColumnsCheck = await db.rawQuery(
+        'PRAGMA table_info(photos)',
+      );
+      final photoColumnNamesCheck = photosColumnsCheck
+          .map((col) => col['name'] as String)
+          .toSet();
+      final photosHasV14 = photoColumnNamesCheck.contains('image_path');
+      final photosHasV13 = photoColumnNamesCheck.contains('file_path');
+
+      // Consider it v14 if plant_logs have v14 schema (even if photos don't)
+      // We'll handle photos separately in the early exit logic
       if (hasV14Schema) {
         AppLogger.warning(
           'Migration_v14',
-          '⚠️ Database already has v14 schema, skipping table rebuild',
+          '⚠️ plant_logs already have v14 schema, checking for partial migration...',
         );
+        if (!photosHasV14 && photosHasV13) {
+          AppLogger.info(
+            'Migration_v14',
+            '  Photos still have v13 schema - will migrate in early exit',
+          );
+        }
         isAlreadyV14 = true;
-      } else if (!hasV13Schema) {
+      } else if (!hasV13Schema && !hasV14Schema) {
         final error =
             '❌ Schema validation failed!\n'
             'Database has neither v13 nor v14 schema.\n'
@@ -112,7 +130,7 @@ final Migration migrationV14 = Migration(
 
     // If already v14, only ensure archived columns exist and exit
     if (isAlreadyV14) {
-      AppLogger.info('Migration_v14', '📝 Ensuring archived columns exist');
+      AppLogger.info('Migration_v14', '📝 Ensuring archived columns and photos schema exist');
 
       // Check and add archived columns if missing
       try {
@@ -147,6 +165,138 @@ final Migration migrationV14 = Migration(
         AppLogger.info('Migration_v14', '  ✅ Added archived to rooms');
       } catch (e) {
         AppLogger.debug('Migration_v14', '  archived already exists in rooms');
+      }
+
+      // Check if plant_logs need to be migrated from old schema
+      final logsCheck = await db.rawQuery('PRAGMA table_info(plant_logs)');
+      final logsColNames = logsCheck.map((col) => col['name'] as String).toSet();
+      final hasWateringMl = logsColNames.contains('watering_ml');
+      final hasWaterAmount = logsColNames.contains('water_amount');
+
+      if (hasWateringMl && !hasWaterAmount) {
+        AppLogger.info(
+          'Migration_v14',
+          '  ⚠️ plant_logs still have v13 schema, migrating now...',
+        );
+
+        // Migrate plant_logs v13 → v14
+        await db.execute('''
+          CREATE TABLE plant_logs_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            plant_id INTEGER NOT NULL,
+            day_number INTEGER NOT NULL,
+            log_date TEXT NOT NULL,
+            logged_by TEXT,
+            action_type TEXT NOT NULL,
+            phase TEXT,
+            phase_day_number INTEGER,
+            water_amount REAL,
+            ph_in REAL,
+            ph_out REAL,
+            ec_in REAL,
+            ec_out REAL,
+            temperature REAL,
+            humidity REAL,
+            runoff INTEGER DEFAULT 0,
+            cleanse INTEGER DEFAULT 0,
+            container_size REAL,
+            container_medium_amount REAL,
+            container_drainage INTEGER DEFAULT 0,
+            container_drainage_material TEXT,
+            system_reservoir_size REAL,
+            system_bucket_count INTEGER,
+            system_bucket_size REAL,
+            note TEXT,
+            archived INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE RESTRICT
+          )
+        ''');
+
+        await db.execute('''
+          INSERT INTO plant_logs_new (
+            id, plant_id, day_number, log_date, logged_by, action_type, phase, phase_day_number,
+            water_amount, ph_in, ph_out, ec_in, ec_out, temperature, humidity,
+            runoff, cleanse, container_size, container_medium_amount, container_drainage,
+            container_drainage_material, system_reservoir_size, system_bucket_count,
+            system_bucket_size, note, archived, created_at
+          )
+          SELECT
+            id, plant_id, day_number, log_date,
+            NULL as logged_by,
+            action_type, phase, phase_day_number,
+            watering_ml as water_amount,
+            ph as ph_in,
+            NULL as ph_out,
+            nutrient_ec as ec_in,
+            NULL as ec_out,
+            temperature, humidity,
+            0 as runoff,
+            0 as cleanse,
+            NULL as container_size,
+            NULL as container_medium_amount,
+            0 as container_drainage,
+            NULL as container_drainage_material,
+            NULL as system_reservoir_size,
+            NULL as system_bucket_count,
+            NULL as system_bucket_size,
+            note,
+            COALESCE(archived, 0) as archived,
+            created_at
+          FROM plant_logs
+        ''');
+
+        await db.execute('DROP TABLE plant_logs');
+        await db.execute('ALTER TABLE plant_logs_new RENAME TO plant_logs');
+
+        // Re-create indexes
+        await db.execute('CREATE INDEX idx_logs_plant ON plant_logs(plant_id)');
+        await db.execute('CREATE INDEX idx_logs_date ON plant_logs(log_date DESC)');
+        await db.execute('CREATE INDEX idx_plant_logs_plant_archived ON plant_logs(plant_id, archived)');
+        await db.execute('CREATE INDEX idx_plant_logs_archived_date ON plant_logs(archived, log_date DESC)');
+
+        AppLogger.info('Migration_v14', '  ✅ plant_logs migrated (v13 → v14)');
+      } else if (hasWaterAmount) {
+        AppLogger.info('Migration_v14', '  ✅ plant_logs already have v14 schema');
+      }
+
+      // Check if photos need to be migrated from old schema (file_path → image_path)
+      final photosCheck = await db.rawQuery('PRAGMA table_info(photos)');
+      final hasFilePath = photosCheck.any((col) => col['name'] == 'file_path');
+      final hasImagePath = photosCheck.any((col) => col['name'] == 'image_path');
+
+      if (hasFilePath && !hasImagePath) {
+        AppLogger.info(
+          'Migration_v14',
+          '  ⚠️ Photos still have old schema, migrating photos table...',
+        );
+
+        // Migrate photos table
+        await db.execute('''
+          CREATE TABLE photos_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            log_id INTEGER,
+            image_path TEXT NOT NULL,
+            description TEXT,
+            taken_at TEXT DEFAULT (datetime('now')),
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE RESTRICT
+          )
+        ''');
+
+        await db.execute('''
+          INSERT INTO photos_new (id, log_id, image_path, created_at)
+          SELECT id, log_id, file_path, created_at
+          FROM photos
+        ''');
+
+        await db.execute('DROP TABLE photos');
+        await db.execute('ALTER TABLE photos_new RENAME TO photos');
+        await db.execute('CREATE INDEX idx_photos_log ON photos(log_id)');
+
+        AppLogger.info('Migration_v14', '  ✅ Photos migrated (file_path → image_path)');
+      } else if (hasImagePath) {
+        AppLogger.info('Migration_v14', '  ✅ Photos already have v14 schema');
       }
 
       AppLogger.info(
@@ -269,23 +419,79 @@ final Migration migrationV14 = Migration(
       '📝 Step 3/9: Rebuilding photos (CASCADE → RESTRICT)',
     );
 
-    await db.execute('''
-      CREATE TABLE photos_new (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        log_id INTEGER,
-        image_path TEXT NOT NULL,
-        description TEXT,
-        taken_at TEXT DEFAULT (datetime('now')),
-        created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE RESTRICT
-      )
-    ''');
+    // Check current photos schema to determine correct migration path
+    final photosSchemaCheck = await db.rawQuery('PRAGMA table_info(photos)');
+    final photosColNames = photosSchemaCheck
+        .map((col) => col['name'] as String)
+        .toSet();
+    final hasFilePath = photosColNames.contains('file_path');
+    final hasImagePath = photosColNames.contains('image_path');
 
-    await db.execute('INSERT INTO photos_new SELECT * FROM photos');
-    await db.execute('DROP TABLE photos');
-    await db.execute('ALTER TABLE photos_new RENAME TO photos');
+    if (hasImagePath) {
+      // Photos already have v14 schema, just verify RESTRICT constraint
+      AppLogger.info(
+        'Migration_v14',
+        '  ⚠️ Photos already have v14 schema (image_path), verifying constraints...',
+      );
 
-    AppLogger.info('Migration_v14', '  ✅ photos: ON DELETE CASCADE → RESTRICT');
+      // Rebuild anyway to ensure ON DELETE RESTRICT is set
+      await db.execute('''
+        CREATE TABLE photos_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          log_id INTEGER,
+          image_path TEXT NOT NULL,
+          description TEXT,
+          taken_at TEXT DEFAULT (datetime('now')),
+          created_at TEXT DEFAULT (datetime('now')),
+          FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE RESTRICT
+        )
+      ''');
+
+      await db.execute('''
+        INSERT INTO photos_new
+        SELECT * FROM photos
+      ''');
+      await db.execute('DROP TABLE photos');
+      await db.execute('ALTER TABLE photos_new RENAME TO photos');
+
+      AppLogger.info('Migration_v14', '  ✅ photos: Verified ON DELETE RESTRICT');
+    } else if (hasFilePath) {
+      // Photos have old v13 schema, migrate file_path → image_path
+      AppLogger.info(
+        'Migration_v14',
+        '  📝 Migrating photos: file_path → image_path',
+      );
+
+      await db.execute('''
+        CREATE TABLE photos_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          log_id INTEGER,
+          image_path TEXT NOT NULL,
+          description TEXT,
+          taken_at TEXT DEFAULT (datetime('now')),
+          created_at TEXT DEFAULT (datetime('now')),
+          FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE RESTRICT
+        )
+      ''');
+
+      // ✅ CRITICAL FIX: Map old schema (file_path) to new schema (image_path)
+      // Old schema: id, log_id, file_path, created_at
+      // New schema: id, log_id, image_path, description, taken_at, created_at
+      await db.execute('''
+        INSERT INTO photos_new (id, log_id, image_path, created_at)
+        SELECT id, log_id, file_path, created_at
+        FROM photos
+      ''');
+      await db.execute('DROP TABLE photos');
+      await db.execute('ALTER TABLE photos_new RENAME TO photos');
+
+      AppLogger.info('Migration_v14', '  ✅ photos: file_path → image_path, CASCADE → RESTRICT');
+    } else {
+      AppLogger.warning(
+        'Migration_v14',
+        '  ⚠️ Photos have unexpected schema, skipping migration',
+      );
+    }
 
     // ===========================================
     // STEP 4: Rebuild harvests with RESTRICT
