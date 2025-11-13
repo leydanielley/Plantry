@@ -57,19 +57,11 @@ final Migration migrationV14 = Migration(
           .toSet();
 
       // Check if database has v13 schema (old column names)
-      final v13Columns = {
-        'watering_ml',
-        'nutrient_ec',
-        'ph',
-      };
+      final v13Columns = {'watering_ml', 'nutrient_ec', 'ph'};
       final hasV13Schema = v13Columns.every((col) => columnNames.contains(col));
 
       // Check if database has v14 schema (new column names)
-      final v14Columns = {
-        'water_amount',
-        'ph_in',
-        'ec_in',
-      };
+      final v14Columns = {'water_amount', 'ph_in', 'ec_in'};
       final hasV14Schema = v14Columns.every((col) => columnNames.contains(col));
 
       if (hasV14Schema) {
@@ -79,14 +71,18 @@ final Migration migrationV14 = Migration(
         );
         isAlreadyV14 = true;
       } else if (!hasV13Schema) {
-        final error = '❌ Schema validation failed!\n'
+        final error =
+            '❌ Schema validation failed!\n'
             'Database has neither v13 nor v14 schema.\n'
             'Found columns: ${columnNames.join(", ")}\n'
             'This indicates database corruption or version mismatch.';
         AppLogger.error('Migration_v14', error);
         throw Exception(error);
       } else {
-        AppLogger.info('Migration_v14', '  ✅ v13 schema detected, proceeding with migration');
+        AppLogger.info(
+          'Migration_v14',
+          '  ✅ v13 schema detected, proceeding with migration',
+        );
       }
 
       // Validate other critical tables exist
@@ -96,7 +92,8 @@ final Migration migrationV14 = Migration(
 
       if (tables.length < 5) {
         final foundTables = tables.map((t) => t['name']).join(', ');
-        final error = '❌ Critical tables missing!\n'
+        final error =
+            '❌ Critical tables missing!\n'
             'Expected: plants, photos, harvests, rdwc_logs, rdwc_systems\n'
             'Found: $foundTables';
         AppLogger.error('Migration_v14', error);
@@ -125,7 +122,10 @@ final Migration migrationV14 = Migration(
         AppLogger.info('Migration_v14', '  ✅ Added archived to plant_logs');
       } catch (e) {
         // Column already exists, ignore
-        AppLogger.debug('Migration_v14', '  archived already exists in plant_logs');
+        AppLogger.debug(
+          'Migration_v14',
+          '  archived already exists in plant_logs',
+        );
       }
 
       try {
@@ -134,17 +134,25 @@ final Migration migrationV14 = Migration(
         );
         AppLogger.info('Migration_v14', '  ✅ Added archived to rdwc_logs');
       } catch (e) {
-        AppLogger.debug('Migration_v14', '  archived already exists in rdwc_logs');
+        AppLogger.debug(
+          'Migration_v14',
+          '  archived already exists in rdwc_logs',
+        );
       }
 
       try {
-        await db.execute('ALTER TABLE rooms ADD COLUMN archived INTEGER DEFAULT 0');
+        await db.execute(
+          'ALTER TABLE rooms ADD COLUMN archived INTEGER DEFAULT 0',
+        );
         AppLogger.info('Migration_v14', '  ✅ Added archived to rooms');
       } catch (e) {
         AppLogger.debug('Migration_v14', '  archived already exists in rooms');
       }
 
-      AppLogger.info('Migration_v14', '🎉 Migration v14 complete (schema already up-to-date)');
+      AppLogger.info(
+        'Migration_v14',
+        '🎉 Migration v14 complete (schema already up-to-date)',
+      );
       return; // Exit early
     }
 
