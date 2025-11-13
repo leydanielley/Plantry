@@ -96,7 +96,7 @@ class BackupService implements IBackupService {
         'version': BackupConfig.backupVersion,
         'exportDate': DateTime.now().toIso8601String(),
         'appVersion': AppVersion.version,
-        'data': {},
+        'data': <String, dynamic>{},
       };
 
       // Export each table

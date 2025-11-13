@@ -43,7 +43,9 @@ final Migration migrationV14 = Migration(
     // ===========================================
     // STEP 0: Pre-Migration Schema Validation
     // ===========================================
-    AppLogger.info('Migration_v14', '🔍 Step 0/9: Validating v13 schema');
+    AppLogger.info('Migration_v14', '🔍 Step 0/9: Validating schema');
+
+    bool isAlreadyV14 = false;
 
     try {
       // Validate plant_logs schema (most complex migration)
@@ -54,28 +56,37 @@ final Migration migrationV14 = Migration(
           .map((col) => col['name'] as String)
           .toSet();
 
-      final requiredColumns = {
-        'id',
-        'plant_id',
-        'log_date',
-        'action_type',
-        'day_number',
-        'watering_ml', // v13 column that gets renamed to water_amount in v14
-        'nutrient_ec', // v13 column that gets mapped to ec_in in v14
-        'ph', // v13 column that gets mapped to ph_in in v14
-        'created_at',
+      // Check if database has v13 schema (old column names)
+      final v13Columns = {
+        'watering_ml',
+        'nutrient_ec',
+        'ph',
       };
+      final hasV13Schema = v13Columns.every((col) => columnNames.contains(col));
 
-      final missingColumns = requiredColumns.difference(columnNames);
+      // Check if database has v14 schema (new column names)
+      final v14Columns = {
+        'water_amount',
+        'ph_in',
+        'ec_in',
+      };
+      final hasV14Schema = v14Columns.every((col) => columnNames.contains(col));
 
-      if (missingColumns.isNotEmpty) {
-        final error =
-            '❌ Schema validation failed!\n'
-            'Required v13 columns missing: ${missingColumns.join(", ")}\n'
+      if (hasV14Schema) {
+        AppLogger.warning(
+          'Migration_v14',
+          '⚠️ Database already has v14 schema, skipping table rebuild',
+        );
+        isAlreadyV14 = true;
+      } else if (!hasV13Schema) {
+        final error = '❌ Schema validation failed!\n'
+            'Database has neither v13 nor v14 schema.\n'
             'Found columns: ${columnNames.join(", ")}\n'
             'This indicates database corruption or version mismatch.';
         AppLogger.error('Migration_v14', error);
         throw Exception(error);
+      } else {
+        AppLogger.info('Migration_v14', '  ✅ v13 schema detected, proceeding with migration');
       }
 
       // Validate other critical tables exist
@@ -85,8 +96,7 @@ final Migration migrationV14 = Migration(
 
       if (tables.length < 5) {
         final foundTables = tables.map((t) => t['name']).join(', ');
-        final error =
-            '❌ Critical tables missing!\n'
+        final error = '❌ Critical tables missing!\n'
             'Expected: plants, photos, harvests, rdwc_logs, rdwc_systems\n'
             'Found: $foundTables';
         AppLogger.error('Migration_v14', error);
@@ -101,6 +111,41 @@ final Migration migrationV14 = Migration(
         e,
       );
       rethrow; // Abort migration - will trigger database recovery
+    }
+
+    // If already v14, only ensure archived columns exist and exit
+    if (isAlreadyV14) {
+      AppLogger.info('Migration_v14', '📝 Ensuring archived columns exist');
+
+      // Check and add archived columns if missing
+      try {
+        await db.execute(
+          'ALTER TABLE plant_logs ADD COLUMN archived INTEGER DEFAULT 0',
+        );
+        AppLogger.info('Migration_v14', '  ✅ Added archived to plant_logs');
+      } catch (e) {
+        // Column already exists, ignore
+        AppLogger.debug('Migration_v14', '  archived already exists in plant_logs');
+      }
+
+      try {
+        await db.execute(
+          'ALTER TABLE rdwc_logs ADD COLUMN archived INTEGER DEFAULT 0',
+        );
+        AppLogger.info('Migration_v14', '  ✅ Added archived to rdwc_logs');
+      } catch (e) {
+        AppLogger.debug('Migration_v14', '  archived already exists in rdwc_logs');
+      }
+
+      try {
+        await db.execute('ALTER TABLE rooms ADD COLUMN archived INTEGER DEFAULT 0');
+        AppLogger.info('Migration_v14', '  ✅ Added archived to rooms');
+      } catch (e) {
+        AppLogger.debug('Migration_v14', '  archived already exists in rooms');
+      }
+
+      AppLogger.info('Migration_v14', '🎉 Migration v14 complete (schema already up-to-date)');
+      return; // Exit early
     }
 
     // ===========================================

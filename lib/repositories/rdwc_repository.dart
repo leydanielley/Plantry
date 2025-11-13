@@ -399,9 +399,9 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
     try {
       final db = await _dbHelper.database;
 
-      // Count logs
+      // Count logs (exclude archived)
       final logsResult = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM rdwc_logs WHERE system_id = ?',
+        'SELECT COUNT(*) as count FROM rdwc_logs WHERE system_id = ? AND archived = 0',
         [systemId],
       );
       final logsCount = Sqflite.firstIntValue(logsResult) ?? 0;
@@ -456,13 +456,14 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
   }
 
   /// Get recent logs for a system (last N logs)
+  /// ✅ v14: Excludes archived logs by default
   @override
   Future<List<RdwcLog>> getRecentLogs(int systemId, {int limit = 10}) async {
     try {
       final db = await _dbHelper.database;
       final maps = await db.query(
         'rdwc_logs',
-        where: 'system_id = ?',
+        where: 'system_id = ? AND archived = 0',
         whereArgs: [systemId],
         orderBy: 'log_date DESC',
         limit: limit,
@@ -577,8 +578,9 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
     }
   }
 
-  /// Delete RDWC log
-  /// ✅ PHASE 3: Wrapped in transaction for data integrity (delete + update must be atomic)
+  /// Archive RDWC log (Soft-Delete)
+  /// ✅ SOFT-DELETE: Archives log instead of deleting (archived = 1)
+  /// ✅ PHASE 3: Wrapped in transaction for data integrity (archive + update must be atomic)
   @override
   Future<int> deleteLog(int logId) async {
     try {
@@ -586,7 +588,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
       // Use transaction to ensure atomic operation
       return await db.transaction((txn) async {
-        // Get system ID before deleting the log
+        // Get system ID before archiving the log
         final logResult = await txn.query(
           'rdwc_logs',
           columns: ['system_id'],
@@ -597,7 +599,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         if (logResult.isEmpty) {
           AppLogger.warning(
             'RdwcRepository',
-            'Log not found for deletion',
+            'Log not found for archiving',
             'ID: $logId',
           );
           return 0;
@@ -605,17 +607,18 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
 
         final systemId = logResult.first['system_id'] as int;
 
-        // Delete the log
-        final count = await txn.delete(
+        // Archive the log (Soft-Delete)
+        final count = await txn.update(
           'rdwc_logs',
+          {'archived': 1},
           where: 'id = ?',
           whereArgs: [logId],
         );
 
-        // Update system level to the most recent remaining log's levelAfter
+        // Update system level to the most recent remaining NON-ARCHIVED log's levelAfter
         final mostRecentLog = await txn.query(
           'rdwc_logs',
-          where: 'system_id = ? AND level_after IS NOT NULL',
+          where: 'system_id = ? AND level_after IS NOT NULL AND archived = 0',
           whereArgs: [systemId],
           orderBy: 'log_date DESC, id DESC',
           limit: 1,
@@ -632,15 +635,101 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           );
           AppLogger.info(
             'RdwcRepository',
-            'Updated system level after log deletion',
+            'Updated system level after log archiving',
             'SystemID: $systemId, NewLevel: $newLevel L',
           );
         } else {
-          // ✅ FIX: No logs remaining - set level to 0 (no data) instead of max capacity
+          // ✅ FIX: No non-archived logs remaining - set level to 0 (no data) instead of max capacity
           // Resetting to max capacity is incorrect as it implies the system is full
           await txn.update(
             'rdwc_systems',
             {'current_level': 0.0}, // ✅ FIXED: correct column name
+            where: 'id = ?',
+            whereArgs: [systemId],
+          );
+          AppLogger.info(
+            'RdwcRepository',
+            'Reset system level to 0 (no non-archived logs remaining)',
+            'SystemID: $systemId',
+          );
+        }
+
+        AppLogger.info('RdwcRepository', 'Archived RDWC log', 'ID: $logId');
+        return count;
+      });
+    } catch (e) {
+      AppLogger.error('RdwcRepository', 'Error archiving RDWC log', e);
+      rethrow;
+    }
+  }
+
+  /// Permanently delete RDWC log
+  /// ⚠️ DANGER: Real deletion! Use only after warning + backup
+  Future<int> deleteLogPermanently(int logId) async {
+    try {
+      final db = await _dbHelper.database;
+
+      // Use transaction to ensure atomic operation
+      return await db.transaction((txn) async {
+        // Get system ID before deleting the log
+        final logResult = await txn.query(
+          'rdwc_logs',
+          columns: ['system_id'],
+          where: 'id = ?',
+          whereArgs: [logId],
+        );
+
+        if (logResult.isEmpty) {
+          AppLogger.warning(
+            'RdwcRepository',
+            'Log not found for permanent deletion',
+            'ID: $logId',
+          );
+          return 0;
+        }
+
+        final systemId = logResult.first['system_id'] as int;
+
+        // Delete fertilizer associations first (RESTRICT constraint)
+        await txn.delete(
+          'rdwc_log_fertilizers',
+          where: 'rdwc_log_id = ?',
+          whereArgs: [logId],
+        );
+
+        // Delete the log permanently
+        final count = await txn.delete(
+          'rdwc_logs',
+          where: 'id = ?',
+          whereArgs: [logId],
+        );
+
+        // Update system level to the most recent remaining log's levelAfter
+        final mostRecentLog = await txn.query(
+          'rdwc_logs',
+          where: 'system_id = ? AND level_after IS NOT NULL AND archived = 0',
+          whereArgs: [systemId],
+          orderBy: 'log_date DESC, id DESC',
+          limit: 1,
+        );
+
+        if (mostRecentLog.isNotEmpty) {
+          final newLevel = mostRecentLog.first['level_after'] as double;
+          await txn.update(
+            'rdwc_systems',
+            {'current_level': newLevel},
+            where: 'id = ?',
+            whereArgs: [systemId],
+          );
+          AppLogger.info(
+            'RdwcRepository',
+            'Updated system level after permanent log deletion',
+            'SystemID: $systemId, NewLevel: $newLevel L',
+          );
+        } else {
+          await txn.update(
+            'rdwc_systems',
+            {'current_level': 0.0},
             where: 'id = ?',
             whereArgs: [systemId],
           );
@@ -651,11 +740,19 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           );
         }
 
-        AppLogger.info('RdwcRepository', 'Deleted RDWC log', 'ID: $logId');
+        AppLogger.info(
+          'RdwcRepository',
+          'Permanently deleted RDWC log',
+          'ID: $logId',
+        );
         return count;
       });
     } catch (e) {
-      AppLogger.error('RdwcRepository', 'Error deleting RDWC log', e);
+      AppLogger.error(
+        'RdwcRepository',
+        'Error permanently deleting RDWC log',
+        e,
+      );
       rethrow;
     }
   }
@@ -678,6 +775,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           AND water_consumed IS NOT NULL
           AND log_date >= ?
           AND log_type = 'ADDBACK'
+          AND archived = 0
       ''',
         [systemId, cutoffDate.toIso8601String()],
       );
@@ -718,6 +816,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           AND water_added IS NOT NULL
           AND log_date >= ?
           AND log_date <= ?
+          AND archived = 0
       ''',
         [systemId, start.toIso8601String(), end.toIso8601String()],
       );
@@ -862,7 +961,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         FROM rdwc_logs rl
         LEFT JOIN rdwc_log_fertilizers rlf ON rl.id = rlf.rdwc_log_id
         LEFT JOIN fertilizers f ON rlf.fertilizer_id = f.id
-        WHERE rl.system_id = ?
+        WHERE rl.system_id = ? AND rl.archived = 0
         ORDER BY rl.log_date DESC, rl.id DESC
         LIMIT ?
       ''',
@@ -1195,6 +1294,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           AND water_consumed IS NOT NULL
           AND water_consumed > 0
           AND log_date >= ?
+          AND archived = 0
         GROUP BY DATE(log_date)
         ORDER BY log_date DESC
       ''',
