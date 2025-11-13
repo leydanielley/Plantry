@@ -48,3 +48,6 @@ analyzer:
 
     # ✅ Ignore specific warnings
     invalid_annotation_target: ignore
+
+    # ✅ Allow print in tests for debugging
+    avoid_print: ignore
