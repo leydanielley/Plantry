@@ -20,7 +20,8 @@
       "Bash(do echo -n \"$key: \")",
       "Bash(dart analyze:*)",
       "Bash(echo:*)",
-      "Bash(adb shell:*)"
+      "Bash(adb shell:*)",
+      "Bash(flutter build:*)"
     ],
     "deny": [],
     "ask": []
