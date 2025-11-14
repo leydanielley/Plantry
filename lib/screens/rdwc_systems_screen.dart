@@ -167,7 +167,12 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
                 // Header Row
                 Row(
                   children: [
-                    Icon(Icons.water_damage, color: statusColor, size: 24),
+                    Image.asset(
+                      'assets/icons/rdwc_icon.png',
+                      width: 24,
+                      height: 24,
+                      color: statusColor,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(

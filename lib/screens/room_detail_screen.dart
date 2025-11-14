@@ -181,7 +181,12 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.water_damage, color: statusColor, size: 28),
+                  Image.asset(
+                    'assets/icons/rdwc_icon.png',
+                    width: 28,
+                    height: 28,
+                    color: statusColor,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
