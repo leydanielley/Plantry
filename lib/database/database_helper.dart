@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            30, // ✅ v30: Healing migration (v16) - Fix partial migrations & missing harvests fields
+            31, // ✅ v31: Safe rebuild migration (v17) - Atomic table rebuilds with SafeTableRebuild
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -93,7 +93,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 30,
+          version: 31,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -143,7 +143,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 30,
+          version: 31,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,

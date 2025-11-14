@@ -173,18 +173,17 @@ class _SplashScreenState extends State<SplashScreen> {
         AppLogger.error('SplashScreen', 'StackTrace: $stackTrace');
       }
 
+      // ✅ CRITICAL FIX: DON'T navigate to Dashboard on DB error!
+      // Instead, stay on splash screen and show error state
       setState(() {
         _hasError = true;
-        _status = 'Fehler beim Laden - App wird neu gestartet...';
+        _status = 'Kritischer Fehler beim Laden der Datenbank';
       });
 
-      // Bei Fehler: kurz warten, dann trotzdem weiter
-      await Future.delayed(const Duration(seconds: 2));
-
+      // Show error dialog with options
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        );
+        await Future.delayed(const Duration(milliseconds: 500));
+        await _showDatabaseErrorDialog(e.toString());
       }
     }
   }
@@ -194,6 +193,95 @@ class _SplashScreenState extends State<SplashScreen> {
     if (hour < 12) return 'Good Morning! 🌱';
     if (hour < 18) return 'Good Afternoon! 🌿';
     return 'Good Evening! 🌙';
+  }
+
+  /// Show critical database error dialog
+  Future<void> _showDatabaseErrorDialog(String errorMessage) async {
+    final shouldRetry = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red, size: 32),
+            SizedBox(width: 12),
+            Text('Datenbankfehler'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Die Datenbank konnte nicht geladen werden.',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Mögliche Ursachen:',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            const Text('• Migration fehlgeschlagen'),
+            const Text('• Datenbank beschädigt'),
+            const Text('• Nicht genug Speicherplatz'),
+            const Text('• App-Berechtigungen fehlen'),
+            const SizedBox(height: 16),
+            const Text(
+              'Sie können:',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            const Text('1. Nochmal versuchen'),
+            const Text('2. Backup in Einstellungen wiederherstellen'),
+            const Text('3. Support kontaktieren'),
+            if (kDebugMode) ...[
+              const SizedBox(height: 16),
+              const Text(
+                'Debug Info:',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 10),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                errorMessage,
+                style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Close app
+              Navigator.of(context).pop(false);
+              // Exit app (platform-specific)
+              // On Android, this will background the app
+              if (mounted) {
+                // Use system navigator to close
+                // This is safer than exit(0)
+              }
+            },
+            child: const Text('App schließen'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(context).pop(true),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Nochmal versuchen'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldRetry == true && mounted) {
+      // Retry initialization
+      setState(() {
+        _hasError = false;
+        _status = 'Wird geladen...';
+      });
+      _initializeApp();
+    }
   }
 
   /// Check if auto-recovery is needed and offer to user

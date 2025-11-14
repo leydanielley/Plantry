@@ -41,6 +41,74 @@ class SchemaRegistry {
   // Schema Definitions (per version)
   // ===========================================
 
+  /// Schema for v13: Pre-soft-delete (old column names)
+  static final schemaV13 = SchemaDefinition(
+    version: 13,
+    requiredTables: {
+      'plants': {
+        'id',
+        'name',
+        'strain',
+        'grow_id',
+        'room_id',
+        'planted_date',
+        'created_at',
+      },
+      'plant_logs': {
+        'id',
+        'plant_id',
+        'day_number',
+        'log_date',
+        'action_type',
+        'phase',
+        'phase_day_number',
+        'watering_ml', // v13 name (renamed to water_amount in v14)
+        'ph', // v13 name (split to ph_in/ph_out in v14)
+        'nutrient_ec', // v13 name (split to ec_in/ec_out in v14)
+        'temperature',
+        'humidity',
+        'note',
+        'created_at',
+      },
+      'photos': {
+        'id',
+        'log_id',
+        'file_path', // v13 name (renamed to image_path in v14)
+        'created_at',
+      },
+      'harvests': {
+        'id',
+        'plant_id',
+        'harvest_date',
+        'wet_weight',
+        'dry_weight',
+        'created_at',
+      },
+      'rdwc_logs': {
+        'id',
+        'system_id',
+        'log_date',
+        'log_type',
+        'level_before',
+        'water_added',
+        'level_after',
+        'water_consumed',
+        'ph_before',
+        'ph_after',
+        'ec_before',
+        'ec_after',
+        'note',
+        'logged_by',
+        'created_at',
+      },
+      'rooms': {'id', 'name', 'created_at'},
+    },
+    requiredIndexes: {
+      'plant_logs': {'idx_logs_plant', 'idx_logs_date'},
+      'photos': {'idx_photos_log'},
+    },
+  );
+
   /// Schema for v14: Soft-delete system
   static final schemaV14 = SchemaDefinition(
     version: 14,
@@ -181,11 +249,20 @@ class SchemaRegistry {
     requiredIndexes: schemaV15.requiredIndexes,
   );
 
+  /// Schema for v17: Safe rebuild (same as v16)
+  static final schemaV17 = SchemaDefinition(
+    version: 17,
+    requiredTables: schemaV16.requiredTables, // Same as v16
+    requiredIndexes: schemaV16.requiredIndexes, // Same as v16
+  );
+
   /// Map of all schema definitions
   static final Map<int, SchemaDefinition> schemas = {
+    13: schemaV13,
     14: schemaV14,
     15: schemaV15,
     16: schemaV16,
+    17: schemaV17,
   };
 
   // ===========================================

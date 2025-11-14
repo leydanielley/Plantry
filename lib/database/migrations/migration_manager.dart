@@ -10,6 +10,7 @@ import 'package:growlog_app/services/interfaces/i_backup_service.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/database/migrations/migration.dart';
 import 'package:growlog_app/database/migrations/scripts/all_migrations.dart';
+import 'package:growlog_app/database/schema_registry.dart';
 
 /// Manages database migrations for seamless app updates
 ///
@@ -198,6 +199,34 @@ class MigrationManager {
         'MigrationManager',
         '🎉 All migrations completed successfully',
         'Database now at v$newVersion',
+      );
+
+      // ✅ CRITICAL: Validate final schema matches expected version
+      AppLogger.info(
+        'MigrationManager',
+        '🔍 Validating schema for v$newVersion...',
+      );
+
+      final schemaValid = await SchemaRegistry.validateSchema(
+        db,
+        newVersion,
+        strict: false, // Allow extra columns for backwards compatibility
+      );
+
+      if (!schemaValid) {
+        AppLogger.error(
+          'MigrationManager',
+          '❌ Schema validation failed after migrations!',
+        );
+        throw Exception(
+          'Migration completed but schema validation failed for v$newVersion. '
+          'Database may be in an inconsistent state.',
+        );
+      }
+
+      AppLogger.info(
+        'MigrationManager',
+        '✅ Schema validation passed for v$newVersion',
       );
 
       // Mark migration as completed

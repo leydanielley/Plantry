@@ -12,6 +12,7 @@ import 'package:growlog_app/database/migrations/scripts/migration_v13.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v14.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v15.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v16.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v17.dart';
 
 /// All migrations in chronological order
 ///
@@ -55,6 +56,9 @@ final List<Migration> allMigrations = [
 
   // v16: HEALING MIGRATION - Fix partial migrations & missing harvests fields
   migrationV16,
+
+  // v17: SAFE REBUILD - Re-implement v14 tables with SafeTableRebuild for atomicity
+  migrationV17,
 ];
 
 /// Get the latest migration version
