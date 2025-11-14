@@ -177,10 +177,11 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
     final db = await _dbHelper.database;
 
     // Join mit logs Tabelle um alle Fotos einer Pflanze zu bekommen
+    // ✅ FIX: Filter archived logs to prevent showing photos from archived logs
     String query = '''
   SELECT photos.* FROM photos
   INNER JOIN plant_logs ON photos.log_id = plant_logs.id
-  WHERE plant_logs.plant_id = ?
+  WHERE plant_logs.plant_id = ? AND plant_logs.archived = 0
   ORDER BY photos.created_at DESC
 ''';
 

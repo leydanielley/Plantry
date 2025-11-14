@@ -222,6 +222,42 @@ class VersionManager {
     }
   }
 
+  /// Check if there was a recent migration failure
+  static Future<bool> hasRecentMigrationFailure() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final status = prefs.getString(_keyMigrationStatus);
+
+      // Check if migration status is 'failed' or 'timeout'
+      if (status == 'failed' || status == 'timeout') {
+        AppLogger.warning(
+          'VersionManager',
+          'Recent migration failure detected (status: $status)',
+        );
+        return true;
+      }
+
+      // Check if there are failed migrations in history
+      final failedMigrations = await getFailedMigrations();
+      if (failedMigrations.isNotEmpty) {
+        AppLogger.warning(
+          'VersionManager',
+          'Failed migrations in history: ${failedMigrations.length}',
+        );
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      AppLogger.error(
+        'VersionManager',
+        'Failed to check migration failure status',
+        e,
+      );
+      return false;
+    }
+  }
+
   /// Clear failed migrations
   static Future<void> clearFailedMigrations() async {
     try {

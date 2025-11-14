@@ -11,6 +11,7 @@ import 'package:growlog_app/database/migrations/scripts/migration_v12.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v13.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v14.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v15.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v16.dart';
 
 /// All migrations in chronological order
 ///
@@ -51,6 +52,9 @@ final List<Migration> allMigrations = [
 
   // v15: CRITICAL FIX - Data Integrity: NOT NULL constraints, UNIQUE indexes, CHECK normalization
   migrationV15,
+
+  // v16: HEALING MIGRATION - Fix partial migrations & missing harvests fields
+  migrationV16,
 ];
 
 /// Get the latest migration version
