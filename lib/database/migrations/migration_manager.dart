@@ -48,12 +48,13 @@ class MigrationManager {
   /// [db] The database to migrate
   /// [oldVersion] Current database version
   /// [newVersion] Target database version
-  /// [timeout] Maximum time to wait for migration (default: 5 minutes)
+  /// [timeout] Maximum time to wait for migration (default: 10 minutes)
+  /// ✅ INCREASED from 5 to 10 minutes to handle large databases (10,000+ logs)
   Future<void> migrate(
     Database db,
     int oldVersion,
     int newVersion, {
-    Duration timeout = const Duration(minutes: 5),
+    Duration timeout = const Duration(minutes: 10),
   }) async {
     if (oldVersion == newVersion) {
       AppLogger.info(

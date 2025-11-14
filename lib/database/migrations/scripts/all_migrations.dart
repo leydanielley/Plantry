@@ -13,6 +13,7 @@ import 'package:growlog_app/database/migrations/scripts/migration_v14.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v15.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v16.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v17.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v18.dart';
 
 /// All migrations in chronological order
 ///
@@ -59,6 +60,9 @@ final List<Migration> allMigrations = [
 
   // v17: SAFE REBUILD - Re-implement v14 tables with SafeTableRebuild for atomicity
   migrationV17,
+
+  // v18: DATA LOSS PREVENTION - Change FK constraints to RESTRICT (prevent orphaned plants)
+  migrationV18,
 ];
 
 /// Get the latest migration version

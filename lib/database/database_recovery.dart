@@ -163,35 +163,68 @@ class DatabaseRecovery {
       emergencyBackupPath = await exportToJSON(corruptedDb);
       await corruptedDb.close();
     } catch (e) {
-      AppLogger.warning(
+      AppLogger.error(
         'DatabaseRecovery',
-        'Emergency export not possible (DB cannot be opened)',
+        'Emergency export failed - DB cannot be opened',
         e,
       );
-      // Continue with deletion even if export fails
+      // ✅ CRITICAL FIX: Do NOT delete without backup!
+      // If we can't even open the DB, try filesystem backup
+      try {
+        final dbFile = File(dbPath);
+        if (await dbFile.exists()) {
+          final backupDir = Directory('/storage/emulated/0/Download/Plantry Backups/Emergency');
+          if (!await backupDir.exists()) {
+            await backupDir.create(recursive: true);
+          }
+          final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
+          final backupPath = '${backupDir.path}/corrupted_db_$timestamp.db';
+          await dbFile.copy(backupPath);
+          emergencyBackupPath = backupPath;
+          AppLogger.info('DatabaseRecovery', '✅ Filesystem backup created: $backupPath');
+        }
+      } catch (backupError) {
+        AppLogger.error(
+          'DatabaseRecovery',
+          '❌ Filesystem backup also failed',
+          backupError,
+        );
+        // REFUSE to delete without any backup!
+        return DatabaseRecoveryResult.failed(
+          'Cannot create emergency backup. Database cannot be safely deleted.\n\n'
+          'Your data is preserved but the app cannot start.\n'
+          'Please contact support or manually backup the database file.',
+        );
+      }
     }
 
     // Step 4: Backup and delete corrupted database
     AppLogger.warning('DatabaseRecovery', 'Step 3: Creating fresh database...');
+
+    // ✅ SAFETY CHECK: Verify we have a backup before deletion
+    if (emergencyBackupPath == null) {
+      AppLogger.error(
+        'DatabaseRecovery',
+        '🛑 REFUSING to delete database without emergency backup',
+      );
+      return DatabaseRecoveryResult.failed(
+        'Emergency backup failed. Cannot safely delete database.\n\n'
+        'Your data is preserved. Please check storage permissions.',
+      );
+    }
+
     final deleted = await deleteCorruptedDatabase(dbPath);
 
     if (deleted) {
-      String message =
-          'Corrupted database removed. A fresh database will be created.';
+      // We know emergencyBackupPath is not null due to safety check above
+      final message = 'Corrupted database removed. A fresh database will be created.'
+          '\n\n✅ Emergency backup saved to:\n$emergencyBackupPath\n\n'
+          'You can manually recover data from this JSON file if needed.';
 
-      if (emergencyBackupPath != null) {
-        message +=
-            '\n\n✅ Emergency backup saved to:\n$emergencyBackupPath\n\n'
-            'You can manually recover data from this JSON file if needed.';
-        AppLogger.info(
-          'DatabaseRecovery',
-          '✅ Emergency backup available at: $emergencyBackupPath',
-        );
-      } else {
-        message +=
-            '\n\nNote: Previous data may be lost. Check backups if available.';
-      }
-
+      AppLogger.info(
+        'DatabaseRecovery',
+        '✅ Emergency backup available at: $emergencyBackupPath',
+      );
       AppLogger.info('DatabaseRecovery', '✅ Fresh database will be created');
       return DatabaseRecoveryResult.recreated(message);
     } else {

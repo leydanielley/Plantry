@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            31, // ✅ v31: Safe rebuild migration (v17) - Atomic table rebuilds with SafeTableRebuild
+            32, // ✅ v32: Data loss prevention (v18) - FK constraints RESTRICT (prevent orphaned plants)
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -93,7 +93,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 31,
+          version: 32,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -143,7 +143,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 31,
+          version: 32, // ✅ v32: Data loss prevention (v18) - FK constraints RESTRICT
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,

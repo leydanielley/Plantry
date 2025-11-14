@@ -835,4 +835,35 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
       return [];
     }
   }
+
+  /// ✅ DATA LOSS PREVENTION: Find orphaned plants
+  /// Returns plants that have NO grow_id AND NO room_id
+  /// These plants were likely "lost" when their grow/room was deleted with ON DELETE SET NULL
+  @override
+  Future<List<Plant>> findOrphans() async {
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'plants',
+        where: 'grow_id IS NULL AND room_id IS NULL AND archived = ?',
+        whereArgs: [0],
+        orderBy: 'created_at DESC',
+      );
+
+      AppLogger.info(
+        'PlantRepository',
+        'Found ${maps.length} orphaned plants',
+      );
+
+      return maps.map((map) => Plant.fromMap(map)).toList();
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to load orphaned plants',
+        e,
+        stackTrace,
+      );
+      return [];
+    }
+  }
 }

@@ -114,6 +114,14 @@ class MockPlantRepository implements IPlantRepository {
     return {'logs': 0, 'photos': 0, 'harvests': 0};
   }
 
+  @override
+  Future<List<Plant>> findOrphans() async {
+    // Mock implementation - find plants without grow_id AND room_id
+    return _plants.values
+        .where((p) => p.growId == null && p.roomId == null && !p.archived)
+        .toList();
+  }
+
   // Helper methods for testing
   void clear() {
     _plants.clear();

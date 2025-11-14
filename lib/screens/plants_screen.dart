@@ -37,6 +37,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
   Map<int, Room> _roomsById = {};
   Map<int?, List<Plant>> _plantsByGrow = {};
   bool _isLoading = true;
+  bool _showOrphansOnly = false; // ✅ ORPHAN FILTER: Toggle orphans view
   late AppTranslations _t = AppTranslations('de');
 
   @override
@@ -60,8 +61,11 @@ class _PlantsScreenState extends State<PlantsScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Load all plants, grows and rooms
-      final plants = await _plantRepo.findAll();
+      // Load plants based on filter (orphans or all)
+      final plants = _showOrphansOnly
+          ? await _plantRepo.findOrphans()
+          : await _plantRepo.findAll();
+
       final grows = await _growRepo.getAll(includeArchived: true);
       final rooms = await _roomRepo.findAll();
 
@@ -118,6 +122,24 @@ class _PlantsScreenState extends State<PlantsScreen> {
         title: Text(_t['plants']),
         backgroundColor: AppConstants.primaryGreen,
         foregroundColor: Colors.white,
+        actions: [
+          // ✅ ORPHAN FILTER: Toggle button
+          IconButton(
+            icon: Icon(
+              _showOrphansOnly ? Icons.warning_amber : Icons.filter_list,
+              color: _showOrphansOnly ? Colors.amber : Colors.white,
+            ),
+            tooltip: _showOrphansOnly
+                ? 'Alle Pflanzen anzeigen'
+                : 'Verwaiste Pflanzen anzeigen',
+            onPressed: () {
+              setState(() {
+                _showOrphansOnly = !_showOrphansOnly;
+              });
+              _loadData();
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -143,6 +165,12 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final items = _buildFlatItemList();
+
+    // ✅ ORPHAN WARNING: Show banner when displaying orphaned plants
+    if (_showOrphansOnly) {
+      items.insert(0, _buildOrphanWarningBanner());
+      items.insert(1, const SizedBox(height: AppConstants.spacingMedium));
+    }
 
     // ✅ PERFORMANCE FIX: ListView.builder statt ListView
     // Rendert nur sichtbare Items → bessere Performance bei vielen Pflanzen
@@ -453,9 +481,93 @@ class _PlantsScreenState extends State<PlantsScreen> {
     );
   }
 
+  Widget _buildOrphanWarningBanner() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(AppConstants.spacingMedium),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.amber[900]?.withValues(alpha: 0.3)
+            : Colors.amber[50],
+        borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
+        border: Border.all(
+          color: isDark ? Colors.amber[700]! : Colors.amber[300]!,
+          width: 2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: isDark ? Colors.amber[400] : Colors.amber[800],
+            size: 32,
+          ),
+          const SizedBox(width: AppConstants.spacingMedium),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Verwaiste Pflanzen',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.amber[400] : Colors.amber[900],
+                      ),
+                ),
+                const SizedBox(height: AppConstants.spacingXs),
+                Text(
+                  'Diese Pflanzen haben keinen Grow und keinen Raum zugewiesen. Sie wurden möglicherweise beim Löschen eines Grows verwaist. Bitte weise sie einem Grow zu oder archiviere sie.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: isDark ? Colors.grey[300] : Colors.grey[800],
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // ✅ ORPHAN FILTER: Different message when showing orphans
+    if (_showOrphansOnly) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              size: AppConstants.emptyStateIconSize,
+              color: Colors.green[400],
+            ),
+            const SizedBox(height: AppConstants.emptyStateSpacingTop),
+            Text(
+              'Keine verwaisten Pflanzen!',
+              style: TextStyle(
+                fontSize: AppConstants.fontSizeLarge,
+                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
+            Text(
+              'Alle Pflanzen sind korrekt einem Grow zugewiesen.',
+              style: TextStyle(
+                fontSize: AppConstants.fontSizeMedium,
+                color: isDark ? Colors.grey[500] : Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Default empty state
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
