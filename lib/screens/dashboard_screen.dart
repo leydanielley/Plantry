@@ -186,7 +186,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             if (GrowLogApp.of(context)?.settings.isExpertMode ?? false) ...[
               const SizedBox(height: 12),
               _buildActionCard(
-                'assets/icons/fertilizer_icon.png', // Reusing icon for now
+                'assets/icons/rdwc_icon.png',
                 _t['rdwc_systems'],
                 _t['dashboard_rdwc_subtitle'], // ✅ i18n
                 isDark,
