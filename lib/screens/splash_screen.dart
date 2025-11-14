@@ -14,6 +14,7 @@ import 'package:growlog_app/utils/app_state_recovery.dart';
 import 'package:growlog_app/utils/version_manager.dart';
 import 'package:growlog_app/utils/update_cleanup.dart';
 import 'package:growlog_app/utils/auto_recovery_helper.dart';
+import 'package:growlog_app/utils/backup_progress_notifier.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -25,11 +26,33 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   String _status = 'Wird geladen...';
   bool _hasError = false;
+  BackupProgressEvent? _backupProgress;
+  StreamSubscription<BackupProgressEvent>? _progressSubscription;
 
   @override
   void initState() {
     super.initState();
+    _setupProgressListener();
     _initializeApp();
+  }
+
+  /// Setup listener for backup progress
+  void _setupProgressListener() {
+    _progressSubscription = BackupProgressNotifier.instance.stream.listen((
+      event,
+    ) {
+      if (mounted) {
+        setState(() {
+          _backupProgress = event;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _progressSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _initializeApp() async {
@@ -145,6 +168,9 @@ class _SplashScreenState extends State<SplashScreen> {
         await UpdateCleanup.performPostUpdateCleanup();
       }
 
+      // Clear backup progress
+      BackupProgressNotifier.instance.clear();
+
       // Fix 2 Sekunden Splash
       if (stopwatch.elapsedMilliseconds < 2000) {
         await Future.delayed(
@@ -172,6 +198,9 @@ class _SplashScreenState extends State<SplashScreen> {
         AppLogger.error('SplashScreen', '❌ Error initializing: $e');
         AppLogger.error('SplashScreen', 'StackTrace: $stackTrace');
       }
+
+      // Clear backup progress on error
+      BackupProgressNotifier.instance.clear();
 
       // ✅ CRITICAL FIX: DON'T navigate to Dashboard on DB error!
       // Instead, stay on splash screen and show error state
@@ -483,6 +512,41 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               textAlign: TextAlign.center,
             ),
+
+            // Backup Progress
+            if (_backupProgress != null && _backupProgress!.total > 0) ...[
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 48),
+                child: Column(
+                  children: [
+                    // Progress Bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value:
+                            _backupProgress!.current / _backupProgress!.total,
+                        minHeight: 6,
+                        backgroundColor: Colors.white24,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF4CAF50),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Progress Text
+                    Text(
+                      _backupProgress!.message,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white54,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             // Debug Info (nur im Debug Mode)
             if (kDebugMode) ...[

@@ -31,11 +31,15 @@ class BackupService implements IBackupService {
   ///
   /// [db] Optional database instance. If not provided, will get instance from DatabaseHelper.
   /// This is useful during migrations to avoid circular dependency.
+  /// [onProgress] Optional callback for progress updates during backup
   @override
-  Future<String> exportData({Database? db}) async {
+  Future<String> exportData({
+    Database? db,
+    BackupProgressCallback? onProgress,
+  }) async {
     // ✅ P1 FIX: Wrap entire export in timeout (5 minutes max)
     // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
-    return await _exportDataInternal(db: db).timeout(
+    return await _exportDataInternal(db: db, onProgress: onProgress).timeout(
       BackupConfig.exportTimeout,
       onTimeout: () {
         AppLogger.error(
@@ -49,7 +53,10 @@ class BackupService implements IBackupService {
     );
   }
 
-  Future<String> _exportDataInternal({Database? db}) async {
+  Future<String> _exportDataInternal({
+    Database? db,
+    BackupProgressCallback? onProgress,
+  }) async {
     try {
       AppLogger.info('BackupService', 'Starting export...');
 
@@ -140,6 +147,9 @@ class BackupService implements IBackupService {
       int copiedCount = 0;
       int missingCount = 0;
 
+      // Report initial progress
+      onProgress?.call(0, photos.length, 'Datenbank exportiert');
+
       if (photos.isNotEmpty) {
         // ✅ P1 FIX: Use path.join instead of string concatenation
         // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
@@ -180,6 +190,13 @@ class BackupService implements IBackupService {
           // Count successes and failures
           copiedCount += results.where((r) => r == true).length;
           missingCount += results.where((r) => r == false).length;
+
+          // Report progress after each batch
+          onProgress?.call(
+            copiedCount,
+            photos.length,
+            'Fotos werden kopiert: $copiedCount/${photos.length}',
+          );
         }
         AppLogger.info('BackupService', 'Copied photos', 'count=$copiedCount');
         if (missingCount > 0) {
@@ -197,6 +214,8 @@ class BackupService implements IBackupService {
       final zipPath = path.join(appDir.path, 'plantry_backup_$timestamp.zip');
 
       AppLogger.info('BackupService', 'Creating ZIP file...');
+      onProgress?.call(photos.length, photos.length, 'ZIP wird erstellt...');
+
       final encoder = ZipFileEncoder();
       encoder.create(zipPath);
       await encoder.addDirectory(exportDir);

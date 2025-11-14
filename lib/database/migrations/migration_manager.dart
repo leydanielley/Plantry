@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/version_manager.dart';
+import 'package:growlog_app/utils/backup_progress_notifier.dart';
 import 'package:growlog_app/services/interfaces/i_backup_service.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/database/migrations/migration.dart';
@@ -264,7 +265,13 @@ class MigrationManager {
   Future<String> _createPreMigrationBackup(Database db) async {
     // Use the existing BackupService.exportData() method
     // Pass the database instance to avoid deadlock during migration
-    return await backupService.exportData(db: db);
+    // Progress is reported via BackupProgressNotifier singleton
+    return await backupService.exportData(
+      db: db,
+      onProgress: (current, total, message) {
+        BackupProgressNotifier.instance.notify(current, total, message);
+      },
+    );
   }
 
   /// Verify database integrity after migration
