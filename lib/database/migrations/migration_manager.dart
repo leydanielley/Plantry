@@ -72,6 +72,7 @@ class MigrationManager {
     await VersionManager.markMigrationInProgress();
 
     // Step 1: Create automatic backup before migration
+    // ✅ CRITICAL FIX: Backup MUST succeed (unless database is empty)
     String? backupPath;
     try {
       backupPath = await _createPreMigrationBackup(db);
@@ -80,13 +81,34 @@ class MigrationManager {
         '✅ Pre-migration backup created',
         backupPath,
       );
-    } catch (e, _) {
-      AppLogger.warning(
+    } catch (e, stackTrace) {
+      AppLogger.error(
         'MigrationManager',
-        'Failed to create backup (continuing anyway)',
+        '❌ Failed to create pre-migration backup',
         e,
+        stackTrace,
       );
-      // Continue anyway - user might have no data yet, or this is first install
+
+      // Check if database has any data
+      final hasData = await _databaseHasData(db);
+
+      if (hasData) {
+        // ✅ CRITICAL: Refuse to migrate if backup failed and DB has data!
+        AppLogger.error(
+          'MigrationManager',
+          '🛑 REFUSING to migrate: Backup failed and database contains data',
+        );
+        throw Exception(
+          'Cannot migrate: Pre-migration backup failed and database contains data. '
+          'Migration is too risky without a backup. Please free up storage space or check app permissions.',
+        );
+      } else {
+        // Database is empty (fresh install), safe to continue
+        AppLogger.warning(
+          'MigrationManager',
+          '⚠️ Backup failed but database is empty (fresh install), continuing...',
+        );
+      }
     }
 
     // Step 2: Get migrations that need to run
@@ -245,6 +267,49 @@ class MigrationManager {
         stack,
       );
       return false;
+    }
+  }
+
+  /// Check if database has any user data
+  ///
+  /// Returns true if any core tables contain data
+  /// Used to determine if backup is critical before migration
+  Future<bool> _databaseHasData(Database db) async {
+    try {
+      // Check core tables for data
+      final coreTables = ['plants', 'plant_logs', 'grows', 'rooms'];
+
+      for (final table in coreTables) {
+        try {
+          final count = await db.rawQuery(
+            'SELECT COUNT(*) as count FROM $table',
+          );
+          final rowCount = Sqflite.firstIntValue(count) ?? 0;
+
+          if (rowCount > 0) {
+            AppLogger.info(
+              'MigrationManager',
+              'Found data in $table: $rowCount rows',
+            );
+            return true;
+          }
+        } catch (e) {
+          // Table might not exist yet (first install)
+          AppLogger.debug(
+            'MigrationManager',
+            'Table $table does not exist or is inaccessible',
+          );
+        }
+      }
+
+      AppLogger.info('MigrationManager', 'Database appears to be empty');
+      return false;
+    } catch (e) {
+      AppLogger.warning(
+        'MigrationManager',
+        'Could not determine if database has data, assuming it does (safer)',
+      );
+      return true; // Assume it has data to be safe
     }
   }
 

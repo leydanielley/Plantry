@@ -1,0 +1,370 @@
+// =============================================
+// GROWLOG - Schema Registry
+// Central source of truth for database schemas
+// =============================================
+
+import 'package:sqflite/sqflite.dart';
+import 'package:growlog_app/utils/app_logger.dart';
+
+/// Schema definition for a database version
+class SchemaDefinition {
+  final int version;
+  final Map<String, Set<String>> requiredTables;
+  final Map<String, Set<String>> requiredIndexes;
+
+  SchemaDefinition({
+    required this.version,
+    required this.requiredTables,
+    this.requiredIndexes = const {},
+  });
+}
+
+/// Central registry of all database schemas
+///
+/// Provides a single source of truth for what each database version should look like.
+/// Used for validation before and after migrations.
+///
+/// WHY THIS EXISTS:
+/// - Manual validation in each migration is error-prone
+/// - No way to verify database state matches expected schema
+/// - Hard to catch schema drift over time
+///
+/// USAGE:
+/// ```dart
+/// final isValid = await SchemaRegistry.validateSchema(db, 14);
+/// if (!isValid) {
+///   throw Exception('Database schema v14 is invalid!');
+/// }
+/// ```
+class SchemaRegistry {
+  // ===========================================
+  // Schema Definitions (per version)
+  // ===========================================
+
+  /// Schema for v14: Soft-delete system
+  static final schemaV14 = SchemaDefinition(
+    version: 14,
+    requiredTables: {
+      'plants': {
+        'id',
+        'name',
+        'strain',
+        'grow_id',
+        'room_id',
+        'planted_date',
+        'created_at',
+      },
+      'plant_logs': {
+        'id',
+        'plant_id',
+        'day_number',
+        'log_date',
+        'logged_by',
+        'action_type',
+        'phase',
+        'phase_day_number',
+        'water_amount', // v14 renamed from watering_ml
+        'ph_in', // v14 renamed from ph
+        'ph_out', // v14 new field
+        'ec_in', // v14 renamed from nutrient_ec
+        'ec_out', // v14 new field
+        'temperature',
+        'humidity',
+        'runoff', // v14 new field
+        'cleanse', // v14 new field
+        'container_size', // v14 new field
+        'container_medium_amount', // v14 new field
+        'container_drainage', // v14 new field
+        'container_drainage_material', // v14 new field
+        'system_reservoir_size', // v14 new field
+        'system_bucket_count', // v14 new field
+        'system_bucket_size', // v14 new field
+        'note',
+        'archived', // v14 new field
+        'created_at',
+      },
+      'photos': {
+        'id',
+        'log_id',
+        'image_path', // v14 renamed from file_path
+        'description', // v14 new field
+        'taken_at', // v14 new field
+        'created_at',
+      },
+      'harvests': {
+        'id',
+        'plant_id',
+        'harvest_date',
+        'wet_weight',
+        'dry_weight',
+        'created_at',
+        // v14 note: Many fields still missing, added in v16
+      },
+      'rdwc_logs': {
+        'id',
+        'system_id',
+        'log_date',
+        'log_type',
+        'level_before',
+        'water_added',
+        'level_after',
+        'water_consumed',
+        'ph_before',
+        'ph_after',
+        'ec_before',
+        'ec_after',
+        'note',
+        'logged_by',
+        'archived', // v14 new field
+        'created_at',
+      },
+      'rooms': {
+        'id',
+        'name',
+        'archived', // v14 new field
+        'created_at',
+      },
+    },
+    requiredIndexes: {
+      'plant_logs': {
+        'idx_logs_plant',
+        'idx_logs_date',
+        'idx_plant_logs_plant_archived',
+        'idx_plant_logs_archived_date',
+      },
+      'photos': {'idx_photos_log'},
+    },
+  );
+
+  /// Schema for v15: Data integrity constraints
+  static final schemaV15 = SchemaDefinition(
+    version: 15,
+    requiredTables: schemaV14.requiredTables, // Same tables as v14
+    requiredIndexes: {
+      ...schemaV14.requiredIndexes,
+      'plant_logs': {
+        ...?schemaV14.requiredIndexes['plant_logs'],
+        'idx_plant_logs_unique_day', // v15 adds UNIQUE constraint
+      },
+    },
+  );
+
+  /// Schema for v16: Healing migration
+  static final schemaV16 = SchemaDefinition(
+    version: 16,
+    requiredTables: {
+      ...schemaV15.requiredTables,
+      'harvests': {
+        ...?schemaV15.requiredTables['harvests'],
+        // v16 adds all missing harvests fields
+        'drying_start_date',
+        'drying_end_date',
+        'drying_days',
+        'drying_method',
+        'drying_temperature',
+        'drying_humidity',
+        'curing_start_date',
+        'curing_end_date',
+        'curing_days',
+        'curing_method',
+        'curing_notes',
+        'thc_percentage',
+        'cbd_percentage',
+        'terpene_profile',
+        'rating',
+        'taste_notes',
+        'effect_notes',
+        'overall_notes',
+        'updated_at',
+      },
+    },
+    requiredIndexes: schemaV15.requiredIndexes,
+  );
+
+  /// Map of all schema definitions
+  static final Map<int, SchemaDefinition> schemas = {
+    14: schemaV14,
+    15: schemaV15,
+    16: schemaV16,
+  };
+
+  // ===========================================
+  // Validation Functions
+  // ===========================================
+
+  /// Validate database schema matches expected version
+  ///
+  /// Returns true if database schema is valid for the given version
+  ///
+  /// [db] Database instance to validate
+  /// [version] Expected database version
+  /// [strict] If true, extra columns/tables are errors. If false, warnings.
+  static Future<bool> validateSchema(
+    Database db,
+    int version, {
+    bool strict = false,
+  }) async {
+    try {
+      AppLogger.info(
+        'SchemaRegistry',
+        '🔍 Validating database schema for v$version...',
+      );
+
+      final schemaDef = schemas[version];
+      if (schemaDef == null) {
+        AppLogger.warning(
+          'SchemaRegistry',
+          '⚠️ No schema definition for v$version',
+        );
+        return false;
+      }
+
+      bool isValid = true;
+
+      // ===========================================
+      // Validate Tables & Columns
+      // ===========================================
+      for (final entry in schemaDef.requiredTables.entries) {
+        final tableName = entry.key;
+        final requiredColumns = entry.value;
+
+        // Check table exists
+        final tableCheck = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+          [tableName],
+        );
+
+        if (tableCheck.isEmpty) {
+          AppLogger.error('SchemaRegistry', '❌ Missing table: $tableName');
+          isValid = false;
+          continue;
+        }
+
+        // Check columns
+        final columns = await db.rawQuery('PRAGMA table_info($tableName)');
+        final actualColumns = columns
+            .map((col) => col['name'] as String)
+            .toSet();
+
+        final missingColumns = requiredColumns.difference(actualColumns);
+        if (missingColumns.isNotEmpty) {
+          AppLogger.error(
+            'SchemaRegistry',
+            '❌ Table $tableName missing columns: ${missingColumns.join(", ")}',
+          );
+          isValid = false;
+        }
+
+        if (strict) {
+          final extraColumns = actualColumns.difference(requiredColumns);
+          if (extraColumns.isNotEmpty) {
+            AppLogger.error(
+              'SchemaRegistry',
+              '❌ Table $tableName has unexpected columns: ${extraColumns.join(", ")}',
+            );
+            isValid = false;
+          }
+        }
+      }
+
+      // ===========================================
+      // Validate Indexes
+      // ===========================================
+      if (schemaDef.requiredIndexes.isNotEmpty) {
+        for (final entry in schemaDef.requiredIndexes.entries) {
+          final tableName = entry.key;
+          final requiredIndexes = entry.value;
+
+          final indexes = await db.rawQuery(
+            "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name=?",
+            [tableName],
+          );
+          final actualIndexes = indexes
+              .map((idx) => idx['name'] as String)
+              .toSet();
+
+          final missingIndexes = requiredIndexes.difference(actualIndexes);
+          if (missingIndexes.isNotEmpty) {
+            AppLogger.warning(
+              'SchemaRegistry',
+              '⚠️ Table $tableName missing indexes: ${missingIndexes.join(", ")}',
+            );
+            // Indexes missing is warning, not error
+          }
+        }
+      }
+
+      // ===========================================
+      // Foreign Key Integrity Check
+      // ===========================================
+      final fkCheck = await db.rawQuery('PRAGMA foreign_key_check');
+      if (fkCheck.isNotEmpty) {
+        AppLogger.error(
+          'SchemaRegistry',
+          '❌ Foreign key violations detected: ${fkCheck.length}',
+        );
+        for (final violation in fkCheck.take(5)) {
+          AppLogger.error('SchemaRegistry', '  - $violation');
+        }
+        isValid = false;
+      }
+
+      // ===========================================
+      // Database Integrity Check
+      // ===========================================
+      final integrityCheck = await db.rawQuery('PRAGMA integrity_check');
+      final result = integrityCheck.first['integrity_check'];
+      if (result != 'ok') {
+        AppLogger.error(
+          'SchemaRegistry',
+          '❌ Database integrity check failed: $result',
+        );
+        isValid = false;
+      }
+
+      if (isValid) {
+        AppLogger.info(
+          'SchemaRegistry',
+          '✅ Schema validation passed for v$version',
+        );
+      } else {
+        AppLogger.error(
+          'SchemaRegistry',
+          '❌ Schema validation failed for v$version',
+        );
+      }
+
+      return isValid;
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'SchemaRegistry',
+        'Schema validation error',
+        e,
+        stackTrace,
+      );
+      return false;
+    }
+  }
+
+  /// Get schema definition for a version
+  static SchemaDefinition? getSchema(int version) {
+    return schemas[version];
+  }
+
+  /// Check if a table has all required columns
+  static Future<bool> tableHasColumns(
+    Database db,
+    String tableName,
+    Set<String> requiredColumns,
+  ) async {
+    try {
+      final columns = await db.rawQuery('PRAGMA table_info($tableName)');
+      final actualColumns = columns.map((col) => col['name'] as String).toSet();
+
+      return requiredColumns.every((col) => actualColumns.contains(col));
+    } catch (e) {
+      AppLogger.error('SchemaRegistry', 'Failed to check table columns', e);
+      return false;
+    }
+  }
+}
