@@ -169,9 +169,8 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
                   children: [
                     Image.asset(
                       'assets/icons/rdwc_icon.png',
-                      width: 24,
-                      height: 24,
-                      color: statusColor,
+                      width: 32,
+                      height: 32,
                     ),
                     const SizedBox(width: 12),
                     Expanded(

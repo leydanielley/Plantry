@@ -183,9 +183,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 children: [
                   Image.asset(
                     'assets/icons/rdwc_icon.png',
-                    width: 28,
-                    height: 28,
-                    color: statusColor,
+                    width: 36,
+                    height: 36,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
