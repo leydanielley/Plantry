@@ -27,7 +27,7 @@ GrowLog is a private plant growing journal and log tracking application built wi
 - **Framework:** Flutter 3.9.2+
 - **Database:** SQLite (sqflite)
 - **Version:** 0.9.0
-- **Database Version:** 8 (RDWC Expert Mode)
+- **Database Version:** 20 (Latest: Harvests FK constraint fix + Data loss prevention)
 - **Architecture:** Clean architecture with Repository pattern, Dependency Injection, and Provider state management
 
 ## Privacy & Security
