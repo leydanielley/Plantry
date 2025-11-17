@@ -414,7 +414,6 @@ class LogService implements ILogService {
           final plantPhase = PlantPhase.values.byName(
             plantMap['phase'].toString().toLowerCase(),
           );
-          final phaseStartDateStr = plantMap['phase_start_date'] as String?;
 
           // ✅ FIX: Berechne dayNumber individuell pro Pflanze!
           int dayNumber = 1;
@@ -450,7 +449,30 @@ class LogService implements ILogService {
           }
 
           // ✅ v13: phaseDayNumber berechnen
+          // Use phase-specific date instead of deprecated phase_start_date
           int? phaseDayNumber;
+          String? phaseStartDateStr;
+
+          switch (plantPhase) {
+            case PlantPhase.veg:
+              phaseStartDateStr = plantMap['veg_date'] as String? ??
+                  plantMap['phase_start_date'] as String?;
+              break;
+            case PlantPhase.bloom:
+              phaseStartDateStr = plantMap['bloom_date'] as String? ??
+                  plantMap['phase_start_date'] as String?;
+              break;
+            case PlantPhase.harvest:
+              phaseStartDateStr = plantMap['harvest_date'] as String? ??
+                  plantMap['phase_start_date'] as String?;
+              break;
+            case PlantPhase.seedling:
+            case PlantPhase.archived:
+              phaseStartDateStr = plantMap['seed_date'] as String? ??
+                  plantMap['phase_start_date'] as String?;
+              break;
+          }
+
           if (phaseStartDateStr != null) {
             // ✅ HIGH FIX: Use SafeParsers to prevent crashes from corrupted DB data
             final phaseStartDate = SafeParsers.parseDateTime(
@@ -534,7 +556,7 @@ class LogService implements ILogService {
           for (final plantId in plantIds) {
             plantBatch.rawUpdate(
               'UPDATE plants SET phase = ?, phase_start_date = ? WHERE id = ?',
-              [newPhase.name, logDate.toIso8601String(), plantId],
+              [newPhase.name.toUpperCase(), logDate.toIso8601String(), plantId],
             );
           }
 

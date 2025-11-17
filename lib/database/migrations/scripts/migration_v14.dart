@@ -180,15 +180,16 @@ final Migration migrationV14 = Migration(
         );
 
         // Migrate plant_logs v13 → v14
+        // ✅ FIX: Add missing CHECK and DEFAULT constraints
         await db.execute('''
           CREATE TABLE plant_logs_new (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             plant_id INTEGER NOT NULL,
             day_number INTEGER NOT NULL,
-            log_date TEXT NOT NULL,
+            log_date TEXT NOT NULL DEFAULT (datetime('now')),
             logged_by TEXT,
-            action_type TEXT NOT NULL,
-            phase TEXT,
+            action_type TEXT NOT NULL CHECK(action_type IN ('WATER', 'FEED', 'NOTE', 'PHASE_CHANGE', 'TRANSPLANT', 'HARVEST', 'TRAINING', 'TRIM', 'OTHER')),
+            phase TEXT CHECK(phase IN ('SEEDLING', 'VEG', 'BLOOM', 'HARVEST', 'ARCHIVED')),
             phase_day_number INTEGER,
             water_amount REAL,
             ph_in REAL,
@@ -272,6 +273,7 @@ final Migration migrationV14 = Migration(
         );
 
         // Migrate photos table
+        // ✅ FIX: photos.log_id should be CASCADE (photos should be deleted with log)
         await db.execute('''
           CREATE TABLE photos_new (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -280,7 +282,7 @@ final Migration migrationV14 = Migration(
             description TEXT,
             taken_at TEXT DEFAULT (datetime('now')),
             created_at TEXT DEFAULT (datetime('now')),
-            FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE RESTRICT
+            FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE CASCADE
           )
         ''');
 
@@ -329,16 +331,16 @@ final Migration migrationV14 = Migration(
       '📝 Step 2/9: Rebuilding plant_logs (CASCADE → RESTRICT)',
     );
 
-    // ✅ CRITICAL FIX: Use correct v14 schema with all required columns
+    // ✅ CRITICAL FIX: Use correct v14 schema with all required columns and constraints
     await db.execute('''
       CREATE TABLE plant_logs_new (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         plant_id INTEGER NOT NULL,
         day_number INTEGER NOT NULL,
-        log_date TEXT NOT NULL,
+        log_date TEXT NOT NULL DEFAULT (datetime('now')),
         logged_by TEXT,
-        action_type TEXT NOT NULL,
-        phase TEXT,
+        action_type TEXT NOT NULL CHECK(action_type IN ('WATER', 'FEED', 'NOTE', 'PHASE_CHANGE', 'TRANSPLANT', 'HARVEST', 'TRAINING', 'TRIM', 'OTHER')),
+        phase TEXT CHECK(phase IN ('SEEDLING', 'VEG', 'BLOOM', 'HARVEST', 'ARCHIVED')),
         phase_day_number INTEGER,
         water_amount REAL,
         ph_in REAL,
@@ -434,7 +436,8 @@ final Migration migrationV14 = Migration(
         '  ⚠️ Photos already have v14 schema (image_path), verifying constraints...',
       );
 
-      // Rebuild anyway to ensure ON DELETE RESTRICT is set
+      // Rebuild anyway to ensure ON DELETE CASCADE is set (photos should be deleted with log)
+      // ✅ FIX: Changed RESTRICT → CASCADE
       await db.execute('''
         CREATE TABLE photos_new (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -443,7 +446,7 @@ final Migration migrationV14 = Migration(
           description TEXT,
           taken_at TEXT DEFAULT (datetime('now')),
           created_at TEXT DEFAULT (datetime('now')),
-          FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE RESTRICT
+          FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE CASCADE
         )
       ''');
 
@@ -462,6 +465,7 @@ final Migration migrationV14 = Migration(
         '  📝 Migrating photos: file_path → image_path',
       );
 
+      // ✅ FIX: photos.log_id should be CASCADE (photos should be deleted with log)
       await db.execute('''
         CREATE TABLE photos_new (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -470,7 +474,7 @@ final Migration migrationV14 = Migration(
           description TEXT,
           taken_at TEXT DEFAULT (datetime('now')),
           created_at TEXT DEFAULT (datetime('now')),
-          FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE RESTRICT
+          FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE CASCADE
         )
       ''');
 
@@ -564,7 +568,7 @@ final Migration migrationV14 = Migration(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         system_id INTEGER NOT NULL,
         log_date TEXT DEFAULT (datetime('now')),
-        log_type TEXT NOT NULL CHECK(log_type IN ('addback', 'fullchange', 'maintenance', 'measurement')),
+        log_type TEXT NOT NULL CHECK(log_type IN ('ADDBACK', 'FULLCHANGE', 'MAINTENANCE', 'MEASUREMENT')),
         level_before REAL,
         water_added REAL,
         level_after REAL,
@@ -581,9 +585,12 @@ final Migration migrationV14 = Migration(
       )
     ''');
 
+    // ✅ FIX: Transform log_type to uppercase to match CHECK constraint
     await db.execute('''
       INSERT INTO rdwc_logs_new
-      SELECT id, system_id, log_date, log_type, level_before, water_added, level_after,
+      SELECT id, system_id, log_date,
+             UPPER(log_type) as log_type,  -- Transform to uppercase
+             level_before, water_added, level_after,
              water_consumed, ph_before, ph_after, ec_before, ec_after, note, logged_by,
              archived, created_at
       FROM rdwc_logs
@@ -605,21 +612,28 @@ final Migration migrationV14 = Migration(
       '📝 Step 6/9: Rebuilding rdwc_log_fertilizers',
     );
 
+    // ✅ CRITICAL FIX: rdwc_log_fertilizers constraints corrected
+    // - rdwc_log_id: RESTRICT → CASCADE (child data should be deleted with parent log)
+    // - amount_type: CHECK constraint must match v8 schema ('PER_LITER', 'TOTAL')
     await db.execute('''
       CREATE TABLE rdwc_log_fertilizers_new (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         rdwc_log_id INTEGER NOT NULL,
         fertilizer_id INTEGER NOT NULL,
         amount REAL NOT NULL,
-        amount_type TEXT NOT NULL CHECK(amount_type IN ('ml', 'g', 'ml_per_liter', 'g_per_liter')),
-        FOREIGN KEY (rdwc_log_id) REFERENCES rdwc_logs(id) ON DELETE RESTRICT,
+        amount_type TEXT NOT NULL CHECK(amount_type IN ('PER_LITER', 'TOTAL')),
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (rdwc_log_id) REFERENCES rdwc_logs(id) ON DELETE CASCADE,
         FOREIGN KEY (fertilizer_id) REFERENCES fertilizers(id) ON DELETE RESTRICT
       )
     ''');
 
-    await db.execute(
-      'INSERT INTO rdwc_log_fertilizers_new SELECT * FROM rdwc_log_fertilizers',
-    );
+    await db.execute('''
+      INSERT INTO rdwc_log_fertilizers_new (id, rdwc_log_id, fertilizer_id, amount, amount_type, created_at)
+      SELECT id, rdwc_log_id, fertilizer_id, amount, amount_type,
+             datetime('now') as created_at
+      FROM rdwc_log_fertilizers
+    ''');
     await db.execute('DROP TABLE rdwc_log_fertilizers');
     await db.execute(
       'ALTER TABLE rdwc_log_fertilizers_new RENAME TO rdwc_log_fertilizers',
@@ -627,7 +641,7 @@ final Migration migrationV14 = Migration(
 
     AppLogger.info(
       'Migration_v14',
-      '  ✅ rdwc_log_fertilizers: ON DELETE CASCADE → RESTRICT',
+      '  ✅ rdwc_log_fertilizers: Schema fixed (CASCADE for rdwc_log_id, RESTRICT for fertilizer_id)',
     );
 
     // ===========================================

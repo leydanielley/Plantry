@@ -75,6 +75,11 @@ class BackupService implements IBackupService {
 
       // Use provided database or get instance (avoid deadlock during migration)
       final database = db ?? await DatabaseHelper.instance.database;
+
+      // ✅ NEW: Get database version for backup metadata
+      final dbVersionResult = await database.rawQuery('PRAGMA user_version');
+      final dbVersion = Sqflite.firstIntValue(dbVersionResult) ?? 0;
+
       final timestamp = DateTime.now()
           .toIso8601String()
           .replaceAll(':', '-')
@@ -139,6 +144,28 @@ class BackupService implements IBackupService {
       );
 
       AppLogger.info('BackupService', 'JSON data saved');
+
+      // ✅ NEW: Create backup metadata file
+      final backupData = backup['data'] as Map<String, dynamic>;
+      final metadata = {
+        'backup_version': BackupConfig.backupVersion,
+        'db_version': dbVersion,
+        'app_version': AppVersion.version,
+        'backup_type': 'auto', // Will be overridden by caller if needed
+        'timestamp': DateTime.now().toIso8601String(),
+        'plants_count': (backupData['plants'] as List?)?.length ?? 0,
+        'logs_count': (backupData['plant_logs'] as List?)?.length ?? 0,
+        'grows_count': (backupData['grows'] as List?)?.length ?? 0,
+        'rooms_count': (backupData['rooms'] as List?)?.length ?? 0,
+        'rdwc_systems_count': (backupData['rdwc_systems'] as List?)?.length ?? 0,
+      };
+
+      final metadataFile = File(path.join(exportDir.path, 'backup_metadata.json'));
+      await metadataFile.writeAsString(
+        const JsonEncoder.withIndent('  ').convert(metadata),
+      );
+
+      AppLogger.info('BackupService', 'Metadata saved', 'DB v$dbVersion');
 
       // ✅ P1 FIX: Parallelize photo copying for better performance
       // ✅ FIX: Cast to avoid dynamic call error
@@ -211,7 +238,8 @@ class BackupService implements IBackupService {
       // Create ZIP file
       final appDir = await getApplicationDocumentsDirectory();
       // ✅ P1 FIX: Use path.join instead of string concatenation
-      final zipPath = path.join(appDir.path, 'plantry_backup_$timestamp.zip');
+      // ✅ NEW: Include DB version in filename for easier identification
+      final zipPath = path.join(appDir.path, 'plantry_backup_v${dbVersion}_$timestamp.zip');
 
       AppLogger.info('BackupService', 'Creating ZIP file...');
       onProgress?.call(photos.length, photos.length, 'ZIP wird erstellt...');
@@ -223,6 +251,21 @@ class BackupService implements IBackupService {
 
       // Clean up temp directory
       await exportDir.delete(recursive: true);
+
+      // ✅ NEW: Copy backup to Download folder for persistence
+      try {
+        final downloadBackupPath = await _copyToDownloadFolder(zipPath);
+        AppLogger.info('BackupService', '✅ Backup also saved to Downloads', downloadBackupPath);
+
+        // Cleanup old backups in Download folder
+        await _cleanupOldBackups('/storage/emulated/0/Download/Plantry Backups/Auto', maxBackups: 5);
+      } catch (e) {
+        // Don't fail the entire backup if Download copy fails
+        AppLogger.warning('BackupService', '⚠️ Could not copy to Downloads (backup still in app)', e);
+      }
+
+      // ✅ NEW: Cleanup old backups in app documents folder
+      await _cleanupOldBackups(appDir.path, maxBackups: 5);
 
       AppLogger.info('BackupService', '✅ Export complete', zipPath);
       return zipPath;
@@ -753,5 +796,86 @@ class BackupService implements IBackupService {
       'Pre-validation complete: ${plants?.length ?? 0} plants, '
           '${plantLogs?.length ?? 0} logs, ${photos?.length ?? 0} photos',
     );
+  }
+
+  /// Copy backup to Download folder for persistence
+  /// Returns path to copy in Download folder
+  Future<String> _copyToDownloadFolder(String backupPath) async {
+    // Create Download/Plantry Backups/Auto directory
+    final downloadDir = Directory('/storage/emulated/0/Download/Plantry Backups/Auto');
+
+    if (!await downloadDir.exists()) {
+      await downloadDir.create(recursive: true);
+      AppLogger.info('BackupService', 'Created Download backup directory', downloadDir.path);
+    }
+
+    // Copy backup file
+    final backupFile = File(backupPath);
+    final fileName = path.basename(backupPath);
+    final targetPath = path.join(downloadDir.path, fileName);
+
+    await backupFile.copy(targetPath);
+
+    return targetPath;
+  }
+
+  /// Clean up old backups, keeping only the last [maxBackups] files
+  /// Searches for plantry_backup_*.zip files and sorts by modification time
+  Future<void> _cleanupOldBackups(String backupDir, {int maxBackups = 5}) async {
+    try {
+      final dir = Directory(backupDir);
+      if (!await dir.exists()) return;
+
+      // Find all backup files
+      final allFiles = await dir.list().toList();
+      final backupFiles = allFiles
+          .whereType<File>()
+          .where((f) => path.basename(f.path).startsWith('plantry_backup_'))
+          .where((f) => path.basename(f.path).endsWith('.zip'))
+          .toList();
+
+      if (backupFiles.length <= maxBackups) {
+        // No cleanup needed
+        return;
+      }
+
+      // Sort by modification time (newest first)
+      backupFiles.sort((a, b) {
+        final aStat = a.statSync();
+        final bStat = b.statSync();
+        return bStat.modified.compareTo(aStat.modified);
+      });
+
+      // Delete old backups (keep only maxBackups)
+      int deletedCount = 0;
+      for (int i = maxBackups; i < backupFiles.length; i++) {
+        try {
+          await backupFiles[i].delete();
+          deletedCount++;
+          AppLogger.debug(
+            'BackupService',
+            'Deleted old backup',
+            path.basename(backupFiles[i].path),
+          );
+        } catch (e) {
+          AppLogger.warning(
+            'BackupService',
+            'Could not delete old backup',
+            e,
+          );
+        }
+      }
+
+      if (deletedCount > 0) {
+        AppLogger.info(
+          'BackupService',
+          'Cleanup complete',
+          'Deleted $deletedCount old backups, kept $maxBackups',
+        );
+      }
+    } catch (e) {
+      // Don't fail backup if cleanup fails
+      AppLogger.warning('BackupService', 'Backup cleanup failed', e);
+    }
   }
 }

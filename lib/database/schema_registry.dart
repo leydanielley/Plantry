@@ -256,6 +256,27 @@ class SchemaRegistry {
     requiredIndexes: schemaV16.requiredIndexes, // Same as v16
   );
 
+  /// Schema for v18: FK constraint fix (same schema as v17, just FK changes)
+  static final schemaV18 = SchemaDefinition(
+    version: 18,
+    requiredTables: schemaV17.requiredTables, // Same as v17
+    requiredIndexes: schemaV17.requiredIndexes, // Same as v17
+  );
+
+  /// Schema for v19: Emergency data recovery (same schema as v18)
+  static final schemaV19 = SchemaDefinition(
+    version: 19,
+    requiredTables: schemaV18.requiredTables, // Same as v18
+    requiredIndexes: schemaV18.requiredIndexes, // Same as v18
+  );
+
+  /// Schema for v20: Harvests FK constraint fix (same schema as v19)
+  static final schemaV20 = SchemaDefinition(
+    version: 20,
+    requiredTables: schemaV19.requiredTables, // Same as v19
+    requiredIndexes: schemaV19.requiredIndexes, // Same as v19
+  );
+
   /// Map of all schema definitions
   static final Map<int, SchemaDefinition> schemas = {
     13: schemaV13,
@@ -263,6 +284,9 @@ class SchemaRegistry {
     15: schemaV15,
     16: schemaV16,
     17: schemaV17,
+    18: schemaV18,
+    19: schemaV19,
+    20: schemaV20,
   };
 
   // ===========================================
@@ -273,11 +297,11 @@ class SchemaRegistry {
   ///
   /// Returns true if database schema is valid for the given version
   ///
-  /// [db] Database instance to validate
+  /// [executor] Database or Transaction instance to validate
   /// [version] Expected database version
   /// [strict] If true, extra columns/tables are errors. If false, warnings.
   static Future<bool> validateSchema(
-    Database db,
+    DatabaseExecutor executor,
     int version, {
     bool strict = false,
   }) async {
@@ -306,7 +330,7 @@ class SchemaRegistry {
         final requiredColumns = entry.value;
 
         // Check table exists
-        final tableCheck = await db.rawQuery(
+        final tableCheck = await executor.rawQuery(
           "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
           [tableName],
         );
@@ -318,7 +342,7 @@ class SchemaRegistry {
         }
 
         // Check columns
-        final columns = await db.rawQuery('PRAGMA table_info($tableName)');
+        final columns = await executor.rawQuery('PRAGMA table_info($tableName)');
         final actualColumns = columns
             .map((col) => col['name'] as String)
             .toSet();
@@ -352,7 +376,7 @@ class SchemaRegistry {
           final tableName = entry.key;
           final requiredIndexes = entry.value;
 
-          final indexes = await db.rawQuery(
+          final indexes = await executor.rawQuery(
             "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name=?",
             [tableName],
           );
@@ -374,7 +398,7 @@ class SchemaRegistry {
       // ===========================================
       // Foreign Key Integrity Check
       // ===========================================
-      final fkCheck = await db.rawQuery('PRAGMA foreign_key_check');
+      final fkCheck = await executor.rawQuery('PRAGMA foreign_key_check');
       if (fkCheck.isNotEmpty) {
         AppLogger.error(
           'SchemaRegistry',
@@ -389,7 +413,7 @@ class SchemaRegistry {
       // ===========================================
       // Database Integrity Check
       // ===========================================
-      final integrityCheck = await db.rawQuery('PRAGMA integrity_check');
+      final integrityCheck = await executor.rawQuery('PRAGMA integrity_check');
       final result = integrityCheck.first['integrity_check'];
       if (result != 'ok') {
         AppLogger.error(
@@ -430,12 +454,12 @@ class SchemaRegistry {
 
   /// Check if a table has all required columns
   static Future<bool> tableHasColumns(
-    Database db,
+    DatabaseExecutor executor,
     String tableName,
     Set<String> requiredColumns,
   ) async {
     try {
-      final columns = await db.rawQuery('PRAGMA table_info($tableName)');
+      final columns = await executor.rawQuery('PRAGMA table_info($tableName)');
       final actualColumns = columns.map((col) => col['name'] as String).toSet();
 
       return requiredColumns.every((col) => actualColumns.contains(col));

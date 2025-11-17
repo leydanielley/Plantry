@@ -257,13 +257,64 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
         return;
       }
 
-      // 2. Update all plants' phase and phase_start_date (single batch update)
+      // 2. Update all plants' phase and phase-specific dates (single batch update)
+      // Set the appropriate phase-specific date based on the new phase
+      // and clear future phase dates
+      Map<String, dynamic> updateData;
+
+      switch (newPhase.toUpperCase()) {
+        case 'SEEDLING':
+          updateData = {
+            'phase': 'SEEDLING',
+            'phase_start_date': newPhaseStartDate,
+            // Clear all phase dates when going back to seedling
+            'veg_date': null,
+            'bloom_date': null,
+            'harvest_date': null,
+          };
+          break;
+        case 'VEG':
+          updateData = {
+            'phase': 'VEG',
+            'phase_start_date': newPhaseStartDate,
+            'veg_date': newPhaseStartDate,
+            // Clear future phase dates
+            'bloom_date': null,
+            'harvest_date': null,
+          };
+          break;
+        case 'BLOOM':
+          updateData = {
+            'phase': 'BLOOM',
+            'phase_start_date': newPhaseStartDate,
+            'bloom_date': newPhaseStartDate,
+            // veg_date is kept (not in update map)
+            // Clear future phase dates
+            'harvest_date': null,
+          };
+          break;
+        case 'HARVEST':
+          updateData = {
+            'phase': 'HARVEST',
+            'phase_start_date': newPhaseStartDate,
+            'harvest_date': newPhaseStartDate,
+            // veg_date and bloom_date are kept (not in update map)
+          };
+          break;
+        case 'ARCHIVED':
+          updateData = {
+            'phase': 'ARCHIVED',
+            'phase_start_date': newPhaseStartDate,
+            // All phase dates are kept (not in update map)
+          };
+          break;
+        default:
+          throw ArgumentError('Invalid phase: $newPhase');
+      }
+
       await txn.update(
         'plants',
-        {
-          'phase': newPhase.toUpperCase(),
-          'phase_start_date': newPhaseStartDate,
-        },
+        updateData,
         where: 'grow_id = ?',
         whereArgs: [growId],
       );

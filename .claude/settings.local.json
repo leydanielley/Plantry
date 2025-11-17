@@ -21,7 +21,17 @@
       "Bash(dart analyze:*)",
       "Bash(echo:*)",
       "Bash(adb shell:*)",
-      "Bash(flutter build:*)"
+      "Bash(flutter build:*)",
+      "Bash(flutter clean:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(adb devices:*)",
+      "Bash(tee:*)",
+      "Bash(for table in plants plant_logs photos rdwc_logs rdwc_log_fertilizers log_fertilizers template_fertilizers rooms grows harvests hardware)",
+      "Bash(do echo -n \"$table: \")",
+      "Bash(aapt dump:*)",
+      "Bash(dart test_migrations.dart:*)",
+      "Bash(python3:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": [],
     "ask": []

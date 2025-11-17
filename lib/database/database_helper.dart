@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            32, // ✅ v32: Data loss prevention (v18) - FK constraints RESTRICT (prevent orphaned plants)
+            20, // v20: Fix harvests FK constraint - CASCADE on plant deletion
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -93,7 +93,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 32,
+          version: 20,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -143,7 +143,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 32, // ✅ v32: Data loss prevention (v18) - FK constraints RESTRICT
+          version: 20,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -252,6 +252,7 @@ class DatabaseHelper {
       );
 
       // RDWC Logs Table (Water Addback Tracking)
+      // ✅ FIX: Changed CASCADE → RESTRICT (will be corrected by migration v15)
       await db.execute('''
         CREATE TABLE IF NOT EXISTS rdwc_logs (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -269,7 +270,7 @@ class DatabaseHelper {
           note TEXT,
           logged_by TEXT,
           created_at TEXT DEFAULT (datetime('now')),
-          FOREIGN KEY (system_id) REFERENCES rdwc_systems(id) ON DELETE CASCADE
+          FOREIGN KEY (system_id) REFERENCES rdwc_systems(id) ON DELETE RESTRICT
         )
       ''');
       await db.execute(
@@ -415,7 +416,7 @@ class DatabaseHelper {
   Future<void> _createDB(Database db, int version) async {
     AppLogger.info('DatabaseHelper', 'Creating database schema v$version...');
 
-    // Rooms Table
+    // Rooms Table (v14: added archived column for soft-delete)
     await db.execute('''
       CREATE TABLE IF NOT EXISTS rooms (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -427,6 +428,7 @@ class DatabaseHelper {
         width REAL DEFAULT 0,
         depth REAL DEFAULT 0,
         height REAL DEFAULT 0,
+        archived INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (rdwc_system_id) REFERENCES rdwc_systems(id) ON DELETE SET NULL
@@ -484,9 +486,9 @@ class DatabaseHelper {
         archived INTEGER DEFAULT 0,
         current_container_size REAL,
         current_system_size REAL,
-        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL,
-        FOREIGN KEY (grow_id) REFERENCES grows(id) ON DELETE SET NULL,
-        FOREIGN KEY (rdwc_system_id) REFERENCES rdwc_systems(id) ON DELETE SET NULL
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE RESTRICT,
+        FOREIGN KEY (grow_id) REFERENCES grows(id) ON DELETE RESTRICT,
+        FOREIGN KEY (rdwc_system_id) REFERENCES rdwc_systems(id) ON DELETE RESTRICT
       )
     ''');
     await db.execute(
@@ -920,5 +922,18 @@ class DatabaseHelper {
     );
     await db.execute('ANALYZE');
     AppLogger.info('DatabaseHelper', '✅ Database analyzed!');
+  }
+
+  /// Close the database and reset the instance
+  /// Used when creating a fresh database or during recovery
+  Future<void> close() async {
+    return _lock.synchronized(() async {
+      if (_database != null) {
+        AppLogger.info('DatabaseHelper', 'Closing database...');
+        await _database!.close();
+        _database = null;
+        AppLogger.info('DatabaseHelper', '✅ Database closed and reset');
+      }
+    });
   }
 }

@@ -3,6 +3,8 @@
 // =============================================
 
 import 'dart:async';
+import 'dart:io';
+import 'package:archive/archive.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/version_manager.dart';
@@ -74,6 +76,16 @@ class MigrationManager {
     // Mark migration as in progress
     await VersionManager.markMigrationInProgress();
 
+    // ✅ NEW: Pre-flight check - verify schema definition exists for target version
+    final hasSchemaDefinition = SchemaRegistry.getSchema(newVersion) != null;
+    if (!hasSchemaDefinition) {
+      AppLogger.warning(
+        'MigrationManager',
+        '⚠️ No schema definition found for v$newVersion',
+        'Schema validation will be skipped. Please add schema definition to SchemaRegistry.',
+      );
+    }
+
     // Step 1: Create automatic backup before migration
     // ✅ CRITICAL FIX: Backup MUST succeed (unless database is empty)
     String? backupPath;
@@ -84,6 +96,16 @@ class MigrationManager {
         '✅ Pre-migration backup created',
         backupPath,
       );
+
+      // ✅ NEW: Verify backup is valid before proceeding with migration
+      final isValid = await _verifyBackup(backupPath);
+      if (!isValid) {
+        throw Exception(
+          'Backup verification failed! File exists but appears corrupted or incomplete.',
+        );
+      }
+      AppLogger.info('MigrationManager', '✅ Backup verified successfully');
+
     } catch (e, stackTrace) {
       AppLogger.error(
         'MigrationManager',
@@ -137,12 +159,14 @@ class MigrationManager {
     );
 
     // Step 3: Run migrations sequentially inside a transaction (with timeout)
+    // ✅ CRITICAL FIX: Schema validation now happens INSIDE transaction
     try {
       await db
           .transaction((txn) async {
             int currentStep = 0;
             final totalSteps = migrationsToRun.length;
 
+            // 3a. Run all migrations
             for (final migration in migrationsToRun) {
               currentStep++;
               final progress = '[$currentStep/$totalSteps]';
@@ -186,6 +210,60 @@ class MigrationManager {
                 rethrow;
               }
             }
+
+            AppLogger.info(
+              'MigrationManager',
+              '🎉 All migrations completed successfully',
+              'Database now at v$newVersion',
+            );
+
+            // 3b. ✅ CRITICAL FIX: Validate schema INSIDE transaction (BEFORE commit)
+            if (hasSchemaDefinition) {
+              AppLogger.info(
+                'MigrationManager',
+                '🔍 Validating schema for v$newVersion BEFORE commit...',
+              );
+
+              final schemaValid = await SchemaRegistry.validateSchema(
+                txn, // ✅ Pass transaction, not database!
+                newVersion,
+                strict: false, // Allow extra columns for backwards compatibility
+              );
+
+              if (!schemaValid) {
+                AppLogger.error(
+                  'MigrationManager',
+                  '❌ Schema validation failed! Transaction will rollback.',
+                );
+                throw MigrationException(
+                  'Schema validation failed for v$newVersion. '
+                  'Transaction has been rolled back. Database remains at v$oldVersion.',
+                  oldVersion: oldVersion,
+                  newVersion: newVersion,
+                  error: 'Schema validation failed',
+                );
+              }
+
+              AppLogger.info(
+                'MigrationManager',
+                '✅ Schema validation passed for v$newVersion',
+              );
+            } else {
+              // ✅ Warn if no schema definition exists (but don't fail)
+              AppLogger.warning(
+                'MigrationManager',
+                '⚠️ Skipping schema validation for v$newVersion (no schema definition)',
+              );
+              AppLogger.warning(
+                'MigrationManager',
+                'Consider adding schema definition to SchemaRegistry for better validation.',
+              );
+            }
+
+            // 3c. Mark migration as completed (only reached if validation passed)
+            await VersionManager.markMigrationCompleted(dbVersion: newVersion);
+
+            // ✅ Transaction commits HERE (only if everything succeeded)
           })
           .timeout(
             timeout *
@@ -199,40 +277,8 @@ class MigrationManager {
 
       AppLogger.info(
         'MigrationManager',
-        '🎉 All migrations completed successfully',
-        'Database now at v$newVersion',
+        '✅ Migration transaction committed successfully',
       );
-
-      // ✅ CRITICAL: Validate final schema matches expected version
-      AppLogger.info(
-        'MigrationManager',
-        '🔍 Validating schema for v$newVersion...',
-      );
-
-      final schemaValid = await SchemaRegistry.validateSchema(
-        db,
-        newVersion,
-        strict: false, // Allow extra columns for backwards compatibility
-      );
-
-      if (!schemaValid) {
-        AppLogger.error(
-          'MigrationManager',
-          '❌ Schema validation failed after migrations!',
-        );
-        throw Exception(
-          'Migration completed but schema validation failed for v$newVersion. '
-          'Database may be in an inconsistent state.',
-        );
-      }
-
-      AppLogger.info(
-        'MigrationManager',
-        '✅ Schema validation passed for v$newVersion',
-      );
-
-      // Mark migration as completed
-      await VersionManager.markMigrationCompleted(dbVersion: newVersion);
     } catch (e, stack) {
       AppLogger.error(
         'MigrationManager',
@@ -273,6 +319,64 @@ class MigrationManager {
         BackupProgressNotifier.instance.notify(current, total, message);
       },
     );
+  }
+
+  /// Verify backup file is valid and complete
+  ///
+  /// Checks:
+  /// 1. File exists
+  /// 2. File size > 0
+  /// 3. ZIP structure is valid
+  /// 4. data.json exists in ZIP
+  ///
+  /// Returns true if backup is valid, false otherwise
+  Future<bool> _verifyBackup(String backupPath) async {
+    try {
+      final backupFile = File(backupPath);
+
+      // Check 1: File exists
+      if (!await backupFile.exists()) {
+        AppLogger.error('MigrationManager', 'Backup file does not exist', backupPath);
+        return false;
+      }
+
+      // Check 2: File size > 0
+      final fileSize = await backupFile.length();
+      if (fileSize == 0) {
+        AppLogger.error('MigrationManager', 'Backup file is empty (0 bytes)');
+        return false;
+      }
+
+      // Check 3: ZIP structure is valid
+      try {
+        final bytes = await backupFile.readAsBytes();
+        final archive = ZipDecoder().decodeBytes(bytes);
+
+        if (archive.isEmpty) {
+          AppLogger.error('MigrationManager', 'Backup ZIP is empty (no files)');
+          return false;
+        }
+
+        // Check 4: data.json exists
+        final hasDataJson = archive.any((file) => file.name.endsWith('data.json'));
+        if (!hasDataJson) {
+          AppLogger.error('MigrationManager', 'Backup missing data.json');
+          return false;
+        }
+
+        AppLogger.debug(
+          'MigrationManager',
+          'Backup verified: ${fileSize ~/ 1024}KB, ${archive.length} files',
+        );
+        return true;
+      } catch (e) {
+        AppLogger.error('MigrationManager', 'Backup ZIP is corrupted', e);
+        return false;
+      }
+    } catch (e) {
+      AppLogger.error('MigrationManager', 'Backup verification failed', e);
+      return false;
+    }
   }
 
   /// Verify database integrity after migration

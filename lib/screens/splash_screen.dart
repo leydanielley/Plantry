@@ -15,6 +15,7 @@ import 'package:growlog_app/utils/version_manager.dart';
 import 'package:growlog_app/utils/update_cleanup.dart';
 import 'package:growlog_app/utils/auto_recovery_helper.dart';
 import 'package:growlog_app/utils/backup_progress_notifier.dart';
+import 'package:growlog_app/screens/manual_recovery_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -28,6 +29,8 @@ class _SplashScreenState extends State<SplashScreen> {
   bool _hasError = false;
   BackupProgressEvent? _backupProgress;
   StreamSubscription<BackupProgressEvent>? _progressSubscription;
+  int _initAttempts = 0;
+  static const int _maxRetries = 3;
 
   @override
   void initState() {
@@ -57,6 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     final stopwatch = Stopwatch()..start();
+    _initAttempts++;
 
     try {
       // ✅ P0 FIX: Version tracking & update detection
@@ -72,11 +76,27 @@ class _SplashScreenState extends State<SplashScreen> {
         });
       }
 
-      // Check if migration is stuck
+      // ✅ NEW: Check if migration crashed/stuck - show recovery screen immediately
       final migrationStuck = await VersionManager.isMigrationInProgress();
       if (migrationStuck) {
-        AppLogger.error('SplashScreen', '⚠️ Previous migration appears stuck');
-        await VersionManager.clearFailedMigrations();
+        AppLogger.error('SplashScreen', '⚠️ Previous migration appears stuck or crashed');
+
+        if (mounted) {
+          // Navigate to Manual Recovery Screen - user MUST make a choice
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => const ManualRecoveryScreen(
+                errorMessage:
+                    'Die letzte Datenbank-Migration ist fehlgeschlagen oder wurde unterbrochen. '
+                    'Bitte wählen Sie eine der folgenden Optionen:\n\n'
+                    '1. Backup wiederherstellen (empfohlen)\n'
+                    '2. Neue Datenbank erstellen (alle Daten gehen verloren)',
+                allowSkip: false, // Force user to make a choice
+              ),
+            ),
+          );
+          return; // Stop splash screen initialization
+        }
       }
 
       // ✅ P0 FIX: Check for crash recovery
@@ -226,90 +246,168 @@ class _SplashScreenState extends State<SplashScreen> {
 
   /// Show critical database error dialog
   Future<void> _showDatabaseErrorDialog(String errorMessage) async {
-    final shouldRetry = await showDialog<bool>(
+    // If too many retries, offer alternative options
+    final tooManyRetries = _initAttempts >= _maxRetries;
+
+    final result = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.error_outline, color: Colors.red, size: 32),
-            SizedBox(width: 12),
-            Text('Datenbankfehler'),
+            Icon(
+              tooManyRetries ? Icons.error : Icons.error_outline,
+              color: tooManyRetries ? Colors.red : Colors.orange,
+              size: 32,
+            ),
+            const SizedBox(width: 12),
+            const Text('Datenbankfehler'),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Die Datenbank konnte nicht geladen werden.',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Mögliche Ursachen:',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            const Text('• Migration fehlgeschlagen'),
-            const Text('• Datenbank beschädigt'),
-            const Text('• Nicht genug Speicherplatz'),
-            const Text('• App-Berechtigungen fehlen'),
-            const SizedBox(height: 16),
-            const Text(
-              'Sie können:',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            const Text('1. Nochmal versuchen'),
-            const Text('2. Backup in Einstellungen wiederherstellen'),
-            const Text('3. Support kontaktieren'),
-            if (kDebugMode) ...[
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tooManyRetries
+                    ? 'Die Datenbank konnte nach $_initAttempts Versuchen nicht geladen werden.'
+                    : 'Die Datenbank konnte nicht geladen werden.',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              if (tooManyRetries) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.warning, size: 18, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text(
+                            'Kritischer Fehler',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Bitte verwenden Sie die manuelle Wiederherstellung, um Ihre Daten zu retten.',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               const Text(
-                'Debug Info:',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 10),
+                'Mögliche Ursachen:',
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
+              const Text('• Migration fehlgeschlagen'),
+              const Text('• Datenbank beschädigt'),
+              const Text('• Nicht genug Speicherplatz'),
+              const Text('• App-Berechtigungen fehlen'),
+              const SizedBox(height: 16),
               Text(
-                errorMessage,
-                style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
+                tooManyRetries ? 'Empfohlene Aktion:' : 'Sie können:',
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
+              const SizedBox(height: 8),
+              if (!tooManyRetries) ...[
+                const Text('1. Nochmal versuchen'),
+                const Text('2. Manuelle Wiederherstellung starten'),
+                const Text('3. Support kontaktieren'),
+              ] else ...[
+                const Text('→ Manuelle Wiederherstellung öffnen'),
+                const Text('   (Daten aus Backup wiederherstellen)'),
+              ],
+              if (kDebugMode) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'Debug Info:',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 10),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    errorMessage,
+                    style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              // Close app
-              Navigator.of(context).pop(false);
-              // Exit app (platform-specific)
-              // On Android, this will background the app
-              if (mounted) {
-                // Use system navigator to close
-                // This is safer than exit(0)
-              }
-            },
-            child: const Text('App schließen'),
-          ),
+          if (!tooManyRetries)
+            TextButton(
+              onPressed: () => Navigator.of(context).pop('close'),
+              child: const Text('App schließen'),
+            ),
+          if (!tooManyRetries)
+            TextButton.icon(
+              onPressed: () => Navigator.of(context).pop('retry'),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Nochmal versuchen'),
+            ),
           FilledButton.icon(
-            onPressed: () => Navigator.of(context).pop(true),
-            icon: const Icon(Icons.refresh),
-            label: const Text('Nochmal versuchen'),
+            onPressed: () => Navigator.of(context).pop('manual_recovery'),
+            icon: const Icon(Icons.build),
+            label: Text(
+              tooManyRetries ? 'Wiederherstellung öffnen' : 'Manuelle Wiederherstellung',
+            ),
           ),
         ],
       ),
     );
 
-    if (shouldRetry == true && mounted) {
-      // Retry initialization
-      setState(() {
-        _hasError = false;
-        _status = 'Wird geladen...';
-      });
-      _initializeApp();
+    if (!mounted) return;
+
+    switch (result) {
+      case 'retry':
+        // Retry initialization
+        setState(() {
+          _hasError = false;
+          _status = 'Wird geladen...';
+        });
+        _initializeApp();
+        break;
+
+      case 'manual_recovery':
+        // Navigate to manual recovery screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => ManualRecoveryScreen(
+              errorMessage: errorMessage,
+              allowSkip: false, // Don't allow skip if we're in error state
+            ),
+          ),
+        );
+        break;
+
+      case 'close':
+      default:
+        // Close app - do nothing, user will use system back button
+        break;
     }
   }
 

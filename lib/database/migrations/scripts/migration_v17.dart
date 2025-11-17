@@ -134,10 +134,10 @@ final Migration migrationV17 = Migration(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             plant_id INTEGER NOT NULL,
             day_number INTEGER NOT NULL,
-            log_date TEXT NOT NULL,
+            log_date TEXT NOT NULL DEFAULT (datetime('now')),
             logged_by TEXT,
-            action_type TEXT NOT NULL,
-            phase TEXT,
+            action_type TEXT NOT NULL CHECK(action_type IN ('WATER', 'FEED', 'NOTE', 'PHASE_CHANGE', 'TRANSPLANT', 'HARVEST', 'TRAINING', 'TRIM', 'OTHER')),
+            phase TEXT CHECK(phase IN ('SEEDLING', 'VEG', 'BLOOM', 'HARVEST', 'ARCHIVED')),
             phase_day_number INTEGER,
             water_amount REAL,
             ph_in REAL,
@@ -228,7 +228,7 @@ final Migration migrationV17 = Migration(
             description TEXT,
             taken_at TEXT DEFAULT (datetime('now')),
             created_at TEXT DEFAULT (datetime('now')),
-            FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE RESTRICT
+            FOREIGN KEY (log_id) REFERENCES plant_logs(id) ON DELETE CASCADE
           )
         ''',
         dataMigration: '''

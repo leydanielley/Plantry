@@ -15,7 +15,7 @@ import 'package:growlog_app/di/service_locator.dart';
 /// Automatic recovery system that detects failed migrations
 /// and offers to restore from pre-migration backups
 class AutoRecoveryHelper {
-  /// Check if database appears empty (sign of failed migration)
+  /// Check if database appears empty or corrupted (sign of failed migration)
   static Future<bool> isDatabaseEmpty(Database db) async {
     try {
       // Check if critical tables have data
@@ -29,10 +29,19 @@ class AutoRecoveryHelper {
         await db.rawQuery('SELECT COUNT(*) FROM grows WHERE archived = 0'),
       );
 
-      // Database is considered "empty" if all core tables are empty
-      return (plantsCount ?? 0) == 0 &&
+      final isEmpty = (plantsCount ?? 0) == 0 &&
           (logsCount ?? 0) == 0 &&
           (growsCount ?? 0) == 0;
+
+      if (isEmpty) {
+        AppLogger.warning(
+          'AutoRecoveryHelper',
+          '⚠️ Database appears empty: plants=$plantsCount, logs=$logsCount, grows=$growsCount',
+        );
+      }
+
+      // Database is considered "empty" if all core tables are empty
+      return isEmpty;
     } catch (e) {
       AppLogger.warning(
         'AutoRecoveryHelper',
@@ -44,42 +53,136 @@ class AutoRecoveryHelper {
     }
   }
 
+  /// Check if database has missing critical columns
+  /// (sign of incomplete migration)
+  static Future<bool> hasMissingColumns(Database db) async {
+    try {
+      // Check plants table for v18+ columns
+      final plantsColumns = await db.rawQuery('PRAGMA table_info(plants)');
+      final columnNames = plantsColumns.map((c) => c['name'] as String).toSet();
+
+      final requiredColumns = {
+        'breeder',
+        'feminized',
+        'phase',
+        'veg_date',
+        'bloom_date',
+        'harvest_date',
+      };
+
+      final missing = requiredColumns.difference(columnNames);
+
+      if (missing.isNotEmpty) {
+        AppLogger.warning(
+          'AutoRecoveryHelper',
+          '⚠️ Missing columns in plants table: ${missing.join(", ")}',
+        );
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      AppLogger.warning(
+        'AutoRecoveryHelper',
+        'Could not check for missing columns',
+        e,
+      );
+      return false;
+    }
+  }
+
   /// Find the most recent pre-migration backup
+  /// Searches multiple locations for maximum recovery chances
   static Future<String?> findLatestBackup() async {
     try {
+      final List<File> allBackupFiles = [];
+
       final documentsDir = await getApplicationDocumentsDirectory();
+
+      // Location 1: Regular backups directory
       final backupsDir = Directory(
         path.join(documentsDir.path, 'plantry_backups'),
       );
 
-      if (!await backupsDir.exists()) {
-        AppLogger.info('AutoRecoveryHelper', 'No backups directory found');
-        return null;
+      if (await backupsDir.exists()) {
+        final files = await backupsDir
+            .list()
+            .where((entity) => entity is File && entity.path.endsWith('.zip'))
+            .cast<File>()
+            .toList();
+        allBackupFiles.addAll(files);
+        AppLogger.info(
+          'AutoRecoveryHelper',
+          'Found ${files.length} backup(s) in plantry_backups',
+        );
       }
 
-      // Get all .zip files in backups directory
-      final files = await backupsDir
-          .list()
-          .where((entity) => entity is File && entity.path.endsWith('.zip'))
-          .cast<File>()
-          .toList();
+      // Location 2: Emergency backups directory
+      final emergencyDir = Directory(
+        path.join(documentsDir.path, 'growlog_emergency_backups'),
+      );
 
-      if (files.isEmpty) {
-        AppLogger.info('AutoRecoveryHelper', 'No backup files found');
+      if (await emergencyDir.exists()) {
+        final files = await emergencyDir
+            .list()
+            .where((entity) =>
+                entity is File &&
+                (entity.path.endsWith('.zip') || entity.path.endsWith('.json')))
+            .cast<File>()
+            .toList();
+        allBackupFiles.addAll(files);
+        AppLogger.info(
+          'AutoRecoveryHelper',
+          'Found ${files.length} emergency backup(s)',
+        );
+      }
+
+      // Location 3: Download folder (user might have manual backups there)
+      try {
+        final downloadDir = Directory('/storage/emulated/0/Download/Plantry Backups');
+        if (await downloadDir.exists()) {
+          final files = await downloadDir
+              .list()
+              .where((entity) =>
+                  entity is File &&
+                  (entity.path.endsWith('.zip') ||
+                      entity.path.endsWith('.json')))
+              .cast<File>()
+              .toList();
+          allBackupFiles.addAll(files);
+          AppLogger.info(
+            'AutoRecoveryHelper',
+            'Found ${files.length} backup(s) in Download folder',
+          );
+        }
+      } catch (e) {
+        // Ignore permission errors for Download folder
+        AppLogger.debug(
+          'AutoRecoveryHelper',
+          'Could not access Download folder: $e',
+        );
+      }
+
+      if (allBackupFiles.isEmpty) {
+        AppLogger.info('AutoRecoveryHelper', 'No backup files found anywhere');
         return null;
       }
 
       // Sort by modification time (newest first)
-      files.sort((a, b) {
+      allBackupFiles.sort((a, b) {
         final aModified = a.statSync().modified;
         final bModified = b.statSync().modified;
         return bModified.compareTo(aModified);
       });
 
-      final latestBackup = files.first.path;
+      final latestBackup = allBackupFiles.first.path;
       AppLogger.info(
         'AutoRecoveryHelper',
         'Found latest backup: ${path.basename(latestBackup)}',
+      );
+      AppLogger.info(
+        'AutoRecoveryHelper',
+        'Total backups found: ${allBackupFiles.length}',
       );
 
       return latestBackup;
@@ -100,16 +203,24 @@ class AutoRecoveryHelper {
       // Check 2: Is the database empty?
       final dbEmpty = await isDatabaseEmpty(db);
 
-      // Check 3: Is there a recent backup available?
+      // Check 3: Are there missing columns?
+      final missingCols = await hasMissingColumns(db);
+
+      // Check 4: Is there a recent backup available?
       final backupPath = await findLatestBackup();
 
-      final shouldRecover = migrationFailed || (dbEmpty && backupPath != null);
+      final shouldRecover = migrationFailed ||
+          (dbEmpty && backupPath != null) ||
+          (missingCols && backupPath != null);
 
       if (shouldRecover) {
         AppLogger.warning(
           'AutoRecoveryHelper',
           '⚠️ Recovery recommended:',
-          'Migration failed: $migrationFailed, DB empty: $dbEmpty, Backup available: ${backupPath != null}',
+          'Migration failed: $migrationFailed, '
+              'DB empty: $dbEmpty, '
+              'Missing columns: $missingCols, '
+              'Backup available: ${backupPath != null}',
         );
       }
 
@@ -117,6 +228,7 @@ class AutoRecoveryHelper {
         shouldRecover: shouldRecover,
         migrationFailed: migrationFailed,
         databaseEmpty: dbEmpty,
+        missingColumns: missingCols,
         backupAvailable: backupPath != null,
         backupPath: backupPath,
       );
@@ -130,6 +242,7 @@ class AutoRecoveryHelper {
         shouldRecover: false,
         migrationFailed: false,
         databaseEmpty: false,
+        missingColumns: false,
         backupAvailable: false,
         backupPath: null,
       );
@@ -173,6 +286,7 @@ class RecoveryInfo {
   final bool shouldRecover;
   final bool migrationFailed;
   final bool databaseEmpty;
+  final bool missingColumns;
   final bool backupAvailable;
   final String? backupPath;
 
@@ -180,6 +294,7 @@ class RecoveryInfo {
     required this.shouldRecover,
     required this.migrationFailed,
     required this.databaseEmpty,
+    required this.missingColumns,
     required this.backupAvailable,
     required this.backupPath,
   });
@@ -188,6 +303,7 @@ class RecoveryInfo {
     final reasons = <String>[];
     if (migrationFailed) reasons.add('Migration failed');
     if (databaseEmpty) reasons.add('Database appears empty');
+    if (missingColumns) reasons.add('Missing critical columns');
     if (!backupAvailable) reasons.add('No backup available');
 
     return reasons.join(', ');

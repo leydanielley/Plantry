@@ -254,14 +254,34 @@ class Plant {
   /// Tage in aktueller Phase
   /// Day 1 = Phase start day, Day 2 = Next day, etc.
   int get phaseDays {
-    if (phaseStartDate == null) return 0;
+    // ✅ FIX: Use phase-specific dates instead of deprecated phaseStartDate
+    DateTime? effectivePhaseStart;
+
+    switch (phase) {
+      case PlantPhase.harvest:
+        effectivePhaseStart = harvestDate ?? phaseStartDate;
+        break;
+      case PlantPhase.bloom:
+        effectivePhaseStart = bloomDate ?? phaseStartDate;
+        break;
+      case PlantPhase.veg:
+        effectivePhaseStart = vegDate ?? phaseStartDate;
+        break;
+      case PlantPhase.seedling:
+      case PlantPhase.archived:
+        effectivePhaseStart = seedDate ?? phaseStartDate;
+        break;
+    }
+
+    if (effectivePhaseStart == null) return 0;
+
     // ✅ Nur Datums-Teil vergleichen
     final today = DateTime.now();
     final todayDay = DateTime(today.year, today.month, today.day);
     final phaseDay = DateTime(
-      phaseStartDate!.year,
-      phaseStartDate!.month,
-      phaseStartDate!.day,
+      effectivePhaseStart.year,
+      effectivePhaseStart.month,
+      effectivePhaseStart.day,
     );
     // ✅ FIX: +1 for 1-indexed days (Day 1 = phase start day)
     final days = todayDay.difference(phaseDay).inDays + 1;
@@ -275,6 +295,10 @@ class Plant {
         medium == Medium.hydro) {
       if (currentSystemSize != null) {
         return '${currentSystemSize!.toStringAsFixed(0)}L System';
+      }
+      // ✅ FIX: Fallback wenn System verknüpft aber Größe fehlt (Migration v18 Datenverlust)
+      if (rdwcSystemId != null) {
+        return 'System verknüpft (Größe fehlt)';
       }
       return 'System nicht erfasst';
     } else {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
@@ -14,8 +15,21 @@ import 'package:growlog_app/providers/grow_provider.dart';
 import 'package:growlog_app/providers/room_provider.dart';
 import 'package:growlog_app/providers/log_provider.dart';
 
+// Import sqflite_ffi for Desktop platforms (Linux, Windows, macOS)
+// Android and iOS use native sqflite implementation (no import needed)
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ CRITICAL FIX: Initialize sqflite for Desktop platforms
+  // On Android/iOS, sqflite uses native implementation
+  // On Linux/Windows/macOS, we need to initialize sqflite_ffi
+  if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
+    AppLogger.info('Main', 'Initializing sqflite_ffi for Desktop platform');
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
 
   // Initialize dependency injection
   await setupServiceLocator();

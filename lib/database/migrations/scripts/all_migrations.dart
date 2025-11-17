@@ -14,6 +14,8 @@ import 'package:growlog_app/database/migrations/scripts/migration_v15.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v16.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v17.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v18.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v19.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v20.dart';
 
 /// All migrations in chronological order
 ///
@@ -63,6 +65,12 @@ final List<Migration> allMigrations = [
 
   // v18: DATA LOSS PREVENTION - Change FK constraints to RESTRICT (prevent orphaned plants)
   migrationV18,
+
+  // v19: EMERGENCY DATA RECOVERY - Restore data lost in faulty v18 migration
+  migrationV19,
+
+  // v20: FIX harvests FK constraint - CASCADE on plant deletion (prevent deletion errors)
+  migrationV20,
 ];
 
 /// Get the latest migration version
