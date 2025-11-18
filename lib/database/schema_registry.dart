@@ -277,6 +277,33 @@ class SchemaRegistry {
     requiredIndexes: schemaV19.requiredIndexes, // Same as v19
   );
 
+  // NOTE: Schemas v21-v35 are not defined in this registry
+  // These migrations were implemented without schema registry updates
+  // v35: CRITICAL HEALING - Recovery from v34 downgrade error
+  // If validation is needed for these versions, schemas should be added retroactively
+
+  /// Schema for v36: FK CASCADE Standardization
+  /// Migration v36 changed FK constraints on harvests and hardware tables
+  /// from CASCADE to RESTRICT (no new columns or indexes)
+  static final schemaV36 = SchemaDefinition(
+    version: 36,
+    requiredTables: schemaV20.requiredTables, // Same as v20
+    requiredIndexes: schemaV20.requiredIndexes, // Same as v20
+  );
+
+  /// Schema for v37: Performance - Add fertilizers.name index
+  /// Migration v37 adds idx_fertilizers_name index for ORDER BY optimization
+  static final schemaV37 = SchemaDefinition(
+    version: 37,
+    requiredTables: schemaV36.requiredTables, // Same as v36
+    requiredIndexes: {
+      ...schemaV36.requiredIndexes,
+      'fertilizers': {
+        'idx_fertilizers_name', // v37 adds name index for ORDER BY optimization
+      },
+    },
+  );
+
   /// Map of all schema definitions
   static final Map<int, SchemaDefinition> schemas = {
     13: schemaV13,
@@ -287,6 +314,9 @@ class SchemaRegistry {
     18: schemaV18,
     19: schemaV19,
     20: schemaV20,
+    // 21-35: Not defined (migrations exist without schema registry)
+    36: schemaV36,
+    37: schemaV37,
   };
 
   // ===========================================
