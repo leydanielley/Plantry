@@ -18,6 +18,11 @@ abstract class IPlantRepository {
   Future<int> count();
   Future<int> getLogCount(int plantId);
   Future<List<Plant>> findByRdwcSystem(int systemId);
+  Future<bool> isBucketOccupied(
+    int systemId,
+    int bucketNumber, {
+    int? excludePlantId,
+  });
   Future<int> countLogsToBeDeleted(int plantId, DateTime newSeedDate);
 
   // ✅ DATA LOSS PREVENTION: Find orphaned plants

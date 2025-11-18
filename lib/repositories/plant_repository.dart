@@ -125,6 +125,22 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
   @override
   Future<Plant> save(Plant plant) async {
     try {
+      // ✅ FIX #5: Validate bucket uniqueness for RDWC plants
+      if (plant.rdwcSystemId != null && plant.bucketNumber != null) {
+        final bucketOccupied = await isBucketOccupied(
+          plant.rdwcSystemId!,
+          plant.bucketNumber!,
+          excludePlantId: plant.id, // Exclude self for UPDATE
+        );
+
+        if (bucketOccupied) {
+          throw RepositoryException.conflict(
+            'Bucket ${plant.bucketNumber} im RDWC-System ist bereits belegt. '
+            'Bitte wählen Sie einen anderen Bucket.',
+          );
+        }
+      }
+
       final db = await _dbHelper.database;
 
       if (plant.id == null) {
@@ -833,6 +849,45 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
         stackTrace,
       );
       return [];
+    }
+  }
+
+  /// ✅ FIX #5: Check if RDWC bucket is occupied
+  /// Returns true if bucket is occupied by a non-archived plant
+  /// [excludePlantId] - Optional: exclude specific plant ID (for UPDATE validation)
+  Future<bool> isBucketOccupied(
+    int systemId,
+    int bucketNumber, {
+    int? excludePlantId,
+  }) async {
+    try {
+      final db = await _dbHelper.database;
+
+      // Build WHERE clause
+      String whereClause = 'rdwc_system_id = ? AND bucket_number = ? AND archived = 0';
+      List<dynamic> whereArgs = [systemId, bucketNumber];
+
+      // Exclude specific plant ID if provided (for UPDATE validation)
+      if (excludePlantId != null) {
+        whereClause += ' AND id != ?';
+        whereArgs.add(excludePlantId);
+      }
+
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM plants WHERE $whereClause',
+        whereArgs,
+      );
+
+      final count = Sqflite.firstIntValue(result) ?? 0;
+      return count > 0;
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'PlantRepository',
+        'Failed to check bucket occupation',
+        e,
+        stackTrace,
+      );
+      return false; // Conservative: assume not occupied if check fails
     }
   }
 
