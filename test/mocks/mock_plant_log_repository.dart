@@ -151,6 +151,27 @@ class MockPlantLogRepository implements IPlantLogRepository {
     }
   }
 
+  /// ✅ FIX #4: Mock implementation for duplicate log check
+  @override
+  Future<PlantLog?> findByPlantAndDayNumber(
+    int plantId,
+    int dayNumber, {
+    int? excludeLogId,
+  }) async {
+    // Mock implementation - find log by plant and day number
+    try {
+      return _logs.values.firstWhere(
+        (log) =>
+            log.plantId == plantId &&
+            log.dayNumber == dayNumber &&
+            log.id != excludeLogId &&
+            !log.archived,
+      );
+    } catch (e) {
+      return null; // Not found
+    }
+  }
+
   // Helper methods for testing
   void clear() {
     _logs.clear();

@@ -122,6 +122,21 @@ class MockPlantRepository implements IPlantRepository {
         .toList();
   }
 
+  /// ✅ FIX #5: Mock implementation for bucket uniqueness check
+  @override
+  Future<bool> isBucketOccupied(
+    int systemId,
+    int bucketNumber, {
+    int? excludePlantId,
+  }) async {
+    // Mock implementation - check if bucket is occupied
+    return _plants.values.any((p) =>
+        p.rdwcSystemId == systemId &&
+        p.bucketNumber == bucketNumber &&
+        p.id != excludePlantId &&
+        !p.archived);
+  }
+
   // Helper methods for testing
   void clear() {
     _plants.clear();

@@ -355,11 +355,13 @@ void main() {
         ActionType.training,
       ];
 
+      // ✅ FIX: Use different day numbers to avoid duplicate log errors (Fix #4)
+      int dayNumber = 10;
       for (final actionType in actionTypes) {
         // Arrange
         final log = PlantLog(
           plantId: testPlantId,
-          dayNumber: 10,
+          dayNumber: dayNumber++, // Increment day number for each log
           logDate: DateTime.now(),
           actionType: actionType,
         );

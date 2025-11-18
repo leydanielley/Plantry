@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:growlog_app/repositories/grow_repository.dart';
 import 'package:growlog_app/repositories/plant_repository.dart';
+import 'package:growlog_app/repositories/repository_error_handler.dart';
 import 'package:growlog_app/database/database_helper.dart';
 import 'package:growlog_app/models/grow.dart';
 import 'package:growlog_app/models/plant.dart';
@@ -301,8 +302,12 @@ void main() {
     });
 
     test(
-      'Deleting grow with plants - should detach plants from grow',
+      'Deleting grow with plants - should be blocked (Fix #3)',
       () async {
+        // ✅ FIX #3: Updated to test new validation behavior
+        // OLD behavior: Grow deletion detached plants (set grow_id to null)
+        // NEW behavior: Grow deletion is BLOCKED when plants exist
+
         // Arrange - Create grow with plants
         final grow = Grow(
           name: 'Grow With Plants',
@@ -316,19 +321,22 @@ void main() {
           medium: Medium.erde,
           growId: growId,
         );
-        final savedPlant = await plantRepository.save(plant);
+        await plantRepository.save(plant);
 
-        // Act
-        await growRepository.delete(growId);
-
-        // Assert - Plant should still exist but with null grow_id
-        final updatedPlant = await plantRepository.findById(savedPlant.id!);
-        expect(updatedPlant, isNotNull, reason: 'Plant should still exist');
+        // Act & Assert - Deletion should be blocked
         expect(
-          updatedPlant!.growId,
-          isNull,
-          reason: 'Plant should be detached from grow',
+          () => growRepository.delete(growId),
+          throwsA(isA<RepositoryException>().having(
+            (e) => e.type,
+            'type',
+            RepositoryErrorType.conflict,
+          )),
+          reason: 'Should throw conflict exception when deleting grow with plants',
         );
+
+        // Verify grow still exists
+        final foundGrow = await growRepository.getById(growId);
+        expect(foundGrow, isNotNull, reason: 'Grow should still exist after blocked delete');
       },
     );
 
