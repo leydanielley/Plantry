@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            20, // v20: Fix harvests FK constraint - CASCADE on plant deletion
+            35, // v35: CRITICAL FIX - Recovery from v34 downgrade error (healing migration)
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -93,7 +93,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 20,
+          version: 35,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -143,7 +143,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 20,
+          version: 35,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,

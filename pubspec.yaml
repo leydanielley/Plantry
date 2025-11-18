@@ -2,10 +2,10 @@ name: growlog_app
 description: "Private plant growing journal and log tracking app"
 publish_to: 'none'
 
-# Build number 35 contains database schema v20
+# Build number 36 contains database schema v35 (CRITICAL HOTFIX: v34 downgrade error)
 # Build number increments with each release (monotonically increasing)
 # Database version only changes when schema changes occur
-version: 0.11.3+35
+version: 0.11.4+36
 
 environment:
   sdk: ^3.9.2

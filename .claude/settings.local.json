@@ -31,7 +31,9 @@
       "Bash(aapt dump:*)",
       "Bash(dart test_migrations.dart:*)",
       "Bash(python3:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(dart run:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []
