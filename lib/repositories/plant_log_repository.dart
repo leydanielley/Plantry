@@ -60,6 +60,38 @@ class PlantLogRepository
     return PlantLog.fromMap(maps.first);
   }
 
+  /// ✅ FIX #4: Find log by plant_id and day_number (for duplicate check)
+  /// Returns existing log for given plant and day (ignoring archived logs)
+  /// [excludeLogId] - Optional: exclude specific log ID (used for UPDATE validation)
+  @override
+  Future<PlantLog?> findByPlantAndDayNumber(
+    int plantId,
+    int dayNumber, {
+    int? excludeLogId,
+  }) async {
+    final db = await _dbHelper.database;
+
+    // Build WHERE clause
+    String whereClause = 'plant_id = ? AND day_number = ? AND archived = 0';
+    List<dynamic> whereArgs = [plantId, dayNumber];
+
+    // Exclude specific log ID if provided (for UPDATE validation)
+    if (excludeLogId != null) {
+      whereClause += ' AND id != ?';
+      whereArgs.add(excludeLogId);
+    }
+
+    final maps = await db.query(
+      'plant_logs',
+      where: whereClause,
+      whereArgs: whereArgs,
+      limit: 1,
+    );
+
+    if (maps.isEmpty) return null;
+    return PlantLog.fromMap(maps.first);
+  }
+
   /// ✅ FIX: Batch-Query für mehrere Logs (verhindert N+1 Problem!)
   /// Nutzen: Photo Gallery lädt alle Logs auf einmal statt einzeln
   @override
@@ -79,8 +111,39 @@ class PlantLogRepository
   }
 
   /// Log speichern (INSERT oder UPDATE)
+  /// ✅ FIX #4: Validates no duplicate log exists for same plant and day
   @override
   Future<PlantLog> save(PlantLog log) async {
+    // ✅ FIX #4: Check for duplicate before INSERT
+    if (log.id == null) {
+      // INSERT - check for existing log with same plant_id and day_number
+      final existingLog = await findByPlantAndDayNumber(
+        log.plantId,
+        log.dayNumber,
+      );
+
+      if (existingLog != null) {
+        throw RepositoryException.conflict(
+          'Ein Log für Tag ${log.dayNumber} existiert bereits. '
+          'Bitte bearbeiten Sie den bestehenden Log oder wählen Sie einen anderen Tag.',
+        );
+      }
+    } else {
+      // UPDATE - check for duplicate excluding current log
+      final existingLog = await findByPlantAndDayNumber(
+        log.plantId,
+        log.dayNumber,
+        excludeLogId: log.id,
+      );
+
+      if (existingLog != null) {
+        throw RepositoryException.conflict(
+          'Ein anderer Log für Tag ${log.dayNumber} existiert bereits. '
+          'Bitte wählen Sie einen anderen Tag.',
+        );
+      }
+    }
+
     final db = await _dbHelper.database;
 
     if (log.id == null) {

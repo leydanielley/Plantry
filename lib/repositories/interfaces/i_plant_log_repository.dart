@@ -12,6 +12,11 @@ abstract class IPlantLogRepository {
     bool includeArchived = false,
   });
   Future<PlantLog?> findById(int id);
+  Future<PlantLog?> findByPlantAndDayNumber(
+    int plantId,
+    int dayNumber, {
+    int? excludeLogId,
+  });
   Future<List<PlantLog>> findByIds(List<int> ids);
   Future<PlantLog> save(PlantLog log);
   Future<int> delete(int id);
