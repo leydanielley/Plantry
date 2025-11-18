@@ -13,9 +13,9 @@ class AppVersion {
   /// Version aus pubspec.yaml
   ///
   /// Format: "major.minor.patch+build"
-  /// Beispiel: "0.11.3+35"
+  /// Beispiel: "0.47.0+47"
   /// ⚠️ WICHTIG: Bei jedem Release MUSS diese Zeile MIT pubspec.yaml synchron sein!
-  static const String version = '0.11.3+35';
+  static const String version = '0.47.0+47';
 
   /// Extrahiert Major Version
   /// Beispiel: "0.8.7+12" → 0
