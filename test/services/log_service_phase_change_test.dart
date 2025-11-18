@@ -168,6 +168,7 @@ void main() {
         log: log,
         fertilizers: {},
         photoPaths: [],
+        newPhase: PlantPhase.veg,
       );
 
       // Assert: vegDate should now be set
@@ -211,6 +212,7 @@ void main() {
         log: log,
         fertilizers: {},
         photoPaths: [],
+        newPhase: PlantPhase.bloom,
       );
 
       // Assert: bloomDate should now be set
@@ -256,6 +258,7 @@ void main() {
         log: log,
         fertilizers: {},
         photoPaths: [],
+        newPhase: PlantPhase.harvest,
       );
 
       // Assert: harvestDate should now be set
@@ -302,6 +305,7 @@ void main() {
         log: log,
         fertilizers: {},
         photoPaths: [],
+        newPhase: PlantPhase.bloom,
       );
 
       // Assert: Dates should NOT be overwritten (keep original)

@@ -4,6 +4,7 @@
 // =============================================
 
 import 'dart:io';
+import 'package:sqflite/sqflite.dart';
 import 'package:growlog_app/database/database_helper.dart';
 import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/plant_log.dart';
@@ -146,6 +147,77 @@ class LogService implements ILogService {
         }
         rethrow;
       }
+    }
+  }
+
+  /// ✅ FIX #1: Update phase-specific dates in plants table when phase changes
+  /// Only sets dates if they are currently null (idempotent behavior)
+  /// This fixes the bug where phase changes only updated deprecated phase_start_date
+  Future<void> _updatePlantPhaseDate(
+    DatabaseExecutor db,
+    int plantId,
+    PlantPhase newPhase,
+    DateTime logDate,
+  ) async {
+    // Get current plant to check existing dates
+    final plantMaps = await db.query(
+      'plants',
+      where: 'id = ?',
+      whereArgs: [plantId],
+    );
+
+    if (plantMaps.isEmpty) {
+      AppLogger.warning(
+        'LogService',
+        'Cannot update phase date - plant not found: $plantId',
+      );
+      return;
+    }
+
+    final plant = plantMaps.first;
+    final Map<String, dynamic> updates = {};
+
+    // Only update if date is null (don't overwrite existing dates)
+    switch (newPhase) {
+      case PlantPhase.veg:
+        if (plant['veg_date'] == null) {
+          updates['veg_date'] = logDate.toIso8601String();
+          AppLogger.info(
+            'LogService',
+            'Setting veg_date for plant $plantId to ${logDate.toIso8601String()}',
+          );
+        }
+        break;
+      case PlantPhase.bloom:
+        if (plant['bloom_date'] == null) {
+          updates['bloom_date'] = logDate.toIso8601String();
+          AppLogger.info(
+            'LogService',
+            'Setting bloom_date for plant $plantId to ${logDate.toIso8601String()}',
+          );
+        }
+        break;
+      case PlantPhase.harvest:
+        if (plant['harvest_date'] == null) {
+          updates['harvest_date'] = logDate.toIso8601String();
+          AppLogger.info(
+            'LogService',
+            'Setting harvest_date for plant $plantId to ${logDate.toIso8601String()}',
+          );
+        }
+        break;
+      case PlantPhase.seedling:
+      case PlantPhase.archived:
+        // No phase-specific date for seedling/archived
+        break;
+    }
+
+    if (updates.isNotEmpty) {
+      await db.update('plants', updates, where: 'id = ?', whereArgs: [plantId]);
+      AppLogger.info(
+        'LogService',
+        '✅ Updated plant $plantId phase dates: $updates',
+      );
     }
   }
 
@@ -296,6 +368,14 @@ class LogService implements ILogService {
             updatedPlant.toMap(),
             where: 'id = ?',
             whereArgs: [plant.id],
+          );
+
+          // ✅ FIX #1: Update phase-specific dates (vegDate, bloomDate, harvestDate)
+          await _updatePlantPhaseDate(
+            txn,
+            plant.id!,
+            newPhase,
+            correctedLog.logDate,
           );
         }
 
@@ -557,6 +637,15 @@ class LogService implements ILogService {
             plantBatch.rawUpdate(
               'UPDATE plants SET phase = ?, phase_start_date = ? WHERE id = ?',
               [newPhase.name.toUpperCase(), logDate.toIso8601String(), plantId],
+            );
+
+            // ✅ FIX #1: Update phase-specific dates (vegDate, bloomDate, harvestDate)
+            // Must be done individually (not in batch) to check existing dates
+            await _updatePlantPhaseDate(
+              txn,
+              plantId,
+              newPhase,
+              logDate,
             );
           }
 
