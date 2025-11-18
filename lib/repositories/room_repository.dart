@@ -196,9 +196,38 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
 
   /// Raum archivieren (Soft-Delete)
   /// ✅ SOFT-DELETE: Archiviert Raum statt zu löschen (archived = 1)
+  /// ✅ FIX #3: Validates room is not in use before archiving
   @override
   Future<int> delete(int id) async {
     try {
+      // ✅ FIX #3: Check if room is in use before archiving
+      final inUse = await isInUse(id);
+      if (inUse) {
+        final usage = await getUsageDetails(id);
+
+        // Build detailed German error message
+        final parts = <String>[];
+        if (usage['plants']! > 0) {
+          parts.add('${usage['plants']} Pflanze${usage['plants']! > 1 ? 'n' : ''}');
+        }
+        if (usage['grows']! > 0) {
+          parts.add('${usage['grows']} Grow${usage['grows']! > 1 ? 's' : ''}');
+        }
+        if (usage['hardware']! > 0) {
+          parts.add('${usage['hardware']} Hardware-Gerät${usage['hardware']! > 1 ? 'e' : ''}');
+        }
+        if (usage['rdwc_systems']! > 0) {
+          parts.add('${usage['rdwc_systems']} RDWC-System${usage['rdwc_systems']! > 1 ? 'e' : ''}');
+        }
+
+        throw RepositoryException.conflict(
+          'Raum kann nicht gelöscht werden. '
+          'Er enthält noch ${parts.join(', ')}. '
+          'Bitte verschieben oder löschen Sie diese Elemente zuerst.',
+        );
+      }
+
+      // Room is not in use, safe to archive
       final db = await _dbHelper.database;
       return await db.update(
         'rooms',
@@ -214,6 +243,22 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
         stackTrace,
       );
       rethrow;
+    }
+  }
+
+  /// ✅ FIX #3: Check if room can be deleted (archived)
+  /// Returns true if room has no dependencies and can be safely deleted
+  Future<bool> canDeleteRoom(int id) async {
+    try {
+      return !(await isInUse(id));
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'RoomRepository',
+        'Failed to check if room can be deleted',
+        e,
+        stackTrace,
+      );
+      return false; // Conservative: assume cannot delete if check fails
     }
   }
 

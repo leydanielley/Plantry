@@ -118,26 +118,43 @@ class GrowRepository with RepositoryErrorHandler implements IGrowRepository {
   /// - Zum vollständigen Löschen einer Pflanze: PlantRepository.delete() verwenden
   ///
   /// ✅ FIX v11: Use transaction to prevent race condition
+  /// ✅ FIX #3: Validates grow has no plants before deletion
   @override
   Future<int> delete(int id) async {
     try {
-      final db = await _dbHelper.database;
-
-      return await db.transaction((txn) async {
-        // 1. First, detach all plants from this grow
-        await txn.update(
-          'plants',
-          {'grow_id': null},
-          where: 'grow_id = ?',
-          whereArgs: [id],
+      // ✅ FIX #3: Check if grow has plants before deletion
+      final plantCount = await getPlantCount(id);
+      if (plantCount > 0) {
+        throw RepositoryException.conflict(
+          'Grow kann nicht gelöscht werden. '
+          'Er enthält noch $plantCount Pflanze${plantCount > 1 ? 'n' : ''}. '
+          'Bitte archivieren Sie den Grow stattdessen oder entfernen Sie die Pflanzen zuerst.',
         );
+      }
 
-        // 2. Then delete the grow itself
-        return await txn.delete('grows', where: 'id = ?', whereArgs: [id]);
-      });
+      // Grow has no plants, safe to delete
+      final db = await _dbHelper.database;
+      return await db.delete('grows', where: 'id = ?', whereArgs: [id]);
     } catch (e, stackTrace) {
       AppLogger.error('GrowRepository', 'Failed to delete grow', e, stackTrace);
       rethrow;
+    }
+  }
+
+  /// ✅ FIX #3: Check if grow can be deleted
+  /// Returns true if grow has no plants and can be safely deleted
+  Future<bool> canDeleteGrow(int id) async {
+    try {
+      final plantCount = await getPlantCount(id);
+      return plantCount == 0;
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'GrowRepository',
+        'Failed to check if grow can be deleted',
+        e,
+        stackTrace,
+      );
+      return false; // Conservative: assume cannot delete if check fails
     }
   }
 
