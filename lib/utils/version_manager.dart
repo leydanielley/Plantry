@@ -223,29 +223,49 @@ class VersionManager {
   }
 
   /// Check if there was a recent migration failure
+  ///
+  /// ✅ FIXED: Only checks if the CURRENT/LAST migration failed
+  /// (NOT historical failures from previous sessions)
+  ///
+  /// Returns true only if:
+  /// - Current migration status is 'failed' or 'timeout'
+  /// - AND migration is not marked as 'completed'
+  ///
+  /// This prevents false positives where users see recovery warnings
+  /// even after successful migrations.
   static Future<bool> hasRecentMigrationFailure() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final status = prefs.getString(_keyMigrationStatus);
 
+      // ✅ FIX: If migration is 'completed', ignore history
+      // The current migration succeeded, so no recovery needed
+      if (status == 'completed') {
+        AppLogger.info(
+          'VersionManager',
+          'Current migration completed successfully - no recovery needed',
+        );
+        return false;
+      }
+
+      // ✅ FIX: Only trigger on CURRENT migration failure
       // Check if migration status is 'failed' or 'timeout'
       if (status == 'failed' || status == 'timeout') {
         AppLogger.warning(
           'VersionManager',
-          'Recent migration failure detected (status: $status)',
+          '⚠️ CURRENT migration failure detected (status: $status)',
         );
         return true;
       }
 
-      // Check if there are failed migrations in history
-      final failedMigrations = await getFailedMigrations();
-      if (failedMigrations.isNotEmpty) {
-        AppLogger.warning(
-          'VersionManager',
-          'Failed migrations in history: ${failedMigrations.length}',
-        );
-        return true;
-      }
+      // ❌ REMOVED: Don't check historical failures
+      // Old code would trigger false positives if ANY past migration failed
+      // even if the current migration succeeded
+      //
+      // final failedMigrations = await getFailedMigrations();
+      // if (failedMigrations.isNotEmpty) {
+      //   return true; // ❌ WRONG!
+      // }
 
       return false;
     } catch (e) {

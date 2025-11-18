@@ -195,22 +195,35 @@ class AutoRecoveryHelper {
   /// Check if we should offer auto-recovery
   ///
   /// Returns recovery info with backup path if recovery is recommended
+  ///
+  /// ✅ FIXED: Only triggers when CURRENT migration failed
+  /// (NOT when historical migrations failed or on fresh installs)
   static Future<RecoveryInfo> shouldOfferRecovery(Database db) async {
     try {
-      // Check 1: Was there a recent migration failure?
+      // Check 1: Was there a CURRENT migration failure?
+      // ✅ FIX: Now only checks current migration status (not history)
       final migrationFailed = await VersionManager.hasRecentMigrationFailure();
 
-      // Check 2: Is the database empty?
+      // Check 2: Is this a fresh install?
+      // ✅ FIX: Don't trigger recovery on fresh installs
+      final isFirstLaunch = await VersionManager.isFirstLaunch();
+
+      // Check 3: Is the database empty?
       final dbEmpty = await isDatabaseEmpty(db);
 
-      // Check 3: Are there missing columns?
+      // Check 4: Are there missing columns?
       final missingCols = await hasMissingColumns(db);
 
-      // Check 4: Is there a recent backup available?
+      // Check 5: Is there a recent backup available?
       final backupPath = await findLatestBackup();
 
+      // ✅ FIX: Updated logic to prevent false positives
+      // Only offer recovery if:
+      // 1. Current migration failed (not historical), OR
+      // 2. DB is empty AND it's NOT a fresh install AND backup exists, OR
+      // 3. Missing columns AND backup exists
       final shouldRecover = migrationFailed ||
-          (dbEmpty && backupPath != null) ||
+          (dbEmpty && !isFirstLaunch && backupPath != null) ||
           (missingCols && backupPath != null);
 
       if (shouldRecover) {
@@ -219,8 +232,18 @@ class AutoRecoveryHelper {
           '⚠️ Recovery recommended:',
           'Migration failed: $migrationFailed, '
               'DB empty: $dbEmpty, '
+              'Fresh install: $isFirstLaunch, '
               'Missing columns: $missingCols, '
               'Backup available: ${backupPath != null}',
+        );
+      } else {
+        AppLogger.info(
+          'AutoRecoveryHelper',
+          '✅ No recovery needed:',
+          'Migration failed: $migrationFailed, '
+              'DB empty: $dbEmpty, '
+              'Fresh install: $isFirstLaunch, '
+              'Missing columns: $missingCols',
         );
       }
 
