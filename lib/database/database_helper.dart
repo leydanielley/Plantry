@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            35, // v35: CRITICAL FIX - Recovery from v34 downgrade error (healing migration)
+            36, // v36: Standardize FK CASCADE rules (harvests & hardware: CASCADE → RESTRICT)
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -93,7 +93,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 35,
+          version: 36,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -143,7 +143,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 35,
+          version: 36,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -680,7 +680,7 @@ class DatabaseHelper {
         notes TEXT,
         active INTEGER DEFAULT 1,
         created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE RESTRICT
       )
     ''');
     await db.execute(
@@ -773,7 +773,7 @@ class DatabaseHelper {
         overall_notes TEXT,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT,
-        FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE
+        FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE RESTRICT
       )
     ''');
     await db.execute(

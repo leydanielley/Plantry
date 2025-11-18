@@ -17,6 +17,7 @@ import 'package:growlog_app/database/migrations/scripts/migration_v18.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v19.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v20.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v35.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v36.dart';
 
 /// All migrations in chronological order
 ///
@@ -75,6 +76,9 @@ final List<Migration> allMigrations = [
 
   // v35: CRITICAL HEALING - Recovery from v34 downgrade error
   migrationV35,
+
+  // v36: Standardize FK CASCADE rules (harvests & hardware: CASCADE → RESTRICT)
+  migrationV36,
 ];
 
 /// Get the latest migration version
