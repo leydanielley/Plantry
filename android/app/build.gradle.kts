@@ -38,7 +38,7 @@ android {
         versionName = "0.11.4"
 
         // Support for ALL Android architectures (maximum device support)
-        ndk {R=flc0pt3
+        ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
 
