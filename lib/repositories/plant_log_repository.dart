@@ -72,8 +72,41 @@ class PlantLogRepository
     final db = await _dbHelper.database;
 
     // Build WHERE clause
-    String whereClause = 'plant_id = ? AND day_number = ? AND archived = 0';
-    List<dynamic> whereArgs = [plantId, dayNumber];
+    var whereClause = 'plant_id = ? AND day_number = ? AND archived = 0';
+    var whereArgs = [plantId, dayNumber];
+
+    // Exclude specific log ID if provided (for UPDATE validation)
+    if (excludeLogId != null) {
+      whereClause += ' AND id != ?';
+      whereArgs.add(excludeLogId);
+    }
+
+    final maps = await db.query(
+      'plant_logs',
+      where: whereClause,
+      whereArgs: whereArgs,
+      limit: 1,
+    );
+
+    if (maps.isEmpty) return null;
+    return PlantLog.fromMap(maps.first);
+  }
+
+  /// ✅ HOTFIX v38: Find log by plant_id, day_number AND action_type
+  /// Returns existing log for given plant, day, and action (ignoring archived logs)
+  /// [excludeLogId] - Optional: exclude specific log ID (used for UPDATE validation)
+  Future<PlantLog?> findByPlantDayAndAction(
+    int plantId,
+    int dayNumber,
+    String actionType, {
+    int? excludeLogId,
+  }) async {
+    final db = await _dbHelper.database;
+
+    // Build WHERE clause
+    var whereClause =
+        'plant_id = ? AND day_number = ? AND action_type = ? AND archived = 0';
+    var whereArgs = [plantId, dayNumber, actionType];
 
     // Exclude specific log ID if provided (for UPDATE validation)
     if (excludeLogId != null) {
@@ -111,34 +144,43 @@ class PlantLogRepository
   }
 
   /// Log speichern (INSERT oder UPDATE)
-  /// ✅ FIX #4: Validates no duplicate log exists for same plant and day
+  /// ✅ HOTFIX v38: Validates no duplicate log exists for same plant, day AND action
   @override
   Future<PlantLog> save(PlantLog log) async {
-    // ✅ FIX #4: Check for duplicate before INSERT
+    // Convert ActionType enum to database string format (using toMap())
+    final logMap = log.toMap();
+    final dbActionType = logMap['action_type'] as String;
+
+    // Get user-friendly action name for error message
+    final actionName = log.actionType.displayName;
+
+    // ✅ HOTFIX v38: Check for duplicate with same action_type
     if (log.id == null) {
-      // INSERT - check for existing log with same plant_id and day_number
-      final existingLog = await findByPlantAndDayNumber(
+      // INSERT - check for existing log with same plant_id, day_number AND action_type
+      final existingLog = await findByPlantDayAndAction(
         log.plantId,
         log.dayNumber,
+        dbActionType,
       );
 
       if (existingLog != null) {
         throw RepositoryException.conflict(
-          'Ein Log für Tag ${log.dayNumber} existiert bereits. '
+          'Ein $actionName-Log für Tag ${log.dayNumber} existiert bereits. '
           'Bitte bearbeiten Sie den bestehenden Log oder wählen Sie einen anderen Tag.',
         );
       }
     } else {
       // UPDATE - check for duplicate excluding current log
-      final existingLog = await findByPlantAndDayNumber(
+      final existingLog = await findByPlantDayAndAction(
         log.plantId,
         log.dayNumber,
+        dbActionType,
         excludeLogId: log.id,
       );
 
       if (existingLog != null) {
         throw RepositoryException.conflict(
-          'Ein anderer Log für Tag ${log.dayNumber} existiert bereits. '
+          'Ein anderer $actionName-Log für Tag ${log.dayNumber} existiert bereits. '
           'Bitte wählen Sie einen anderen Tag.',
         );
       }
@@ -148,13 +190,13 @@ class PlantLogRepository
 
     if (log.id == null) {
       // INSERT
-      final id = await db.insert('plant_logs', log.toMap());
+      final id = await db.insert('plant_logs', logMap);
       return log.copyWith(id: id);
     } else {
       // UPDATE
       await db.update(
         'plant_logs',
-        log.toMap(),
+        logMap,
         where: 'id = ?',
         whereArgs: [log.id],
       );

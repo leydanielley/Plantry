@@ -5,7 +5,7 @@ publish_to: 'none'
 # Build number 47 contains database schema v37 (Sprint 1: Critical bug fixes + performance improvements)
 # Build number increments with each release (monotonically increasing)
 # Database version only changes when schema changes occur
-version: 0.47.0+47
+version: 0.47.1+48
 
 environment:
   sdk: ^3.9.2

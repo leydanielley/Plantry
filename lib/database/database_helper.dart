@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            37, // v37: Performance - Add fertilizers.name index for ORDER BY optimization
+            38, // v38: CRITICAL FIX - Allow multiple logs per day per plant
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -93,7 +93,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 37,
+          version: 38,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -143,7 +143,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 37,
+          version: 38,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,

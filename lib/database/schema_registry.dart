@@ -588,6 +588,26 @@ class SchemaRegistry {
     },
   );
 
+  /// Schema for v38: CRITICAL FIX - Allow multiple logs per day per plant
+  /// Migration v38 changes unique constraint from (plant_id, day_number)
+  /// to (plant_id, day_number, action_type) to allow multiple different
+  /// action types on the same day while preventing duplicate actions
+  static final schemaV38 = SchemaDefinition(
+    version: 38,
+    requiredTables: schemaV37.requiredTables, // Same as v37
+    requiredIndexes: {
+      ...schemaV37.requiredIndexes,
+      'plant_logs': {
+        // Remove old unique index
+        ...schemaV37.requiredIndexes['plant_logs']!
+            .where((idx) => idx != 'idx_plant_logs_plant_day_unique')
+            .toSet(),
+        // Add new unique index with action_type
+        'idx_plant_logs_unique_per_action', // v38 replaces old unique constraint
+      },
+    },
+  );
+
   /// Map of all schema definitions
   static final Map<int, SchemaDefinition> schemas = {
     13: schemaV13,
@@ -601,6 +621,7 @@ class SchemaRegistry {
     // 21-35: Not defined (migrations exist without schema registry)
     36: schemaV36,
     37: schemaV37,
+    38: schemaV38,
   };
 
   // ===========================================

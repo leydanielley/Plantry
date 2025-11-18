@@ -19,6 +19,7 @@ import 'package:growlog_app/database/migrations/scripts/migration_v20.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v35.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v36.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v37.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v38.dart';
 
 /// All migrations in chronological order
 ///
@@ -83,6 +84,9 @@ final List<Migration> allMigrations = [
 
   // v37: Performance - Add fertilizers.name index for ORDER BY optimization
   migrationV37,
+
+  // v38: CRITICAL FIX - Allow multiple logs per day per plant (change unique constraint)
+  migrationV38,
 ];
 
 /// Get the latest migration version
