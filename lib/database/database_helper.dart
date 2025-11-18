@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            36, // v36: Standardize FK CASCADE rules (harvests & hardware: CASCADE → RESTRICT)
+            37, // v37: Performance - Add fertilizers.name index for ORDER BY optimization
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -93,7 +93,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 36,
+          version: 37,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -143,7 +143,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 36,
+          version: 37,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -611,6 +611,10 @@ class DatabaseHelper {
         created_at TEXT DEFAULT (datetime('now'))
       )
     ''');
+    // v37: Add fertilizers.name index for ORDER BY optimization
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_fertilizers_name ON fertilizers(name)',
+    );
 
     // Log Fertilizers Table
     await db.execute('''
