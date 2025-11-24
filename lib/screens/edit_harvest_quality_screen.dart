@@ -22,6 +22,7 @@ class EditHarvestQualityScreen extends StatefulWidget {
 class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
     with SingleTickerProviderStateMixin {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
+  final AppTranslations _t = AppTranslations('de'); // Initialize with default language
   final _formKey = GlobalKey<FormState>();
   late TabController _tabController;
 
@@ -111,7 +112,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quality Control bearbeiten'),
+        title: Text(_t['quality_control_edit']),
         backgroundColor: Colors.blue[700],
         foregroundColor: Colors.white,
         actions: [

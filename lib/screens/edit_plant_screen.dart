@@ -666,7 +666,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.orange[700]),
-            child: const Text('Archivieren'), // Changed from "Delete"
+            child: Text(t['archive_action']), // ✅ i18n
           ),
         ],
       ),
@@ -688,7 +688,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         // ✅ SOFT-DELETE: Show "archived" message instead of "deleted"
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ ${widget.plant.name} wurde archiviert'),
+            content: Text('✅ ${t['plant_archived_success'].replaceAll('{name}', widget.plant.name)}'),
             backgroundColor: Colors.orange[700],
           ),
         );
@@ -913,9 +913,9 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 helperText: 'Wähle RDWC-System für diese Pflanze',
               ),
               items: [
-                const DropdownMenuItem(
+                DropdownMenuItem(
                   value: null,
-                  child: Text('Kein RDWC System'),
+                  child: Text(t['no_rdwc_system']), // ✅ i18n
                 ),
                 ..._rdwcSystems.where((s) => !s.archived).map((system) {
                   return DropdownMenuItem(
@@ -981,9 +981,9 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                         'Wähle Bucket (${availableBuckets.length} verfügbar)',
                   ),
                   items: [
-                    const DropdownMenuItem(
+                    DropdownMenuItem(
                       value: null,
-                      child: Text('Kein Bucket'),
+                      child: Text(t['no_bucket']), // ✅ i18n
                     ),
                     ...availableBuckets.map((bucket) {
                       final isCurrentBucket =

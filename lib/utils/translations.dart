@@ -1109,6 +1109,17 @@ class AppTranslations {
       'phase': 'Phase',
       'settings_saved': 'Einstellungen gespeichert',
       'error_saving_settings': 'Fehler beim Speichern der Einstellungen',
+
+      // ✅ PRODUCTION FIX: Critical hardcoded strings
+      'settings_title': 'Einstellungen',
+      'quality_control': 'Quality Control',
+      'quality_control_edit': 'Quality Control bearbeiten',
+      'harvest_not_found': 'Ernte nicht gefunden',
+      'quality_data_capture': 'Quality-Daten erfassen',
+      'archive_action': 'Archivieren',
+      'plant_archived_success': '{name} wurde archiviert',
+      'no_rdwc_system': 'Kein RDWC System',
+      'no_bucket': 'Kein Bucket',
     },
 
     // ENGLISH
@@ -2183,6 +2194,17 @@ class AppTranslations {
       'phase': 'Phase',
       'settings_saved': 'Settings saved',
       'error_saving_settings': 'Error saving settings',
+
+      // ✅ PRODUCTION FIX: Critical hardcoded strings
+      'settings_title': 'Settings',
+      'quality_control': 'Quality Control',
+      'quality_control_edit': 'Edit Quality Control',
+      'harvest_not_found': 'Harvest not found',
+      'quality_data_capture': 'Capture Quality Data',
+      'archive_action': 'Archive',
+      'plant_archived_success': '{name} archived',
+      'no_rdwc_system': 'No RDWC System',
+      'no_bucket': 'No Bucket',
     },
   };
 

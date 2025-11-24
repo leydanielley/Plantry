@@ -31,7 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   final IBackupService _backupService = getIt<IBackupService>();
   late AppSettings _settings;
-  late AppTranslations _t;
+  AppTranslations _t = AppTranslations('de'); // Initialize with default language
   bool _isLoading = true;
   bool _showingDialog = false;
 
@@ -199,7 +199,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Settings')),
+        appBar: AppBar(title: Text(_t['settings_title'])),
         body: const Center(child: CircularProgressIndicator()),
       );
     }

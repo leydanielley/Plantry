@@ -21,6 +21,7 @@ class HarvestQualityScreen extends StatefulWidget {
 
 class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
+  final AppTranslations _t = AppTranslations('de'); // Initialize with default language
   Harvest? _harvest;
   bool _isLoading = true;
 
@@ -51,7 +52,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Quality Control'),
+          title: Text(_t['quality_control']),
           backgroundColor: Colors.blue[700],
           foregroundColor: Colors.white,
         ),
@@ -62,11 +63,11 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
     if (_harvest == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Quality Control'),
+          title: Text(_t['quality_control']),
           backgroundColor: Colors.blue[700],
           foregroundColor: Colors.white,
         ),
-        body: const Center(child: Text('Ernte nicht gefunden')),
+        body: Center(child: Text(_t['harvest_not_found'])),
       );
     }
 
@@ -85,7 +86,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quality Control'),
+        title: Text(_t['quality_control']),
         backgroundColor: Colors.blue[700],
         foregroundColor: Colors.white,
         actions: [
@@ -395,7 +396,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
           if (result == true) _loadHarvest();
         },
         icon: const Icon(Icons.add),
-        label: const Text('Quality-Daten erfassen'),
+        label: Text(_t['quality_data_capture']),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,

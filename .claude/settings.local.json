@@ -33,7 +33,12 @@
       "Bash(python3:*)",
       "Bash(sqlite3:*)",
       "Bash(dart run:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(jarsigner:*)",
+      "Bash(unzip:*)",
+      "Bash(/tmp/cert.rsa)",
+      "Bash(keytool -printcert:*)",
+      "Bash(keytool -list:*)"
     ],
     "deny": [],
     "ask": []

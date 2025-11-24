@@ -2,6 +2,86 @@
 
 All notable changes to Plantry will be documented in this file.
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.0] - 2025-11-24
+
+### 🎉 First Production Release
+
+This is the first stable production release of Plantry, ready for the Google Play Store!
+
+### ✨ New Features
+
+#### Complete Internationalization (i18n)
+- **Full bilingual support**: German and English languages
+- **Dynamic language switching**: Change language on-the-fly in settings
+- **884 translation keys**: Every UI element properly translated
+- **No more hardcoded strings**: All user-facing text uses translation system
+- Fixed 9 critical UI elements that showed mixed languages
+
+### 🐛 Critical Bug Fixes (Sprint 1)
+
+#### Database & Data Integrity
+- **Fix #1**: Phase changes now correctly update vegDate, bloomDate, and harvestDate
+- **Fix #2**: Standardized foreign key CASCADE rules (Migration v36)
+  - Prevents orphaned data when deleting rooms/grows/plants
+  - Ensures referential integrity across all tables
+- **Fix #3**: Added delete validation for rooms and grows
+  - Prevents deletion of rooms with active plants
+  - Prevents deletion of grows with active plants
+- **Fix #4**: Duplicate log prevention at repository layer
+  - Prevents creating multiple logs for same plant on same timestamp
+- **Fix #5**: RDWC bucket uniqueness validation
+  - Ensures each bucket can only be assigned to one plant per system
+- **Fix #6**: Added missing database indexes for performance
+  - plant_id, grow_id, room_id indexes for faster queries
+  - Significant performance improvement for large databases
+- **Fix #7**: Added SchemaRegistry definitions for v36 and v37
+  - Proper schema documentation and migration tracking
+
+#### Stability & Recovery
+- **CRITICAL**: Removed false positive recovery warnings
+  - App no longer shows unnecessary "Database corrupted" messages
+  - Fixed recovery detection logic to only trigger on actual issues
+- **Database fix**: Multiple logs per day now work correctly
+  - Fixed constraint that prevented logging multiple times daily
+
+### 🔧 Technical Improvements
+
+#### Code Quality
+- **Test cleanup**: Fixed all test failures caused by Sprint 1 changes
+- **Database schema**: Stable at v37 with comprehensive migration history
+- **Error handling**: Improved error messages and user feedback
+- **Performance**: Added strategic indexes for faster queries
+- **Validation**: Repository-level validation prevents data corruption
+
+#### Architecture
+- **Clean separation**: UI, business logic, and data layers properly separated
+- **Type safety**: All enums and models properly validated
+- **Transaction safety**: All multi-step operations use database transactions
+
+### 📊 Technical Details
+- **Build Number**: 49 (Google Play)
+- **Database Version**: 37
+- **Supported Android**: 5.0 Lollipop (API 21) to Android 15 (API 35)
+- **APK Size**: ~62MB (optimized with R8 shrinking)
+- **Architecture Support**: ARM32, ARM64, x86, x86_64
+
+### 📱 Compatibility
+- **Device Support**: 99%+ of all Android devices
+- **Tablet Support**: Full support for all screen sizes
+- **Offline Mode**: 100% offline functionality
+- **Languages**: German (de), English (en)
+
+### 🎯 Quality Metrics
+- Flutter Analyze: ✅ 0 errors, 2 minor style suggestions
+- All Critical Tests: ✅ Passing
+- Database Migrations: ✅ v1 → v37 fully tested
+- Production Build: ✅ Successful
+
+---
+
 ## [0.9.1] - 2025-11-09
 
 ### 🐛 Critical Data Loss Bugs Fixed

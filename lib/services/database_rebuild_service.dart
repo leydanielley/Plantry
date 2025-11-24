@@ -232,7 +232,7 @@ class DatabaseRebuildService {
 
       await _importDataFromBackup(
         newDb,
-        tempDir!,
+        tempDir,
         (current, total, message) {
           onProgress?.call(4, 6, 'Import: $message ($current/$total)');
         },

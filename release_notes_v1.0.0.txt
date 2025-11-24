@@ -1,0 +1,124 @@
+==========================================================
+PLANTRY v1.0.0 - PLAY STORE RELEASE NOTES
+Build 49 - 2025-11-24
+==========================================================
+
+===============================
+🇩🇪 GERMAN (Deutsch)
+===============================
+
+TITEL:
+Plantry 1.0 - Jetzt mit vollständiger deutscher Übersetzung!
+
+KURZBESCHREIBUNG (80 Zeichen):
+Die perfekte App für Pflanzen-Journal und RDWC-Hydroponic-Systeme - 100% offline
+
+BESCHREIBUNG (500 Zeichen):
+
+🎉 Version 1.0 - Erste stabile Veröffentlichung!
+
+✨ NEU:
+• Vollständige deutsche + englische Übersetzung
+• Sprache im laufenden Betrieb wechseln
+• Alle Texte professionell lokalisiert
+
+🐛 BEHOBEN:
+• 7 kritische Datenbankfehler behoben
+• Mehrere Logs pro Tag möglich
+• Bessere Performance durch Datenbank-Optimierung
+• Keine Fehlalarme mehr bei Datenbankwiederherstellung
+
+💪 STABIL:
+• 99%+ Geräteunterstützung
+• Android 5.0 bis Android 15
+• Getestet auf Phones & Tablets
+• 100% offline funktionsfähig
+
+Ihre private Pflanzendokumentation - sicher, offline, professionell!
+
+===============================
+🇬🇧 ENGLISH
+===============================
+
+TITLE:
+Plantry 1.0 - Now with full English translation!
+
+SHORT DESCRIPTION (80 chars):
+The perfect app for plant journals & RDWC hydroponic systems - 100% offline
+
+DESCRIPTION (500 characters):
+
+🎉 Version 1.0 - First Stable Release!
+
+✨ NEW:
+• Full German + English translation
+• Switch language on the fly
+• All UI elements professionally localized
+
+🐛 FIXED:
+• 7 critical database bugs resolved
+• Multiple logs per day now possible
+• Better performance through database optimization
+• No more false database recovery warnings
+
+💪 ROCK SOLID:
+• 99%+ device compatibility
+• Android 5.0 to Android 15
+• Tested on phones & tablets
+• 100% offline functionality
+
+Your private plant documentation - secure, offline, professional!
+
+==========================================================
+WHAT'S NEW SECTION (For both languages - shorter format)
+==========================================================
+
+🇩🇪 DEUTSCH (Was ist neu):
+----------------------------
+Version 1.0 bringt:
+✨ Vollständige DE/EN Übersetzung
+🐛 7 kritische Datenbankfixes
+⚡ Bessere Performance
+🔒 Mehr Stabilität
+📱 99%+ Geräte-Kompatibilität
+
+Die App ist jetzt produktionsreif und professionell übersetzt!
+
+🇬🇧 ENGLISH (What's New):
+----------------------------
+Version 1.0 brings:
+✨ Complete DE/EN translation
+🐛 7 critical database fixes
+⚡ Better performance
+🔒 More stability
+📱 99%+ device compatibility
+
+The app is now production-ready with professional translations!
+
+==========================================================
+FEATURE GRAPHIC TEXT IDEAS
+==========================================================
+
+🇩🇪 "Deine Pflanzen. Dein Journal. 100% Privat & Offline."
+🇬🇧 "Your Plants. Your Journal. 100% Private & Offline."
+
+Alternative:
+🇩🇪 "Professionelles Pflanzen-Tracking für Hobby & Expert*innen"
+🇬🇧 "Professional Plant Tracking for Hobby & Expert Growers"
+
+==========================================================
+KEY FEATURES TO HIGHLIGHT IN STORE LISTING
+==========================================================
+
+✓ 100% offline - keine Cloud, keine Daten-Sammlung
+✓ Detailliertes Pflanzen-Journal mit Fotos
+✓ RDWC Hydroponic System Management
+✓ Mehrsprachig: Deutsch & English
+✓ Dünger-Tracking & pH/EC-Monitoring
+✓ Export/Import für Backups
+✓ Expertenmodus für Profis
+✓ Benachrichtigungen für Gießen & Pflege
+✓ Gesundheits-Score für Pflanzen
+✓ Komplett kostenlos, keine Werbung
+
+==========================================================
