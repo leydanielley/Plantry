@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FileProvider paths for secure file sharing (Android 7+) -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Internal app storage -->
+    <files-path name="app_files" path="." />
+
+    <!-- External app-specific directory -->
+    <external-files-path name="external_files" path="." />
+
+    <!-- Cache directory for temporary files -->
+    <cache-path name="cache" path="." />
+
+    <!-- External cache directory -->
+    <external-cache-path name="external_cache" path="." />
+
+    <!-- Photos directory -->
+    <external-files-path name="photos" path="photos/" />
+
+    <!-- Backups directory -->
+    <files-path name="backups" path="backups/" />
+</paths>

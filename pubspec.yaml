@@ -1,0 +1,85 @@
+name: growlog_app
+description: "Private plant growing journal and log tracking app"
+publish_to: 'none'
+
+# Build 69 - Version 4.20.69: Open Source Release
+# - App now free & open source (MIT License)
+# - Donate/Support button added
+# - Database schema v37 (stable)
+version: 4.20.69+69
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Image Compression & Caching
+  flutter_image_compress: ^2.1.0
+
+  # SQLite Database
+  sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0  # For Desktop platforms (Linux, Windows, macOS)
+  path_provider: ^2.1.1
+  path: ^1.8.3
+  synchronized: ^3.3.0+3  # Thread-safe operations
+
+  # State Management
+  provider: ^6.1.1
+  get_it: ^9.0.5
+
+  # Settings Persistence
+  shared_preferences: ^2.2.2
+
+  # Image Picker
+  image_picker: ^1.0.7
+
+  # Date/Time formatting
+  intl: ^0.20.2
+
+  # URL Launcher (Donate link)
+  url_launcher: ^6.2.5
+
+  # Notifications (100% offline)
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
+  flutter_timezone: ^3.0.1
+
+  # File handling
+  archive: ^4.0.7
+  file_picker: ^10.3.3
+  dbf_reader: ^1.0.2
+
+  # UI
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  shimmer: ^3.0.0
+  fl_chart: ^0.69.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Testing
+  mockito: ^5.4.4
+  mocktail: ^1.0.0
+  build_runner: ^2.4.6
+  flutter_riverpod: ^2.4.0
+
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
+
+# App Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icons/app_icon.png"
+  adaptive_icon_background: "#1E1E1E"  # Dark background for cannabis leaf
+  adaptive_icon_foreground: "assets/icons/app_icon.png"

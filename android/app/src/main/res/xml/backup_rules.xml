@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Backup configuration for Android Auto Backup
+Controls what data is included in automatic backups
+-->
+<full-backup-content>
+    <!-- INCLUDE: Application-specific data that should be backed up -->
+    <include domain="database" path="." />
+    <include domain="sharedpref" path="." />
+    <include domain="file" path="." />
+
+    <!-- EXCLUDE: Large or regenerable data -->
+    <exclude domain="file" path="photos/" />
+    <exclude domain="file" path="thumbnails/" />
+    <exclude domain="cache" />
+    <exclude domain="external" />
+
+    <!--
+    Reasoning:
+    - Database: User's plant logs (should be backed up)
+    - SharedPreferences: App settings (should be backed up)
+    - Files: App data files (should be backed up)
+    - Photos: Too large, user can export manually
+    - Thumbnails: Can be regenerated
+    - Cache: Temporary data
+    -->
+</full-backup-content>

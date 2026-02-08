@@ -1,0 +1,15 @@
+# Protect sensitive files - only repo owner can approve changes
+# Requires "Require review from Code Owners" in branch protection rules
+
+# Donate/Payment links and settings screen
+lib/screens/settings_screen.dart @leydanielley
+
+# Build config, version, dependencies
+pubspec.yaml @leydanielley
+
+# CI/CD and GitHub config
+.github/ @leydanielley
+
+# Signing and sensitive build files
+android/app/build.gradle @leydanielley
+android/key.properties @leydanielley
