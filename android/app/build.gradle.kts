@@ -17,7 +17,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.plantry.growlog"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -34,8 +34,8 @@ android {
         applicationId = "com.plantry.growlog"
         minSdk = flutter.minSdkVersion  // Android 5.0 Lollipop (2014) - Maximum device compatibility
         targetSdk = 35  // Android 15 - Required by Google Play Store (Nov 2024+)
-        versionCode = 80
-        versionName = "1.0.4"
+        versionCode = 81
+        versionName = "1.0.5"
 
         // Support for ALL Android architectures (maximum device support)
         ndk {
