@@ -6,7 +6,7 @@ publish_to: 'none'
 # - App now free & open source (MIT License)
 # - Donate/Support button added
 # - Database schema v37 (stable)
-version: 4.20.69+69
+version: 1.0.4+80
 
 environment:
   sdk: ^3.9.2
