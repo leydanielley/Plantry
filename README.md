@@ -1,60 +1,95 @@
-# Plantry - Professional Plant Tracking App
+# Plantry – Professional Plant Cultivation Tracker
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-blue.svg)](https://flutter.dev)
-[![Platform](https://img.shields.io/badge/Platform-Android-brightgreen.svg)](https://play.google.com/store)
+[![Platform](https://img.shields.io/badge/Platform-Android-brightgreen.svg)](https://play.google.com/store/apps/details?id=com.plantry.growlog)
+[![Downloads](https://img.shields.io/badge/Downloads-10%2B-orange.svg)](https://play.google.com/store/apps/details?id=com.plantry.growlog)
 
-**100% Offline. 100% Private. Open Source.**
+**100% Offline. 100% Private. No accounts. No tracking. Open Source.**
 
-Your data stays on your device. No cloud, no servers, no tracking.
+Your data stays on your device – always.
 
 ---
 
-## Features
+## 📲 Download
 
-- **Grow Rooms & Tents** - Manage multiple grow environments
-- **Plant Tracking** - Track plants from seedling to harvest
-- **Nutrient Documentation** - Log pH, EC, PPM values
-- **Growth Phases** - Document every stage of growth
-- **Harvest Logging** - Record yields with weight and notes
-- **Photo Documentation** - Capture growth with timestamped photos
-- **Expert Mode** - Advanced features for RDWC, DWC, Hydro, Soil, Coco, Aero
-- **Health Score** - Intelligent plant health monitoring (0-100)
-- **Notifications** - Offline reminders for watering, feeding, photos
-- **Multi-Language** - German & English
-- **Dark Mode** - Full dark mode support
-- **Backup & Restore** - Export/import your data as ZIP
+<a href="https://play.google.com/store/apps/details?id=com.plantry.growlog">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" height="50" alt="Get it on Google Play"/>
+</a>
 
-## Tech Stack
+---
 
-- **Framework:** Flutter 3.x / Dart
-- **Database:** SQLite (local, offline)
-- **State Management:** Provider
-- **Architecture:** Clean Architecture with Repository pattern & DI
+## 📸 Screenshots
 
-## Installation
+<p float="left">
+  <img src="https://play-lh.googleusercontent.com/sdlbEmzIw3ourKRJUitqaH5aeaJtxjzP61rlzpVJ-FB4Lj2MWFOPxZvbeeL7X5YSeWSQES4iWnjZ2g7BfjnGug=w526-h296" width="260"/>
+  <img src="https://play-lh.googleusercontent.com/YUxDvrAgtwLCkCLu9mpbf-vsWu6A7t35YIm7zQ_9RAdCq4eGeGeH4yiT-Iko2uz3EXXWfqGVSIN0pbOe3Pt8UA=w526-h296" width="260"/>
+  <img src="https://play-lh.googleusercontent.com/zhdWYapJvMYDfUOYN39tf6vItER1wzVvGT9xxmTV_AgcegMBzkmQHsceV_5JP04SgYxWJD19H5IUc5Q3F_5G=w526-h296" width="260"/>
+  <img src="https://play-lh.googleusercontent.com/UYAEBbSbbWF7iVRsrp-cW4gnRUH180opuVco0FZWawgu014ZL4lZcs8Mg9oMNmV-g_ZvB8i6pZhWKEcgIRJu=w526-h296" width="260"/>
+</p>
 
-### From Google Play Store
-Coming soon.
+---
 
-### Build from Source
+## ✨ Features
+
+| Category | Details |
+|---|---|
+| 🌱 **Plant Management** | Profiles, strain tracking, growth stages (germ → veg → flower → harvest) |
+| 📖 **Grow Journal** | Daily logs, pH/EC/temp/humidity, watering & feeding, photo per entry |
+| 🏠 **Room Management** | Multiple grow rooms, equipment, irrigation system, medium & nutrients |
+| 🌾 **Harvest Tracking** | Yield, dry weight, drying & curing, quality rating |
+| 💡 **Expert Mode** | RDWC, DWC, Hydro, Soil, Coco, Aero – advanced system tracking |
+| 📊 **Health Score** | Intelligent 0–100 plant health monitoring |
+| 🔔 **Notifications** | Offline reminders for watering, feeding, photos |
+| 💾 **Backup & Restore** | Full export/import as ZIP – photos included |
+| 🌍 **Multi-Language** | German & English |
+| 🎨 **Dark Mode** | Full dark mode support |
+
+---
+
+## 🔐 Privacy & Security
+
+- ✅ No user accounts required
+- ✅ No internet connection needed
+- ✅ No advertising or tracking
+- ✅ No analytics or telemetry
+- ✅ All data stored locally via SQLite
+- ✅ Open source – verify it yourself
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Flutter 3.x / Dart |
+| Database | SQLite (local, offline-first) |
+| State Management | Provider |
+| Architecture | Clean Architecture, Repository Pattern, Dependency Injection |
+
+---
+
+## 🚀 Build from Source
+
+**Prerequisites:** Flutter SDK 3.x, Android SDK
 
 ```bash
-# Prerequisites: Flutter SDK 3.x, Android SDK
-
 git clone https://github.com/leydanielley/Plantry.git
 cd Plantry
 flutter pub get
 flutter run
 ```
 
-#### Release Build
+**Release build:**
+
 ```bash
 flutter build apk --release
 flutter build appbundle --release   # For Play Store
 ```
 
-## Project Structure
+---
+
+## 📁 Project Structure
 
 ```
 lib/
@@ -70,35 +105,37 @@ lib/
 └── widgets/         # Reusable UI components
 ```
 
-## Contributing
+---
+
+## 🤝 Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-**Note:** This is a portfolio project. All pull requests require approval.
-
-## Privacy & Security
-
-- No network connections - works completely offline
-- No analytics or tracking
-- No cloud services
-- All data stored locally on your device
-- Open source - verify it yourself
-
-## License
-
-MIT License - see [LICENSE](LICENSE)
-
-## Author
-
-**Daniel Ley**
-- Portfolio project during IT Systems Integration apprenticeship (2025-2027)
-- GitHub: [@leydanielley](https://github.com/leydanielley)
-
-## Disclaimer
-
-This app is for educational and legal cultivation purposes only.
-Users are responsible for complying with local laws and regulations.
+> **Note:** This is a portfolio project. All pull requests require approval.
 
 ---
 
-**Made with Flutter for the growing community**
+## 📄 License
+
+MIT License – see [LICENSE](LICENSE)
+
+---
+
+## 👤 Author
+
+**Daniel Ley**
+- IT Systems Integration Specialist (Fachinformatiker Systemintegration) – GFN Köln, 2025–2027
+- Business: Daniel Ley Tech Services
+- GitHub: [@leydanielley](https://github.com/leydanielley)
+- Contact: ley.daniel.ley@gmail.com
+
+---
+
+## ⚖️ Disclaimer
+
+Plantry is designed for legal plant cultivation activities only.
+Users are responsible for ensuring their use complies with all applicable local laws and regulations.
+
+---
+
+*Plantry – Grow smarter, stay private.* 🌱
