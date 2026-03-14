@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 /// 🎯 Bouncy Button Widget
 ///
@@ -75,7 +76,7 @@ class _BouncyButtonState extends State<BouncyButton>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final defaultBackgroundColor = widget.backgroundColor ?? theme.primaryColor;
-    final defaultForegroundColor = widget.foregroundColor ?? Colors.white;
+    final defaultForegroundColor = widget.foregroundColor ?? DT.textPrimary;
 
     return GestureDetector(
       onTapDown: widget.onPressed != null ? _onTapDown : null,

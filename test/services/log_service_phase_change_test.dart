@@ -19,8 +19,11 @@ void main() {
   late Database db;
   late DatabaseHelper dbHelper;
   late PlantRepository plantRepo;
+  // ignore: unused_local_variable
   late PlantLogRepository logRepo;
+  // ignore: unused_local_variable
   late LogFertilizerRepository logFertRepo;
+  // ignore: unused_local_variable
   late PhotoRepository photoRepo;
   late LogService logService;
 

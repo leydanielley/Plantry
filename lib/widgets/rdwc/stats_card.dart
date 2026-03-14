@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class StatsCard extends StatelessWidget {
   final String label;
@@ -24,8 +25,6 @@ class StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -40,9 +39,9 @@ class StatsCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      color: DT.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -62,9 +61,9 @@ class StatsCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle!,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 11,
-                  color: isDark ? Colors.grey[500] : Colors.grey[600],
+                  color: DT.textSecondary,
                 ),
               ),
             ],
@@ -81,15 +80,15 @@ class StatsCard extends StatelessWidget {
     switch (trend) {
       case 'up':
         trendIcon = Icons.trending_up;
-        trendColor = Colors.green;
+        trendColor = DT.success;
         break;
       case 'down':
         trendIcon = Icons.trending_down;
-        trendColor = Colors.red;
+        trendColor = DT.error;
         break;
       case 'stable':
         trendIcon = Icons.trending_flat;
-        trendColor = Colors.blue;
+        trendColor = DT.secondary;
         break;
       default:
         return const SizedBox.shrink();

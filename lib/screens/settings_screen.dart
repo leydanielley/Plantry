@@ -1,27 +1,27 @@
 // =============================================
-// GROWLOG - Settings Screen (with Theme Switcher)
+// GROWLOG - Settings Screen
 // =============================================
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:growlog_app/utils/app_messages.dart';
-import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/main.dart';
 import 'package:growlog_app/models/app_settings.dart';
 import 'package:growlog_app/utils/translations.dart';
-import 'package:growlog_app/database/database_helper.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/services/interfaces/i_backup_service.dart';
+import 'package:growlog_app/database/database_helper.dart';
 import 'package:growlog_app/utils/app_version.dart';
-import 'package:growlog_app/screens/privacy_policy_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:growlog_app/screens/archive_screen.dart';
+import 'package:growlog_app/screens/privacy_policy_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/widgets/plantry_card.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(AppSettings)? onSettingsChanged;
-
   const SettingsScreen({super.key, this.onSettingsChanged});
 
   @override
@@ -32,9 +32,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   final IBackupService _backupService = getIt<IBackupService>();
   late AppSettings _settings;
-  AppTranslations _t = AppTranslations('de'); // Initialize with default language
+  late AppTranslations _t;
   bool _isLoading = true;
-  bool _showingDialog = false;
 
   @override
   void initState() {
@@ -43,938 +42,234 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final settings = await _settingsRepo.getSettings();
+    final s = await _settingsRepo.getSettings();
     if (mounted) {
       setState(() {
-        _settings = settings;
-        _t = AppTranslations(_settings.language);
+        _settings = s;
+        _t = AppTranslations(s.language);
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _changeLanguage(String newLanguage) async {
-    final newSettings = _settings.copyWith(language: newLanguage);
-    await _settingsRepo.saveSettings(newSettings);
-
-    if (!mounted) return;
-
-    setState(() {
-      _settings = newSettings;
-      _t = AppTranslations(newLanguage);
-    });
-
-    // Update app theme
-    GrowLogApp.of(context)?.updateSettings(newSettings);
-    widget.onSettingsChanged?.call(newSettings);
-
-    AppMessages.showSuccess(context, _t['saved_success']);
-  }
-
-  Future<void> _toggleDarkMode(bool value) async {
-    final newSettings = _settings.copyWith(isDarkMode: value);
-    await _settingsRepo.saveSettings(newSettings);
-
-    if (!mounted) return;
-
-    setState(() => _settings = newSettings);
-
-    // Update app theme immediately
-    GrowLogApp.of(context)?.updateSettings(newSettings);
-    widget.onSettingsChanged?.call(newSettings);
-
-    AppMessages.showSuccess(
-      context,
-      value ? _t['dark_mode_enabled'] : _t['light_mode_enabled'],
-    );
-  }
-
-  Future<void> _toggleExpertMode(bool value) async {
-    // Show warning when enabling Expert Mode
-    if (value == true) {
-      if (!mounted) return;
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
-              const SizedBox(width: 12),
-              Text(_t['settings_expert_mode_title']),
-            ],
-          ),
-          content: Text(
-            '${_t['settings_expert_mode_warning']}\n\n'
-            '${_t['settings_expert_mode_features']}\n'
-            '${_t['settings_expert_mode_rdwc']}\n'
-            '${_t['settings_expert_mode_nutrients']}\n'
-            '${_t['settings_expert_mode_drift']}\n\n'
-            '${_t['settings_expert_mode_question']}\n\n'
-            '${_t['settings_expert_mode_unsure']}',
-            style: const TextStyle(fontSize: 14),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(_t['settings_normal_mode_keep']),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              child: Text(_t['settings_expert_mode_activate']),
-            ),
-          ],
-        ),
-      );
-
-      if (confirm != true) {
-        return; // User cancelled or chose to stay in normal mode
-      }
+  Future<void> _update(AppSettings ns) async {
+    await _settingsRepo.saveSettings(ns);
+    if (mounted) {
+      setState(() { _settings = ns; _t = AppTranslations(ns.language); });
+      GrowLogApp.of(context)?.updateSettings(ns);
+      widget.onSettingsChanged?.call(ns);
     }
-
-    final newSettings = _settings.copyWith(isExpertMode: value);
-    await _settingsRepo.saveSettings(newSettings);
-
-    if (!mounted) return;
-
-    setState(() => _settings = newSettings);
-
-    // Update app settings
-    GrowLogApp.of(context)?.updateSettings(newSettings);
-    widget.onSettingsChanged?.call(newSettings);
-
-    AppMessages.showSuccess(
-      context,
-      value ? _t['expert_mode_enabled'] : _t['expert_mode_disabled'],
-    );
-  }
-
-  Future<void> _changeNutrientUnit(NutrientUnit unit) async {
-    final newSettings = _settings.copyWith(nutrientUnit: unit);
-    await _settingsRepo.saveSettings(newSettings);
-    if (!mounted) return;
-    setState(() => _settings = newSettings);
-    GrowLogApp.of(context)?.updateSettings(newSettings);
-    widget.onSettingsChanged?.call(newSettings);
-  }
-
-  Future<void> _changePpmScale(PpmScale scale) async {
-    final newSettings = _settings.copyWith(ppmScale: scale);
-    await _settingsRepo.saveSettings(newSettings);
-    if (!mounted) return;
-    setState(() => _settings = newSettings);
-    GrowLogApp.of(context)?.updateSettings(newSettings);
-    widget.onSettingsChanged?.call(newSettings);
-  }
-
-  Future<void> _changeTemperatureUnit(TemperatureUnit unit) async {
-    final newSettings = _settings.copyWith(temperatureUnit: unit);
-    await _settingsRepo.saveSettings(newSettings);
-    if (!mounted) return;
-    setState(() => _settings = newSettings);
-    GrowLogApp.of(context)?.updateSettings(newSettings);
-    widget.onSettingsChanged?.call(newSettings);
-  }
-
-  Future<void> _changeLengthUnit(LengthUnit unit) async {
-    final newSettings = _settings.copyWith(lengthUnit: unit);
-    await _settingsRepo.saveSettings(newSettings);
-    if (!mounted) return;
-    setState(() => _settings = newSettings);
-    GrowLogApp.of(context)?.updateSettings(newSettings);
-    widget.onSettingsChanged?.call(newSettings);
-  }
-
-  Future<void> _changeVolumeUnit(VolumeUnit unit) async {
-    final newSettings = _settings.copyWith(volumeUnit: unit);
-    await _settingsRepo.saveSettings(newSettings);
-    if (!mounted) return;
-    setState(() => _settings = newSettings);
-    GrowLogApp.of(context)?.updateSettings(newSettings);
-    widget.onSettingsChanged?.call(newSettings);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (_isLoading) return const Scaffold(backgroundColor: DT.canvas, body: Center(child: CircularProgressIndicator(color: DT.accent)));
 
-    if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: Text(_t['settings_title'])),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(title: Text(_t['settings'])),
+    return PlantryScaffold(
+      title: _t['settings'],
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         children: [
-          // Language Section
-          _buildSectionHeader(_t['language'], isDark),
-          Card(
-            child: Column(
-              children: [
-                _buildLanguageTile('de', _t['german'], '🇩🇪', isDark),
-                const Divider(height: 1),
-                _buildLanguageTile('en', _t['english'], '🇬🇧', isDark),
+          // Sprache
+          _section(_t['language']),
+          PlantryCard(
+            child: Column(children: [
+              _radioTile('Deutsch', 'de', '🇩🇪'),
+              const Divider(height: 1, color: DT.border),
+              _radioTile('English', 'en', '🇬🇧'),
+            ]),
+          ),
+          const SizedBox(height: 24),
+
+          // Design
+          _section(_t['personalization']),
+          PlantryCard(
+            child: Column(children: [
+              _switch(_t['dark_mode'], _settings.isDarkMode, (v) => _update(_settings.copyWith(isDarkMode: v))),
+              const Divider(height: 1, color: DT.border),
+              _switch('Experten Modus', _settings.isExpertMode, (v) => _update(_settings.copyWith(isExpertMode: v))),
+            ]),
+          ),
+          const SizedBox(height: 24),
+
+          // Einheiten
+          _section(_t['units_section']),
+          PlantryCard(
+            child: Column(children: [
+              _unitRow('Nährstoffe', _settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM', () => _update(_settings.copyWith(nutrientUnit: _settings.nutrientUnit == NutrientUnit.ec ? NutrientUnit.ppm : NutrientUnit.ec))),
+              if (_settings.nutrientUnit == NutrientUnit.ppm) ...[
+                const Divider(height: 1, color: DT.border),
+                _unitRow('PPM Skala', _settings.ppmScale.toString().split('.').last.replaceAll('scale', ''), _showPpmScaleDialog),
               ],
-            ),
+              const Divider(height: 1, color: DT.border),
+              _unitRow('Temperatur', _settings.temperatureUnit == TemperatureUnit.celsius ? '°C' : '°F', () => _update(_settings.copyWith(temperatureUnit: _settings.temperatureUnit == TemperatureUnit.celsius ? TemperatureUnit.fahrenheit : TemperatureUnit.celsius))),
+              const Divider(height: 1, color: DT.border),
+              _unitRow('Volumen', _settings.volumeUnit == VolumeUnit.liter ? 'Liter' : 'Gallonen', () => _update(_settings.copyWith(volumeUnit: _settings.volumeUnit == VolumeUnit.liter ? VolumeUnit.gallon : VolumeUnit.liter))),
+            ]),
           ),
-
           const SizedBox(height: 24),
 
-          // Backup & Restore Section
-          _buildSectionHeader(_t['backup_restore'], isDark),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: Icon(Icons.upload_file, color: Colors.green[700]),
-                  title: Text(_t['export_data']),
-                  subtitle: Text(_t['export_data_desc']),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: _exportData,
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.download, color: Colors.blue[700]),
-                  title: Text(_t['import_data']),
-                  subtitle: Text(_t['import_data_desc']),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: _importData,
-                ),
-              ],
-            ),
+          // Datensicherung
+          _section(_t['backup_section']),
+          PlantryCard(
+            child: Column(children: [
+              _actionTile('Daten exportieren', Icons.upload_file, DT.accent, _exportData),
+              const Divider(height: 1, color: DT.border),
+              _actionTile('Daten importieren', Icons.download, DT.secondary, _importData),
+            ]),
           ),
-
           const SizedBox(height: 24),
 
-          // Theme Section
-          _buildSectionHeader(_t['theme'], isDark),
-          Card(
-            child: SwitchListTile(
-              title: Text(_t['dark_mode']),
-              subtitle: Text(
-                _settings.isDarkMode ? _t['dark_mode'] : _t['light_mode'],
-              ),
-              value: _settings.isDarkMode,
-              onChanged: _toggleDarkMode,
-              secondary: Icon(
-                _settings.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                color: Colors.green[700],
-              ),
-            ),
+          // Archiv & Reset
+          _section(_t['data_section']),
+          PlantryCard(
+            child: Column(children: [
+              _actionTile(_t['archive_section'], Icons.archive_outlined, DT.warning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ArchiveScreen()))),
+              const Divider(height: 1, color: DT.border),
+              _actionTile('Datenbank zurücksetzen', Icons.delete_forever, DT.error, _showResetConfirmation),
+            ]),
           ),
-
           const SizedBox(height: 24),
 
-          // Expert Mode Section
-          _buildSectionHeader(_t['expert_mode'], isDark),
-          Card(
-            child: SwitchListTile(
-              title: Text(_t['expert_mode']),
-              subtitle: Text(_t['expert_mode_desc']),
-              value: _settings.isExpertMode,
-              onChanged: _toggleExpertMode,
-              secondary: Icon(
-                _settings.isExpertMode ? Icons.engineering : Icons.person,
-                color: Colors.orange[700],
-              ),
-            ),
+          // Rechtliches
+          _section(_t['information_section']),
+          PlantryCard(
+            child: Column(children: [
+              _actionTile(_t['privacy_policy'], Icons.privacy_tip_outlined, DT.textSecondary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => PrivacyPolicyScreen(language: _settings.language)))),
+              const Divider(height: 1, color: DT.border),
+              _actionTile('GitHub Repository', Icons.code, DT.textSecondary, () => _launch('https://github.com/leydanielley/Plantry')),
+              const Divider(height: 1, color: DT.border),
+              _actionTile(_t['support_donate'], Icons.favorite_outline, DT.error, () => _launch('https://paypal.me/papayaa74')),
+            ]),
           ),
+          const SizedBox(height: 32),
 
-          const SizedBox(height: 24),
-
-          // Measurement Units Section
-          _buildSectionHeader(_t['measurement_units'], isDark),
-          Card(
-            child: Column(
-              children: [
-                // Nutrient Unit (EC/PPM)
-                ListTile(
-                  leading: Icon(Icons.science, color: Colors.blue[700]),
-                  title: Text(_t['nutrient_unit']),
-                  trailing: SegmentedButton<NutrientUnit>(
-                    segments: const [
-                      ButtonSegment(value: NutrientUnit.ec, label: Text('EC')),
-                      ButtonSegment(
-                        value: NutrientUnit.ppm,
-                        label: Text('PPM'),
-                      ),
-                    ],
-                    selected: {_settings.nutrientUnit},
-                    onSelectionChanged: (Set<NutrientUnit> selected) {
-                      _changeNutrientUnit(selected.first);
-                    },
-                  ),
-                ),
-                const Divider(height: 1),
-
-                // PPM Scale (nur sichtbar wenn PPM gewählt)
-                if (_settings.nutrientUnit == NutrientUnit.ppm) ...[
-                  ListTile(
-                    leading: Icon(Icons.analytics, color: Colors.purple[700]),
-                    title: Text(_t['ppm_scale']),
-                    subtitle: Text(_t['ppm_scale_help']),
-                    trailing: SegmentedButton<PpmScale>(
-                      segments: const [
-                        ButtonSegment(
-                          value: PpmScale.scale500,
-                          label: Text('500'),
-                        ),
-                        ButtonSegment(
-                          value: PpmScale.scale700,
-                          label: Text('700'),
-                        ),
-                        ButtonSegment(
-                          value: PpmScale.scale640,
-                          label: Text('640'),
-                        ),
-                      ],
-                      selected: {_settings.ppmScale},
-                      onSelectionChanged: (Set<PpmScale> selected) {
-                        _changePpmScale(selected.first);
-                      },
-                    ),
-                  ),
-                  const Divider(height: 1),
-                ],
-
-                // Temperature Unit (C/F)
-                ListTile(
-                  leading: Icon(Icons.thermostat, color: Colors.orange[700]),
-                  title: Text(_t['temperature_unit']),
-                  trailing: SegmentedButton<TemperatureUnit>(
-                    segments: const [
-                      ButtonSegment(
-                        value: TemperatureUnit.celsius,
-                        label: Text('°C'),
-                      ),
-                      ButtonSegment(
-                        value: TemperatureUnit.fahrenheit,
-                        label: Text('°F'),
-                      ),
-                    ],
-                    selected: {_settings.temperatureUnit},
-                    onSelectionChanged: (Set<TemperatureUnit> selected) {
-                      _changeTemperatureUnit(selected.first);
-                    },
-                  ),
-                ),
-                const Divider(height: 1),
-
-                // Length Unit (cm/inch)
-                ListTile(
-                  leading: Icon(Icons.straighten, color: Colors.green[700]),
-                  title: Text(_t['length_unit']),
-                  trailing: SegmentedButton<LengthUnit>(
-                    segments: const [
-                      ButtonSegment(value: LengthUnit.cm, label: Text('cm')),
-                      ButtonSegment(
-                        value: LengthUnit.inch,
-                        label: Text('inch'),
-                      ),
-                    ],
-                    selected: {_settings.lengthUnit},
-                    onSelectionChanged: (Set<LengthUnit> selected) {
-                      _changeLengthUnit(selected.first);
-                    },
-                  ),
-                ),
-                const Divider(height: 1),
-
-                // Volume Unit (L/Gal)
-                ListTile(
-                  leading: Icon(Icons.water_drop, color: Colors.cyan[700]),
-                  title: Text(_t['volume_unit']),
-                  trailing: SegmentedButton<VolumeUnit>(
-                    segments: const [
-                      ButtonSegment(value: VolumeUnit.liter, label: Text('L')),
-                      ButtonSegment(
-                        value: VolumeUnit.gallon,
-                        label: Text('gal'),
-                      ),
-                    ],
-                    selected: {_settings.volumeUnit},
-                    onSelectionChanged: (Set<VolumeUnit> selected) {
-                      _changeVolumeUnit(selected.first);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Legal & About Section
-          _buildSectionHeader(_t['legal_about'], isDark),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: Icon(Icons.privacy_tip, color: Colors.green[700]),
-                  title: Text(_t['privacy_policy']),
-                  subtitle: Text(_t['privacy_policy_desc']),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            PrivacyPolicyScreen(language: _settings.language),
-                      ),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.favorite, color: Colors.red[400]),
-                  title: Text(_t['support_us']),
-                  subtitle: Text(_t['support_us_desc']),
-                  trailing: const Icon(Icons.open_in_new),
-                  onTap: () async {
-                    final url = Uri.parse('https://paypal.me/papayaa74');
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.info_outline, color: Colors.green[700]),
-                  title: Text(_t['app_name']),
-                  subtitle: Text('Version ${AppVersion.versionWithoutBuild}'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.security, color: Colors.blue[700]),
-                  title: Text(_t['offline_badge']),
-                  subtitle: Text(_t['offline_badge_desc']),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.person, color: Colors.green[700]),
-                  title: Text(_t['developer']),
-                  subtitle: Text(_t['developer_desc']),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.code, color: Colors.grey[700]),
-                  title: Text(_t['github_repo']),
-                  subtitle: Text(_t['github_repo_desc']),
-                  trailing: const Icon(Icons.open_in_new),
-                  onTap: () async {
-                    final url = Uri.parse('https://github.com/leydanielley/Plantry');
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.balance, color: Colors.amber[700]),
-                  title: Text(_t['license']),
-                  subtitle: Text(_t['license_desc']),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Data Management Section
-          _buildSectionHeader(_t['data_management'], isDark),
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.archive, color: Colors.orange[700]),
-              title: const Text(
-                'Archiv',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: const Text(
-                'Archivierte Pflanzen, RDWC-Systeme und Räume anzeigen und wiederherstellen',
-                style: TextStyle(fontSize: 12),
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ArchiveScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            color: Colors.red[50],
-            child: ListTile(
-              leading: Icon(Icons.delete_forever, color: Colors.red[700]),
-              title: Text(
-                _t['reset_database'],
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                _t['reset_database_desc'],
-                style: const TextStyle(fontSize: 12),
-              ),
-              onTap: _showResetConfirmation,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Debug Info
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.bug_report, color: Colors.orange[700]),
-              title: Text(_t['settings_debug_info']),
-              subtitle: Text(
-                '${_t['settings_debug_theme'].replaceAll('{theme}', isDark ? _t['dark_mode'] : _t['light_mode'])}\n'
-                '${_t['settings_debug_expert'].replaceAll('{status}', _settings.isExpertMode ? _t['expert_mode_enabled'] : _t['expert_mode_disabled'])}',
-              ),
-            ),
-          ),
+          Center(child: Text('Version ${AppVersion.versionWithoutBuild}', style: const TextStyle(color: DT.textTertiary, fontSize: 12))),
+          const SizedBox(height: 40),
         ],
       ),
     );
   }
 
-  Future<void> _showResetConfirmation() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning, color: Colors.red[700]),
-            const SizedBox(width: 12),
-            Text(_t['reset_confirm_title']),
-          ],
-        ),
-        content: Text(_t['reset_confirm_message']),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(_t['cancel']),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[700],
-              foregroundColor: Colors.white,
-            ),
-            child: Text(_t['delete']),
-          ),
-        ],
-      ),
-    );
+  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12, left: 4), child: Text(t.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: DT.textTertiary, letterSpacing: 1.5)));
 
-    if (confirmed == true && mounted) {
-      _resetDatabase();
-    }
+  Widget _switch(String l, bool v, ValueChanged<bool> onChanged) {
+    return SwitchListTile(
+      title: Text(l, style: const TextStyle(color: DT.textPrimary, fontSize: 15)),
+      value: v, onChanged: onChanged, activeThumbColor: DT.accent, contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+    );
   }
 
-  Future<void> _exportData() async {
-    _showingDialog = true;
+  Widget _radioTile(String l, String code, String flag) {
+    final sel = _settings.language == code;
+    return ListTile(
+      leading: Text(flag, style: const TextStyle(fontSize: 20)),
+      title: Text(l, style: TextStyle(color: DT.textPrimary, fontSize: 15, fontWeight: sel ? FontWeight.bold : FontWeight.normal)),
+      trailing: sel ? const Icon(Icons.check_circle, color: DT.accent, size: 20) : null,
+      onTap: () => _update(_settings.copyWith(language: code)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+    );
+  }
+
+  Widget _unitRow(String l, String v, VoidCallback onTap) {
+    return ListTile(
+      title: Text(l, style: const TextStyle(color: DT.textPrimary, fontSize: 15)),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(8)),
+        child: Text(v, style: const TextStyle(color: DT.accent, fontWeight: FontWeight.bold, fontSize: 13)),
+      ),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+    );
+  }
+
+  Widget _actionTile(String l, IconData i, Color c, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(i, color: c, size: 20),
+      title: Text(l, style: const TextStyle(color: DT.textPrimary, fontSize: 15)),
+      trailing: const Icon(Icons.chevron_right, color: DT.textTertiary, size: 18),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+    );
+  }
+
+  // PPM Scale Dialog
+  void _showPpmScaleDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: Card(
-          margin: const EdgeInsets.all(24),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text(
-                  _t['settings_creating_backup'],
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: DT.elevated,
+        title: const Text('PPM Skala wählen', style: TextStyle(color: DT.textPrimary)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ppmItem(PpmScale.scale500, '500 (Hanna)'),
+            _ppmItem(PpmScale.scale700, '700 (Truncheon)'),
+            _ppmItem(PpmScale.scale640, '640 (Ewa)'),
+          ],
         ),
       ),
     );
+  }
 
+  Widget _ppmItem(PpmScale s, String l) {
+    return ListTile(
+      title: Text(l, style: const TextStyle(color: DT.textPrimary)),
+      onTap: () { _update(_settings.copyWith(ppmScale: s)); Navigator.pop(context); },
+    );
+  }
+
+  // Backup & Reset Logic
+  Future<void> _exportData() async {
     try {
       await _backupService.exportData();
-
-      if (mounted && _showingDialog) {
-        Navigator.of(context).pop(); // Close loading dialog
-        _showingDialog = false;
-
-        // Show success message
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green[700]),
-                const SizedBox(width: 12),
-                Text(_t['export_success']),
-              ],
-            ),
-            content: Text(_t['export_success_desc']),
-            actions: [
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(_t['ok']),
-              ),
-            ],
-          ),
-        );
-      }
+      if (!mounted) return;
+      AppMessages.showSuccess(context, 'Export erfolgreich!');
     } catch (e) {
-      AppLogger.error('SettingsScreen', 'Export error: $e');
-      if (mounted && _showingDialog) {
-        Navigator.of(context).pop(); // Close loading dialog
-        _showingDialog = false;
-      }
-      if (mounted) {
-        AppMessages.showError(context, '${_t['export_error']}: $e');
-      }
+      if (!mounted) return;
+      AppMessages.showError(context, 'Fehler: $e');
     }
   }
 
   Future<void> _importData() async {
     try {
-      // Pick backup file
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['zip'],
-      );
-
-      if (result == null || result.files.isEmpty) {
-        return; // User cancelled
-      }
-
-      final filePath = result.files.first.path;
-      if (filePath == null) {
-        if (mounted) {
-          AppMessages.showError(context, _t['import_error']);
-        }
-        return;
-      }
-
-      // Show backup info
-      final info = await _backupService.getBackupInfo(filePath);
-
-      if (!mounted) return;
-
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.info_outline, color: Colors.blue[700]),
-              const SizedBox(width: 12),
-              Text(_t['import_confirm']),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(_t['import_confirm_desc']),
-              const SizedBox(height: 16),
-              Text(
-                '${_t['backup_info']}:',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text('${_t['export_date']}: ${info['exportDate']}'),
-              Text('${_t['plants']}: ${info['totalPlants']}'),
-              Text('${_t['logs']}: ${info['totalLogs']}'),
-              Text('${_t['photos']}: ${info['totalPhotos']}'),
-              Text('${_t['rooms']}: ${info['totalRooms']}'),
-              Text('${_t['grows']}: ${info['totalGrows']}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(_t['cancel']),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[700],
-                foregroundColor: Colors.white,
-              ),
-              child: Text(_t['import']),
-            ),
-          ],
-        ),
-      );
-
-      if (confirmed != true || !mounted) return;
-
-      // Show loading
-      _showingDialog = true;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Center(
-          child: Card(
-            margin: const EdgeInsets.all(24),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(
-                    _t['settings_restoring_backup'],
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-
-      // Import data
-      await _backupService.importData(filePath);
-
-      if (mounted && _showingDialog) {
-        Navigator.of(context).pop(); // Close loading dialog
-        _showingDialog = false;
-      }
-
-      if (mounted) {
-        AppMessages.showSuccess(context, _t['import_success']);
-
-        // Return to dashboard
-        Navigator.of(context).popUntil((route) => route.isFirst);
+      final res = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['zip']);
+      if (res != null && res.files.single.path != null) {
+        await _backupService.importData(res.files.single.path!);
+        if (!mounted) return;
+        AppMessages.showSuccess(context, 'Import erfolgreich!');
       }
     } catch (e) {
-      AppLogger.error('SettingsScreen', 'Import error: $e');
-      if (mounted && _showingDialog) {
-        Navigator.of(context).pop(); // Close loading dialog
-        _showingDialog = false;
-      }
-      if (mounted) {
-        AppMessages.showError(context, '${_t['import_error']}: $e');
-      }
-    }
-  }
-
-  Future<void> _resetDatabase() async {
-    _showingDialog = true;
-
-    // Step 1: Show backup progress
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: Card(
-          margin: const EdgeInsets.all(24),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text(
-                  _t['settings_creating_backup'],
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-
-    try {
-      // Step 1: Create automatic backup
-      final backupPath = await _backupService.exportData();
-      AppLogger.info('SettingsScreen', 'Backup created at: $backupPath');
-
       if (!mounted) return;
-
-      // Step 2: Delete all data
-      final db = await DatabaseHelper.instance.database;
-
-      // Delete all tables content (but keep structure)
-      await db.transaction((txn) async {
-        // 1. Delete photo files from filesystem BEFORE deleting DB entries
-        final photos = await txn.query('photos');
-        for (final photo in photos) {
-          try {
-            final file = File(photo['file_path'] as String);
-            if (await file.exists()) {
-              await file.delete();
-              AppLogger.debug(
-                'SettingsScreen',
-                'Deleted photo file',
-                'path=${photo['file_path']}',
-              );
-            }
-          } catch (e) {
-            AppLogger.warning(
-              'SettingsScreen',
-              'Failed to delete photo file',
-              e,
-            );
-            // Continue with DB deletion even if file deletion fails
-          }
-        }
-
-        // 2. Delete child tables first (Foreign Key dependencies)
-        await txn.delete('log_fertilizers');
-        await txn.delete('rdwc_log_fertilizers');
-        await txn.delete('rdwc_recipe_fertilizers');
-        await txn.delete('template_fertilizers');
-        await txn.delete('photos');
-
-        // 3. Delete middle-level tables
-        await txn.delete('harvests');
-        await txn.delete('plant_logs');
-        await txn.delete('rdwc_logs');
-        await txn.delete('log_templates');
-        await txn.delete('rdwc_recipes');
-
-        // 4. Delete parent tables
-        await txn.delete('plants');
-        await txn.delete('rdwc_systems');
-        await txn.delete('grows');
-        await txn.delete('rooms');
-        await txn.delete('hardware');
-        await txn.delete('fertilizers');
-      });
-
-      AppLogger.info('SettingsScreen', 'All data deleted successfully');
-
-      if (mounted && _showingDialog) {
-        Navigator.of(context).pop(); // Close loading dialog
-        _showingDialog = false;
-
-        // Show success with backup info
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green[700]),
-                const SizedBox(width: 12),
-                Text(_t['reset_success']),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(_t['reset_success_desc']),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.backup, size: 20, color: Colors.blue[700]),
-                          const SizedBox(width: 8),
-                          Text(
-                            _t['backup_created'],
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        backupPath.split('/').last,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(_t['ok']),
-              ),
-            ],
-          ),
-        );
-
-        // Return to dashboard
-        if (mounted) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        }
-      }
-    } catch (e, stackTrace) {
-      AppLogger.error(
-        'SettingsScreen',
-        'Error resetting database: $e',
-        e,
-        stackTrace,
-      );
-      if (mounted && _showingDialog) {
-        Navigator.of(context).pop(); // Close loading dialog
-        _showingDialog = false;
-
-        AppMessages.showError(context, '${_t['reset_error']}: $e');
-      }
+      AppMessages.showError(context, 'Fehler: $e');
     }
   }
 
-  Widget _buildSectionHeader(String title, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: isDark ? Colors.grey[400] : Colors.grey[600],
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
+  Future<void> _showResetConfirmation() async {
+    final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      backgroundColor: DT.elevated,
+      title: Text(_t['delete_all_title'], style: const TextStyle(color: DT.error)),
+      content: const Text('Dies löscht permanent alle Daten. Ein Backup wird automatisch erstellt.', style: TextStyle(color: DT.textSecondary)),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
+        TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(_t['delete_all_btn'], style: const TextStyle(color: DT.error))),
+      ],
+    ));
+    if (ok == true) {
+      await _backupService.exportData();
+      final db = await DatabaseHelper.instance.database;
+      await db.transaction((txn) async {
+        await txn.delete('plants'); await txn.delete('plant_logs'); await txn.delete('grows');
+        await txn.delete('rooms'); await txn.delete('hardware'); await txn.delete('fertilizers');
+      });
+      if (!mounted) return;
+      Navigator.pop(context);
+    }
   }
 
-  Widget _buildLanguageTile(
-    String code,
-    String name,
-    String flag,
-    bool isDark,
-  ) {
-    final isSelected = _settings.language == code;
-
-    return ListTile(
-      leading: Text(flag, style: const TextStyle(fontSize: 28)),
-      title: Text(
-        name,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isDark ? Colors.white : Colors.black,
-        ),
-      ),
-      trailing: isSelected
-          ? Icon(Icons.check_circle, color: Colors.green[700])
-          : null,
-      onTap: () => _changeLanguage(code),
-    );
+  Future<void> _launch(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 }

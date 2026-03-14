@@ -75,10 +75,14 @@ class BackupConfig {
     'rdwc_log_fertilizers',
     'rdwc_recipes',
     'rdwc_recipe_fertilizers',
+    'fertilizer_sets',
+    'fertilizer_set_items',
   ];
 
   /// List of tables in deletion order (respects foreign keys)
   static const List<String> deletionOrderTables = [
+    'fertilizer_set_items',
+    'fertilizer_sets',
     'rdwc_recipe_fertilizers',
     'rdwc_log_fertilizers',
     'rdwc_logs',
@@ -100,9 +104,9 @@ class BackupConfig {
 
   /// List of tables in import order (respects foreign keys)
   static const List<String> importOrderTables = [
+    'rdwc_systems',
     'rooms',
     'grows',
-    'rdwc_systems',
     'plants',
     'fertilizers',
     'plant_logs',
@@ -116,6 +120,8 @@ class BackupConfig {
     'template_fertilizers',
     'harvests',
     'app_settings',
+    'fertilizer_sets',
+    'fertilizer_set_items',
   ];
 
   // ═══════════════════════════════════════════

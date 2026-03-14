@@ -1,5 +1,5 @@
 // =============================================
-// GROWLOG - Splash Screen (OPTIMIERT - Async Loading)
+// GROWLOG - Splash Screen
 // =============================================
 
 import 'package:flutter/material.dart';
@@ -8,7 +8,6 @@ import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:growlog_app/screens/dashboard_screen.dart';
 import 'package:growlog_app/database/database_helper.dart';
-import 'package:growlog_app/widgets/widgets.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/app_state_recovery.dart';
 import 'package:growlog_app/utils/version_manager.dart';
@@ -16,6 +15,7 @@ import 'package:growlog_app/utils/update_cleanup.dart';
 import 'package:growlog_app/utils/auto_recovery_helper.dart';
 import 'package:growlog_app/utils/backup_progress_notifier.dart';
 import 'package:growlog_app/screens/manual_recovery_screen.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -63,7 +63,6 @@ class _SplashScreenState extends State<SplashScreen> {
     _initAttempts++;
 
     try {
-      // ✅ P0 FIX: Version tracking & update detection
       if (kDebugMode) {
         await VersionManager.logVersionInfo();
       }
@@ -76,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen> {
         });
       }
 
-      // ✅ NEW: Check if migration crashed/stuck - show recovery screen immediately
+      // Check if migration crashed/stuck - show recovery screen immediately
       final migrationStuck = await VersionManager.isMigrationInProgress();
       if (migrationStuck) {
         AppLogger.error('SplashScreen', '⚠️ Previous migration appears stuck or crashed');
@@ -99,7 +98,6 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
 
-      // ✅ P0 FIX: Check for crash recovery
       final recoveryInfo = await AppStateRecovery.checkRecovery();
 
       if (recoveryInfo.inCrashLoop) {
@@ -140,8 +138,7 @@ class _SplashScreenState extends State<SplashScreen> {
         });
       }
 
-      // ✅ FIX: Timeout nach 10 Minuten (war 30s - zu kurz für Migrationen!)
-      // Migrationen können länger dauern, besonders bei großen Datenbanken
+      // Timeout of 10 minutes — migrations can take longer with large databases
       final db = await DatabaseHelper.instance.database.timeout(
         const Duration(minutes: 10),
         onTimeout: () {
@@ -167,7 +164,6 @@ class _SplashScreenState extends State<SplashScreen> {
       // Mark successful initialization
       await AppStateRecovery.resetCrashCount();
 
-      // ✅ NEW: Check if auto-recovery is needed
       setState(() {
         _status = 'Daten werden überprüft...';
       });
@@ -180,7 +176,6 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
 
-      // ✅ Post-Update Cleanup (run in background)
       if (updateInfo.isUpdate) {
         setState(() {
           _status = 'Aufräumen...';
@@ -191,15 +186,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // Clear backup progress
       BackupProgressNotifier.instance.clear();
 
-      // Fix 2 Sekunden Splash
-      if (stopwatch.elapsedMilliseconds < 2000) {
-        await Future.delayed(
-          Duration(milliseconds: 2000 - stopwatch.elapsedMilliseconds),
-        );
-      }
-
       if (mounted) {
-        // OPTIMIERUNG 3: Direkt navigieren ohne weitere Delays
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
@@ -222,8 +209,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // Clear backup progress on error
       BackupProgressNotifier.instance.clear();
 
-      // ✅ CRITICAL FIX: DON'T navigate to Dashboard on DB error!
-      // Instead, stay on splash screen and show error state
+      // Stay on splash screen and show error state — do NOT navigate to Dashboard
       setState(() {
         _hasError = true;
         _status = 'Kritischer Fehler beim Laden der Datenbank';
@@ -235,13 +221,6 @@ class _SplashScreenState extends State<SplashScreen> {
         await _showDatabaseErrorDialog(e.toString());
       }
     }
-  }
-
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning! 🌱';
-    if (hour < 18) return 'Good Afternoon! 🌿';
-    return 'Good Evening! 🌙';
   }
 
   /// Show critical database error dialog
@@ -529,17 +508,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF121212)
-          : const Color(0xFF004225),
+      backgroundColor: DT.canvas,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // PlantPot Icon mit Animation
+            // Logo mit Animation
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),
               duration: const Duration(milliseconds: 600),
@@ -547,57 +522,62 @@ class _SplashScreenState extends State<SplashScreen> {
               builder: (context, value, child) {
                 return Transform.scale(scale: value, child: child);
               },
-              child: Container(
-                padding: const EdgeInsets.all(30),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1E1E1E)
-                      : Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: PlantPotIcon(
-                  size: 100,
-                  leavesColor: const Color(0xFF4CAF50),
-                  stemColor: const Color(0xFF6D4C41),
-                  potColor: isDark
-                      ? const Color(0xFF78909C)
-                      : const Color(0xFF90A4AE),
-                ),
+              child: Image.asset(
+                'assets/icons/app_icon.png',
+                width: 120,
+                height: 120,
               ),
             ),
             const SizedBox(height: 32),
 
-            // Welcome Text
-            const Text(
-              'Welcome',
-              style: TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 1.0,
-              ),
+            // App Name
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'PLANTRY',
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w900,
+                    color: DT.textPrimary,
+                    letterSpacing: -1,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: const BoxDecoration(
+                    color: DT.accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-
-            // Greeting
-            Text(
-              _getGreeting(),
-              style: const TextStyle(fontSize: 18, color: Colors.white70),
+            const SizedBox(height: 6),
+            const Text(
+              'PLANT HEALTH TRACKER',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: DT.accent,
+                letterSpacing: 2,
+              ),
             ),
             const SizedBox(height: 64),
 
             // Loading Indicator
             if (!_hasError)
               const SizedBox(
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(DT.accent),
+                  strokeWidth: 2.5,
                 ),
               )
             else
-              const Icon(Icons.error_outline, color: Colors.orange, size: 40),
+              const Icon(Icons.error_outline, color: DT.error, size: 40),
 
             const SizedBox(height: 16),
 
@@ -605,8 +585,8 @@ class _SplashScreenState extends State<SplashScreen> {
             Text(
               _status,
               style: TextStyle(
-                fontSize: 14,
-                color: _hasError ? Colors.orange[200] : Colors.white60,
+                fontSize: 13,
+                color: _hasError ? DT.error : DT.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -618,27 +598,19 @@ class _SplashScreenState extends State<SplashScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 48),
                 child: Column(
                   children: [
-                    // Progress Bar
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
-                        value:
-                            _backupProgress!.current / _backupProgress!.total,
+                        value: _backupProgress!.current / _backupProgress!.total,
                         minHeight: 6,
-                        backgroundColor: Colors.white24,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF4CAF50),
-                        ),
+                        backgroundColor: DT.elevated,
+                        valueColor: const AlwaysStoppedAnimation<Color>(DT.accent),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Progress Text
                     Text(
                       _backupProgress!.message,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.white54,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: DT.textTertiary),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -646,23 +618,20 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ],
 
-            // Debug Info (nur im Debug Mode)
+            // Debug Info
             if (kDebugMode) ...[
               const SizedBox(height: 24),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.black26,
+                  color: DT.elevated,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
                   'DEBUG MODE',
                   style: TextStyle(
                     fontSize: 10,
-                    color: Colors.white54,
+                    color: DT.textTertiary,
                     fontFamily: 'monospace',
                   ),
                 ),

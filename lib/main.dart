@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import für den Fix
 import 'package:growlog_app/models/app_settings.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/screens/splash_screen.dart';
@@ -15,44 +16,43 @@ import 'package:growlog_app/providers/grow_provider.dart';
 import 'package:growlog_app/providers/room_provider.dart';
 import 'package:growlog_app/providers/log_provider.dart';
 
-// Import sqflite_ffi for Desktop platforms (Linux, Windows, macOS)
-// Android and iOS use native sqflite implementation (no import needed)
+// Import sqflite_ffi for Desktop platforms
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ CRITICAL FIX: Initialize sqflite for Desktop platforms
-  // On Android/iOS, sqflite uses native implementation
-  // On Linux/Windows/macOS, we need to initialize sqflite_ffi
+  // ===================== RECOVERY CODE =====================
+  // Dieser Block löscht den fehlerhaften Migrations-Status.
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('migration_status') == 'in_progress') {
+      await prefs.remove('migration_status');
+      await prefs.remove('migration_start_time');
+      AppLogger.warning('main.dart', 'FORCE-CLEARED stuck migration flag.');
+    }
+  } catch (e) {
+    AppLogger.error('main.dart', 'Failed to clear migration flag', e);
+  }
+  // ================= END RECOVERY CODE =================
+
   if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
-    AppLogger.info('Main', 'Initializing sqflite_ffi for Desktop platform');
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
 
-  // Initialize dependency injection
   await setupServiceLocator();
-  AppLogger.info('Main', 'Service locator initialized');
 
-  // Global Error Handler für Flutter Errors
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    AppLogger.error(
-      'Flutter',
-      'Flutter Error: ${details.exception}',
-      details.exception,
-      details.stack,
-    );
+    AppLogger.error('Flutter', 'Error: ${details.exception}', details.exception, details.stack);
   };
 
-  // Global Error Handler für Async Errors (außerhalb Flutter Framework)
   PlatformDispatcher.instance.onError = (error, stack) {
-    AppLogger.error('AsyncError', 'Uncaught Error', error, stack);
-    return true; // Error handled
+    AppLogger.error('AsyncError', 'Uncaught', error, stack);
+    return true;
   };
 
-  // Wrap app with multiple providers
   runApp(
     MultiProvider(
       providers: [
@@ -78,10 +78,10 @@ class GrowLogApp extends StatefulWidget {
 
 class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
-  // ✅ FIX: Initialize with defaults to prevent LateInitializationError
+  
   late AppSettings _settings = AppSettings(
     language: 'de',
-    isDarkMode: false,
+    isDarkMode: true,
     isExpertMode: false,
     nutrientUnit: NutrientUnit.ec,
     ppmScale: PpmScale.scale700,
@@ -107,127 +107,37 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-
-    AppLogger.info('AppLifecycle', 'State changed: ${state.name}');
-
-    switch (state) {
-      case AppLifecycleState.resumed:
-        AppLogger.info('AppLifecycle', '✅ App resumed');
-        break;
-      case AppLifecycleState.inactive:
-        // Foldable is folding or app switching
-        AppLogger.info('AppLifecycle', '⚠️ App inactive (possibly folding)');
-        break;
-      case AppLifecycleState.paused:
-        AppLogger.info('AppLifecycle', '⏸️ App paused');
-        // ✅ FIX: CRITICAL - Use unawaited to prevent data loss when OS kills app
-        // Cannot make didChangeAppLifecycleState async (framework constraint)
-        unawaited(_handleAppPause());
-        break;
-      case AppLifecycleState.detached:
-        AppLogger.info('AppLifecycle', '🔌 App detached');
-        break;
-      case AppLifecycleState.hidden:
-        AppLogger.info('AppLifecycle', '👁️ App hidden');
-        break;
-    }
-  }
-
-  /// Handle app pause - save critical state
-  Future<void> _handleAppPause() async {
-    try {
-      // Save current settings to prevent loss
-      await _settingsRepo.saveSettings(_settings);
-      AppLogger.info('AppLifecycle', 'Settings saved on pause');
-    } catch (e) {
-      AppLogger.error('AppLifecycle', 'Failed to save settings on pause', e);
+    if (state == AppLifecycleState.paused) {
+      unawaited(_settingsRepo.saveSettings(_settings));
     }
   }
 
   Future<void> _loadSettings() async {
     try {
-      // Timeout claudenach 10 Sekunden - verhindert unendliches Hängen
-      final settings = await _settingsRepo.getSettings().timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          AppLogger.warning(
-            'Main',
-            'Settings loading timeout - using defaults',
-          );
-          // Fallback auf Default-Settings
-          return AppSettings(
-            language: 'de',
-            isDarkMode: false,
-            isExpertMode: false,
-            nutrientUnit: NutrientUnit.ec,
-            ppmScale: PpmScale.scale700,
-            temperatureUnit: TemperatureUnit.celsius,
-            lengthUnit: LengthUnit.cm,
-            volumeUnit: VolumeUnit.liter,
-          );
-        },
-      );
-
-      if (mounted) {
-        setState(() {
-          _settings = settings;
-          _isLoading = false;
-        });
-      }
-    } catch (e, stackTrace) {
-      AppLogger.error('Main', 'Error loading settings', e, stackTrace);
-
-      // Fallback auf Default-Settings bei Fehler
-      if (mounted) {
-        setState(() {
-          _settings = AppSettings(
-            language: 'de',
-            isDarkMode: false,
-            isExpertMode: false,
-            nutrientUnit: NutrientUnit.ec,
-            ppmScale: PpmScale.scale700,
-            temperatureUnit: TemperatureUnit.celsius,
-            lengthUnit: LengthUnit.cm,
-            volumeUnit: VolumeUnit.liter,
-          );
-          _isLoading = false;
-        });
-      }
+      final settings = await _settingsRepo.getSettings().timeout(const Duration(seconds: 5));
+      if (mounted) setState(() { _settings = settings; _isLoading = false; });
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void updateSettings(AppSettings newSettings) {
-    setState(() {
-      _settings = newSettings;
-    });
+    setState(() => _settings = newSettings);
   }
 
-  // Getter to access current settings
   AppSettings get settings => _settings;
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(color: Colors.green[700]),
-          ),
-        ),
-      );
-    }
+    if (_isLoading) return const MaterialApp(home: Scaffold(backgroundColor: Color(0xFF050505), body: Center(child: CircularProgressIndicator(color: Color(0xFF00FFBB)))));
 
     return MaterialApp(
       title: 'Plantry',
       debugShowCheckedModeBanner: false,
       themeMode: _settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-
       theme: AppTheme.lightTheme(),
       darkTheme: AppTheme.darkTheme(),
-
       home: const SplashScreen(),
-
-      // Named routes for deep linking
       routes: {'/privacy-policy': (context) => const PrivacyPolicyScreen()},
     );
   }

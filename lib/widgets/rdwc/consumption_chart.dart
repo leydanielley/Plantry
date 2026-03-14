@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:growlog_app/utils/unit_converter.dart';
 import 'package:growlog_app/models/app_settings.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class ConsumptionChart extends StatelessWidget {
   final Map<String, dynamic> dailyConsumption; // date -> liters
@@ -25,7 +26,6 @@ class ConsumptionChart extends StatelessWidget {
       return _buildEmptyState(context);
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final entries = dailyConsumption.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
@@ -57,7 +57,7 @@ class ConsumptionChart extends StatelessWidget {
                 return BarTooltipItem(
                   '$date\n$formatted',
                   const TextStyle(
-                    color: Colors.white,
+                    color: DT.textPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 );
@@ -90,9 +90,9 @@ class ConsumptionChart extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       days[dayOfWeek - 1],
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 10,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        color: DT.textSecondary,
                       ),
                     ),
                   );
@@ -106,9 +106,9 @@ class ConsumptionChart extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   return Text(
                     UnitConverter.formatVolume(value, settings.volumeUnit),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 10,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      color: DT.textSecondary,
                     ),
                   );
                 },
@@ -126,11 +126,8 @@ class ConsumptionChart extends StatelessWidget {
             drawVerticalLine: false,
             horizontalInterval: chartMaxY / 5,
             getDrawingHorizontalLine: (value) {
-              return FlLine(
-                // ✅ FIX: Replace force unwrap with null-aware operator
-                color: isDark
-                    ? (Colors.grey[800] ?? Colors.grey)
-                    : (Colors.grey[300] ?? Colors.grey),
+              return const FlLine(
+                color: DT.elevated,
                 strokeWidth: 1,
               );
             },
@@ -144,7 +141,7 @@ class ConsumptionChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: consumption,
-                  color: Colors.blue,
+                  color: DT.secondary,
                   width: 16,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(4),
@@ -152,10 +149,7 @@ class ConsumptionChart extends StatelessWidget {
                   backDrawRodData: BackgroundBarChartRodData(
                     show: true,
                     toY: chartMaxY,
-                    // ✅ FIX: Replace force unwrap with null-aware operator
-                    color: isDark
-                        ? (Colors.grey[800] ?? Colors.grey)
-                        : (Colors.grey[200] ?? Colors.grey),
+                    color: DT.surface,
                   ),
                 ),
               ],
@@ -166,7 +160,7 @@ class ConsumptionChart extends StatelessWidget {
             horizontalLines: [
               HorizontalLine(
                 y: averageConsumption,
-                color: Colors.orange,
+                color: DT.warning,
                 strokeWidth: 2,
                 dashArray: [5, 5],
                 label: HorizontalLineLabel(
@@ -174,7 +168,7 @@ class ConsumptionChart extends StatelessWidget {
                   labelResolver: (line) =>
                       'Avg: ${UnitConverter.formatVolume(averageConsumption, settings.volumeUnit)}',
                   style: const TextStyle(
-                    color: Colors.orange,
+                    color: DT.warning,
                     fontWeight: FontWeight.bold,
                     fontSize: 10,
                   ),
@@ -191,15 +185,15 @@ class ConsumptionChart extends StatelessWidget {
     return Container(
       height: 300,
       padding: const EdgeInsets.all(32),
-      child: Center(
+      child: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.bar_chart, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
+            Icon(Icons.bar_chart, size: 64, color: DT.textSecondary),
+            SizedBox(height: 16),
             Text(
               'No consumption data yet',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 16, color: DT.textSecondary),
             ),
           ],
         ),

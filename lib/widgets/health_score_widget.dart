@@ -10,6 +10,7 @@ import 'package:growlog_app/services/interfaces/i_warning_service.dart';
 import 'package:growlog_app/services/warning_service.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class HealthScoreWidget extends StatefulWidget {
   final Plant plant;
@@ -126,11 +127,11 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
                             color: _getScoreColor(),
                           ),
                         ),
-                        Text(
+                        const Text(
                           '/100',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: DT.textSecondary,
                           ),
                         ),
                       ],
@@ -165,7 +166,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
                         AppTranslations(
                           Localizations.localeOf(context).languageCode,
                         ).translate('plant_health'),
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        style: const TextStyle(fontSize: 14, color: DT.textSecondary),
                       ),
                     ],
                   ),
@@ -202,9 +203,9 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
                   if (_warnings.length > 3)
                     Text(
                       '+ ${_warnings.length - 3} weitere Warnungen',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: DT.textSecondary,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -321,7 +322,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
             const SizedBox(height: 4),
             Text(
               '→ ${warning.recommendation}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+              style: const TextStyle(fontSize: 12, color: DT.textTertiary),
             ),
           ],
         ],
@@ -346,7 +347,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
         const SizedBox(height: 4),
         LinearProgressIndicator(
           value: value / 100,
-          backgroundColor: Colors.grey[300],
+          backgroundColor: DT.elevated,
           valueColor: AlwaysStoppedAnimation<Color>(
             _getScoreColorForValue(value),
           ),
@@ -359,14 +360,14 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
   /// ✅ FIX: Safe color getter that handles null health score
   Color _getScoreColor() {
     if (_healthScore == null) {
-      return Colors.grey; // Default color when score unavailable
+      return DT.textTertiary; // Default color when score unavailable
     }
     return _getScoreColorForValue(_healthScore!.score.toDouble());
   }
 
   Color _getScoreColorForValue(double value) {
-    if (value >= 90) return Colors.green;
-    if (value >= 70) return Colors.lightGreen;
+    if (value >= 90) return DT.success;
+    if (value >= 70) return DT.success;
     if (value >= 50) return Colors.orange;
     if (value >= 30) return Colors.deepOrange;
     return Colors.red;

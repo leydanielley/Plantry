@@ -341,7 +341,7 @@ void main() {
 
       // Validate plants FKs
       final plantsFks = await db.rawQuery('PRAGMA foreign_key_list(plants)');
-      for (var fk in plantsFks) {
+      for (final fk in plantsFks) {
         if (fk['from'] == 'room_id' || fk['from'] == 'grow_id') {
           expect(fk['on_delete'], 'RESTRICT',
               reason: '${fk['from']} should be RESTRICT');

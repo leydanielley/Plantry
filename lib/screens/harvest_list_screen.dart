@@ -4,15 +4,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/utils/translations.dart';
-import 'package:growlog_app/utils/app_constants.dart';
-import 'package:growlog_app/widgets/empty_state_widget.dart';
+import 'package:growlog_app/widgets/plantry_list_tile.dart';
+import 'package:growlog_app/widgets/plantry_chips.dart';
 import 'package:growlog_app/screens/harvest_detail_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class HarvestListScreen extends StatefulWidget {
   const HarvestListScreen({super.key});
@@ -29,6 +31,8 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
   bool _isLoading = true;
   String _filter = 'all'; // all, drying, curing, completed
   late AppTranslations _t = AppTranslations('de');
+
+  final List<String> _filterKeys = ['all', 'drying', 'curing', 'completed'];
 
   @override
   void initState() {
@@ -47,14 +51,11 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
   }
 
   Future<void> _loadHarvests() async {
-    if (!mounted) return; // ✅ FIX: Add mounted check before setState
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
-      AppLogger.info('HarvestListScreen', 'Loading harvests...');
       final harvests = await _harvestRepo.getAllHarvestsWithPlants();
-      AppLogger.info('HarvestListScreen', 'Loaded ${harvests.length} harvests');
-
       if (mounted) {
         setState(() {
           _harvests = harvests;
@@ -63,9 +64,7 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
       }
     } catch (e) {
       AppLogger.error('HarvestListScreen', 'Error: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -74,14 +73,12 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
       case 'drying':
         return _harvests.where((h) {
           final harvest = Harvest.fromMap(h);
-          return harvest.dryingStartDate != null &&
-              harvest.dryingEndDate == null;
+          return harvest.dryingStartDate != null && harvest.dryingEndDate == null;
         }).toList();
       case 'curing':
         return _harvests.where((h) {
           final harvest = Harvest.fromMap(h);
-          return harvest.curingStartDate != null &&
-              harvest.curingEndDate == null;
+          return harvest.curingStartDate != null && harvest.curingEndDate == null;
         }).toList();
       case 'completed':
         return _harvests.where((h) {
@@ -95,38 +92,29 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_t['harvests']),
-        backgroundColor: AppConstants.primaryGreen,
-        foregroundColor: Colors.white,
-      ),
+    final filterLabels = [
+      _t['all'], 
+      _t['in_drying'], 
+      _t['in_curing'], 
+      _t['completed']
+    ];
+
+    return PlantryScaffold(
+      title: _t['harvests'],
       body: Column(
         children: [
-          // Filter Chips
-          Container(
-            padding: AppConstants.paddingMedium,
-            color: Colors.green[50],
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildFilterChip(_t['all'], 'all'),
-                  const SizedBox(width: AppConstants.spacingSmall),
-                  _buildFilterChip(_t['in_drying'], 'drying'),
-                  const SizedBox(width: AppConstants.spacingSmall),
-                  _buildFilterChip(_t['in_curing'], 'curing'),
-                  const SizedBox(width: AppConstants.spacingSmall),
-                  _buildFilterChip(_t['completed'], 'completed'),
-                ],
-              ),
-            ),
+          const SizedBox(height: 16),
+          PlantryFilterChips(
+            labels: filterLabels,
+            selectedIndex: _filterKeys.indexOf(_filter),
+            onSelected: (index) {
+              setState(() => _filter = _filterKeys[index]);
+            },
           ),
-
-          // List
+          const SizedBox(height: 16),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: DT.accent))
                 : _filteredHarvests.isEmpty
                 ? _buildEmptyState()
                 : _buildHarvestList(),
@@ -136,123 +124,70 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label, String value) {
-    final isSelected = _filter == value;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        setState(() => _filter = value);
-      },
-      selectedColor: Colors.green[200],
-      checkmarkColor: Colors.green[700],
-    );
-  }
-
-  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
   Widget _buildEmptyState() {
-    return EmptyStateWidget(
-      icon: Icons.grass,
-      title: _filter == 'all' ? _t['no_harvests_yet'] : _t['no_harvests_found'],
-      subtitle: _filter == 'all'
-          ? _t['record_first_harvest']
-          : _t['no_harvests_filter'],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.grass_outlined, size: 80, color: DT.textTertiary),
+          const SizedBox(height: 24),
+          Text(
+            _filter == 'all' ? _t['no_harvests_yet'] : _t['no_harvests_found'],
+            style: const TextStyle(fontSize: 20, color: DT.textPrimary, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _filter == 'all' ? _t['record_first_harvest'] : _t['no_harvests_filter'],
+            style: const TextStyle(fontSize: 16, color: DT.textSecondary),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildHarvestList() {
-    return ListView.builder(
-      padding: AppConstants.listPadding,
-      itemCount: _filteredHarvests.length,
-      itemBuilder: (context, index) {
-        final harvestData = _filteredHarvests[index];
-        final harvest = Harvest.fromMap(harvestData);
+    return RefreshIndicator(
+      onRefresh: _loadHarvests,
+      color: DT.accent,
+      backgroundColor: DT.surface,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+        itemCount: _filteredHarvests.length,
+        itemBuilder: (context, index) {
+          final harvestData = _filteredHarvests[index];
+          final harvest = Harvest.fromMap(harvestData);
 
-        return Card(
-          margin: AppConstants.cardMarginVertical,
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: _getStatusColor(harvest),
-              child: const Icon(Icons.grass, color: Colors.white),
-            ),
-            title: Text(
-              harvestData['plant_name'] as String,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (harvestData['plant_strain'] != null)
-                  Text(harvestData['plant_strain'] as String),
-                const SizedBox(height: AppConstants.spacingXs),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: AppConstants.fontSizeSmall,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: AppConstants.listItemIconSpacing),
-                    Text(
-                      DateFormat('dd.MM.yyyy').format(harvest.harvestDate),
-                      style: TextStyle(
-                        fontSize: AppConstants.fontSizeSmall,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    if (harvest.dryWeight != null) ...[
-                      const SizedBox(width: AppConstants.listItemSpacingMedium),
-                      Icon(
-                        Icons.scale,
-                        size: AppConstants.fontSizeSmall,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: AppConstants.listItemIconSpacing),
-                      Text(
-                        '${harvest.dryWeight!.toStringAsFixed(1)}g',
-                        style: TextStyle(
-                          fontSize: AppConstants.fontSizeSmall,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[700],
-                        ),
-                      ),
-                    ],
-                  ],
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: PlantryListTile(
+              leading: Container(
+                width: 48, height: 48,
+                decoration: BoxDecoration(
+                  color: _getStatusColor(harvest).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: AppConstants.spacingXs),
-                Text(
-                  '${harvest.dryingStatus} • ${harvest.curingStatus}',
-                  style: TextStyle(
-                    fontSize: AppConstants.roomDimensionsFontSize,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
+                child: Icon(Icons.grass_rounded, color: _getStatusColor(harvest), size: 28),
+              ),
+              title: harvestData['plant_name'] as String,
+              subtitle: '${harvestData['plant_strain'] ?? "Unbekannt"}\n${DateFormat('dd.MM.yyyy').format(harvest.harvestDate)}${harvest.dryWeight != null ? ' • ${harvest.dryWeight!.toStringAsFixed(1)}g' : ''}',
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HarvestDetailScreen(harvestId: harvest.id!)),
+                );
+                _loadHarvests();
+              },
             ),
-            trailing: const Icon(
-              Icons.arrow_forward_ios,
-              size: AppConstants.spacingMedium,
-            ),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      HarvestDetailScreen(harvestId: harvest.id!),
-                ),
-              );
-              _loadHarvests();
-            },
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
   Color _getStatusColor(Harvest harvest) {
-    if (harvest.isComplete) return Colors.green;
-    if (harvest.curingStartDate != null) return Colors.purple;
-    if (harvest.dryingStartDate != null) return Colors.orange;
-    return Colors.grey;
+    if (harvest.isComplete) return DT.success;
+    if (harvest.curingStartDate != null) return DT.info;
+    if (harvest.dryingStartDate != null) return DT.warning;
+    return DT.textTertiary;
   }
 }

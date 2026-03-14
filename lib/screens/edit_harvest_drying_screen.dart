@@ -9,6 +9,8 @@ import 'package:intl/intl.dart';
 import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class EditHarvestDryingScreen extends StatefulWidget {
   final Harvest harvest;
@@ -22,6 +24,7 @@ class EditHarvestDryingScreen extends StatefulWidget {
 
 class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
+  late AppTranslations _t;
   final _formKey = GlobalKey<FormState>();
 
   DateTime? _dryingStartDate;
@@ -31,6 +34,12 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
   final TextEditingController _humidityController = TextEditingController();
 
   bool _isSaving = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode);
+  }
 
   @override
   void initState() {
@@ -95,16 +104,12 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Trocknung bearbeiten'),
-        backgroundColor: Colors.orange[700],
-        foregroundColor: Colors.white,
-        actions: [
-          if (!_isSaving)
-            IconButton(icon: const Icon(Icons.check), onPressed: _save),
-        ],
-      ),
+    return PlantryScaffold(
+      title: 'Trocknung bearbeiten',
+      actions: [
+        if (!_isSaving)
+          IconButton(icon: const Icon(Icons.check), onPressed: _save),
+      ],
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -116,17 +121,17 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: DT.warning.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.orange[200] ?? Colors.orange,
+                    color: DT.warning.withValues(alpha: 0.3),
                   ),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    Icon(Icons.dry_cleaning, color: Colors.orange[700]),
-                    const SizedBox(width: 12),
-                    const Expanded(
+                    Icon(Icons.dry_cleaning, color: DT.warning),
+                    SizedBox(width: 12),
+                    Expanded(
                       child: Text(
                         'Trocknungs-Daten',
                         style: TextStyle(
@@ -145,7 +150,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 label: 'Start-Datum',
                 date: _dryingStartDate,
                 icon: Icons.play_arrow,
-                color: Colors.orange,
+                color: DT.warning,
                 onTap: () async {
                   final date = await showDatePicker(
                     context: context,
@@ -166,7 +171,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 label: 'End-Datum',
                 date: _dryingEndDate,
                 icon: Icons.stop,
-                color: Colors.green,
+                color: DT.success,
                 onTap: () async {
                   final date = await showDatePicker(
                     context: context,
@@ -187,19 +192,19 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: DT.secondary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.timer, color: Colors.blue),
+                      const Icon(Icons.timer, color: DT.secondary),
                       const SizedBox(width: 8),
                       Text(
                         'Dauer: ${_dryingEndDate!.difference(_dryingStartDate!).inDays} Tage',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+                          color: DT.secondary,
                         ),
                       ),
                     ],
@@ -279,23 +284,23 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: DT.warning.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.orange[200] ?? Colors.orange,
+                    color: DT.warning.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
                         Icon(
                           Icons.lightbulb_outline,
-                          color: Colors.orange[700],
+                          color: DT.warning,
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
+                        SizedBox(width: 8),
+                        Text(
                           'Tipps',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
@@ -315,7 +320,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                             const Icon(
                               Icons.check,
                               size: 16,
-                              color: Colors.green,
+                              color: DT.success,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -338,10 +343,10 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: DT.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: DT.canvas.withValues(alpha: 0.5),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),
@@ -352,7 +357,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
             Expanded(
               child: OutlinedButton(
                 onPressed: _isSaving ? null : () => Navigator.pop(context),
-                child: const Text('Abbrechen'),
+                child: Text(_t['cancel']),
               ),
             ),
             const SizedBox(width: 12),
@@ -369,8 +374,8 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                     : const Icon(Icons.save),
                 label: Text(_isSaving ? 'Speichert...' : 'Speichern'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
+                  backgroundColor: DT.warning,
+                  foregroundColor: DT.textPrimary,
                 ),
               ),
             ),
@@ -393,7 +398,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300] ?? Colors.grey),
+          border: Border.all(color: DT.border),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -406,20 +411,18 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: const TextStyle(fontSize: 12, color: DT.textSecondary),
                   ),
                   Text(
                     date != null
                         ? DateFormat('dd.MM.yyyy').format(date)
-                        : AppTranslations(
-                            Localizations.localeOf(context).languageCode,
-                          )['edit_harvest_not_set'],
+                        : _t['edit_harvest_not_set'],
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: date != null
                           ? FontWeight.bold
                           : FontWeight.normal,
-                      color: date != null ? Colors.black : Colors.grey[400],
+                      color: date != null ? DT.textPrimary : DT.textTertiary,
                     ),
                   ),
                 ],
@@ -429,7 +432,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
               IconButton(
                 icon: const Icon(Icons.clear),
                 onPressed: onClear,
-                color: Colors.grey[400],
+                color: DT.textTertiary,
               ),
           ],
         ),

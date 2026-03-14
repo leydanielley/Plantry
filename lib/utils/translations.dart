@@ -2,21 +2,6 @@
 // GROWLOG - Translations / i18n
 // =============================================
 
-// ✅ AUDIT WARNING: Duplicate keys exist in this file:
-// - 'add_fertilizer' (lines 52, 468, 608, 1024)
-// - 'bucket_count' (lines 143, 496, 699, 1052)
-// - 'photos' (lines 187, 460, 743, 1016)
-// - 'system_info' (lines 138, 278, 694, 834)
-// - 'target_ph' (lines 227, 285, 783, 841)
-//
-// NOTE: These duplicates exist because translations were added
-// incrementally in different feature sections. In Dart Maps,
-// the last value overwrites previous ones, so the duplicates
-// don't cause runtime errors but indicate technical debt.
-//
-// RECOMMENDATION: Consolidate these keys in a future refactoring.
-// For now, they work correctly since the values are identical.
-
 class AppTranslations {
   final String languageCode;
 
@@ -527,6 +512,10 @@ class AppTranslations {
       'change_phase': 'Phase ändern',
       'date_time': 'Datum & Uhrzeit',
       'add_photo': 'Hinzufügen',
+      'add_photo_placeholder': 'Foto hinzufügen...',
+      'save_set': 'Set speichern',
+      'load_set': 'Set laden',
+      'choose_fertilizer': 'Dünger wählen',
       'no_photos_added': 'Keine Fotos hinzugefügt',
       'tap_to_add_photos':
           'Tippe auf "Hinzufügen" um Fotos zu diesem Log hinzuzufügen',
@@ -827,6 +816,12 @@ class AppTranslations {
       'plant_detail_no_logs': 'Noch keine Logs',
       'plant_detail_add_first_log': 'Füge den ersten Log-Eintrag hinzu!',
       'plant_detail_total_day': 'Gesamt: Tag {day}',
+      'create_entry': 'Eintrag erstellen',
+      'log_scope_question': 'Möchtest du nur für diese Pflanze oder für alle Pflanzen im Grow loggen?',
+      'only_this': 'Nur diese',
+      'all_plants': 'Alle Pflanzen',
+      'harvested_weight': 'Geerntet:',
+      'confirm_delete': 'Löschen?',
 
       // ✅ AUDIT FIX: i18n extraction - Add Room Screen
       'add_room_title': 'Neuer Raum',
@@ -1128,6 +1123,230 @@ class AppTranslations {
       'plant_archived_success': '{name} wurde archiviert',
       'no_rdwc_system': 'Kein RDWC System',
       'no_bucket': 'Kein Bucket',
+
+      // Edit Plant Screen
+      'no_grow': 'Kein Grow',
+      'choose_system': 'System wählen...',
+      'confirm_archive': 'Archivieren?',
+      'plant_will_be_archived': 'Die Pflanze wird archiviert.',
+
+      // RDWC System Detail Screen
+      'avg_per_day': 'Ø/Tag',
+      'buckets': 'Buckets',
+      'no_plants_assigned': 'Keine Pflanzen zugewiesen',
+      'no_logs_available': 'Noch keine Logs vorhanden',
+      'max': 'Max',
+      'rest': 'Rest',
+      'delete_system_confirm': 'Alle Daten dieses Systems werden gelöscht.',
+      'addback_action': 'Addback',
+      'measurement_action': 'Messung',
+      'calculator_action': 'Rechner',
+      'log_type_addback': 'Addback',
+      'log_type_change': 'Wechsel',
+      'log_type_maintenance': 'Wartung',
+
+      // Manual Recovery Screen
+      'data_recovery': 'Datenwiederherstellung',
+      'skip': 'Überspringen',
+      'recovery_options': 'Wiederherstellungsoptionen',
+      'preparing_recovery': 'Bereite Wiederherstellung vor...',
+      'recovery_success': 'Wiederherstellung erfolgreich! ✅',
+      'recovery_failed': 'Wiederherstellung fehlgeschlagen',
+      'choose_own_file': 'Eigene Datei wählen',
+      'new_db': 'Neue DB',
+      'create_new_db': 'Neue DB erstellen',
+      'db_error_detected': 'Datenbankfehler erkannt',
+      'warning': 'Warnung',
+      'no_auto_backups': 'Keine automatischen Backups gefunden',
+      'choose_backup_file': 'Wählen Sie eine eigene Backup-Datei',
+      'restore': 'Wiederherstellen',
+      'restore_confirm': 'Wiederherstellen?',
+      'still_used_by': 'Wird noch verwendet von:',
+      'processing': 'Wird bearbeitet...',
+      'new_db_warning': 'Dies wird eine neue, leere Datenbank erstellen.\n\nALLE AKTUELLEN DATEN GEHEN VERLOREN!\n\nSind Sie sicher?',
+      'importing_backup': 'Importiere Backup',
+      'new_db_created': 'Neue Datenbank erstellt! ✅',
+      'creating_fresh_db': 'Erstelle neue Datenbank...',
+
+      // Harvest Drying Screen
+      'drying_title': 'Trocknung',
+      'end_drying': 'Trocknung beenden',
+      'start_drying_now': 'Trocknung jetzt starten',
+      'finish': 'Beenden',
+      'continue_to_curing': 'Weiter zum Curing',
+      'drying_data': 'Trocknungs-Daten',
+      'not_started': 'Nicht gestartet',
+      'ready_to_start': 'Bereit zum Start',
+      'drying_finished': 'Trocknung erfolgreich beendet',
+      'drying_active': 'Laufender Trocknungsprozess',
+      'drying_started_msg': 'Trocknung gestartet! 🌿',
+      'drying_ended_msg': 'Trocknung beendet! ✅',
+      'enter_valid_weight': 'Bitte gültiges Gewicht eingeben',
+      'end_drying_title': 'Trocknung beenden',
+      'wet_weight_display': 'Nassgewicht',
+      'dry_weight_label': 'Trockengewicht',
+
+      // Harvest Curing Screen
+      'curing_title': 'Curing',
+      'start_curing_btn': 'Curing starten',
+      'start_curing_now': 'Curing jetzt starten',
+      'end_curing': 'Curing beenden',
+      'continue_to_quality': 'Weiter zur Quality Control',
+      'curing_data': 'Curing-Daten',
+      'start_btn': 'Starten',
+      'curing_finished': 'Curing erfolgreich beendet',
+      'curing_active': 'Laufender Fermentations-Prozess',
+      'curing_started_msg': 'Curing gestartet! 📦',
+      'curing_ended_msg': 'Curing abgeschlossen! 🎉',
+      'curing_start_label': 'Curing-Start',
+      'curing_method_label': 'Curing-Methode',
+
+      // Archive Screen
+      'archive_title': 'Archiv',
+      'archive_tab_plants': 'Pflanzen',
+      'archive_tab_rdwc': 'RDWC',
+      'archive_tab_rooms': 'Räume',
+      'no_entries': 'Keine Einträge',
+      'tap_to_restore': 'Zum Wiederherstellen tippen',
+      'item_will_be_restored': 'wird wieder aktiviert.',
+
+      // Settings Screen
+      'personalization': 'Personalisierung',
+      'units_section': 'Einheiten & Messwerte',
+      'backup_section': 'Backup & Datensicherung',
+      'data_section': 'Daten-Verwaltung',
+      'information_section': 'Informationen',
+      'choose_ppm_scale': 'PPM Skala wählen',
+      'delete_all_title': 'ALLES LÖSCHEN?',
+      'delete_all_message': 'Dies löscht permanent alle Daten. Ein Backup wird automatisch erstellt.',
+      'delete_all_btn': 'LÖSCHEN',
+      'archive_section': 'Archiv',
+      'support_donate': 'Support / Spende',
+      'expert_mode_label': 'Experten Modus',
+
+      // Edit Log Screen
+      'fertilizer_section': 'Dünger',
+      'choose_fertilizer_title': 'Dünger wählen',
+
+      // Grow Detail Screen
+      'assign': 'Zuweisen',
+      'create_new': 'Neu erstellen',
+      'select_plant': 'Pflanze wählen',
+
+      // Dashboard Screen
+      'system_tools': 'SYSTEM TOOLS',
+      'select_plant_title': 'Pflanze wählen',
+      'plants_without_log': '{count} Pflanze(n) seit 48h ohne Log',
+      'inactive_plants_tap_to_log': 'Tippen um Pflanze zu wählen',
+      'change_btn': 'Ändern',
+
+      // Harvest Detail Screen
+      'delete_harvest_confirm': 'Die Ernte wird gelöscht und die Pflanze zurückgesetzt.',
+
+      // RDWC Systems Screen
+      'no_systems_yet': 'Noch keine Systeme angelegt.',
+
+      // RDWC Addback Form - Maintenance items
+      'maintenance_pumps_cleaned': 'Pumps cleaned',
+      'maintenance_filters_changed': 'Filters changed',
+      'maintenance_tubes_checked': 'Tubes checked',
+      'maintenance_reservoir_cleaned': 'Reservoir cleaned',
+      'maintenance_airstones_cleaned': 'Airstones cleaned',
+      'maintenance_reservoir_cleaned_change': 'Reservoir cleaned during change',
+
+      // Room Detail
+      'show_all': 'Alle',
+
+      // Add Grow / Edit Grow
+      'no_room_selected': 'Kein Raum',
+
+      // Harvest Detail Screen
+      'harvest_weight_section': 'Gewicht',
+      'harvest_wet_weight': 'Nassgewicht',
+      'harvest_dry_weight': 'Trockengewicht',
+      'harvest_weight_loss': 'Verlust',
+      'harvest_drying_section': 'Trocknung',
+      'harvest_curing_section': 'Curing',
+      'harvest_start': 'Start',
+      'harvest_end': 'Ende',
+      'harvest_status': 'Status',
+      'harvest_yield_section': 'Ertrag',
+      'harvest_yield_per_sqm': 'Ertrag pro m²',
+
+      // Grow Detail Screen – Yield
+      'grow_yield_section': 'Ertrag',
+      'grow_yield_harvests': 'Ernten',
+      'grow_yield_total_dry': 'Trocken gesamt',
+      'grow_yield_avg_per_plant': 'Ø pro Pflanze',
+
+      // Plant Detail – Timeline view
+      'view_list': 'Liste',
+      'view_timeline': 'Timeline',
+      'timeline_day': 'Tag',
+
+      // Düngerplan-Generator Screen
+      'dosing_plan_title': 'Düngerplan',
+      'dosing_plan_select_recipe': 'Rezept auswählen',
+      'dosing_plan_recipe_hint': 'Rezept wählen...',
+      'dosing_plan_select_system': 'System (optional, füllt Volumen)',
+      'dosing_plan_system_hint': 'RDWC-System wählen...',
+      'dosing_plan_no_system': 'Kein System',
+      'dosing_plan_volume_label': 'Volumen (Liter)',
+      'dosing_plan_volume_hint': 'z.B. 100',
+      'dosing_plan_volume_required': 'Bitte Volumen eingeben',
+      'dosing_plan_volume_invalid': 'Ungültiger Wert',
+      'dosing_plan_weeks_label': 'Anzahl Wochen',
+      'dosing_plan_weeks_unit': 'Wochen',
+      'dosing_plan_generate': 'Dosierungsplan generieren',
+      'dosing_plan_no_recipe_selected': 'Kein Rezept ausgewählt.\nBitte oben ein Rezept wählen.',
+      'dosing_plan_no_fertilizers': 'Dieses Rezept enthält keine Dünger.',
+      'dosing_plan_table_title': 'Dosierungsplan',
+      'dosing_plan_col_week': 'Woche',
+      'dosing_plan_col_total': 'Gesamt',
+      'dosing_plan_week_prefix': 'Woche',
+      'dosing_plan_target_ec': 'Ziel-EC',
+      'dosing_plan_target_ph': 'Ziel-pH',
+
+      // Room – Lighting & g/W Yield
+      'light_watts': 'Watt (Beleuchtung)',
+      'yield_per_watt': 'g/W',
+      'yield_per_watt_label': 'Ertrag pro Watt',
+
+      // DBF Import Screen
+      'dbf_import_title': 'Dünger importieren',
+      'dbf_import_go_back': 'Zurück',
+      'dbf_import_summary': 'Import-Übersicht',
+      'dbf_import_file': 'Datei',
+      'dbf_import_total_items': 'Einträge gesamt',
+      'dbf_import_substances_label': '  • Substanzen',
+      'dbf_import_recipes_label': '  • Rezepte/Formeln',
+      'dbf_import_duplicates_label': 'Duplikate',
+      'dbf_import_invalid_label': 'Ungültig (URLs/Links)',
+      'dbf_import_incomplete_label': 'Unvollständig',
+      'dbf_import_selected_label': 'Ausgewählt zum Import',
+      'dbf_import_filter_all': 'Alle',
+      'dbf_import_filter_substances': 'Substanzen',
+      'dbf_import_filter_recipes': 'Rezepte',
+      'dbf_import_select_all': 'Alle wählen',
+      'dbf_import_select_filtered': 'Gefilterte wählen',
+      'dbf_import_deselect_all': 'Alle abwählen',
+      'dbf_import_deselect_filtered': 'Gefilterte abwählen',
+      'dbf_import_no_fertilizers': 'Keine Dünger in der Datei gefunden',
+      'dbf_import_no_items_filter': 'Keine Einträge in diesem Filter',
+      'dbf_badge_invalid': 'UNGÜLTIG',
+      'dbf_badge_incomplete': 'UNVOLLSTÄNDIG',
+      'dbf_badge_recipe': 'REZEPT',
+      'dbf_import_invalid_entry': 'Ungültiger Eintrag (URL/Link)',
+      'dbf_import_missing_nutrients': 'Fehlende Nährstoffdaten – nicht im Rechner nutzbar',
+      'dbf_import_already_exists': 'Bereits vorhanden',
+      'dbf_import_hide_invalid': 'Ungültige ausblenden',
+      'dbf_import_show_more_invalid': 'weitere ungültige Einträge anzeigen',
+      'dbf_import_duplicates_will_skip': 'Duplikat(e) werden übersprungen',
+      'dbf_importing': 'Importiere...',
+      'dbf_import_success': 'Dünger importiert',
+      'dbf_import_skipped': 'übersprungen',
+      'dbf_import_error_loading': 'Fehler beim Laden der Datei',
+      'dbf_import_error_importing': 'Fehler beim Importieren',
     },
 
     // ENGLISH
@@ -1630,6 +1849,10 @@ class AppTranslations {
       'change_phase': 'Change Phase',
       'date_time': 'Date & Time',
       'add_photo': 'Add',
+      'add_photo_placeholder': 'Add photo...',
+      'save_set': 'Save set',
+      'load_set': 'Load set',
+      'choose_fertilizer': 'Choose fertilizer',
       'no_photos_added': 'No photos added',
       'tap_to_add_photos': 'Tap "Add" to add photos to this log',
       'water': 'Water',
@@ -1925,6 +2148,12 @@ class AppTranslations {
       'plant_detail_no_logs': 'No logs yet',
       'plant_detail_add_first_log': 'Add your first log entry!',
       'plant_detail_total_day': 'Total: Day {day}',
+      'create_entry': 'Create entry',
+      'log_scope_question': 'Do you want to log only for this plant or for all plants in the grow?',
+      'only_this': 'Only this',
+      'all_plants': 'All plants',
+      'harvested_weight': 'Harvested:',
+      'confirm_delete': 'Delete?',
 
       // ✅ AUDIT FIX: i18n extraction - Add Room Screen
       'add_room_title': 'New Room',
@@ -2221,6 +2450,230 @@ class AppTranslations {
       'plant_archived_success': '{name} archived',
       'no_rdwc_system': 'No RDWC System',
       'no_bucket': 'No Bucket',
+
+      // Edit Plant Screen
+      'no_grow': 'No grow',
+      'choose_system': 'Choose system...',
+      'confirm_archive': 'Archive?',
+      'plant_will_be_archived': 'The plant will be archived.',
+
+      // RDWC System Detail Screen
+      'avg_per_day': 'Avg/Day',
+      'buckets': 'Buckets',
+      'no_plants_assigned': 'No plants assigned',
+      'no_logs_available': 'No logs yet',
+      'max': 'Max',
+      'rest': 'Remaining',
+      'delete_system_confirm': 'All data of this system will be deleted.',
+      'addback_action': 'Addback',
+      'measurement_action': 'Measurement',
+      'calculator_action': 'Calculator',
+      'log_type_addback': 'Addback',
+      'log_type_change': 'Change',
+      'log_type_maintenance': 'Maintenance',
+
+      // Manual Recovery Screen
+      'data_recovery': 'Data Recovery',
+      'skip': 'Skip',
+      'recovery_options': 'Recovery Options',
+      'preparing_recovery': 'Preparing recovery...',
+      'recovery_success': 'Recovery successful! ✅',
+      'recovery_failed': 'Recovery failed',
+      'choose_own_file': 'Choose own file',
+      'new_db': 'New DB',
+      'create_new_db': 'Create new DB',
+      'db_error_detected': 'Database error detected',
+      'warning': 'Warning',
+      'no_auto_backups': 'No automatic backups found',
+      'choose_backup_file': 'Choose a backup file',
+      'restore': 'Restore',
+      'restore_confirm': 'Restore?',
+      'still_used_by': 'Still used by:',
+      'processing': 'Processing...',
+      'new_db_warning': 'This will create a new, empty database.\n\nALL CURRENT DATA WILL BE LOST!\n\nAre you sure?',
+      'importing_backup': 'Importing backup',
+      'new_db_created': 'New database created! ✅',
+      'creating_fresh_db': 'Creating new database...',
+
+      // Harvest Drying Screen
+      'drying_title': 'Drying',
+      'end_drying': 'End Drying',
+      'start_drying_now': 'Start Drying Now',
+      'finish': 'Finish',
+      'continue_to_curing': 'Continue to Curing',
+      'drying_data': 'Drying Data',
+      'not_started': 'Not started',
+      'ready_to_start': 'Ready to start',
+      'drying_finished': 'Drying completed successfully',
+      'drying_active': 'Active drying process',
+      'drying_started_msg': 'Drying started! 🌿',
+      'drying_ended_msg': 'Drying ended! ✅',
+      'enter_valid_weight': 'Please enter valid weight',
+      'end_drying_title': 'End Drying',
+      'wet_weight_display': 'Wet Weight',
+      'dry_weight_label': 'Dry Weight',
+
+      // Harvest Curing Screen
+      'curing_title': 'Curing',
+      'start_curing_btn': 'Start Curing',
+      'start_curing_now': 'Start Curing Now',
+      'end_curing': 'End Curing',
+      'continue_to_quality': 'Continue to Quality Control',
+      'curing_data': 'Curing Data',
+      'start_btn': 'Start',
+      'curing_finished': 'Curing completed successfully',
+      'curing_active': 'Active fermentation process',
+      'curing_started_msg': 'Curing started! 📦',
+      'curing_ended_msg': 'Curing completed! 🎉',
+      'curing_start_label': 'Curing Start',
+      'curing_method_label': 'Curing Method',
+
+      // Archive Screen
+      'archive_title': 'Archive',
+      'archive_tab_plants': 'Plants',
+      'archive_tab_rdwc': 'RDWC',
+      'archive_tab_rooms': 'Rooms',
+      'no_entries': 'No entries',
+      'tap_to_restore': 'Tap to restore',
+      'item_will_be_restored': 'will be reactivated.',
+
+      // Settings Screen
+      'personalization': 'Personalization',
+      'units_section': 'Units & Measurements',
+      'backup_section': 'Backup & Data Security',
+      'data_section': 'Data Management',
+      'information_section': 'Information',
+      'choose_ppm_scale': 'Choose PPM Scale',
+      'delete_all_title': 'DELETE ALL?',
+      'delete_all_message': 'This permanently deletes all data. A backup will be created automatically.',
+      'delete_all_btn': 'DELETE',
+      'archive_section': 'Archive',
+      'support_donate': 'Support / Donate',
+      'expert_mode_label': 'Expert Mode',
+
+      // Edit Log Screen
+      'fertilizer_section': 'Fertilizers',
+      'choose_fertilizer_title': 'Choose Fertilizer',
+
+      // Grow Detail Screen
+      'assign': 'Assign',
+      'create_new': 'Create New',
+      'select_plant': 'Select Plant',
+
+      // Dashboard Screen
+      'system_tools': 'SYSTEM TOOLS',
+      'select_plant_title': 'Select Plant',
+      'plants_without_log': '{count} plant(s) without log for 48h',
+      'inactive_plants_tap_to_log': 'Tap to select a plant',
+      'change_btn': 'Change',
+
+      // Harvest Detail Screen
+      'delete_harvest_confirm': 'The harvest will be deleted and the plant reset.',
+
+      // RDWC Systems Screen
+      'no_systems_yet': 'No systems created yet.',
+
+      // RDWC Addback Form - Maintenance items
+      'maintenance_pumps_cleaned': 'Pumps cleaned',
+      'maintenance_filters_changed': 'Filters changed',
+      'maintenance_tubes_checked': 'Tubes checked',
+      'maintenance_reservoir_cleaned': 'Reservoir cleaned',
+      'maintenance_airstones_cleaned': 'Airstones cleaned',
+      'maintenance_reservoir_cleaned_change': 'Reservoir cleaned during change',
+
+      // Room Detail
+      'show_all': 'All',
+
+      // Add Grow / Edit Grow
+      'no_room_selected': 'No Room',
+
+      // Harvest Detail Screen
+      'harvest_weight_section': 'Weight',
+      'harvest_wet_weight': 'Wet Weight',
+      'harvest_dry_weight': 'Dry Weight',
+      'harvest_weight_loss': 'Loss',
+      'harvest_drying_section': 'Drying',
+      'harvest_curing_section': 'Curing',
+      'harvest_start': 'Start',
+      'harvest_end': 'End',
+      'harvest_status': 'Status',
+      'harvest_yield_section': 'Yield',
+      'harvest_yield_per_sqm': 'Yield per m²',
+
+      // Grow Detail Screen – Yield
+      'grow_yield_section': 'Yield',
+      'grow_yield_harvests': 'Harvests',
+      'grow_yield_total_dry': 'Total Dry',
+      'grow_yield_avg_per_plant': 'Avg per Plant',
+
+      // Plant Detail – Timeline view
+      'view_list': 'List',
+      'view_timeline': 'Timeline',
+      'timeline_day': 'Day',
+
+      // Dosing Plan Generator Screen
+      'dosing_plan_title': 'Fertilizer Plan',
+      'dosing_plan_select_recipe': 'Select Recipe',
+      'dosing_plan_recipe_hint': 'Choose a recipe...',
+      'dosing_plan_select_system': 'System (optional, pre-fills volume)',
+      'dosing_plan_system_hint': 'Choose RDWC system...',
+      'dosing_plan_no_system': 'No System',
+      'dosing_plan_volume_label': 'Volume (Liters)',
+      'dosing_plan_volume_hint': 'e.g. 100',
+      'dosing_plan_volume_required': 'Please enter volume',
+      'dosing_plan_volume_invalid': 'Invalid value',
+      'dosing_plan_weeks_label': 'Number of Weeks',
+      'dosing_plan_weeks_unit': 'Weeks',
+      'dosing_plan_generate': 'Generate Dosing Plan',
+      'dosing_plan_no_recipe_selected': 'No recipe selected.\nPlease select a recipe above.',
+      'dosing_plan_no_fertilizers': 'This recipe has no fertilizers.',
+      'dosing_plan_table_title': 'Dosing Plan',
+      'dosing_plan_col_week': 'Week',
+      'dosing_plan_col_total': 'Total',
+      'dosing_plan_week_prefix': 'Week',
+      'dosing_plan_target_ec': 'Target EC',
+      'dosing_plan_target_ph': 'Target pH',
+
+      // Room – Lighting & g/W Yield
+      'light_watts': 'Watts (Lighting)',
+      'yield_per_watt': 'g/W',
+      'yield_per_watt_label': 'Yield per Watt',
+
+      // DBF Import Screen
+      'dbf_import_title': 'Import Fertilizers',
+      'dbf_import_go_back': 'Go Back',
+      'dbf_import_summary': 'Import Summary',
+      'dbf_import_file': 'File',
+      'dbf_import_total_items': 'Total Items',
+      'dbf_import_substances_label': '  • Substances',
+      'dbf_import_recipes_label': '  • Recipes/Formulas',
+      'dbf_import_duplicates_label': 'Duplicates',
+      'dbf_import_invalid_label': 'Invalid (URLs/Links)',
+      'dbf_import_incomplete_label': 'Incomplete Data',
+      'dbf_import_selected_label': 'Selected to Import',
+      'dbf_import_filter_all': 'All',
+      'dbf_import_filter_substances': 'Substances',
+      'dbf_import_filter_recipes': 'Recipes',
+      'dbf_import_select_all': 'Select All',
+      'dbf_import_select_filtered': 'Select Filtered',
+      'dbf_import_deselect_all': 'Deselect All',
+      'dbf_import_deselect_filtered': 'Deselect Filtered',
+      'dbf_import_no_fertilizers': 'No fertilizers found in file',
+      'dbf_import_no_items_filter': 'No items in this filter',
+      'dbf_badge_invalid': 'INVALID',
+      'dbf_badge_incomplete': 'INCOMPLETE',
+      'dbf_badge_recipe': 'RECIPE',
+      'dbf_import_invalid_entry': 'Invalid entry (URL/Link)',
+      'dbf_import_missing_nutrients': 'Missing nutrient data - not usable in calculator',
+      'dbf_import_already_exists': 'Already exists',
+      'dbf_import_hide_invalid': 'Hide invalid entries',
+      'dbf_import_show_more_invalid': 'more invalid entries',
+      'dbf_import_duplicates_will_skip': 'duplicate(s) will be skipped',
+      'dbf_importing': 'Importing...',
+      'dbf_import_success': 'fertilizers imported',
+      'dbf_import_skipped': 'skipped',
+      'dbf_import_error_loading': 'Error loading file',
+      'dbf_import_error_importing': 'Error importing',
     },
   };
 

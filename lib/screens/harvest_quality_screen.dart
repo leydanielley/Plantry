@@ -9,6 +9,8 @@ import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/screens/edit_harvest_quality_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class HarvestQualityScreen extends StatefulWidget {
   final int harvestId;
@@ -53,8 +55,8 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
       return Scaffold(
         appBar: AppBar(
           title: Text(_t['quality_control']),
-          backgroundColor: Colors.blue[700],
-          foregroundColor: Colors.white,
+          backgroundColor: DT.secondary,
+          foregroundColor: DT.canvas,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -64,8 +66,8 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
       return Scaffold(
         appBar: AppBar(
           title: Text(_t['quality_control']),
-          backgroundColor: Colors.blue[700],
-          foregroundColor: Colors.white,
+          backgroundColor: DT.secondary,
+          foregroundColor: DT.canvas,
         ),
         body: Center(child: Text(_t['harvest_not_found'])),
       );
@@ -84,27 +86,23 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
 
     final isComplete = hasQualityData || hasRatingData;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_t['quality_control']),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      EditHarvestQualityScreen(harvest: _harvest!),
-                ),
-              );
-              if (result == true) _loadHarvest();
-            },
-          ),
-        ],
-      ),
+    return PlantryScaffold(
+      title: _t['quality_control'],
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.edit),
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    EditHarvestQualityScreen(harvest: _harvest!),
+              ),
+            );
+            if (result == true) _loadHarvest();
+          },
+        ),
+      ],
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -136,7 +134,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
   }
 
   Widget _buildStatusCard(bool isComplete) {
-    final Color color = isComplete ? Colors.green : Colors.grey;
+    final Color color = isComplete ? DT.success : DT.textTertiary;
     final IconData icon = isComplete ? Icons.check_circle : Icons.pending;
     final String status = isComplete ? 'Daten erfasst' : 'Offen';
     final String subtitle = isComplete
@@ -152,7 +150,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              child: Icon(icon, color: Colors.white, size: 32),
+              child: Icon(icon, color: DT.canvas, size: 32),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -169,7 +167,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: const TextStyle(fontSize: 14, color: DT.textSecondary),
                   ),
                 ],
               ),
@@ -187,11 +185,11 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                Icon(Icons.science, color: Colors.blue[700]),
-                const SizedBox(width: 8),
-                const Text(
+                Icon(Icons.science, color: DT.secondary),
+                SizedBox(width: 8),
+                Text(
                   'Cannabinoid-Profil',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -200,7 +198,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
             const Divider(height: 20),
 
             if (_harvest!.thcPercentage != null) ...[
-              _buildCannabinoidBar('THC', _harvest!.thcPercentage!, Colors.red),
+              _buildCannabinoidBar('THC', _harvest!.thcPercentage!, DT.error),
               const SizedBox(height: 16),
             ],
 
@@ -208,7 +206,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
               _buildCannabinoidBar(
                 'CBD',
                 _harvest!.cbdPercentage!,
-                Colors.green,
+                DT.success,
               ),
               const SizedBox(height: 16),
             ],
@@ -222,7 +220,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.purple[50],
+                  color: DT.info.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 width: double.infinity,
@@ -262,7 +260,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
           child: LinearProgressIndicator(
             value: (percentage / 30).clamp(0.0, 1.0),
             minHeight: 12,
-            backgroundColor: Colors.grey[300],
+            backgroundColor: DT.elevated,
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -277,11 +275,11 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                Icon(Icons.star, color: Colors.amber[700]),
-                const SizedBox(width: 8),
-                const Text(
+                Icon(Icons.star, color: DT.warning),
+                SizedBox(width: 8),
+                Text(
                   'Bewertung & Notizen',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -297,7 +295,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
                       index < _harvest!.rating!
                           ? Icons.star
                           : Icons.star_border,
-                      color: Colors.amber,
+                      color: DT.warning,
                       size: 28,
                     );
                   }),
@@ -319,7 +317,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
                 'Geschmack',
                 _harvest!.tasteNotes!,
                 Icons.restaurant,
-                Colors.orange,
+                DT.warning,
               ),
               const SizedBox(height: 12),
             ],
@@ -329,7 +327,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
                 'Wirkung',
                 _harvest!.effectNotes!,
                 Icons.psychology,
-                Colors.purple,
+                DT.info,
               ),
               const SizedBox(height: 12),
             ],
@@ -339,7 +337,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
                 'Gesamt-Notizen',
                 _harvest!.overallNotes!,
                 Icons.note,
-                Colors.blue,
+                DT.secondary,
               ),
             ],
           ],
@@ -398,8 +396,8 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
         icon: const Icon(Icons.add),
         label: Text(_t['quality_data_capture']),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
+          backgroundColor: DT.secondary,
+          foregroundColor: DT.canvas,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -423,8 +421,8 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
           )['complete_harvest'],
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
+          backgroundColor: DT.accent,
+          foregroundColor: DT.canvas,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

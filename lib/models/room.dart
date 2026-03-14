@@ -19,6 +19,7 @@ class Room {
   final double width;
   final double depth;
   final double height;
+  final int? lightWatts; // v41: lighting wattage for g/W yield calculation
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -33,6 +34,7 @@ class Room {
     double width = 0.0,
     double depth = 0.0,
     double height = 0.0,
+    this.lightWatts,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : // ✅ VALIDATION: Apply validation from RoomConfig
@@ -81,6 +83,7 @@ class Room {
       width: (map['width'] as num?)?.toDouble() ?? 0.0,
       depth: (map['depth'] as num?)?.toDouble() ?? 0.0,
       height: (map['height'] as num?)?.toDouble() ?? 0.0,
+      lightWatts: map['light_watts'] as int?,
       createdAt: SafeParsers.parseDateTime(
         map['created_at'] as String?,
         fallback: DateTime.now(),
@@ -124,6 +127,7 @@ class Room {
       'width': width,
       'depth': depth,
       'height': height,
+      'light_watts': lightWatts,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -141,6 +145,7 @@ class Room {
     double? width,
     double? depth,
     double? height,
+    Object? lightWatts = _undefined,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -160,6 +165,9 @@ class Room {
       width: width ?? this.width,
       depth: depth ?? this.depth,
       height: height ?? this.height,
+      lightWatts: lightWatts == _undefined
+          ? this.lightWatts
+          : lightWatts as int?,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
     );

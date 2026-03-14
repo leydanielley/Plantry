@@ -18,6 +18,8 @@ import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart'
 import 'package:growlog_app/helpers/image_cache_helper.dart';
 import 'package:growlog_app/widgets/empty_state_widget.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class PlantPhotoGalleryScreen extends StatefulWidget {
   final Plant plant;
@@ -34,6 +36,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
   final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
   final ImageCacheHelper _imageCache = ImageCacheHelper();
 
+  late AppTranslations _t;
   final List<Photo> _photos = [];
   final Map<int, PlantLog> _logs = {};
   bool _isLoading = true;
@@ -45,6 +48,12 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
   bool _hasMore = true;
 
   final ScrollController _scrollController = ScrollController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode);
+  }
 
   @override
   void initState() {
@@ -125,7 +134,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.transparent, // intentionally transparent for photo dialog overlay
         child: Stack(
           children: [
             Center(
@@ -140,7 +149,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: DT.canvas.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -151,7 +160,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
                       Text(
                         'Tag ${log.dayNumber} • ${log.actionType.displayName}',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: DT.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -159,7 +168,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
                       const SizedBox(height: 4),
                       Text(
                         DateFormat('dd.MM.yyyy HH:mm').format(log.logDate),
-                        style: TextStyle(color: Colors.grey[300], fontSize: 12),
+                        style: const TextStyle(color: DT.textSecondary, fontSize: 12),
                       ),
                     ],
                   ],
@@ -170,7 +179,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
               top: 40,
               right: 20,
               child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                icon: const Icon(Icons.close, color: DT.textPrimary, size: 30),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
@@ -179,7 +188,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
               right: 20,
               child: FloatingActionButton(
                 onPressed: () => _deletePhoto(photo),
-                backgroundColor: Colors.red,
+                backgroundColor: DT.error,
                 child: const Icon(Icons.delete),
               ),
             ),
@@ -206,11 +215,11 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Abbrechen'),
+            child: Text(_t['cancel']),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: DT.error),
             child: Text(
               AppTranslations(
                 Localizations.localeOf(context).languageCode,
@@ -247,12 +256,8 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('${widget.plant.name} - Foto-Galerie'),
-        backgroundColor: Colors.purple[700],
-        foregroundColor: Colors.white,
-      ),
+    return PlantryScaffold(
+      title: '${widget.plant.name} - Foto-Galerie',
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _photos.isEmpty
@@ -276,17 +281,17 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
       children: [
         Container(
           padding: const EdgeInsets.all(16),
-          color: Colors.purple[50],
+          color: DT.info.withValues(alpha: 0.08),
           child: Row(
             children: [
-              Icon(Icons.photo_library, color: Colors.purple[700]),
+              const Icon(Icons.photo_library, color: DT.info),
               const SizedBox(width: 12),
               Text(
                 '${_photos.length} Fotos',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.purple[700],
+                  color: DT.info,
                 ),
               ),
             ],
@@ -339,7 +344,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                               colors: [
-                                Colors.black.withValues(alpha: 0.7),
+                                DT.canvas.withValues(alpha: 0.7),
                                 Colors.transparent,
                               ],
                             ),
@@ -347,7 +352,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
                           child: Text(
                             'Tag ${log.dayNumber}',
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: DT.textPrimary,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -372,7 +377,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
-            color: Colors.grey[300],
+            color: DT.elevated,
             child: const Center(
               child: SizedBox(
                 width: 24,
@@ -393,8 +398,8 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Container(
-              color: Colors.grey[300],
-              child: const Icon(Icons.broken_image, color: Colors.grey),
+              color: DT.elevated,
+              child: const Icon(Icons.broken_image, color: DT.textTertiary),
             );
           },
         );

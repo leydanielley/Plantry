@@ -11,6 +11,8 @@ import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -120,19 +122,15 @@ class _NotificationSettingsScreenState
       return Scaffold(
         appBar: AppBar(
           title: Text(_t['notifications']),
-          backgroundColor: const Color(0xFF004225),
-          foregroundColor: Colors.white,
+          backgroundColor: DT.surface,
+          foregroundColor: DT.textPrimary,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_t['notifications']),
-        backgroundColor: const Color(0xFF004225),
-        foregroundColor: Colors.white,
-      ),
+    return PlantryScaffold(
+      title: _t['notifications'],
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -150,7 +148,7 @@ class _NotificationSettingsScreenState
                 _settings!.enabled
                     ? Icons.notifications_active
                     : Icons.notifications_off,
-                color: _settings!.enabled ? Colors.green : Colors.grey,
+                color: _settings!.enabled ? DT.success : DT.textSecondary,
               ),
             ),
           ),
@@ -170,7 +168,7 @@ class _NotificationSettingsScreenState
                   value: _settings!.wateringReminders,
                   onChanged: (v) =>
                       _saveSettings(_settings!.copyWith(wateringReminders: v)),
-                  secondary: const Icon(Icons.water_drop, color: Colors.blue),
+                  secondary: const Icon(Icons.water_drop, color: DT.secondary),
                 ),
                 if (_settings!.wateringReminders)
                   Padding(
@@ -197,7 +195,7 @@ class _NotificationSettingsScreenState
                   onChanged: (v) => _saveSettings(
                     _settings!.copyWith(fertilizingReminders: v),
                   ),
-                  secondary: const Icon(Icons.eco, color: Colors.green),
+                  secondary: const Icon(Icons.eco, color: DT.success),
                 ),
                 if (_settings!.fertilizingReminders)
                   Padding(
@@ -223,7 +221,7 @@ class _NotificationSettingsScreenState
                   value: _settings!.photoReminders,
                   onChanged: (v) =>
                       _saveSettings(_settings!.copyWith(photoReminders: v)),
-                  secondary: const Icon(Icons.camera_alt, color: Colors.orange),
+                  secondary: const Icon(Icons.camera_alt, color: DT.warning),
                 ),
                 if (_settings!.photoReminders)
                   Padding(
@@ -247,7 +245,7 @@ class _NotificationSettingsScreenState
                   value: _settings!.harvestReminders,
                   onChanged: (v) =>
                       _saveSettings(_settings!.copyWith(harvestReminders: v)),
-                  secondary: const Icon(Icons.agriculture, color: Colors.brown),
+                  secondary: const Icon(Icons.agriculture, color: DT.warning),
                 ),
               ],
             ),
@@ -261,7 +259,7 @@ class _NotificationSettingsScreenState
                 ListTile(
                   leading: const Icon(
                     Icons.access_time,
-                    color: Color(0xFF004225),
+                    color: DT.accent,
                   ),
                   title: Text(_t['notification_time']),
                   subtitle: Text(_settings!.notificationTime),
@@ -279,8 +277,8 @@ class _NotificationSettingsScreenState
               icon: const Icon(Icons.send),
               label: Text(_t['notification_test']),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF004225),
-                foregroundColor: Colors.white,
+                backgroundColor: DT.accent,
+                foregroundColor: DT.canvas,
                 padding: const EdgeInsets.all(16),
               ),
             ),
@@ -291,14 +289,14 @@ class _NotificationSettingsScreenState
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: DT.secondary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue[200] ?? Colors.blue),
+                border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
               ),
               child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                  Icon(Icons.info_outline, color: DT.secondary, size: 20),
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -330,7 +328,7 @@ class _NotificationSettingsScreenState
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF004225),
+                color: DT.accent,
               ),
             ),
           ),
@@ -364,7 +362,7 @@ class _NotificationSettingsScreenState
           divisions: max - min,
           label: '$value ${_t['days']}',
           onChanged: onChanged,
-          activeColor: const Color(0xFF004225),
+          activeColor: DT.accent,
         ),
       ],
     );

@@ -1,5 +1,5 @@
 // =============================================
-// GROWLOG - Room List Screen (✅ Custom Icons)
+// GROWLOG - Room List Screen
 // =============================================
 
 import 'package:flutter/material.dart';
@@ -11,12 +11,13 @@ import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/utils/translations.dart';
-import 'package:growlog_app/utils/app_constants.dart';
-import 'package:growlog_app/widgets/empty_state_widget.dart'; // ✅ PHASE 3: Shared widget
 import 'package:growlog_app/screens/add_room_screen.dart';
 import 'package:growlog_app/screens/edit_room_screen.dart';
 import 'package:growlog_app/screens/room_detail_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/widgets/plantry_list_tile.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class RoomListScreen extends StatefulWidget {
   const RoomListScreen({super.key});
@@ -52,14 +53,10 @@ class _RoomListScreenState extends State<RoomListScreen> {
   }
 
   Future<void> _loadRooms() async {
-    if (mounted) {
-      setState(() => _isLoading = true);
-    }
+    if (mounted) setState(() => _isLoading = true);
 
     try {
       final rooms = await _roomRepo.findAll();
-
-      // Lade Pflanzen-Anzahl pro Raum
       final plantCounts = <int, int>{};
       for (final room in rooms) {
         if (room.id != null) {
@@ -77,126 +74,58 @@ class _RoomListScreenState extends State<RoomListScreen> {
       }
     } catch (e) {
       AppLogger.error('RoomListScreen', 'Error loading rooms: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _deleteRoom(Room room) async {
-    // 1. Prüfe ob Raum in Verwendung ist
     final isInUse = await _roomRepo.isInUse(room.id!);
 
     if (isInUse) {
-      // Zeige benutzerfreundliche Warnung
       final usage = await _roomRepo.getUsageDetails(room.id!);
-
       if (!mounted) return;
 
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
+          backgroundColor: DT.elevated,
           title: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+              const Icon(Icons.warning_amber_rounded, color: DT.warning),
               const SizedBox(width: 12),
-              Expanded(child: Text(_t['room_cannot_be_deleted'])),
+              Expanded(child: Text(_t['room_cannot_be_deleted'], style: const TextStyle(color: DT.textPrimary))),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Der Raum "${room.name}" wird noch verwendet:',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              if (usage['plants']! > 0)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(Icons.eco, size: 20, color: Colors.green[700]),
-                      const SizedBox(width: 8),
-                      Text('${usage['plants']} ${_t['plants']}'),
-                    ],
-                  ),
-                ),
-              if (usage['grows']! > 0)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(Icons.spa, size: 20, color: Colors.teal[700]),
-                      const SizedBox(width: 8),
-                      Text('${usage['grows']} Grows'),
-                    ],
-                  ),
-                ),
-              if (usage['hardware']! > 0)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(Icons.devices, size: 20, color: Colors.blue[700]),
-                      const SizedBox(width: 8),
-                      Text('${usage['hardware']} ${_t['hardware']}'),
-                    ],
-                  ),
-                ),
-              if (usage['rdwc_systems']! > 0)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(Icons.water_drop, size: 20, color: Colors.cyan[700]),
-                      const SizedBox(width: 8),
-                      Text('${usage['rdwc_systems']} RDWC-Systeme'),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 16),
-              Text(
-                'Bitte verschieben oder löschen Sie diese Elemente zuerst.',
-                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-              ),
+              Text(_t['still_used_by'], style: const TextStyle(color: DT.textSecondary)),
+              const SizedBox(height: 8),
+              if (usage['plants']! > 0) Text('• ${usage['plants']} Pflanzen', style: const TextStyle(color: DT.textSecondary)),
+              if (usage['grows']! > 0) Text('• ${usage['grows']} Grows', style: const TextStyle(color: DT.textSecondary)),
+              if (usage['hardware']! > 0) Text('• ${usage['hardware']} Hardware', style: const TextStyle(color: DT.textSecondary)),
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(_t['ok']),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(_t['ok'], style: const TextStyle(color: DT.accent))),
           ],
         ),
       );
       return;
     }
 
-    // 2. Raum ist NICHT in Verwendung - zeige normale Lösch-Bestätigung
     if (!mounted) return;
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_t['delete_room_title']),
-        content: Text(
-          '${_t['delete_confirm'].replaceAll('?', '')} "${room.name}"?',
-        ),
+        backgroundColor: DT.elevated,
+        title: Text(_t['delete_room_title'], style: const TextStyle(color: DT.textPrimary)),
+        content: Text('${_t['delete_confirm'].replaceAll('?', '')} "${room.name}"?', style: const TextStyle(color: DT.textSecondary)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(_t['cancel']),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(
-              _t['delete'],
-              style: const TextStyle(color: Colors.red),
-            ),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
         ],
       ),
     );
@@ -205,214 +134,108 @@ class _RoomListScreenState extends State<RoomListScreen> {
       try {
         await _roomRepo.delete(room.id!);
         _loadRooms();
-        if (mounted) {
-          AppMessages.deletedSuccessfully(context, _t['rooms']);
-        }
+        if (mounted) AppMessages.deletedSuccessfully(context, _t['rooms']);
       } catch (e) {
-        // Sollte nicht passieren, da wir vorher geprüft haben
-        AppLogger.error('RoomListScreen', 'Unexpected delete error: $e');
-        if (mounted) {
-          AppMessages.deletingError(context, _t['unexpected_error']);
-        }
+        AppLogger.error('RoomListScreen', 'Error deleting: $e');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_t['rooms']),
-        backgroundColor: AppConstants.primaryGreen,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              final result = await Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const AddRoomScreen()),
-              );
-              if (result == true) _loadRooms();
-            },
-          ),
-        ],
-      ),
+    return PlantryScaffold(
+      title: _t['rooms'],
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : _rooms.isEmpty
           ? _buildEmptyState()
           : _buildRoomList(),
-      floatingActionButton: FloatingActionButton(
+      fab: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const AddRoomScreen()),
           );
           if (result == true) _loadRooms();
         },
-        backgroundColor: Colors.green[700],
+        backgroundColor: DT.accent,
+        foregroundColor: DT.onAccent,
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  /// ✅ PHASE 3: Replaced with shared EmptyStateWidget
   Widget _buildEmptyState() {
-    return EmptyStateWidget(
-      icon: Icons.home_work,
-      title: _t['no_rooms'],
-      subtitle: _t['add_first_room'],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.home_work_outlined, size: 80, color: DT.textTertiary),
+          const SizedBox(height: 24),
+          Text(_t['no_rooms'], style: const TextStyle(fontSize: 20, color: DT.textPrimary, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(_t['add_first_room'], style: const TextStyle(fontSize: 16, color: DT.textSecondary)),
+        ],
+      ),
     );
   }
 
   Widget _buildRoomList() {
     return RefreshIndicator(
       onRefresh: _loadRooms,
+      color: DT.accent,
+      backgroundColor: DT.surface,
       child: ListView.builder(
         itemCount: _rooms.length,
-        padding: AppConstants.listPadding,
-        itemBuilder: (context, index) {
-          final room = _rooms[index];
-          return _buildRoomCard(room);
-        },
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        itemBuilder: (context, index) => _buildRoomCard(_rooms[index]),
       ),
     );
   }
 
   Widget _buildRoomCard(Room room) {
     final plantCount = _plantCounts[room.id] ?? 0;
-
-    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
-    return RepaintBoundary(
-      child: Card(
-        key: ValueKey(room.id), // ✅ PERFORMANCE: Key for efficient updates
-        margin: AppConstants.cardMarginVertical,
-        child: ListTile(
-          leading: Container(
-            width: 60,
-            height: 60,
-            padding: const EdgeInsets.all(6),
-            child: Image.asset(
-              _getGrowTypeIconPath(room.growType),
-              fit: BoxFit.contain,
-            ),
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PlantryListTile(
+        leading: Container(
+          width: 48, height: 48,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: DT.elevated,
+            borderRadius: BorderRadius.circular(12),
           ),
-          title: Text(
-            room.name,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (room.description != null) Text(room.description!),
-              const SizedBox(height: AppConstants.spacingXs),
-              Row(
-                children: [
-                  Icon(
-                    Icons.spa,
-                    size: AppConstants.listItemIconSize,
-                    color: Colors.grey[600],
-                  ),
-                  const SizedBox(width: AppConstants.listItemIconSpacing),
-                  Text(
-                    '$plantCount ${_t['plants_short']}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: AppConstants.fontSizeSmall,
-                    ),
-                  ),
-                  const SizedBox(width: AppConstants.listItemSpacingMedium),
-                  if (room.growType != null) ...[
-                    Icon(
-                      Icons.category,
-                      size: AppConstants.listItemIconSize,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: AppConstants.listItemIconSpacing),
-                    Text(
-                      room.growType!.displayName,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: AppConstants.fontSizeSmall,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              if (room.width > 0 && room.depth > 0) ...[
-                const SizedBox(height: AppConstants.spacingXs / 2),
-                Text(
-                  '${(room.width * 100).toStringAsFixed(0)}cm × ${(room.depth * 100).toStringAsFixed(0)}cm × ${(room.height * 100).toStringAsFixed(0)}cm',
-                  style: TextStyle(
-                    color: Colors.grey[500],
-                    fontSize: AppConstants.roomDimensionsFontSize,
-                  ),
-                ),
-              ],
-            ],
-          ),
-          trailing: PopupMenuButton(
-            icon: Icon(Icons.more_vert, color: Colors.grey[600]),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    const Icon(Icons.edit, color: Colors.blue),
-                    const SizedBox(width: AppConstants.spacingSmall),
-                    Text(_t['edit']),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    const Icon(Icons.delete, color: Colors.red),
-                    const SizedBox(width: AppConstants.spacingSmall),
-                    Text(
-                      _t['delete'],
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: (value) async {
-              if (value == 'edit') {
-                final result = await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => EditRoomScreen(room: room),
-                  ),
-                );
-                if (result == true) _loadRooms();
-              } else if (value == 'delete') {
-                _deleteRoom(room);
-              }
-            },
-          ),
-          onTap: () async {
-            final result = await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => RoomDetailScreen(room: room),
-              ),
-            );
-            if (result == true) _loadRooms();
-          },
+          child: Image.asset(_getIcon(room.growType), fit: BoxFit.contain),
         ),
+        title: room.name,
+        subtitle: '$plantCount ${_t['plants_short']} • ${room.growType?.displayName ?? "Unbekannt"}\n${(room.width * 100).toInt()}x${(room.depth * 100).toInt()}x${(room.height * 100).toInt()}cm',
+        trailing: PopupMenuButton<String>(
+          color: DT.elevated,
+          icon: const Icon(Icons.more_vert, color: DT.textTertiary),
+          onSelected: (val) async {
+            if (val == 'edit') {
+              final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditRoomScreen(room: room)));
+              if (res == true) _loadRooms();
+            } else if (val == 'delete') {
+              _deleteRoom(room);
+            }
+          },
+          itemBuilder: (ctx) => [
+            PopupMenuItem(value: 'edit', child: Text(_t['edit'], style: const TextStyle(color: DT.textPrimary))),
+            PopupMenuItem(value: 'delete', child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+          ],
+        ),
+        onTap: () async {
+          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => RoomDetailScreen(room: room)));
+          if (res == true) _loadRooms();
+        },
       ),
     );
   }
 
-  // ✅ Custom Icon Paths für Room Types
-  String _getGrowTypeIconPath(GrowType? type) {
-    if (type == null) return 'assets/icons/room_icon.png';
-    switch (type) {
-      case GrowType.indoor:
-        return 'assets/icons/room_icon.png';
-      case GrowType.outdoor:
-        return 'assets/icons/outdoor_icon.png';
-      case GrowType.greenhouse:
-        return 'assets/icons/greenhouse_icon.png';
-    }
+  String _getIcon(GrowType? type) {
+    if (type == GrowType.indoor) return 'assets/icons/room_icon.png';
+    if (type == GrowType.outdoor) return 'assets/icons/outdoor_icon.png';
+    return 'assets/icons/greenhouse_icon.png';
   }
 }

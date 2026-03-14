@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppConstants {
-  // Colors
-  static const Color primaryGreen = Color(0xFF4CAF50);
-  static const Color darkGreen = Color(0xFF388E3C);
-  static const Color lightGreen = Color(0xFF81C784);
-  static const Color darkModePrimary = Color(0xFF2C2C2C);
-  static const Color lightModePrimary = Colors.white;
-  static const Color darkModeSecondary = Color(0xFF3C3C3C);
-  static const Color lightModeSecondary = Color(0xFFF5F5F5);
+  // Colors → see lib/theme/design_tokens.dart (DT)
 
   // ✅ PHASE 2 FIX: Comprehensive spacing constants (for SizedBox)
   static const double spacingXs = 4.0;

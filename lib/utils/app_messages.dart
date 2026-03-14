@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 /// Central class for all app messages
 /// Provides unified SnackBar messages with icons and colors
@@ -49,7 +50,7 @@ class AppMessages {
     _showSnackBar(
       context,
       message: message,
-      backgroundColor: Colors.green[700] ?? const Color(0xFF388E3C),
+      backgroundColor: DT.success,
       icon: Icons.check_circle,
     );
   }

@@ -3,6 +3,8 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   final String language;
@@ -13,8 +15,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Privacy Policy'), elevation: 0),
+    return PlantryScaffold(
+      title: 'Privacy Policy',
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -26,7 +28,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ? 'Datenschutzerklärung für Plantry'
                   : 'Privacy Policy for Plantry',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Colors.green[700],
+                color: DT.accent,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -37,7 +39,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   : 'Effective Date: November 3, 2025',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontStyle: FontStyle.italic,
-                color: Colors.grey[600],
+                color: DT.textSecondary,
               ),
             ),
             Text(
@@ -46,7 +48,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   : 'Last Updated: November 3, 2025',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontStyle: FontStyle.italic,
-                color: Colors.grey[600],
+                color: DT.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -55,10 +57,10 @@ class PrivacyPolicyScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green[50],
+                color: DT.accent.withValues(alpha: 0.08),
                 border: Border(
                   left: BorderSide(
-                    color: Colors.green[400] ?? Colors.green,
+                    color: DT.accent.withValues(alpha: 0.5),
                     width: 4,
                   ),
                 ),
@@ -284,14 +286,14 @@ class PrivacyPolicyScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             // Footer
-            Divider(color: Colors.grey[300]),
+            const Divider(color: DT.border),
             const SizedBox(height: 16),
             Center(
               child: Text(
                 '© 2026 Plantry. Open Source - MIT License.',
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                ).textTheme.bodySmall?.copyWith(color: DT.textSecondary),
               ),
             ),
             const SizedBox(height: 32),
@@ -308,7 +310,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Colors.green[600],
+            color: DT.accent,
             fontWeight: FontWeight.bold,
           ),
         ),

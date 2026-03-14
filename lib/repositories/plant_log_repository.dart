@@ -73,7 +73,7 @@ class PlantLogRepository
 
     // Build WHERE clause
     var whereClause = 'plant_id = ? AND day_number = ? AND archived = 0';
-    var whereArgs = [plantId, dayNumber];
+    final whereArgs = [plantId, dayNumber];
 
     // Exclude specific log ID if provided (for UPDATE validation)
     if (excludeLogId != null) {
@@ -106,7 +106,7 @@ class PlantLogRepository
     // Build WHERE clause
     var whereClause =
         'plant_id = ? AND day_number = ? AND action_type = ? AND archived = 0';
-    var whereArgs = [plantId, dayNumber, actionType];
+    final whereArgs = [plantId, dayNumber, actionType];
 
     // Exclude specific log ID if provided (for UPDATE validation)
     if (excludeLogId != null) {

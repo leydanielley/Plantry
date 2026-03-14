@@ -5,6 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:growlog_app/services/database_rebuild_service.dart';
 import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
 
 class DatabaseRebuildScreen extends StatefulWidget {
   const DatabaseRebuildScreen({super.key});
@@ -24,16 +26,11 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Database Rebuild'),
-        backgroundColor: Colors.red.shade700,
-      ),
-      body: SafeArea(
-        child: _isComplete && _result != null
-            ? _buildResultView()
-            : _buildRebuildView(),
-      ),
+    return PlantryScaffold(
+      title: 'Database Rebuild',
+      body: _isComplete && _result != null
+          ? _buildResultView()
+          : _buildRebuildView(),
     );
   }
 
@@ -44,35 +41,37 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Warning Card
-          Card(
-            color: Colors.red.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.warning, color: Colors.red.shade700),
-                      const SizedBox(width: 8),
-                      Text(
-                        'CRITICAL OPERATION',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red.shade700,
-                        ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: DT.error.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(DT.radiusCard),
+              border: Border.all(color: DT.error.withValues(alpha: 0.3)),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.warning, color: DT.error),
+                    SizedBox(width: 8),
+                    Text(
+                      'CRITICAL OPERATION',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: DT.error,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                Text(
                     'This will rebuild your database from scratch while preserving all your data. '
                     'This is a CRITICAL operation that should only be used if your database is corrupted.',
-                    style: TextStyle(fontSize: 14),
+                    style: TextStyle(fontSize: 14, color: DT.textSecondary),
                   ),
                 ],
-              ),
             ),
           ),
 
@@ -84,6 +83,7 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+              color: DT.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -97,26 +97,25 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
           const SizedBox(height: 24),
 
           // Duration Warning
-          Card(
-            color: Colors.amber.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(Icons.access_time, color: Colors.amber.shade900),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'This process may take 15-60 minutes depending on database size. '
-                      'Do not close the app during this process.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.amber.shade900,
-                      ),
-                    ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: DT.warning.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(DT.radiusCard),
+              border: Border.all(color: DT.warning.withValues(alpha: 0.3)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.access_time, color: DT.warning),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'This process may take 15-60 minutes depending on database size. '
+                    'Do not close the app during this process.',
+                    style: TextStyle(fontSize: 14, color: DT.warning),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 
@@ -129,17 +128,20 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: DT.textPrimary,
               ),
             ),
             const SizedBox(height: 16),
             LinearProgressIndicator(
               value: _progress,
               minHeight: 8,
+              color: DT.accent,
+              backgroundColor: DT.elevated,
             ),
             const SizedBox(height: 8),
             Text(
               _currentPhase,
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14, color: DT.textSecondary),
             ),
             const SizedBox(height: 24),
           ],
@@ -151,8 +153,8 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
             child: ElevatedButton(
               onPressed: _isRebuilding ? null : _startRebuild,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _isRebuilding ? Colors.grey : Colors.red.shade700,
-                foregroundColor: Colors.white,
+                backgroundColor: _isRebuilding ? DT.elevated : DT.error,
+                foregroundColor: DT.textPrimary,
               ),
               child: _isRebuilding
                   ? const Row(
@@ -164,7 +166,7 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                                AlwaysStoppedAnimation<Color>(DT.textPrimary),
                           ),
                         ),
                         SizedBox(width: 12),
@@ -194,44 +196,42 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Result Header
-          Card(
-            color: result.success ? Colors.green.shade50 : Colors.red.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(
-                    result.success ? Icons.check_circle : Icons.error,
-                    color: result.success
-                        ? Colors.green.shade700
-                        : Colors.red.shade700,
-                    size: 48,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          result.success ? 'REBUILD SUCCESSFUL' : 'REBUILD FAILED',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: result.success
-                                ? Colors.green.shade700
-                                : Colors.red.shade700,
-                          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: (result.success ? DT.success : DT.error).withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(DT.radiusCard),
+              border: Border.all(color: (result.success ? DT.success : DT.error).withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  result.success ? Icons.check_circle : Icons.error,
+                  color: result.success ? DT.success : DT.error,
+                  size: 48,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        result.success ? 'REBUILD SUCCESSFUL' : 'REBUILD FAILED',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: result.success ? DT.success : DT.error,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Duration: ${result.duration.inSeconds}s',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Duration: ${result.duration.inSeconds}s',
+                        style: const TextStyle(fontSize: 14, color: DT.textSecondary),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 
@@ -244,45 +244,45 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: DT.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: result.newRecordCounts.entries
-                      .map((entry) {
-                        final oldCount = result.oldRecordCounts[entry.key] ?? 0;
-                        final newCount = entry.value;
-                        final match = oldCount == newCount;
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: DT.cardDecoFlat(),
+              child: Column(
+                children: result.newRecordCounts.entries
+                    .map((entry) {
+                      final oldCount = result.oldRecordCounts[entry.key] ?? 0;
+                      final newCount = entry.value;
+                      final match = oldCount == newCount;
 
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            children: [
-                              Icon(
-                                match ? Icons.check : Icons.warning,
-                                color: match ? Colors.green : Colors.orange,
-                                size: 16,
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            Icon(
+                              match ? Icons.check : Icons.warning,
+                              color: match ? DT.success : DT.warning,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(entry.key, style: const TextStyle(color: DT.textSecondary)),
+                            ),
+                            Text(
+                              '$oldCount → $newCount',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: match ? DT.success : DT.warning,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(entry.key),
-                              ),
-                              Text(
-                                '$oldCount → $newCount',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: match ? Colors.green : Colors.orange,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      })
-                      .toList(),
-                ),
+                            ),
+                          ],
+                        ),
+                      );
+                    })
+                    .toList(),
               ),
             ),
             const SizedBox(height: 24),
@@ -295,34 +295,32 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.red,
+                color: DT.error,
               ),
             ),
             const SizedBox(height: 12),
-            Card(
-              color: Colors.red.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: result.errors
-                      .map((error) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(
-                                  Icons.error_outline,
-                                  color: Colors.red,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(error)),
-                              ],
-                            ),
-                          ))
-                      .toList(),
-                ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: DT.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(DT.radiusCard),
+                border: Border.all(color: DT.error.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: result.errors
+                    .map((error) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.error_outline, color: DT.error, size: 16),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text(error, style: const TextStyle(color: DT.textSecondary))),
+                            ],
+                          ),
+                        ))
+                    .toList(),
               ),
             ),
             const SizedBox(height: 24),
@@ -335,35 +333,33 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.orange,
+                color: DT.warning,
               ),
             ),
             const SizedBox(height: 12),
-            Card(
-              color: Colors.orange.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: result.warnings
-                      .take(10)
-                      .map((warning) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(
-                                  Icons.warning_amber,
-                                  color: Colors.orange,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(warning)),
-                              ],
-                            ),
-                          ))
-                      .toList(),
-                ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: DT.warning.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(DT.radiusCard),
+                border: Border.all(color: DT.warning.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: result.warnings
+                    .take(10)
+                    .map((warning) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.warning_amber, color: DT.warning, size: 16),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text(warning, style: const TextStyle(color: DT.textSecondary))),
+                            ],
+                          ),
+                        ))
+                    .toList(),
               ),
             ),
             if (result.warnings.length > 10)
@@ -373,7 +369,7 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
                   '... and ${result.warnings.length - 10} more warnings',
                   style: const TextStyle(
                     fontStyle: FontStyle.italic,
-                    color: Colors.grey,
+                    color: DT.textTertiary,
                   ),
                 ),
               ),
@@ -387,24 +383,24 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: DT.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(Icons.backup, color: Colors.blue),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        result.backupPath!,
-                        style: const TextStyle(fontSize: 12),
-                      ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: DT.cardDecoFlat(),
+              child: Row(
+                children: [
+                  const Icon(Icons.backup, color: DT.secondary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      result.backupPath!,
+                      style: const TextStyle(fontSize: 12, color: DT.textSecondary),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),
@@ -417,8 +413,8 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
             child: ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: result.success ? Colors.green : Colors.grey,
-                foregroundColor: Colors.white,
+                backgroundColor: result.success ? DT.success : DT.elevated,
+                foregroundColor: result.success ? DT.onAccent : DT.textPrimary,
               ),
               child: const Text(
                 'DONE',
@@ -440,8 +436,8 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(fontSize: 16)),
-          Expanded(child: Text(text)),
+          const Text('• ', style: TextStyle(fontSize: 16, color: DT.textSecondary)),
+          Expanded(child: Text(text, style: const TextStyle(color: DT.textSecondary))),
         ],
       ),
     );
@@ -453,22 +449,24 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Database Rebuild'),
+        backgroundColor: DT.elevated,
+        title: const Text('Confirm Database Rebuild', style: TextStyle(color: DT.textPrimary)),
         content: const Text(
           'Are you sure you want to rebuild the database? '
           'This process cannot be interrupted once started.\n\n'
           'A backup will be created before proceeding.',
+          style: TextStyle(color: DT.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('CANCEL'),
+            child: const Text('CANCEL', style: TextStyle(color: DT.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: DT.error,
+              foregroundColor: DT.textPrimary,
             ),
             child: const Text('START REBUILD'),
           ),
@@ -509,7 +507,7 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
                   ? 'Database rebuild completed successfully!'
                   : 'Database rebuild failed: ${result.message}',
             ),
-            backgroundColor: result.success ? Colors.green : Colors.red,
+            backgroundColor: result.success ? DT.success : DT.error,
             duration: const Duration(seconds: 5),
           ),
         );
@@ -532,7 +530,7 @@ class _DatabaseRebuildScreenState extends State<DatabaseRebuildScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Rebuild failed: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: DT.error,
             duration: const Duration(seconds: 5),
           ),
         );

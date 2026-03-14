@@ -281,7 +281,7 @@ void main() {
       final day27Log = await repo.save(PlantLog(
         plantId: plantId,
         dayNumber: 27,
-        logDate: now.add(Duration(days: 1)),
+        logDate: now.add(const Duration(days: 1)),
         actionType: ActionType.water,
       ));
 
@@ -332,7 +332,7 @@ void main() {
       await db.insert('plant_logs', {
         'plant_id': plantId,
         'day_number': 27,
-        'log_date': now.add(Duration(days: 1)).toIso8601String(),
+        'log_date': now.add(const Duration(days: 1)).toIso8601String(),
         'action_type': 'WATER',
         'archived': 0,
       });

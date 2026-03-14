@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
@@ -18,6 +19,7 @@ import 'package:growlog_app/utils/unit_converter.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class RdwcAddbackFormScreen extends StatefulWidget {
   final RdwcSystem system;
@@ -558,7 +560,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
               icon: const Icon(Icons.clear, size: 18),
               label: Text(_t['clear_recipe']),
               style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
+                foregroundColor: DT.error,
                 visualDensity: VisualDensity.compact,
               ),
             ),
@@ -573,13 +575,13 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.green.withValues(alpha: 0.1),
+            color: DT.success.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+            border: Border.all(color: DT.success.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 20),
+              const Icon(Icons.check_circle, color: DT.success, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -589,7 +591,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                       '${_t['recipe_loaded']}: ${_loadedRecipe!.name}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.green,
+                        color: DT.success,
                         fontSize: 13,
                       ),
                     ),
@@ -604,7 +606,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                         ].join(' | '),
                         style: const TextStyle(
                           fontSize: 11,
-                          color: Colors.green,
+                          color: DT.success,
                         ),
                       ),
                   ],
@@ -640,7 +642,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                     IconButton(
                       icon: const Icon(Icons.delete, size: 20),
                       onPressed: () => _removeFertilizer(i),
-                      color: Colors.red,
+                      color: DT.error,
                     ),
                   ],
                 ),
@@ -704,10 +706,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.1),
+                      color: DT.secondary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: Colors.blue.withValues(alpha: 0.3),
+                        color: DT.secondary.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -716,14 +718,14 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                         const Icon(
                           Icons.analytics,
                           size: 16,
-                          color: Colors.blue,
+                          color: DT.secondary,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           contribution,
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: Colors.blue,
+                            color: DT.secondary,
                             fontSize: 13,
                           ),
                         ),
@@ -756,12 +758,12 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       widgets.add(const SizedBox(height: 8));
       widgets.add(
         Card(
-          color: Colors.blue.withValues(alpha: 0.1),
+          color: DT.secondary.withValues(alpha: 0.1),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                const Icon(Icons.calculate, color: Colors.blue),
+                const Icon(Icons.calculate, color: DT.secondary),
                 const SizedBox(width: 12),
                 Text(
                   '${_t['estimated_ec']}: ${estimatedEc.toStringAsFixed(2)} mS/cm',
@@ -1288,10 +1290,8 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       );
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      appBar: AppBar(title: Text(_getTitle())),
+    return PlantryScaffold(
+      title: _getTitle(),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -1299,12 +1299,12 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
           children: [
             // System info card
             Card(
-              color: isDark ? Colors.grey[850] : Colors.grey[100],
+              color: DT.elevated,
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
-                    const Icon(Icons.water_damage, color: Colors.blue),
+                    const Icon(Icons.water_damage, color: DT.secondary),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -1348,7 +1348,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                         children: [
                           const Icon(
                             Icons.add_circle,
-                            color: Colors.green,
+                            color: DT.success,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
@@ -1360,7 +1360,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                       value: RdwcLogType.fullChange,
                       child: Row(
                         children: [
-                          const Icon(Icons.sync, color: Colors.blue, size: 20),
+                          const Icon(Icons.sync, color: DT.secondary, size: 20),
                           const SizedBox(width: 8),
                           Text(_t['full_change']),
                         ],
@@ -1372,7 +1372,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                         children: [
                           const Icon(
                             Icons.build,
-                            color: Colors.orange,
+                            color: DT.warning,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
@@ -1386,7 +1386,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                         children: [
                           const Icon(
                             Icons.science,
-                            color: Colors.purple,
+                            color: DT.info,
                             size: 20,
                           ),
                           const SizedBox(width: 8),

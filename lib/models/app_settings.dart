@@ -33,7 +33,7 @@ class AppSettings {
 
   AppSettings({
     this.language = 'de',
-    this.isDarkMode = false,
+    this.isDarkMode = true,
     this.isExpertMode = false,
     this.nutrientUnit = NutrientUnit.ec,
     this.ppmScale = PpmScale.scale700, // Europa Standard

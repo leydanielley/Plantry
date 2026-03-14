@@ -170,7 +170,7 @@ final Migration migrationV35 = Migration(
       // These can be added via ALTER TABLE
       for (final col in missingPlantsCols) {
         try {
-          String columnDef = _getColumnDefinition(col);
+          final String columnDef = _getColumnDefinition(col);
           await txn.execute('ALTER TABLE plants ADD COLUMN $columnDef');
           addedColumnsCount++;
           AppLogger.info('Migration_v35', '  Added column plants.$col');
@@ -203,7 +203,7 @@ final Migration migrationV35 = Migration(
       );
       for (final col in missingHarvestsCols) {
         try {
-          String columnDef = _getColumnDefinition(col);
+          final String columnDef = _getColumnDefinition(col);
           await txn.execute('ALTER TABLE harvests ADD COLUMN $columnDef');
           addedColumnsCount++;
           AppLogger.info('Migration_v35', '  Added column harvests.$col');

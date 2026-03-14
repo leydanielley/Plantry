@@ -4,6 +4,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 /// Mixin for standardized error handling in all screens
 /// Benefits:
@@ -37,7 +38,7 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(successMessage),
-            backgroundColor: Colors.green,
+            backgroundColor: DT.success,
             duration: const Duration(seconds: 2),
           ),
         );

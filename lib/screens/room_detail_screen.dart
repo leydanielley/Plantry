@@ -1,10 +1,8 @@
 // =============================================
-// GROWLOG - Room Detail Screen (✅ BUG FIX #5: CM statt Meter anzeigen)
+// GROWLOG - Room Detail Screen
 // =============================================
 
 import 'package:flutter/material.dart';
-import 'package:growlog_app/utils/app_logger.dart';
-import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import 'package:growlog_app/models/room.dart';
 import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/hardware.dart';
@@ -13,16 +11,19 @@ import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_hardware_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
-import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart'; // ✅ AUDIT FIX: i18n
 import 'package:growlog_app/screens/edit_room_screen.dart';
 import 'package:growlog_app/screens/plant_detail_screen.dart';
 import 'package:growlog_app/screens/hardware_list_screen.dart';
 import 'package:growlog_app/screens/rdwc_system_detail_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/widgets/plantry_card.dart';
+import 'package:growlog_app/widgets/plantry_list_tile.dart';
+import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class RoomDetailScreen extends StatefulWidget {
   final Room room;
-
   const RoomDetailScreen({super.key, required this.room});
 
   @override
@@ -33,610 +34,191 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
   final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
-  final ISettingsRepository _settingsRepo =
-      getIt<ISettingsRepository>(); // ✅ AUDIT FIX: i18n
 
+  late AppTranslations _t;
   List<Plant> _plants = [];
   List<Hardware> _hardware = [];
   RdwcSystem? _rdwcSystem;
   int _totalWattage = 0;
-  late AppTranslations _t; // ✅ AUDIT FIX: i18n
   bool _isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode);
+  }
 
   @override
   void initState() {
     super.initState();
-    _initTranslations(); // ✅ AUDIT FIX: i18n
     _loadData();
   }
 
-  Future<void> _initTranslations() async {
-    // ✅ AUDIT FIX: i18n
-    final settings = await _settingsRepo.getSettings();
-    if (mounted) {
-      setState(() {
-        _t = AppTranslations(settings.language);
-      });
-    }
-  }
-
   Future<void> _loadData() async {
-    if (mounted) {
-      setState(() => _isLoading = true);
-    }
-
+    if (mounted) setState(() => _isLoading = true);
     try {
-      // ✅ PERFORMANCE: Parallel laden für schnellere Ladezeit
-      final futures = <Future>[
+      final res = await Future.wait([
         _plantRepo.findByRoom(widget.room.id!),
         _hardwareRepo.findActiveByRoom(widget.room.id!),
         _hardwareRepo.getTotalWattageByRoom(widget.room.id!),
-        if (widget.room.rdwcSystemId != null)
-          _rdwcRepo.getSystemById(widget.room.rdwcSystemId!)
-        else
-          Future.value(null),
-      ];
-
-      final results = await Future.wait(futures);
-
-      final plants = results[0] as List<Plant>;
-      final hardware = results[1] as List<Hardware>;
-      final wattage = results[2] as int;
-      final rdwcSystem = results[3] as RdwcSystem?;
-
+        if (widget.room.rdwcSystemId != null) _rdwcRepo.getSystemById(widget.room.rdwcSystemId!) else Future.value(null),
+      ]);
       if (mounted) {
         setState(() {
-          _plants = plants;
-          _hardware = hardware;
-          _rdwcSystem = rdwcSystem;
-          _totalWattage = wattage;
+          _plants = res[0] as List<Plant>;
+          _hardware = res[1] as List<Hardware>;
+          _totalWattage = res[2] as int;
+          _rdwcSystem = res[3] as RdwcSystem?;
           _isLoading = false;
         });
       }
     } catch (e) {
-      AppLogger.error('RoomDetailScreen', 'Error loading data: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.room.name),
-        backgroundColor: const Color(0xFF004225),
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              if (!mounted) return;
-              final nav = Navigator.of(context);
-              final result = await nav.push(
-                MaterialPageRoute(
-                  builder: (context) => EditRoomScreen(room: widget.room),
-                ),
-              );
-              if (result == true && mounted) {
-                nav.pop(true);
-              }
-            },
-          ),
-        ],
-      ),
+    return PlantryScaffold(
+      title: widget.room.name,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.edit, color: DT.textPrimary),
+          onPressed: () async {
+            final nav = Navigator.of(context);
+            final res = await nav.push(MaterialPageRoute(builder: (_) => EditRoomScreen(room: widget.room)));
+            if (res == true) nav.pop(true);
+          },
+        ),
+      ],
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : RefreshIndicator(
               onRefresh: _loadData,
+              color: DT.accent,
+              backgroundColor: DT.surface,
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 80),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                 children: [
-                  _buildRoomInfoCard(),
-                  if (_rdwcSystem != null) _buildRdwcSystemCard(),
-                  _buildHardwareSection(),
-                  _buildPlantsSection(),
+                  _buildHeader(),
+                  if (_rdwcSystem != null) ...[const SizedBox(height: 12), _buildRdwc()],
+                  const SizedBox(height: 24),
+                  _buildSectionHeader('Hardware', Icons.devices, () => Navigator.push(context, MaterialPageRoute(builder: (_) => HardwareListScreen(roomId: widget.room.id!, roomName: widget.room.name))).then((_) => _loadData())),
+                  ..._hardware.take(3).map((hw) => _buildHwTile(hw)),
+                  if (_hardware.isEmpty) _empty('Keine Hardware'),
+                  const SizedBox(height: 24),
+                  _buildSectionHeader('Pflanzen', Icons.spa, null),
+                  ..._plants.map((p) => _buildPlantTile(p)),
+                  if (_plants.isEmpty) _empty('Keine Pflanzen'),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildRdwcSystemCard() {
-    if (_rdwcSystem == null) return const SizedBox.shrink();
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final system = _rdwcSystem!;
-
-    // Calculate status color
-    Color statusColor;
-    if (system.isCriticallyLow) {
-      statusColor = Colors.red;
-    } else if (system.isLowWater) {
-      statusColor = Colors.orange;
-    } else if (system.isFull) {
-      statusColor = Colors.blue;
-    } else {
-      statusColor = Colors.green;
-    }
-
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: InkWell(
-        onTap: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => RdwcSystemDetailScreen(system: system),
-            ),
-          );
-          if (result == true) {
-            _loadData();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildHeader() {
+    return PlantryCard(
+      child: Column(
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Image.asset(
-                    'assets/icons/rdwc_icon.png',
-                    width: 36,
-                    height: 36,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _t['room_detail_rdwc_system'],
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          system.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: isDark ? Colors.grey[600] : Colors.grey[400],
-                  ),
-                ],
+              Container(
+                width: 48, height: 48,
+                decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(12)),
+                child: Icon(_getIcon(widget.room.growType), color: DT.accent, size: 24),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _t['room_detail_fill_level'],
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.grey[500] : Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${system.fillPercentage.toStringAsFixed(0)}%',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: statusColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _t['room_detail_current'],
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.grey[500] : Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${system.currentLevel.toStringAsFixed(1)}L',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _t['room_detail_capacity'],
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.grey[500] : Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${system.maxCapacity.toStringAsFixed(0)}L',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if (system.description != null &&
-                  system.description!.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(
-                  system.description!,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? Colors.grey[400] : Colors.grey[700],
-                  ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(widget.room.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: DT.textPrimary)),
+                    Text(widget.room.growType?.displayName ?? "Unbekannt", style: const TextStyle(fontSize: 13, color: DT.textSecondary)),
+                  ],
                 ),
-              ],
+              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoomInfoCard() {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: _getGrowTypeColor(widget.room.growType),
-                  child: Icon(
-                    _getGrowTypeIcon(widget.room.growType),
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.room.name,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (widget.room.growType != null)
-                        Text(
-                          widget.room.growType!.displayName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (widget.room.description != null &&
-                widget.room.description!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                widget.room.description!,
-                style: TextStyle(color: Colors.grey[700]),
-              ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _stat('${(widget.room.width * 100).toInt()}x${(widget.room.depth * 100).toInt()}cm', 'Fläche'),
+              _stat('${_totalWattage}W', 'Leistung'),
+              _stat('${_plants.length}', 'Pflanzen'),
             ],
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                // ✅ BUG FIX #5: Meter → CM umrechnen (× 100)
-                if (widget.room.width > 0 && widget.room.depth > 0)
-                  _buildInfoChip(
-                    Icons.straighten,
-                    '${(widget.room.width * 100).toStringAsFixed(0)}cm × ${(widget.room.depth * 100).toStringAsFixed(0)}cm',
-                  ),
-                if (widget.room.height > 0)
-                  _buildInfoChip(
-                    Icons.height,
-                    _t['room_detail_height'].replaceAll(
-                      '{height}',
-                      (widget.room.height * 100).toStringAsFixed(0),
-                    ),
-                  ),
-                if (widget.room.wateringSystem != null)
-                  _buildInfoChip(
-                    Icons.water_drop,
-                    widget.room.wateringSystem!.displayName,
-                  ),
-                _buildInfoChip(
-                  Icons.spa,
-                  _t['room_detail_plants_count'].replaceAll(
-                    '{count}',
-                    '${_plants.length}',
-                  ),
-                  color: Colors.green[600],
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label, {Color? color}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color ?? Colors.grey[200],
-        borderRadius: BorderRadius.circular(16),
-      ),
+  Widget _buildRdwc() {
+    final s = _rdwcSystem!;
+    return PlantryCard(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcSystemDetailScreen(system: s))).then((_) => _loadData()),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 16,
-            color: color != null ? Colors.white : Colors.grey[700],
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: color != null ? Colors.white : Colors.grey[700],
-              fontWeight: FontWeight.w500,
+          Image.asset('assets/icons/rdwc_icon.png', width: 32, height: 32),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('RDWC System', style: TextStyle(fontSize: 12, color: DT.textSecondary)),
+                Text(s.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DT.textPrimary)),
+              ],
             ),
           ),
+          Text('${s.fillPercentage.toInt()}%', style: TextStyle(color: s.fillPercentage < 20 ? DT.error : DT.info, fontWeight: FontWeight.bold)),
+          const Icon(Icons.chevron_right, color: DT.textTertiary),
         ],
       ),
     );
   }
 
-  Widget _buildHardwareSection() {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
+  Widget _buildSectionHeader(String title, IconData icon, VoidCallback? onMore) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
         children: [
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.orange[700],
-              child: const Icon(Icons.devices, color: Colors.white),
-            ),
-            title: Text(
-              _t['room_detail_hardware_title'],
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              _t['room_detail_hardware_subtitle']
-                  .replaceAll('{count}', '${_hardware.length}')
-                  .replaceAll('{wattage}', '$_totalWattage'),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.arrow_forward),
-              onPressed: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => HardwareListScreen(
-                      roomId: widget.room.id!,
-                      roomName: widget.room.name,
-                    ),
-                  ),
-                );
-                _loadData();
-              },
-            ),
-          ),
-          if (_hardware.isNotEmpty) ...[
-            const Divider(height: 1),
-            ..._hardware
-                .take(3)
-                .map(
-                  (hw) => ListTile(
-                    dense: true,
-                    leading: Icon(
-                      hw.type.icon,
-                      color: Colors.orange[700],
-                      size: 24,
-                    ),
-                    title: Text(hw.displayName),
-                    subtitle: Text(hw.type.displayName),
-                    trailing: hw.wattage != null
-                        ? Text(
-                            hw.wattageDisplay,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.orange[700],
-                            ),
-                          )
-                        : null,
-                  ),
-                ),
-            if (_hardware.length > 3)
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  _t['room_detail_more_items'].replaceAll(
-                    '{count}',
-                    '${_hardware.length - 3}',
-                  ),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-          ] else
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-              child: Column(
-                children: [
-                  Icon(Icons.devices_other, size: 48, color: Colors.grey[400]),
-                  const SizedBox(height: 12),
-                  Text(
-                    _t['room_detail_no_hardware'],
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _t['room_detail_add_hardware_hint'],
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                  ),
-                ],
-              ),
-            ),
+          Icon(icon, size: 18, color: DT.textSecondary),
+          const SizedBox(width: 8),
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
+          const Spacer(),
+          if (onMore != null) TextButton(onPressed: onMore, child: Text(_t['show_all'], style: const TextStyle(color: DT.accent, fontSize: 12))),
         ],
       ),
     );
   }
 
-  Widget _buildPlantsSection() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children: [
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.green[700],
-              child: const Icon(Icons.spa, color: Colors.white),
-            ),
-            title: Text(
-              _t['room_detail_plants_title'],
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              _t['room_detail_plants_subtitle'].replaceAll(
-                '{count}',
-                '${_plants.length}',
-              ),
-            ),
-          ),
-          if (_plants.isNotEmpty) ...[
-            const Divider(height: 1),
-            ..._plants.map(
-              (plant) => ListTile(
-                dense: true,
-                leading: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[800] : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    _getPhaseEmoji(plant.phase),
-                    style: const TextStyle(fontSize: 20),
-                  ),
-                ),
-                title: Text(plant.name),
-                subtitle: Text(
-                  '${plant.strain ?? 'Unknown'} • Tag ${plant.totalDays}',
-                ),
-                onTap: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => PlantDetailScreen(plant: plant),
-                    ),
-                  );
-                  _loadData();
-                },
-              ),
-            ),
-          ] else
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-              child: Column(
-                children: [
-                  Icon(Icons.spa, size: 48, color: Colors.grey[400]),
-                  const SizedBox(height: 12),
-                  Text(
-                    _t['room_detail_no_plants'],
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _t['room_detail_add_plant_hint'],
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                  ),
-                ],
-              ),
-            ),
-        ],
+  Widget _buildHwTile(Hardware hw) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: PlantryListTile(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        leading: Icon(hw.type.icon, color: DT.warning, size: 20),
+        title: hw.displayName,
+        subtitle: '${hw.type.displayName}${hw.wattage != null ? " • ${hw.wattage}W" : ""}',
       ),
     );
   }
 
-  Color _getGrowTypeColor(GrowType? type) {
-    if (type == null) return Colors.grey[600] ?? Colors.grey;
-    switch (type) {
-      case GrowType.indoor:
-        return Colors.blue[600] ?? Colors.blue;
-      case GrowType.outdoor:
-        return Colors.green[600] ?? Colors.green;
-      case GrowType.greenhouse:
-        return Colors.orange[600] ?? Colors.orange;
-    }
+  Widget _buildPlantTile(Plant p) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: PlantryListTile(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        leading: Text(_getEmoji(p.phase), style: const TextStyle(fontSize: 20)),
+        title: p.name,
+        subtitle: 'Tag ${p.totalDays} • ${p.strain ?? "Unbekannt"}',
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PlantDetailScreen(plant: p))).then((_) => _loadData()),
+      ),
+    );
   }
 
-  IconData _getGrowTypeIcon(GrowType? type) {
-    if (type == null) return Icons.home;
-    switch (type) {
-      case GrowType.indoor:
-        return Icons.home;
-      case GrowType.outdoor:
-        return Icons.park;
-      case GrowType.greenhouse:
-        return Icons.home_work;
-    }
-  }
-
-  String _getPhaseEmoji(PlantPhase phase) {
-    switch (phase) {
-      case PlantPhase.seedling:
-        return '🌱';
-      case PlantPhase.veg:
-        return '🌿';
-      case PlantPhase.bloom:
-        return '🌸';
-      case PlantPhase.harvest:
-        return '✂️';
-      case PlantPhase.archived:
-        return '📦';
-    }
-  }
+  Widget _stat(String v, String l) => Column(children: [Text(v, style: const TextStyle(fontWeight: FontWeight.bold, color: DT.textPrimary)), Text(l, style: const TextStyle(fontSize: 10, color: DT.textSecondary))]);
+  Widget _empty(String t) => Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(t, style: const TextStyle(color: DT.textTertiary))));
+  IconData _getIcon(GrowType? t) => t == GrowType.indoor ? Icons.home : t == GrowType.outdoor ? Icons.park : Icons.home_work;
+  String _getEmoji(PlantPhase p) => p == PlantPhase.seedling ? '🌱' : p == PlantPhase.veg ? '🌿' : p == PlantPhase.bloom ? '🌸' : p == PlantPhase.harvest ? '✂️' : '📦';
 }

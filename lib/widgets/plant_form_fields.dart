@@ -8,6 +8,7 @@ import 'package:growlog_app/models/room.dart';
 import 'package:growlog_app/models/grow.dart';
 import 'package:growlog_app/utils/input_constraints.dart';
 import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 /// Reusable form fields for plant creation and editing
 ///
@@ -249,7 +250,7 @@ class PlantFormFields extends StatelessWidget {
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.add_circle),
-                  color: Colors.green[700],
+                  color: DT.accent,
                   onPressed: onCreateGrow,
                   tooltip: t.translate('add_plant_create_grow'),
                 ),

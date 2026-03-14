@@ -11,6 +11,8 @@ import 'package:intl/intl.dart';
 import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class EditHarvestScreen extends StatefulWidget {
   final Harvest harvest;
@@ -213,75 +215,71 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
           }
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(_t['edit_harvest_title']), // ✅ i18n
-          backgroundColor: const Color(0xFF004225),
-          foregroundColor: Colors.white,
-          actions: [
-            if (_isSaving)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
+      child: PlantryScaffold(
+        title: _t['edit_harvest_title'], // ✅ i18n
+        actions: [
+          if (_isSaving)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(DT.textPrimary),
                   ),
                 ),
-              )
-            else
-              IconButton(
-                icon: const Icon(Icons.check),
-                onPressed: _saveHarvest,
-                tooltip: _t['edit_harvest_save_tooltip'], // ✅ i18n
               ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.check),
+              onPressed: _saveHarvest,
+              tooltip: _t['edit_harvest_save_tooltip'], // ✅ i18n
+            ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicatorColor: DT.accent,
+          tabs: [
+            Tab(
+              icon: const Icon(Icons.grass, color: DT.textPrimary),
+              child: Text(
+                _t['edit_harvest_tab_basic'],
+                style: const TextStyle(color: DT.textPrimary),
+              ), // ✅ i18n
+            ),
+            Tab(
+              icon: const Icon(Icons.dry_cleaning, color: DT.textPrimary),
+              child: Text(
+                _t['edit_harvest_tab_drying'],
+                style: const TextStyle(color: DT.textPrimary),
+              ), // ✅ i18n
+            ),
+            Tab(
+              icon: const Icon(Icons.inventory_2, color: DT.textPrimary),
+              child: Text(
+                _t['edit_harvest_tab_curing'],
+                style: const TextStyle(color: DT.textPrimary),
+              ), // ✅ i18n
+            ),
+            Tab(
+              icon: const Icon(Icons.science, color: DT.textPrimary),
+              child: Text(
+                _t['edit_harvest_tab_quality'],
+                style: const TextStyle(color: DT.textPrimary),
+              ), // ✅ i18n
+            ),
+            Tab(
+              icon: const Icon(Icons.star, color: DT.textPrimary),
+              child: Text(
+                _t['edit_harvest_tab_rating'],
+                style: const TextStyle(color: DT.textPrimary),
+              ), // ✅ i18n
+            ),
           ],
-          bottom: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            indicatorColor: Colors.white,
-            tabs: [
-              Tab(
-                icon: const Icon(Icons.grass, color: Colors.white),
-                child: Text(
-                  _t['edit_harvest_tab_basic'],
-                  style: const TextStyle(color: Colors.white),
-                ), // ✅ i18n
-              ),
-              Tab(
-                icon: const Icon(Icons.dry_cleaning, color: Colors.white),
-                child: Text(
-                  _t['edit_harvest_tab_drying'],
-                  style: const TextStyle(color: Colors.white),
-                ), // ✅ i18n
-              ),
-              Tab(
-                icon: const Icon(Icons.inventory_2, color: Colors.white),
-                child: Text(
-                  _t['edit_harvest_tab_curing'],
-                  style: const TextStyle(color: Colors.white),
-                ), // ✅ i18n
-              ),
-              Tab(
-                icon: const Icon(Icons.science, color: Colors.white),
-                child: Text(
-                  _t['edit_harvest_tab_quality'],
-                  style: const TextStyle(color: Colors.white),
-                ), // ✅ i18n
-              ),
-              Tab(
-                icon: const Icon(Icons.star, color: Colors.white),
-                child: Text(
-                  _t['edit_harvest_tab_rating'],
-                  style: const TextStyle(color: Colors.white),
-                ), // ✅ i18n
-              ),
-            ],
-          ),
         ),
         body: Form(
           key: _formKey,
@@ -305,10 +303,10 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A), // Dunkel für Theme,
+        color: DT.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: DT.canvas.withValues(alpha: 0.5),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -329,8 +327,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 icon: const Icon(Icons.close),
                 label: Text(_t['cancel']), // ✅ i18n
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white54),
+                  foregroundColor: DT.textPrimary,
+                  side: const BorderSide(color: DT.textSecondary),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
@@ -347,7 +345,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                            DT.textPrimary,
                           ),
                         ),
                       )
@@ -356,8 +354,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                   _isSaving ? _t['edit_harvest_saving'] : _t['save'],
                 ), // ✅ i18n
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
-                  foregroundColor: Colors.white,
+                  backgroundColor: DT.success,
+                  foregroundColor: DT.canvas,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
@@ -381,7 +379,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                style: TextButton.styleFrom(foregroundColor: DT.error),
                 child: Text(_t['edit_harvest_discard']), // ✅ i18n
               ),
             ],
@@ -404,7 +402,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             _t['edit_harvest_basic_header'], // ✅ i18n
             _t['edit_harvest_basic_description'], // ✅ i18n
             Icons.grass,
-            Colors.green,
+            DT.success,
           ),
           const SizedBox(height: 20),
 
@@ -412,7 +410,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
           _buildDateField(
             label: _t['edit_harvest_date_label'], // ✅ i18n
             icon: Icons.calendar_today,
-            color: Colors.green,
+            color: DT.success,
             currentDate: _harvestDate,
             onDateSelected: (date) => setState(() => _harvestDate = date),
             firstDate: DateTime(2020),
@@ -427,7 +425,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             hint: _t['edit_harvest_wet_weight_hint'], // ✅ i18n
             suffix: _t['edit_harvest_wet_weight_suffix'], // ✅ i18n
             icon: Icons.water_drop,
-            color: Colors.blue,
+            color: DT.secondary,
             helperText: _t['edit_harvest_wet_weight_helper'], // ✅ i18n
             allowDecimals: true,
           ),
@@ -441,7 +439,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             suffix:
                 _t['edit_harvest_wet_weight_suffix'], // ✅ i18n (reusing 'g')
             icon: Icons.scale,
-            color: Colors.green,
+            color: DT.success,
             helperText: _t['edit_harvest_dry_weight_helper'], // ✅ i18n
             allowDecimals: true,
             isBold: true,
@@ -469,7 +467,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFB3E5FC), // Helles Blau
+        color: DT.secondary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -479,12 +477,12 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0288D1), // Mittelblau
+                  color: DT.secondary,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.trending_down,
-                  color: Colors.white,
+                  color: DT.canvas,
                   size: 24,
                 ),
               ),
@@ -498,14 +496,14 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
-                        color: Color(0xFF01579B), // Dunkelblau
+                        color: DT.secondary,
                       ),
                     ),
                     Text(
                       _t['edit_harvest_water_evaporated'], // ✅ i18n
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF0277BD),
+                        color: DT.secondary.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -520,7 +518,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 child: _buildInfoCard(
                   '${loss.toStringAsFixed(1)}%',
                   'Prozentual',
-                  Colors.orange,
+                  DT.warning,
                 ),
               ),
               const SizedBox(width: 12),
@@ -528,7 +526,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 child: _buildInfoCard(
                   '${lossGrams.toStringAsFixed(1)}g',
                   'Absolut',
-                  Colors.red,
+                  DT.error,
                 ),
               ),
             ],
@@ -542,7 +540,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: DT.elevated,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -558,7 +556,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(fontSize: 11, color: Color(0xFF666666)),
+            style: const TextStyle(fontSize: 11, color: DT.textTertiary),
           ),
         ],
       ),
@@ -579,7 +577,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             _t['edit_harvest_drying_header'], // ✅ i18n
             _t['edit_harvest_drying_description'], // ✅ i18n
             Icons.dry_cleaning,
-            Colors.orange,
+            DT.warning,
           ),
           const SizedBox(height: 20),
 
@@ -593,7 +591,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             onClearStart: () => setState(() => _dryingStartDate = null),
             onClearEnd: () => setState(() => _dryingEndDate = null),
             minStartDate: _harvestDate,
-            color: Colors.orange,
+            color: DT.warning,
           ),
           const SizedBox(height: 20),
 
@@ -603,7 +601,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             label: _t['edit_harvest_drying_method_label'], // ✅ i18n
             hint: _t['edit_harvest_drying_method_hint'], // ✅ i18n
             icon: Icons.dry_cleaning,
-            color: Colors.orange,
+            color: DT.warning,
             suggestions: ['Hängend', 'Netz', 'Box', 'Rack'],
           ),
           const SizedBox(height: 16),
@@ -618,7 +616,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                   hint: _t['edit_harvest_drying_temp_range'], // ✅ i18n
                   suffix: '°C',
                   icon: Icons.thermostat,
-                  color: Colors.orange,
+                  color: DT.warning,
                   allowDecimals: true,
                 ),
               ),
@@ -630,7 +628,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                   hint: _t['edit_harvest_drying_humidity_range'], // ✅ i18n
                   suffix: '%',
                   icon: Icons.water_drop,
-                  color: Colors.blue,
+                  color: DT.secondary,
                   allowDecimals: true,
                 ),
               ),
@@ -644,8 +642,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             onEnd: () => setState(() => _dryingEndDate ??= DateTime.now()),
             startLabel: _t['edit_harvest_start_today'], // ✅ i18n
             endLabel: _t['edit_harvest_end_today'], // ✅ i18n
-            startColor: Colors.orange,
-            endColor: Colors.green,
+            startColor: DT.warning,
+            endColor: DT.success,
           ),
 
           const SizedBox(height: 20),
@@ -659,7 +657,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
               _t['edit_harvest_drying_airflow'], // ✅ i18n
             ],
             Icons.lightbulb_outline,
-            Colors.orange,
+            DT.warning,
           ),
         ],
       ),
@@ -680,7 +678,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             _t['edit_harvest_curing_header'], // ✅ i18n
             _t['edit_harvest_curing_description'], // ✅ i18n
             Icons.inventory_2,
-            Colors.purple,
+            DT.info,
           ),
           const SizedBox(height: 20),
 
@@ -694,7 +692,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             onClearStart: () => setState(() => _curingStartDate = null),
             onClearEnd: () => setState(() => _curingEndDate = null),
             minStartDate: _dryingEndDate ?? _harvestDate,
-            color: Colors.purple,
+            color: DT.info,
           ),
           const SizedBox(height: 20),
 
@@ -704,7 +702,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             label: _t['edit_harvest_curing_method_label'], // ✅ i18n
             hint: _t['edit_harvest_curing_method_hint'], // ✅ i18n
             icon: Icons.inventory_2,
-            color: Colors.purple,
+            color: DT.info,
             suggestions: [
               'Glass Jars',
               'Grove Bags',
@@ -720,7 +718,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             label: _t['edit_harvest_curing_notes_label'], // ✅ i18n
             hint: _t['edit_harvest_curing_notes_hint'], // ✅ i18n
             icon: Icons.note,
-            color: Colors.purple,
+            color: DT.info,
             maxLines: 4,
           ),
           const SizedBox(height: 20),
@@ -731,8 +729,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             onEnd: () => setState(() => _curingEndDate ??= DateTime.now()),
             startLabel: _t['edit_harvest_start_today'], // ✅ i18n
             endLabel: _t['edit_harvest_end_today'], // ✅ i18n
-            startColor: Colors.purple,
-            endColor: Colors.green,
+            startColor: DT.info,
+            endColor: DT.success,
           ),
 
           const SizedBox(height: 20),
@@ -743,7 +741,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
               _t['edit_harvest_curing_patience'], // ✅ i18n
             ],
             Icons.lightbulb_outline,
-            Colors.purple,
+            DT.info,
           ),
         ],
       ),
@@ -764,7 +762,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             _t['edit_harvest_quality_header'], // ✅ i18n
             _t['edit_harvest_cannabinoid_profile'], // ✅ i18n
             Icons.science,
-            Colors.blue,
+            DT.secondary,
           ),
           const SizedBox(height: 20),
 
@@ -775,7 +773,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             hint: 'z.B. 22.5',
             suffix: '%',
             icon: Icons.science,
-            color: Colors.red,
+            color: DT.error,
             helperText: _t['edit_harvest_thc_helper'], // ✅ i18n
             allowDecimals: true,
           ),
@@ -788,7 +786,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             hint: 'z.B. 0.5',
             suffix: '%',
             icon: Icons.science,
-            color: Colors.green,
+            color: DT.success,
             helperText: _t['edit_harvest_cbd_helper'], // ✅ i18n
             allowDecimals: true,
           ),
@@ -800,7 +798,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             label: _t['edit_harvest_terpene_label'], // ✅ i18n
             hint: _t['edit_harvest_terpene_hint'], // ✅ i18n
             icon: Icons.format_list_bulleted,
-            color: Colors.purple,
+            color: DT.info,
             maxLines: 3,
             suggestions: [
               'Myrcene',
@@ -821,18 +819,18 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color: DT.secondary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue[200] ?? Colors.blue),
+              border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline, color: Colors.blue[700]),
+                const Icon(Icons.info_outline, color: DT.secondary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     _t['edit_harvest_quality_info'], // ✅ i18n
-                    style: TextStyle(fontSize: 13, color: Colors.blue[900]),
+                    style: const TextStyle(fontSize: 13, color: DT.textSecondary),
                   ),
                 ),
               ],
@@ -852,31 +850,31 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.purple[50] ?? Colors.purple,
-            Colors.blue[50] ?? Colors.blue,
+            DT.info.withValues(alpha: 0.08),
+            DT.secondary.withValues(alpha: 0.08),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200] ?? Colors.blue),
+        border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             _t['edit_harvest_cannabinoid_profile'], // ✅ i18n
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
-              color: Colors.blue[900],
+              color: DT.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
-          if (thc != null) _buildCannabinoidBar('THC', thc, Colors.red),
+          if (thc != null) _buildCannabinoidBar('THC', thc, DT.error),
           if (cbd != null) ...[
             const SizedBox(height: 12),
-            _buildCannabinoidBar('CBD', cbd, Colors.green),
+            _buildCannabinoidBar('CBD', cbd, DT.success),
           ],
         ],
       ),
@@ -910,7 +908,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
           child: LinearProgressIndicator(
             value: (percentage / 30).clamp(0.0, 1.0), // Max 30% for visual
             minHeight: 10,
-            backgroundColor: Colors.grey[300],
+            backgroundColor: DT.elevated,
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -932,7 +930,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             _t['edit_harvest_rating_header'], // ✅ i18n
             _t['edit_harvest_rating_description'], // ✅ i18n
             Icons.star,
-            Colors.amber,
+            DT.warning,
           ),
           const SizedBox(height: 20),
 
@@ -960,7 +958,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                               : Icons.star_border,
                           size: 40,
                         ),
-                        color: Colors.amber,
+                        color: DT.warning,
                         onPressed: () {
                           setState(() => _rating = index + 1);
                         },
@@ -974,9 +972,9 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                         '{rating}',
                         '$_rating',
                       ), // ✅ i18n
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: DT.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -984,7 +982,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                   if (_rating == null)
                     Text(
                       _t['edit_harvest_not_set'], // ✅ i18n
-                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      style: const TextStyle(fontSize: 12, color: DT.textTertiary),
                     ),
                 ],
               ),
@@ -998,7 +996,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             label: _t['edit_harvest_taste_label'], // ✅ i18n
             hint: _t['edit_harvest_taste_hint'], // ✅ i18n
             icon: Icons.restaurant,
-            color: Colors.orange,
+            color: DT.warning,
             maxLines: 3,
             suggestions: [
               'Fruchtig',
@@ -1019,7 +1017,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             label: _t['edit_harvest_effect_label'], // ✅ i18n
             hint: _t['edit_harvest_effect_hint'], // ✅ i18n
             icon: Icons.psychology,
-            color: Colors.purple,
+            color: DT.info,
             maxLines: 3,
             suggestions: [
               'Entspannend',
@@ -1040,7 +1038,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             label: _t['notes'], // ✅ i18n (reused)
             hint: _t['edit_harvest_notes_hint'], // ✅ i18n
             icon: Icons.note,
-            color: Colors.blue,
+            color: DT.secondary,
             maxLines: 5,
           ),
         ],
@@ -1073,7 +1071,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            child: Icon(icon, color: Colors.white, size: 24),
+            child: Icon(icon, color: DT.canvas, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -1090,7 +1088,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: const TextStyle(fontSize: 12, color: DT.textSecondary),
                 ),
               ],
             ),
@@ -1122,7 +1120,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300] ?? Colors.grey),
+          border: Border.all(color: DT.border),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -1135,7 +1133,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 children: [
                   Text(
                     label,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: const TextStyle(fontSize: 12, color: DT.textSecondary),
                   ),
                   Text(
                     DateFormat('dd.MM.yyyy').format(currentDate),
@@ -1147,7 +1145,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 ],
               ),
             ),
-            Icon(Icons.calendar_today, color: Colors.grey[400], size: 20),
+            const Icon(Icons.calendar_today, color: DT.textTertiary, size: 20),
           ],
         ),
       ),
@@ -1196,7 +1194,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 label: 'End-Datum',
                 date: endDate,
                 icon: Icons.stop,
-                color: Colors.green,
+                color: DT.success,
                 onTap: () async {
                   final date = await showDatePicker(
                     context: context,
@@ -1250,7 +1248,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300] ?? Colors.grey),
+          border: Border.all(color: DT.border),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -1263,13 +1261,13 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 Expanded(
                   child: Text(
                     label,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: const TextStyle(fontSize: 12, color: DT.textSecondary),
                   ),
                 ),
                 if (onClear != null)
                   InkWell(
                     onTap: onClear,
-                    child: Icon(Icons.clear, size: 18, color: Colors.grey[400]),
+                    child: const Icon(Icons.clear, size: 18, color: DT.textTertiary),
                   ),
               ],
             ),
@@ -1281,7 +1279,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: date != null ? FontWeight.bold : FontWeight.normal,
-                color: date != null ? Colors.black : Colors.grey[400],
+                color: date != null ? DT.textPrimary : DT.textTertiary,
               ),
             ),
           ],
@@ -1416,7 +1414,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             label: Text(startLabel),
             style: ElevatedButton.styleFrom(
               backgroundColor: startColor,
-              foregroundColor: Colors.white,
+              foregroundColor: DT.canvas,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -1432,7 +1430,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
             label: Text(endLabel),
             style: ElevatedButton.styleFrom(
               backgroundColor: endColor,
-              foregroundColor: Colors.white,
+              foregroundColor: DT.canvas,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -1482,7 +1480,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                   Expanded(
                     child: Text(
                       tip,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                      style: const TextStyle(fontSize: 13, color: DT.textSecondary),
                     ),
                   ),
                 ],

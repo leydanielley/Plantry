@@ -3,6 +3,8 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/widgets/plantry_card.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/models/rdwc_system.dart';
@@ -10,10 +12,10 @@ import 'package:growlog_app/models/app_settings.dart';
 import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/utils/unit_converter.dart';
 import 'package:growlog_app/utils/app_logger.dart';
-import 'package:growlog_app/widgets/empty_state_widget.dart';
 import 'package:growlog_app/screens/rdwc_system_detail_screen.dart';
 import 'package:growlog_app/screens/rdwc_system_form_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class RdwcSystemsScreen extends StatefulWidget {
   const RdwcSystemsScreen({super.key});
@@ -41,9 +43,7 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
   Future<void> _loadData() async {
     try {
       final settings = await _settingsRepo.getSettings();
-      final systems = await _rdwcRepo.getAllSystems(
-        includeArchived: _showArchived,
-      );
+      final systems = await _rdwcRepo.getAllSystems(includeArchived: _showArchived);
 
       if (mounted) {
         setState(() {
@@ -54,318 +54,145 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
         });
       }
     } catch (e) {
-      AppLogger.error('RdwcSystemsScreen', 'Error loading data', e);
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<void> _refreshSystems() async {
-    final systems = await _rdwcRepo.getAllSystems(
-      includeArchived: _showArchived,
-    );
-    if (mounted) {
-      setState(() => _systems = systems);
+      AppLogger.error('RdwcSystemsScreen', 'Error loading', e);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('RDWC Systems')),
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        backgroundColor: DT.canvas,
+        body: Center(child: CircularProgressIndicator(color: DT.accent)),
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_t['rdwc_systems']),
-        actions: [
-          IconButton(
-            icon: Icon(_showArchived ? Icons.archive : Icons.archive_outlined),
-            onPressed: () {
-              setState(() => _showArchived = !_showArchived);
-              _refreshSystems();
-            },
-            tooltip: _showArchived ? 'Hide Archived' : 'Show Archived',
-          ),
+    return PlantryScaffold(
+      title: _t['rdwc_systems'],
+      actions: [
+        IconButton(
+          icon: Icon(_showArchived ? Icons.inventory_2 : Icons.inventory_2_outlined, color: DT.textPrimary),
+          onPressed: () {
+            setState(() => _showArchived = !_showArchived);
+            _loadData();
+          },
+        ),
+      ],
+      body: _systems.isEmpty
+          ? _buildEmptyState()
+          : ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              itemCount: _systems.length,
+              itemBuilder: (context, index) => _buildSystemCard(_systems[index]),
+            ),
+      fab: FloatingActionButton(
+        onPressed: () async {
+          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => const RdwcSystemFormScreen()));
+          if (res == true) _loadData();
+        },
+        backgroundColor: DT.accent,
+        foregroundColor: DT.onAccent,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.water_drop_outlined, size: 80, color: DT.textTertiary),
+          const SizedBox(height: 24),
+          Text(_t['rdwc_systems'], style: const TextStyle(fontSize: 20, color: DT.textPrimary, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(_t['no_systems_yet'], style: const TextStyle(fontSize: 16, color: DT.textSecondary)),
         ],
       ),
-      body: _systems.isEmpty
-          ? _buildEmptyState(isDark)
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _systems.length,
-              itemBuilder: (context, index) {
-                return _buildSystemCard(_systems[index], isDark);
-              },
-            ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const RdwcSystemFormScreen(),
-            ),
-          );
-          if (result == true) {
-            _refreshSystems();
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: Text(_t['add_rdwc_system']),
-      ),
     );
   }
 
-  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
-  Widget _buildEmptyState(bool isDark) {
-    return EmptyStateWidget(
-      icon: Icons.water_drop_outlined,
-      title: _t['no_logs_yet'],
-      subtitle: _t['create_first_log'],
-    );
-  }
-
-  Widget _buildSystemCard(RdwcSystem system, bool isDark) {
-    // Calculate status color
-    Color statusColor;
+  Widget _buildSystemCard(RdwcSystem system) {
+    Color statusColor = DT.success;
     if (system.isCriticallyLow) {
-      statusColor = Colors.red;
+      statusColor = DT.error;
     } else if (system.isLowWater) {
-      statusColor = Colors.orange;
+      statusColor = DT.warning;
     } else if (system.isFull) {
-      statusColor = Colors.blue;
-    } else {
-      statusColor = Colors.green;
+      statusColor = DT.info;
     }
 
-    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
-    return RepaintBoundary(
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 12),
-        child: InkWell(
-          onTap: () async {
-            final result = await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => RdwcSystemDetailScreen(system: system),
-              ),
-            );
-            if (result == true) {
-              _refreshSystems();
-            }
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PlantryCard(
+        onTap: () async {
+          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcSystemDetailScreen(system: system)));
+          if (res == true) _loadData();
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                // Header Row
-                Row(
-                  children: [
-                    Image.asset(
-                      'assets/icons/rdwc_icon.png',
-                      width: 32,
-                      height: 32,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            system.name,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          if (system.description != null &&
-                              system.description!.isNotEmpty)
-                            Text(
-                              system.description!,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: isDark
-                                        ? Colors.grey[500]
-                                        : Colors.grey[600],
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                        ],
-                      ),
-                    ),
-                    if (system.archived)
-                      const Icon(Icons.archive, color: Colors.grey),
-                  ],
+                Container(
+                  width: 40, height: 40,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(10)),
+                  child: Image.asset('assets/icons/rdwc_icon.png', fit: BoxFit.contain),
                 ),
-                const SizedBox(height: 16),
-
-                // Level Progress Bar
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _t['water_level'],
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          '${system.fillPercentage.toStringAsFixed(0)}%',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: statusColor,
-                              ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: system.fillPercentage / 100,
-                        minHeight: 8,
-                        backgroundColor: isDark
-                            ? Colors.grey[800]
-                            : Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Stats Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStat(
-                      _t['current_level'],
-                      UnitConverter.formatVolume(
-                        system.currentLevel,
-                        _settings.volumeUnit,
-                      ),
-                      isDark,
-                    ),
-                    _buildStat(
-                      _t['max_capacity'],
-                      UnitConverter.formatVolume(
-                        system.maxCapacity,
-                        _settings.volumeUnit,
-                      ),
-                      isDark,
-                    ),
-                    _buildStat(
-                      _t['remaining_capacity'],
-                      UnitConverter.formatVolume(
-                        system.remainingCapacity,
-                        _settings.volumeUnit,
-                      ),
-                      isDark,
-                    ),
-                  ],
-                ),
-
-                // Warning message
-                if (system.isCriticallyLow)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: Colors.red.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.warning,
-                            color: Colors.red,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _t['system_critical'],
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else if (system.isLowWater)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: Colors.orange.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.info,
-                            color: Colors.orange,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _t['system_low_water'],
-                            style: const TextStyle(
-                              color: Colors.orange,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(system.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DT.textPrimary)),
+                      if (system.description != null) Text(system.description!, style: const TextStyle(fontSize: 12, color: DT.textSecondary), maxLines: 1),
+                    ],
                   ),
+                ),
+                if (system.archived) const Icon(Icons.inventory_2, color: DT.textTertiary, size: 18),
               ],
             ),
-          ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(_t['water_level'], style: const TextStyle(fontSize: 12, color: DT.textSecondary)),
+                Text('${system.fillPercentage.toInt()}%', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: statusColor)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: system.fillPercentage / 100,
+                minHeight: 6,
+                backgroundColor: DT.elevated,
+                valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _stat(_t['room_detail_current'], UnitConverter.formatVolume(system.currentLevel, _settings.volumeUnit)),
+                _stat('Kapazität', UnitConverter.formatVolume(system.maxCapacity, _settings.volumeUnit)),
+                _stat(_t['rest'], UnitConverter.formatVolume(system.remainingCapacity, _settings.volumeUnit)),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildStat(String label, String value, bool isDark) {
+  Widget _stat(String label, String val) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: isDark ? Colors.grey[500] : Colors.grey[600],
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
+        Text(label, style: const TextStyle(fontSize: 10, color: DT.textTertiary)),
+        Text(val, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: DT.textPrimary)),
       ],
     );
   }

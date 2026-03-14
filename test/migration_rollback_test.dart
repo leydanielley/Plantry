@@ -118,12 +118,14 @@ void main() {
       final migrationManager = MigrationManager();
 
       // Replace migrations with broken one (for testing)
+      // ignore: unused_local_variable
       final originalMigrations = migrationManager.migrations;
 
       // Reopen database
       db = await databaseFactory.openDatabase(testDbPath);
 
       bool migrationFailed = false;
+      // ignore: unused_local_variable
       String? errorMessage;
 
       try {

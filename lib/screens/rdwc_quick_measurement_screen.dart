@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/models/rdwc_system.dart';
 import 'package:growlog_app/models/rdwc_log.dart';
 import 'package:growlog_app/models/app_settings.dart';
@@ -123,15 +124,13 @@ class _RdwcQuickMeasurementScreenState
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Icon(Icons.science, color: Colors.purple),
-            const SizedBox(width: 8),
-            Text(_t['quick_measurement']),
-          ],
-        ),
+    return PlantryScaffold(
+      titleWidget: Row(
+        children: [
+          const Icon(Icons.science, color: Colors.purple),
+          const SizedBox(width: 8),
+          Text(_t['quick_measurement']),
+        ],
       ),
       body: Form(
         key: _formKey,
@@ -271,7 +270,6 @@ class _RdwcQuickMeasurementScreenState
               label: Text(_isSaving ? _t['saving'] : _t['save']),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple[700],
-                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),

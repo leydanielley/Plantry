@@ -4,6 +4,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 /// Configuration constants for notification service
 ///
@@ -67,7 +68,7 @@ class NotificationConfig {
   static const String notificationIcon = '@mipmap/ic_launcher';
 
   /// Notification color (green)
-  static const Color notificationColor = Color(0xFF004225);
+  static const Color notificationColor = DT.accent;
 
   // ═══════════════════════════════════════════
   // HELPER METHODS

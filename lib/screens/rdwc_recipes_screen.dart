@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/models/rdwc_recipe.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
@@ -13,7 +14,9 @@ import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/widgets/empty_state_widget.dart';
 import 'package:growlog_app/screens/rdwc_recipe_form_screen.dart';
+import 'package:growlog_app/screens/rdwc_dosing_plan_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class RdwcRecipesScreen extends StatefulWidget {
   const RdwcRecipesScreen({super.key});
@@ -86,7 +89,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: DT.error),
             child: Text(_t['delete']),
           ),
         ],
@@ -110,11 +113,23 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      appBar: AppBar(title: Text(_t['recipes'])),
-      floatingActionButton: FloatingActionButton(
+    return PlantryScaffold(
+      title: _t['recipes'],
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.table_chart, color: DT.accent),
+          tooltip: _t['dosing_plan_title'],
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const RdwcDosingPlanScreen(),
+              ),
+            );
+          },
+        ),
+      ],
+      fab: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push(
             context,
@@ -131,7 +146,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _recipes.isEmpty
-          ? _buildEmptyState(isDark)
+          ? _buildEmptyState()
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView.builder(
@@ -140,7 +155,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                 itemBuilder: (context, index) {
                   final recipe = _recipes[index];
                   final fertilizers = _recipeFertilizers[recipe.id] ?? [];
-                  return _buildRecipeCard(recipe, fertilizers, isDark);
+                  return _buildRecipeCard(recipe, fertilizers);
                 },
               ),
             ),
@@ -148,7 +163,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
   }
 
   /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
-  Widget _buildEmptyState(bool isDark) {
+  Widget _buildEmptyState() {
     return EmptyStateWidget(
       icon: Icons.science_outlined,
       title: _t['no_recipes_yet'],
@@ -174,7 +189,6 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
   Widget _buildRecipeCard(
     RdwcRecipe recipe,
     List<Fertilizer> fertilizers,
-    bool isDark,
   ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -198,7 +212,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.science, color: Colors.green[700]),
+                  const Icon(Icons.science, color: DT.success),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -211,7 +225,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                   IconButton(
                     icon: const Icon(Icons.delete, size: 20),
                     onPressed: () => _deleteRecipe(recipe),
-                    color: Colors.red,
+                    color: DT.error,
                   ),
                 ],
               ),
@@ -221,7 +235,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                 Text(
                   recipe.description!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    color: DT.textSecondary,
                   ),
                 ),
               ],
@@ -231,14 +245,14 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                   _buildInfoChip(
                     icon: Icons.science,
                     label: '${fertilizers.length} ${_t['fertilizers']}',
-                    color: Colors.blue,
+                    color: DT.secondary,
                   ),
                   if (recipe.targetEc != null) ...[
                     const SizedBox(width: 8),
                     _buildInfoChip(
                       icon: Icons.analytics,
                       label: 'EC: ${recipe.targetEc!.toStringAsFixed(1)}',
-                      color: Colors.green,
+                      color: DT.success,
                     ),
                   ],
                   if (recipe.targetPh != null) ...[
@@ -246,7 +260,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                     _buildInfoChip(
                       icon: Icons.water_drop,
                       label: 'pH: ${recipe.targetPh!.toStringAsFixed(1)}',
-                      color: Colors.orange,
+                      color: DT.warning,
                     ),
                   ],
                 ],

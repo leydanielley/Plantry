@@ -1,24 +1,22 @@
 // =============================================
-// GROWLOG - Edit Room Screen (✅ BUG FIX: CM statt Meter!)
+// GROWLOG - Edit Room Screen
 // =============================================
 
 import 'package:flutter/material.dart';
-import 'package:growlog_app/utils/app_messages.dart';
-import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/models/room.dart';
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/models/rdwc_system.dart';
-import 'package:growlog_app/models/app_settings.dart';
 import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
-import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
-import 'package:growlog_app/utils/validators.dart';
-import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/widgets/plantry_form_field.dart';
+import 'package:growlog_app/widgets/plantry_button.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
+import 'package:growlog_app/utils/translations.dart';
 
 class EditRoomScreen extends StatefulWidget {
   final Room room;
-
   const EditRoomScreen({super.key, required this.room});
 
   @override
@@ -29,396 +27,169 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
   final _formKey = GlobalKey<FormState>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
-  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
-
+  
   late TextEditingController _nameController;
-  late TextEditingController _descriptionController;
+  late TextEditingController _descController;
   late TextEditingController _widthController;
   late TextEditingController _depthController;
   late TextEditingController _heightController;
+  late TextEditingController _wattsController;
 
   GrowType? _growType;
   WateringSystem? _wateringSystem;
-  int? _selectedRdwcSystemId;
+  int? _selectedRdwcId;
   List<RdwcSystem> _rdwcSystems = [];
-  AppSettings? _settings;
-  late AppTranslations _t; // ✅ AUDIT FIX: i18n
   bool _isLoading = false;
+  late AppTranslations _t;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.room.name);
-    _descriptionController = TextEditingController(
-      text: widget.room.description ?? '',
-    );
-
-    // ✅ BUG FIX #3: Meter → CM umrechnen beim Laden (multiplizieren mit 100)
-    _widthController = TextEditingController(
-      text: widget.room.width > 0
-          ? (widget.room.width * 100).toStringAsFixed(0)
-          : '',
-    );
-    _depthController = TextEditingController(
-      text: widget.room.depth > 0
-          ? (widget.room.depth * 100).toStringAsFixed(0)
-          : '',
-    );
-    _heightController = TextEditingController(
-      text: widget.room.height > 0
-          ? (widget.room.height * 100).toStringAsFixed(0)
-          : '',
-    );
-
+    _descController = TextEditingController(text: widget.room.description ?? '');
+    _widthController = TextEditingController(text: (widget.room.width * 100).toInt().toString());
+    _depthController = TextEditingController(text: (widget.room.depth * 100).toInt().toString());
+    _heightController = TextEditingController(text: (widget.room.height * 100).toInt().toString());
+    _wattsController = TextEditingController(text: widget.room.lightWatts?.toString() ?? '');
     _growType = widget.room.growType;
     _wateringSystem = widget.room.wateringSystem;
-    _selectedRdwcSystemId = widget.room.rdwcSystemId;
-
-    _loadInitialData();
+    _selectedRdwcId = widget.room.rdwcSystemId;
+    _loadData();
   }
 
-  Future<void> _loadInitialData() async {
-    try {
-      final settings = await _settingsRepo.getSettings();
-      final systems = await _rdwcRepo.getAllSystems();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode);
+  }
 
-      if (mounted) {
-        setState(() {
-          _settings = settings;
-          _t = AppTranslations(settings.language); // ✅ AUDIT FIX: i18n
-          _rdwcSystems = systems;
-        });
-      }
-    } catch (e) {
-      AppLogger.error('EditRoomScreen', 'Error loading initial data', e);
-    }
+  Future<void> _loadData() async {
+    final systems = await _rdwcRepo.getAllSystems();
+    if (mounted) setState(() => _rdwcSystems = systems);
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _descriptionController.dispose();
+    _descController.dispose();
     _widthController.dispose();
     _depthController.dispose();
     _heightController.dispose();
+    _wattsController.dispose();
     super.dispose();
-  }
-
-  Future<void> _saveRoom() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    if (mounted) {
-      setState(() => _isLoading = true);
-    }
-
-    try {
-      // ✅ BUG FIX #3: CM → Meter umrechnen beim Speichern (dividieren durch 100)
-      // ✅ FIX: Clear rdwcSystemId wenn wateringSystem nicht RDWC ist
-      final updatedRoom = widget.room.copyWith(
-        name: _nameController.text.trim(),
-        description: _descriptionController.text.trim().isNotEmpty
-            ? _descriptionController.text.trim()
-            : null,
-        growType: _growType,
-        wateringSystem: _wateringSystem,
-        rdwcSystemId: _wateringSystem == WateringSystem.rdwc
-            ? _selectedRdwcSystemId
-            : null,
-        width: _widthController.text.trim().isNotEmpty
-            ? (double.tryParse(_widthController.text.trim()) ?? 0.0) /
-                  100.0 // ✅ CM → Meter
-            : 0.0,
-        depth: _depthController.text.trim().isNotEmpty
-            ? (double.tryParse(_depthController.text.trim()) ?? 0.0) /
-                  100.0 // ✅ CM → Meter
-            : 0.0,
-        height: _heightController.text.trim().isNotEmpty
-            ? (double.tryParse(_heightController.text.trim()) ?? 0.0) /
-                  100.0 // ✅ CM → Meter
-            : 0.0,
-      );
-
-      await _roomRepo.save(updatedRoom);
-
-      if (mounted) {
-        Navigator.of(context).pop(true);
-        AppMessages.updatedSuccessfully(context, 'Raum');
-      }
-    } catch (e) {
-      AppLogger.error('EditRoomScreen', 'Error saving: $e');
-      if (mounted) {
-        AppMessages.savingError(context, e.toString());
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // ✅ AUDIT FIX: Show loading until translations are initialized
-    if (_settings == null) {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: const Color(0xFF004225),
-          foregroundColor: Colors.white,
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_t['edit_room_title']),
-        backgroundColor: const Color(0xFF004225),
-        foregroundColor: Colors.white,
-      ),
+    return PlantryScaffold(
+      title: 'Raum bearbeiten',
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : Form(
               key: _formKey,
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _buildBasicInfo(),
-                  const SizedBox(height: 24),
-                  _buildGrowSettings(),
-                  const SizedBox(height: 24),
-                  _buildDimensions(),
-                  const SizedBox(height: 24),
-                  _buildSaveButton(),
+                  PlantryFormField(controller: _nameController, label: 'Name', validator: (v) => v!.isEmpty ? 'Pflichtfeld' : null),
                   const SizedBox(height: 16),
+                  PlantryFormField(controller: _descController, label: 'Beschreibung', maxLines: 2),
+                  const SizedBox(height: 24),
+
+                  _section('Setup'),
+                  _dropdown<GrowType>('Umgebung', _growType ?? GrowType.indoor, GrowType.values, (v) => setState(() => _growType = v)),
+                  const SizedBox(height: 16),
+                  _dropdown<WateringSystem>('Bewässerung', _wateringSystem ?? WateringSystem.manual, WateringSystem.values, (v) => setState(() => _wateringSystem = v)),
+                  const SizedBox(height: 16),
+                  if (_wateringSystem == WateringSystem.rdwc) ...[_rdwcDropdown(), const SizedBox(height: 16)],
+
+                  _section('Maße (in cm)'),
+                  Row(children: [
+                    Expanded(child: PlantryFormField(controller: _widthController, label: 'Breite', keyboardType: TextInputType.number)),
+                    const SizedBox(width: 12),
+                    Expanded(child: PlantryFormField(controller: _depthController, label: 'Tiefe', keyboardType: TextInputType.number)),
+                    const SizedBox(width: 12),
+                    Expanded(child: PlantryFormField(controller: _heightController, label: 'Höhe', keyboardType: TextInputType.number)),
+                  ]),
+                  const SizedBox(height: 16),
+                  PlantryFormField(
+                    controller: _wattsController,
+                    label: _t['light_watts'],
+                    hint: 'z.B. 600',
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 32),
+
+                  PlantryButton(label: 'Änderungen speichern', onPressed: _save, fullWidth: true),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildBasicInfo() {
+  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+
+  Widget _dropdown<T>(String label, T value, List<T> items, ValueChanged<T?> onChanged) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          _t['add_room_basic_info'],
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[700],
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: _nameController,
-          decoration: InputDecoration(
-            labelText: _t['add_room_name_label'],
-            prefixIcon: const Icon(Icons.home),
-            border: const OutlineInputBorder(),
-          ),
-          validator: (value) =>
-              Validators.validateNotEmpty(value, fieldName: 'Name'),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: _descriptionController,
-          maxLines: 2,
-          decoration: InputDecoration(
-            labelText: _t['add_room_description_label'],
-            hintText: _t['add_room_description_hint'],
-            prefixIcon: const Icon(Icons.description),
-            border: const OutlineInputBorder(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGrowSettings() {
-    final isExpertMode = _settings?.isExpertMode ?? false;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _t['add_room_grow_setup'],
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[700],
-          ),
-        ),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<GrowType?>(
-          initialValue: _growType,
-          decoration: InputDecoration(
-            labelText: _t['add_room_grow_type'],
-            prefixIcon: const Icon(Icons.category),
-            border: const OutlineInputBorder(),
-          ),
-          items: [
-            DropdownMenuItem(
-              value: null,
-              child: Text(_t['add_room_not_specified']),
-            ),
-            ...GrowType.values.map((type) {
-              return DropdownMenuItem(
-                value: type,
-                child: Text(type.displayName),
-              );
-            }),
-          ],
-          onChanged: (value) => setState(() => _growType = value),
-        ),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<WateringSystem?>(
-          initialValue: _wateringSystem,
-          decoration: InputDecoration(
-            labelText: _t['add_room_watering_system'],
-            prefixIcon: const Icon(Icons.water_drop),
-            border: const OutlineInputBorder(),
-          ),
-          items: [
-            DropdownMenuItem(
-              value: null,
-              child: Text(_t['add_room_not_specified']),
-            ),
-            ...WateringSystem.values.map((system) {
-              return DropdownMenuItem(
-                value: system,
-                child: Text(system.displayName),
-              );
-            }),
-          ],
-          onChanged: (value) => setState(() => _wateringSystem = value),
-        ),
-        // ✅ Expert Mode: RDWC System Auswahl
-        if (isExpertMode) ...[
-          const SizedBox(height: 12),
-          DropdownButtonFormField<int?>(
-            initialValue: _selectedRdwcSystemId,
-            decoration: InputDecoration(
-              labelText: _t['add_room_rdwc_system'],
-              helperText: _t['add_room_rdwc_helper'],
-              prefixIcon: Icon(Icons.water, color: Colors.blue[700]),
-              border: const OutlineInputBorder(),
-            ),
-            items: [
-              DropdownMenuItem(
-                value: null,
-                child: Text(_t['add_room_no_rdwc']),
-              ),
-              ..._rdwcSystems.map((system) {
-                return DropdownMenuItem(
-                  value: system.id,
-                  child: Text(system.name),
-                );
-              }),
-            ],
-            onChanged: (value) => setState(() => _selectedRdwcSystemId = value),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildDimensions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _t['add_room_dimensions'],
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[700],
-          ),
-        ),
+        Text(label, style: const TextStyle(color: DT.textSecondary, fontSize: 12)),
         const SizedBox(height: 8),
-        // ✅ BUG FIX #2: Jetzt Zentimeter statt Meter
-        Text(
-          _t['add_room_dimensions_unit'],
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _widthController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: _t['add_room_width_label'], // ✅ KORRIGIERT
-                  hintText: _t['add_room_width_hint'], // ✅ KORRIGIERT
-                  border: const OutlineInputBorder(),
-                ),
-                // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
-                validator: (value) => Validators.validatePositiveNumber(
-                  value,
-                  min: 10.0,
-                  max: 1000.0,
-                ),
-              ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<T>(
+              value: value, isExpanded: true, dropdownColor: DT.elevated,
+              items: items.map((i) => DropdownMenuItem(value: i, child: Text(_getLabel(i), style: const TextStyle(color: DT.textPrimary)))).toList(),
+              onChanged: onChanged,
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextFormField(
-                controller: _depthController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: _t['add_room_depth_label'], // ✅ KORRIGIERT
-                  hintText: _t['add_room_width_hint'], // ✅ KORRIGIERT
-                  border: const OutlineInputBorder(),
-                ),
-                // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
-                validator: (value) => Validators.validatePositiveNumber(
-                  value,
-                  min: 10.0,
-                  max: 1000.0,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextFormField(
-                controller: _heightController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: _t['add_room_height_label'], // ✅ KORRIGIERT
-                  hintText: _t['add_room_height_hint'], // ✅ KORRIGIERT
-                  border: const OutlineInputBorder(),
-                ),
-                // ✅ BUG FIX #2: Validator für CM (10-1000 cm)
-                validator: (value) => Validators.validatePositiveNumber(
-                  value,
-                  min: 10.0,
-                  max: 1000.0,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildSaveButton() {
-    return ElevatedButton(
-      onPressed: _saveRoom,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green[700],
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  String _getLabel(dynamic i) {
+    if (i is GrowType) return i.displayName;
+    if (i is WateringSystem) return i.displayName;
+    return i.toString();
+  }
+
+  Widget _rdwcDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int?>(
+          value: _selectedRdwcId, isExpanded: true, dropdownColor: DT.elevated,
+          items: [
+            const DropdownMenuItem(value: null, child: Text('System wählen...', style: TextStyle(color: DT.textPrimary))),
+            ..._rdwcSystems.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, style: const TextStyle(color: DT.textPrimary)))),
+          ],
+          onChanged: (v) => setState(() => _selectedRdwcId = v),
+        ),
       ),
-      child: Text(_t['edit_room_save_button']),
     );
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+    try {
+      final r = widget.room.copyWith(
+        name: _nameController.text, description: _descController.text,
+        growType: _growType, wateringSystem: _wateringSystem, rdwcSystemId: _selectedRdwcId,
+        width: (double.tryParse(_widthController.text) ?? 0) / 100,
+        depth: (double.tryParse(_depthController.text) ?? 0) / 100,
+        height: (double.tryParse(_heightController.text) ?? 0) / 100,
+        lightWatts: _wattsController.text.isEmpty ? null : int.tryParse(_wattsController.text),
+      );
+      await _roomRepo.save(r);
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 }

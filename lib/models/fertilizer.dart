@@ -15,6 +15,7 @@ class Fertilizer {
   final String? npk;
   final String? type;
   final String? description;
+  final bool isCustom; // v39: User-created vs. pre-filled fertilizer
   final double? ecValue; // v8: EC contribution per ml (for RDWC calculations)
   final double? ppmValue; // v8: PPM contribution per ml (for RDWC calculations)
 
@@ -26,6 +27,7 @@ class Fertilizer {
   final double? density; // Density for liquid (g/ml)
 
   // Macronutrients (as percentages)
+  final double? n; // Total Nitrogen (N) - v39
   final double? nNO3; // N as Nitrate (NO3-)
   final double? nNH4; // N as Ammonium (NH4+)
   final double? p; // Phosphorus (P)
@@ -54,6 +56,7 @@ class Fertilizer {
     this.npk,
     this.type,
     this.description,
+    this.isCustom = false,
     this.ecValue,
     this.ppmValue,
     this.formula,
@@ -61,6 +64,7 @@ class Fertilizer {
     double? purity,
     this.isLiquid,
     this.density,
+    double? n,
     double? nNO3,
     double? nNH4,
     double? p,
@@ -81,6 +85,7 @@ class Fertilizer {
   }) : // ✅ VALIDATION: Apply validation from ValidationConfig
        name = ValidationConfig.validateName(name),
        purity = ValidationConfig.validatePurity(purity),
+       n = ValidationConfig.validatePercentage(n),
        nNO3 = ValidationConfig.validatePercentage(nNO3),
        nNH4 = ValidationConfig.validatePercentage(nNH4),
        p = ValidationConfig.validatePercentage(p),
@@ -109,6 +114,7 @@ class Fertilizer {
       npk: map['npk'] as String?,
       type: map['type'] as String?,
       description: map['description'] as String?,
+      isCustom: (map['is_custom'] as int? ?? 0) == 1,
       ecValue: (map['ec_value'] as num?)?.toDouble(),
       ppmValue: (map['ppm_value'] as num?)?.toDouble(),
       formula: map['formula'] as String?,
@@ -118,6 +124,7 @@ class Fertilizer {
           ? true
           : (map['is_liquid'] == 0 ? false : null),
       density: (map['density'] as num?)?.toDouble(),
+      n: (map['n'] as num?)?.toDouble(),
       nNO3: (map['n_no3'] as num?)?.toDouble(),
       nNH4: (map['n_nh4'] as num?)?.toDouble(),
       p: (map['p'] as num?)?.toDouble(),
@@ -151,6 +158,7 @@ class Fertilizer {
       'npk': npk,
       'type': type,
       'description': description,
+      'is_custom': isCustom ? 1 : 0,
       'ec_value': ecValue,
       'ppm_value': ppmValue,
       'formula': formula,
@@ -158,6 +166,7 @@ class Fertilizer {
       'purity': purity,
       'is_liquid': isLiquid == null ? null : (isLiquid! ? 1 : 0),
       'density': density,
+      'n': n,
       'n_no3': nNO3,
       'n_nh4': nNH4,
       'p': p,
@@ -187,6 +196,7 @@ class Fertilizer {
     Object? npk = _undefined,
     Object? type = _undefined,
     Object? description = _undefined,
+    bool? isCustom,
     Object? ecValue = _undefined,
     Object? ppmValue = _undefined,
     Object? formula = _undefined,
@@ -194,6 +204,7 @@ class Fertilizer {
     Object? purity = _undefined,
     Object? isLiquid = _undefined,
     Object? density = _undefined,
+    Object? n = _undefined,
     Object? nNO3 = _undefined,
     Object? nNH4 = _undefined,
     Object? p = _undefined,
@@ -221,6 +232,7 @@ class Fertilizer {
       description: description == _undefined
           ? this.description
           : description as String?,
+      isCustom: isCustom ?? this.isCustom,
       ecValue: ecValue == _undefined ? this.ecValue : ecValue as double?,
       ppmValue: ppmValue == _undefined ? this.ppmValue : ppmValue as double?,
       formula: formula == _undefined ? this.formula : formula as String?,
@@ -228,6 +240,7 @@ class Fertilizer {
       purity: purity == _undefined ? this.purity : purity as double?,
       isLiquid: isLiquid == _undefined ? this.isLiquid : isLiquid as bool?,
       density: density == _undefined ? this.density : density as double?,
+      n: n == _undefined ? this.n : n as double?,
       nNO3: nNO3 == _undefined ? this.nNO3 : nNO3 as double?,
       nNH4: nNH4 == _undefined ? this.nNH4 : nNH4 as double?,
       p: p == _undefined ? this.p : p as double?,

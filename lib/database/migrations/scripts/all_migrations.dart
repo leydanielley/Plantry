@@ -20,6 +20,9 @@ import 'package:growlog_app/database/migrations/scripts/migration_v35.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v36.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v37.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v38.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v39.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v40.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v41.dart';
 
 /// All migrations in chronological order
 ///
@@ -87,6 +90,15 @@ final List<Migration> allMigrations = [
 
   // v38: CRITICAL FIX - Allow multiple logs per day per plant (change unique constraint)
   migrationV38,
+
+  // v39: Fertilizer extension - is_custom flag + total N field
+  migrationV39,
+
+  // v40: Add fertilizer_sets and fertilizer_set_items tables
+  migrationV40,
+
+  // v41: Add light_watts to rooms for g/W yield calculation
+  migrationV41,
 ];
 
 /// Get the latest migration version

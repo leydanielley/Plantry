@@ -50,8 +50,7 @@ class MigrationManager {
   /// [db] The database to migrate
   /// [oldVersion] Current database version
   /// [newVersion] Target database version
-  /// [timeout] Maximum time to wait for migration (default: 10 minutes)
-  /// ✅ INCREASED from 5 to 10 minutes to handle large databases (10,000+ logs)
+  /// [timeout] Maximum time to wait for migration (default: 10 minutes, to handle large databases)
   Future<void> migrate(
     Database db,
     int oldVersion,
@@ -76,7 +75,7 @@ class MigrationManager {
     // Mark migration as in progress
     await VersionManager.markMigrationInProgress();
 
-    // ✅ NEW: Pre-flight check - verify schema definition exists for target version
+    // Pre-flight check: verify schema definition exists for target version
     final hasSchemaDefinition = SchemaRegistry.getSchema(newVersion) != null;
     if (!hasSchemaDefinition) {
       AppLogger.warning(
@@ -86,8 +85,8 @@ class MigrationManager {
       );
     }
 
-    // Step 1: Create automatic backup before migration
-    // ✅ CRITICAL FIX: Backup MUST succeed (unless database is empty)
+    // Step 1: Create automatic backup before migration.
+    // Backup must succeed unless the database is empty (fresh install).
     String? backupPath;
     try {
       backupPath = await _createPreMigrationBackup(db);
@@ -97,7 +96,6 @@ class MigrationManager {
         backupPath,
       );
 
-      // ✅ NEW: Verify backup is valid before proceeding with migration
       final isValid = await _verifyBackup(backupPath);
       if (!isValid) {
         throw Exception(
@@ -118,7 +116,6 @@ class MigrationManager {
       final hasData = await _databaseHasData(db);
 
       if (hasData) {
-        // ✅ CRITICAL: Refuse to migrate if backup failed and DB has data!
         AppLogger.error(
           'MigrationManager',
           '🛑 REFUSING to migrate: Backup failed and database contains data',
@@ -158,8 +155,8 @@ class MigrationManager {
       migrationsToRun.map((m) => 'v${m.version}').join(', '),
     );
 
-    // Step 3: Run migrations sequentially inside a transaction (with timeout)
-    // ✅ CRITICAL FIX: Schema validation now happens INSIDE transaction
+    // Step 3: Run migrations sequentially inside a transaction (with timeout).
+    // Schema validation happens INSIDE the transaction so it can be rolled back on failure.
     try {
       await db
           .transaction((txn) async {
@@ -217,7 +214,7 @@ class MigrationManager {
               'Database now at v$newVersion',
             );
 
-            // 3b. ✅ CRITICAL FIX: Validate schema INSIDE transaction (BEFORE commit)
+            // 3b. Validate schema INSIDE transaction (before commit)
             if (hasSchemaDefinition) {
               AppLogger.info(
                 'MigrationManager',
@@ -225,7 +222,7 @@ class MigrationManager {
               );
 
               final schemaValid = await SchemaRegistry.validateSchema(
-                txn, // ✅ Pass transaction, not database!
+                txn,
                 newVersion,
                 strict: false, // Allow extra columns for backwards compatibility
               );
@@ -249,7 +246,6 @@ class MigrationManager {
                 '✅ Schema validation passed for v$newVersion',
               );
             } else {
-              // ✅ Warn if no schema definition exists (but don't fail)
               AppLogger.warning(
                 'MigrationManager',
                 '⚠️ Skipping schema validation for v$newVersion (no schema definition)',
@@ -263,7 +259,7 @@ class MigrationManager {
             // 3c. Mark migration as completed (only reached if validation passed)
             await VersionManager.markMigrationCompleted(dbVersion: newVersion);
 
-            // ✅ Transaction commits HERE (only if everything succeeded)
+            // Transaction commits here
           })
           .timeout(
             timeout *
@@ -455,7 +451,7 @@ class MigrationManager {
   }
 
   /// Get migration info for a specific version
-  /// ✅ FIX: Use orElse to safely return null instead of throwing
+  /// Uses orElse to safely return null instead of throwing
   Migration? getMigration(int version) {
     try {
       return migrations.firstWhere(

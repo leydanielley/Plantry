@@ -3,19 +3,17 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/widgets/icons/plant_pot_icon.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class PlantIconShowcaseScreen extends StatelessWidget {
   const PlantIconShowcaseScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Plant Pot Icon Showcase'),
-        backgroundColor: const Color(0xFF004225),
-        foregroundColor: Colors.white,
-      ),
+    return PlantryScaffold(
+      title: 'Plant Pot Icon Showcase',
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -26,7 +24,7 @@ class PlantIconShowcaseScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(40),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: DT.elevated,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const PlantPotIcon(size: 200),
@@ -138,7 +136,7 @@ class PlantIconShowcaseScreen extends StatelessWidget {
             Container(
               height: 200,
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: DT.elevated,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Center(
@@ -157,7 +155,7 @@ class PlantIconShowcaseScreen extends StatelessWidget {
                     SizedBox(height: 8),
                     Text(
                       'Erstelle deine erste Pflanze!',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: DT.textSecondary),
                     ),
                   ],
                 ),
@@ -177,7 +175,7 @@ class PlantIconShowcaseScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: DT.elevated,
             borderRadius: BorderRadius.circular(12),
           ),
           child: icon,
@@ -192,7 +190,7 @@ class PlantIconShowcaseScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: DT.elevated,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(

@@ -10,14 +10,16 @@ import 'package:growlog_app/models/room.dart';
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/screens/plant_detail_screen.dart';
 import 'package:growlog_app/screens/add_plant_screen.dart';
-import 'package:growlog_app/widgets/widgets.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/utils/translations.dart';
-import 'package:growlog_app/utils/app_constants.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/widgets/plantry_card.dart';
+import 'package:growlog_app/widgets/plantry_list_tile.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class PlantsScreen extends StatefulWidget {
   const PlantsScreen({super.key});
@@ -37,7 +39,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
   Map<int, Room> _roomsById = {};
   Map<int?, List<Plant>> _plantsByGrow = {};
   bool _isLoading = true;
-  bool _showOrphansOnly = false; // ✅ ORPHAN FILTER: Toggle orphans view
+  bool _showOrphansOnly = false;
   late AppTranslations _t = AppTranslations('de');
 
   @override
@@ -57,11 +59,10 @@ class _PlantsScreenState extends State<PlantsScreen> {
   }
 
   Future<void> _loadData() async {
-    if (!mounted) return; // ✅ FIX: Add mounted check before setState
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
-      // Load plants based on filter (orphans or all)
       final plants = _showOrphansOnly
           ? await _plantRepo.findOrphans()
           : await _plantRepo.findAll();
@@ -69,7 +70,6 @@ class _PlantsScreenState extends State<PlantsScreen> {
       final grows = await _growRepo.getAll(includeArchived: true);
       final rooms = await _roomRepo.findAll();
 
-      // Create room map by id
       final Map<int, Room> roomMap = {};
       for (final room in rooms) {
         if (room.id != null) {
@@ -77,9 +77,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
         }
       }
 
-      // Group plants by growId
       final Map<int?, List<Plant>> grouped = {};
-
       for (final plant in plants) {
         if (!grouped.containsKey(plant.growId)) {
           grouped[plant.growId] = [];
@@ -106,52 +104,44 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
   String _getGrowName(int? growId) {
     if (growId == null) return _t['without_grow'];
-
     final grow = _allGrows.firstWhere(
       (g) => g.id == growId,
       orElse: () => Grow(name: _t['unknown_grow'], startDate: DateTime.now()),
     );
-
     return grow.name;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_t['plants']),
-        backgroundColor: AppConstants.primaryGreen,
-        foregroundColor: Colors.white,
-        actions: [
-          // ✅ ORPHAN FILTER: Toggle button
-          IconButton(
-            icon: Icon(
-              _showOrphansOnly ? Icons.warning_amber : Icons.filter_list,
-              color: _showOrphansOnly ? Colors.amber : Colors.white,
-            ),
-            tooltip: _showOrphansOnly
-                ? 'Alle Pflanzen anzeigen'
-                : 'Verwaiste Pflanzen anzeigen',
-            onPressed: () {
-              setState(() {
-                _showOrphansOnly = !_showOrphansOnly;
-              });
-              _loadData();
-            },
+    return PlantryScaffold(
+      title: _t['plants'],
+      actions: [
+        IconButton(
+          icon: Icon(
+            _showOrphansOnly ? Icons.warning_amber : Icons.filter_list,
+            color: _showOrphansOnly ? DT.warning : DT.textPrimary,
           ),
-        ],
-      ),
+          tooltip: _showOrphansOnly
+              ? 'Alle Pflanzen anzeigen'
+              : 'Verwaiste Pflanzen anzeigen',
+          onPressed: () {
+            setState(() {
+              _showOrphansOnly = !_showOrphansOnly;
+            });
+            _loadData();
+          },
+        ),
+      ],
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : _buildContent(),
-      floatingActionButton: FloatingActionButton.extended(
+      fab: FloatingActionButton.extended(
         onPressed: () async {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const AddPlantScreen()),
           );
           if (result == true) _loadData();
         },
-        backgroundColor: Colors.green[700],
         icon: const Icon(Icons.add),
         label: Text(_t['new_plant']),
       ),
@@ -163,26 +153,15 @@ class _PlantsScreenState extends State<PlantsScreen> {
       return _buildEmptyState();
     }
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
     final items = _buildFlatItemList();
 
-    // ✅ ORPHAN WARNING: Show banner when displaying orphaned plants
     if (_showOrphansOnly) {
       items.insert(0, _buildOrphanWarningBanner());
-      items.insert(1, const SizedBox(height: AppConstants.spacingMedium));
+      items.insert(1, const SizedBox(height: 16));
     }
 
-    // ✅ PERFORMANCE FIX: ListView.builder statt ListView
-    // Rendert nur sichtbare Items → bessere Performance bei vielen Pflanzen
     return ListView.builder(
-      padding: EdgeInsets.only(
-        left: AppConstants.spacingMedium,
-        right: AppConstants.spacingMedium,
-        top: AppConstants.spacingMedium,
-        bottom: bottomPadding > 0
-            ? bottomPadding + AppConstants.fabBottomPaddingSmall
-            : AppConstants.fabBottomPaddingLarge,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       itemCount: items.length,
       itemBuilder: (context, index) => items[index],
     );
@@ -191,10 +170,9 @@ class _PlantsScreenState extends State<PlantsScreen> {
   List<Widget> _buildFlatItemList() {
     final List<Widget> items = [];
 
-    // Sort grows: first with grow, then without grow
     final sortedGrowIds = _plantsByGrow.keys.toList()
       ..sort((a, b) {
-        if (a == null) return 1; // null (without grow) comes last
+        if (a == null) return 1;
         if (b == null) return -1;
         return 0;
       });
@@ -203,14 +181,14 @@ class _PlantsScreenState extends State<PlantsScreen> {
       final plants = _plantsByGrow[growId]!;
 
       items.add(_buildGrowHeader(growId, plants.length));
-      items.add(const SizedBox(height: AppConstants.borderRadiusMedium));
+      items.add(const SizedBox(height: 12));
 
       for (final plant in plants) {
         items.add(_buildPlantCard(plant));
-        items.add(const SizedBox(height: AppConstants.spacingSmall));
+        items.add(const SizedBox(height: 8));
       }
 
-      items.add(const SizedBox(height: AppConstants.spacingLarge));
+      items.add(const SizedBox(height: 24));
     }
 
     return items;
@@ -218,11 +196,8 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
   Widget _buildGrowHeader(int? growId, int plantCount) {
     final growName = _getGrowName(growId);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Get room icon from grow
-    IconData headerIcon = Icons.park; // Default: Outdoor
-    Color? iconColor = Colors.green[600];
+    IconData headerIcon = Icons.park;
+    Color iconColor = DT.success;
 
     if (growId != null) {
       final grow = _allGrows.firstWhere(
@@ -230,297 +205,115 @@ class _PlantsScreenState extends State<PlantsScreen> {
         orElse: () => Grow(name: '', startDate: DateTime.now()),
       );
 
-      AppLogger.debug(
-        'PlantsScreen',
-        'Grow "${grow.name}" has roomId: ${grow.roomId}',
-      );
       if (grow.roomId != null && _roomsById.containsKey(grow.roomId)) {
         final room = _roomsById[grow.roomId];
-        AppLogger.debug(
-          'PlantsScreen',
-          'Found room: ${room?.name} with type: ${room?.growType}',
-        );
         if (room != null && room.growType != null) {
           switch (room.growType!) {
             case GrowType.indoor:
               headerIcon = Icons.home;
-              iconColor = Colors.blue[600];
+              iconColor = DT.info;
               break;
             case GrowType.outdoor:
               headerIcon = Icons.park;
-              iconColor = Colors.green[600];
+              iconColor = DT.success;
               break;
             case GrowType.greenhouse:
               headerIcon = Icons.home_work;
-              iconColor = Colors.orange[600];
+              iconColor = DT.warning;
               break;
           }
         }
       } else {
-        // Grow hat keinen Room - default Icon
         headerIcon = Icons.spa;
-        iconColor = Colors.green[600];
       }
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.growHeaderPaddingHorizontal,
-        vertical: AppConstants.growHeaderPaddingVertical,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppConstants.darkModePrimary
-            : AppConstants.lightModePrimary,
-        borderRadius: BorderRadius.circular(
-          AppConstants.growHeaderBorderRadius,
-        ),
+        color: DT.surface,
+        borderRadius: BorderRadius.circular(DT.radiusCard),
+        border: Border.all(color: DT.glassBorder),
       ),
       child: Row(
         children: [
-          // Room Icon
-          Icon(
-            headerIcon,
-            size: AppConstants.growHeaderEmojiSize,
-            color: iconColor,
-          ),
-
-          const SizedBox(width: AppConstants.growHeaderSpacing),
-
-          // Grow Name
+          Icon(headerIcon, size: 24, color: iconColor),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   growName,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: DT.textPrimary,
+                  ),
                 ),
                 Text(
                   '$plantCount ${plantCount == 1 ? _t['plant'] : _t['plants_count']}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isDark ? Colors.grey[500] : Colors.grey[600],
-                  ),
+                  style: const TextStyle(fontSize: 13, color: DT.textSecondary),
                 ),
               ],
             ),
           ),
-
-          // Arrow
-          Container(
-            padding: const EdgeInsets.all(AppConstants.plantCardArrowPadding),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppConstants.darkModeSecondary
-                  : AppConstants.lightModeSecondary,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.keyboard_arrow_down,
-              size: AppConstants.plantCardArrowSize,
-              color: isDark ? Colors.grey[500] : Colors.grey[600],
-            ),
-          ),
+          const Icon(Icons.keyboard_arrow_down, color: DT.textTertiary),
         ],
       ),
     );
   }
 
   Widget _buildPlantCard(Plant plant) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
-    return RepaintBoundary(
-      child: Container(
+    return PlantryListTile(
+      leading: Container(
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
-          color: isDark
-              ? AppConstants.darkModePrimary
-              : AppConstants.lightModePrimary,
-          borderRadius: BorderRadius.circular(
-            AppConstants.plantCardBorderRadius,
-          ),
+          color: DT.elevated,
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(
-              AppConstants.plantCardBorderRadius,
-            ),
-            onTap: () async {
-              final result = await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => PlantDetailScreen(plant: plant),
-                ),
-              );
-              if (result == true) {
-                _loadData();
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(AppConstants.plantCardPadding),
-              child: Row(
-                children: [
-                  // Phase Emoji Container
-                  Container(
-                    padding: const EdgeInsets.all(
-                      AppConstants.plantCardEmojiBgPadding,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppConstants.darkModeSecondary
-                          : AppConstants.lightModeSecondary,
-                      borderRadius: BorderRadius.circular(
-                        AppConstants.plantCardEmojiBgRadius,
-                      ),
-                    ),
-                    child: Text(
-                      _getPhaseEmoji(plant.phase),
-                      style: const TextStyle(
-                        fontSize: AppConstants.plantCardEmojiSize,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(width: AppConstants.spacingMedium),
-
-                  // Plant Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          plant.name,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: AppConstants.spacingXs),
-                        Text(
-                          plant.strain ?? _t['unknown_strain'],
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: isDark
-                                    ? Colors.grey[500]
-                                    : Colors.grey[600],
-                              ),
-                        ),
-                        const SizedBox(height: AppConstants.spacingSmall),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today,
-                              size: AppConstants.listItemIconSize,
-                              color: isDark
-                                  ? Colors.grey[500]
-                                  : Colors.grey[500],
-                            ),
-                            const SizedBox(
-                              width: AppConstants.listItemIconSpacing,
-                            ),
-                            Text(
-                              '${_t['day']} ${plant.totalDays}',
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.grey[500]
-                                    : Colors.grey[600],
-                                fontSize: AppConstants.fontSizeSmall,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(width: AppConstants.spacingMedium),
-                            Icon(
-                              Icons.label,
-                              size: AppConstants.listItemIconSize,
-                              color: isDark
-                                  ? Colors.grey[500]
-                                  : Colors.grey[500],
-                            ),
-                            const SizedBox(
-                              width: AppConstants.listItemIconSpacing,
-                            ),
-                            Text(
-                              _getPhaseName(plant.phase),
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.grey[500]
-                                    : Colors.grey[600],
-                                fontSize: AppConstants.fontSizeSmall,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Arrow
-                  Container(
-                    padding: const EdgeInsets.all(
-                      AppConstants.plantCardArrowPadding,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppConstants.darkModeSecondary
-                          : AppConstants.lightModeSecondary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.arrow_forward_ios,
-                      size: AppConstants.plantCardArrowSize,
-                      color: isDark ? Colors.grey[500] : Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        child: Center(
+          child: Text(
+            _getPhaseEmoji(plant.phase),
+            style: const TextStyle(fontSize: 24),
           ),
         ),
       ),
+      title: plant.name,
+      subtitle: '${plant.strain ?? _t['unknown_strain']} • ${_t['day']} ${plant.totalDays} • ${_getPhaseName(plant.phase)}',
+      onTap: () async {
+        final result = await Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => PlantDetailScreen(plant: plant)),
+        );
+        if (result == true) _loadData();
+      },
     );
   }
 
   Widget _buildOrphanWarningBanner() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.all(AppConstants.spacingMedium),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.amber[900]?.withValues(alpha: 0.3)
-            : Colors.amber[50],
-        borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
-        border: Border.all(
-          color: isDark ? Colors.amber[700]! : Colors.amber[300]!,
-          width: 2,
-        ),
-      ),
+    return const PlantryCard(
+      radius: 12,
       child: Row(
         children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            color: isDark ? Colors.amber[400] : Colors.amber[800],
-            size: 32,
-          ),
-          const SizedBox(width: AppConstants.spacingMedium),
+          Icon(Icons.warning_amber_rounded, color: DT.warning, size: 32),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Verwaiste Pflanzen',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.amber[400] : Colors.amber[900],
-                      ),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: DT.warning,
+                    fontSize: 16,
+                  ),
                 ),
-                const SizedBox(height: AppConstants.spacingXs),
+                SizedBox(height: 4),
                 Text(
-                  'Diese Pflanzen haben keinen Grow und keinen Raum zugewiesen. Sie wurden möglicherweise beim Löschen eines Grows verwaist. Bitte weise sie einem Grow zu oder archiviere sie.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: isDark ? Colors.grey[300] : Colors.grey[800],
-                      ),
+                  'Diese Pflanzen haben keinen Grow und keinen Raum zugewiesen. Bitte weise sie einem Grow zu.',
+                  style: TextStyle(color: DT.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -531,69 +324,24 @@ class _PlantsScreenState extends State<PlantsScreen> {
   }
 
   Widget _buildEmptyState() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // ✅ ORPHAN FILTER: Different message when showing orphans
-    if (_showOrphansOnly) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: AppConstants.emptyStateIconSize,
-              color: Colors.green[400],
-            ),
-            const SizedBox(height: AppConstants.emptyStateSpacingTop),
-            Text(
-              'Keine verwaisten Pflanzen!',
-              style: TextStyle(
-                fontSize: AppConstants.fontSizeLarge,
-                color: isDark ? Colors.grey[300] : Colors.grey[700],
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
-            Text(
-              'Alle Pflanzen sind korrekt einem Grow zugewiesen.',
-              style: TextStyle(
-                fontSize: AppConstants.fontSizeMedium,
-                color: isDark ? Colors.grey[500] : Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Default empty state
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          PlantPotIcon(
-            size: AppConstants.emptyStateIconSize,
-            leavesColor: Colors.grey[400],
-            stemColor: Colors.grey[500],
-            potColor: Colors.grey[400],
-          ),
-          const SizedBox(height: AppConstants.emptyStateSpacingTop),
+          const Icon(Icons.spa_outlined, size: 80, color: DT.textTertiary),
+          const SizedBox(height: 24),
           Text(
-            _t['no_plants_available'],
-            style: TextStyle(
-              fontSize: AppConstants.fontSizeLarge,
-              color: isDark ? Colors.grey[300] : Colors.grey[700],
+            _showOrphansOnly ? 'Keine verwaisten Pflanzen!' : _t['no_plants_available'],
+            style: const TextStyle(
+              fontSize: 20,
+              color: DT.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppConstants.emptyStateSpacingMiddle),
+          const SizedBox(height: 8),
           Text(
-            _t['create_first_plant'],
-            style: TextStyle(
-              fontSize: AppConstants.fontSizeMedium,
-              color: isDark ? Colors.grey[500] : Colors.grey[600],
-            ),
+            _showOrphansOnly ? 'Alles ist korrekt zugewiesen.' : _t['create_first_plant'],
+            style: const TextStyle(fontSize: 16, color: DT.textSecondary),
           ),
         ],
       ),
@@ -602,31 +350,21 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
   String _getPhaseName(PlantPhase phase) {
     switch (phase) {
-      case PlantPhase.seedling:
-        return _t['seedling'];
-      case PlantPhase.veg:
-        return _t['veg'];
-      case PlantPhase.bloom:
-        return _t['bloom'];
-      case PlantPhase.harvest:
-        return _t['harvest'];
-      case PlantPhase.archived:
-        return _t['phase_archived'];
+      case PlantPhase.seedling: return _t['seedling'];
+      case PlantPhase.veg: return _t['veg'];
+      case PlantPhase.bloom: return _t['bloom'];
+      case PlantPhase.harvest: return _t['harvest'];
+      case PlantPhase.archived: return _t['phase_archived'];
     }
   }
 
   String _getPhaseEmoji(PlantPhase phase) {
     switch (phase) {
-      case PlantPhase.seedling:
-        return '🌱';
-      case PlantPhase.veg:
-        return '🌿';
-      case PlantPhase.bloom:
-        return '🌸';
-      case PlantPhase.harvest:
-        return '✂️';
-      case PlantPhase.archived:
-        return '📦';
+      case PlantPhase.seedling: return '🌱';
+      case PlantPhase.veg: return '🌿';
+      case PlantPhase.bloom: return '🌸';
+      case PlantPhase.harvest: return '✂️';
+      case PlantPhase.archived: return '📦';
     }
   }
 }

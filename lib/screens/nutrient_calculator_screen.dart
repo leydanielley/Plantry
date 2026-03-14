@@ -18,6 +18,8 @@ import 'package:growlog_app/utils/unit_converter.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class NutrientCalculatorScreen extends StatefulWidget {
   final RdwcSystem? system; // Optional - null for standalone mode
@@ -318,52 +320,48 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
       );
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Icon(Icons.calculate, color: Colors.orange),
-            const SizedBox(width: 8),
-            Text(_t['topup_calculator']),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _reset,
-            tooltip: _t['reset'],
-          ),
+    return PlantryScaffold(
+      titleWidget: Row(
+        children: [
+          const Icon(Icons.calculate, color: DT.warning),
+          const SizedBox(width: 8),
+          Text(_t['topup_calculator']),
         ],
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: _reset,
+          tooltip: _t['reset'],
+        ),
+      ],
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildInfoCard(isDark),
+            _buildInfoCard(),
             const SizedBox(height: 24),
             // Show system info only if system is provided
             if (widget.system != null) ...[
-              _buildSystemInfo(isDark),
+              _buildSystemInfo(),
               const SizedBox(height: 24),
             ],
             // Show calculator mode selector only in standalone mode
             if (widget.system == null) ...[
-              _buildModeSelector(isDark),
+              _buildModeSelector(),
               const SizedBox(height: 24),
             ],
-            _buildCurrentStatusSection(isDark),
+            _buildCurrentStatusSection(),
             const SizedBox(height: 24),
-            _buildTargetSection(isDark),
+            _buildTargetSection(),
             const SizedBox(height: 24),
             _buildCalculateButton(),
             if (_result != null) ...[
               const SizedBox(height: 32),
               const Divider(thickness: 2),
               const SizedBox(height: 16),
-              _buildResultSection(isDark),
+              _buildResultSection(),
             ],
           ],
         ),
@@ -371,9 +369,9 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     );
   }
 
-  Widget _buildInfoCard(bool isDark) {
+  Widget _buildInfoCard() {
     return Card(
-      color: Colors.orange[50],
+      color: DT.warning.withValues(alpha: 0.08),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -381,14 +379,14 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.info_outline, color: Colors.orange[700]),
+                const Icon(Icons.info_outline, color: DT.warning),
                 const SizedBox(width: 8),
                 Text(
                   _t['topup_calculator'],
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange[900],
+                    color: DT.textPrimary,
                   ),
                 ),
               ],
@@ -396,7 +394,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
             const SizedBox(height: 8),
             Text(
               _t['topup_calculator_description'],
-              style: TextStyle(fontSize: 14, color: Colors.orange[900]),
+              style: const TextStyle(fontSize: 14, color: DT.textSecondary),
             ),
           ],
         ),
@@ -404,7 +402,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     );
   }
 
-  Widget _buildModeSelector(bool isDark) {
+  Widget _buildModeSelector() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -445,7 +443,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     );
   }
 
-  Widget _buildSystemInfo(bool isDark) {
+  Widget _buildSystemInfo() {
     if (widget.system == null) return const SizedBox.shrink();
 
     return Card(
@@ -463,7 +461,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.water, color: Colors.blue[700]),
+                const Icon(Icons.water, color: DT.secondary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -479,8 +477,8 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                       const SizedBox(height: 4),
                       Text(
                         '${_t['system_capacity']}: ${UnitConverter.formatVolume(widget.system!.maxCapacity, _settings.volumeUnit)}',
-                        style: TextStyle(
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        style: const TextStyle(
+                          color: DT.textSecondary,
                         ),
                       ),
                     ],
@@ -494,7 +492,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     );
   }
 
-  Widget _buildCurrentStatusSection(bool isDark) {
+  Widget _buildCurrentStatusSection() {
     final volumeUnit = UnitConverter.getVolumeUnitSuffix(_settings.volumeUnit);
     final nutrientLabel = _settings.nutrientUnit == NutrientUnit.ec
         ? 'EC (mS/cm)'
@@ -524,7 +522,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
               decoration: InputDecoration(
                 labelText: _t['current_volume'],
                 hintText: '50',
-                prefixIcon: const Icon(Icons.water_drop, color: Colors.blue),
+                prefixIcon: const Icon(Icons.water_drop, color: DT.secondary),
                 border: const OutlineInputBorder(),
                 suffixText: volumeUnit,
               ),
@@ -554,7 +552,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                 hintText: _settings.nutrientUnit == NutrientUnit.ec
                     ? '1.2'
                     : '800',
-                prefixIcon: Icon(Icons.science, color: Colors.orange[700]),
+                prefixIcon: const Icon(Icons.science, color: DT.warning),
                 border: const OutlineInputBorder(),
                 suffixText: nutrientLabel,
               ),
@@ -578,7 +576,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     );
   }
 
-  Widget _buildTargetSection(bool isDark) {
+  Widget _buildTargetSection() {
     final volumeUnit = UnitConverter.getVolumeUnitSuffix(_settings.volumeUnit);
 
     return Card(
@@ -602,7 +600,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                 decoration: InputDecoration(
                   labelText: _t['target_volume'],
                   hintText: '60',
-                  prefixIcon: const Icon(Icons.water, color: Colors.blue),
+                  prefixIcon: const Icon(Icons.water, color: DT.secondary),
                   border: const OutlineInputBorder(),
                   suffixText: volumeUnit,
                 ),
@@ -655,16 +653,16 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
               const SizedBox(height: 16),
             ],
             // Target PPM input (always shown)
-            _buildManualTargetInput(isDark),
+            _buildManualTargetInput(),
             // Recipe selection (only in recipe mode)
             if (_recipeMode == RecipeMode.recipe) ...[
               const SizedBox(height: 16),
-              _buildRecipeSelection(isDark),
+              _buildRecipeSelection(),
             ],
             // Direct fertilizer selection (only in direct mode)
             if (_recipeMode == RecipeMode.direct) ...[
               const SizedBox(height: 16),
-              _buildDirectFertilizerSelection(isDark),
+              _buildDirectFertilizerSelection(),
             ],
           ],
         ),
@@ -672,7 +670,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     );
   }
 
-  Widget _buildManualTargetInput(bool isDark) {
+  Widget _buildManualTargetInput() {
     final nutrientLabel = _settings.nutrientUnit == NutrientUnit.ec
         ? 'EC (mS/cm)'
         : 'PPM (${_settings.ppmScale.scaleLabel})';
@@ -682,7 +680,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
       decoration: InputDecoration(
         labelText: _t['target_ppm'],
         hintText: _settings.nutrientUnit == NutrientUnit.ec ? '1.8' : '1200',
-        prefixIcon: Icon(Icons.flag, color: Colors.green[700]),
+        prefixIcon: const Icon(Icons.flag, color: DT.accent),
         border: const OutlineInputBorder(),
         suffixText: nutrientLabel,
       ),
@@ -700,7 +698,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     );
   }
 
-  Widget _buildRecipeSelection(bool isDark) {
+  Widget _buildRecipeSelection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -708,7 +706,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
           initialValue: _selectedRecipe,
           decoration: InputDecoration(
             labelText: _t['select_recipe'],
-            prefixIcon: Icon(Icons.science, color: Colors.green[700]),
+            prefixIcon: const Icon(Icons.science, color: DT.accent),
             border: const OutlineInputBorder(),
           ),
           items: _recipes.map((recipe) {
@@ -729,13 +727,13 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
         ),
         if (_selectedRecipe != null) ...[
           const SizedBox(height: 12),
-          _buildRecipePreview(isDark),
+          _buildRecipePreview(),
         ],
       ],
     );
   }
 
-  Widget _buildRecipePreview(bool isDark) {
+  Widget _buildRecipePreview() {
     if (_selectedRecipe == null) return const SizedBox.shrink();
 
     final recipe = _selectedRecipe!;
@@ -744,14 +742,12 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.grey[100],
+        color: DT.elevated,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: recipe.targetEc == null
-              ? Colors.orange
-              : (isDark
-                    ? Colors.grey[700] ?? Colors.grey
-                    : Colors.grey[300] ?? Colors.grey),
+              ? DT.warning
+              : DT.border,
         ),
       ),
       child: Column(
@@ -762,7 +758,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
               Icon(
                 Icons.analytics,
                 size: 16,
-                color: recipe.targetEc == null ? Colors.orange : Colors.green,
+                color: recipe.targetEc == null ? DT.warning : DT.accent,
               ),
               const SizedBox(width: 8),
               Text(
@@ -772,7 +768,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: recipe.targetEc == null ? Colors.orange : null,
+                  color: recipe.targetEc == null ? DT.warning : DT.textPrimary,
                 ),
               ),
             ],
@@ -781,7 +777,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.water_drop, size: 16, color: Colors.blue),
+                const Icon(Icons.water_drop, size: 16, color: DT.secondary),
                 const SizedBox(width: 8),
                 Text(
                   '${_t['target_ph']}: ${recipe.targetPh!.toStringAsFixed(1)}',
@@ -793,7 +789,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
           const SizedBox(height: 4),
           Row(
             children: [
-              Icon(Icons.local_florist, size: 16, color: Colors.green[700]),
+              const Icon(Icons.local_florist, size: 16, color: DT.accent),
               const SizedBox(width: 8),
               Text(
                 '${fertilizers.length} ${_t['fertilizers']}',
@@ -806,7 +802,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     );
   }
 
-  Widget _buildDirectFertilizerSelection(bool isDark) {
+  Widget _buildDirectFertilizerSelection() {
     // Filter: Only fertilizers with ppmValue (usable in calculator)
     final usableFertilizers = _allFertilizers
         .where((f) => f.ppmValue != null && f.ppmValue! > 0)
@@ -816,18 +812,18 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.orange[50],
+          color: DT.warning.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.orange[300] ?? Colors.orange),
+          border: Border.all(color: DT.warning.withValues(alpha: 0.3)),
         ),
-        child: Row(
+        child: const Row(
           children: [
-            Icon(Icons.warning_amber, color: Colors.orange[700]),
-            const SizedBox(width: 12),
+            Icon(Icons.warning_amber, color: DT.warning),
+            SizedBox(width: 12),
             Expanded(
               child: Text(
                 'No fertilizers with nutrient data available. Import from HydroBuddy or add manually.',
-                style: TextStyle(color: Colors.orange[900]),
+                style: TextStyle(color: DT.textSecondary),
               ),
             ),
           ],
@@ -841,12 +837,12 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isDark ? Colors.grey[850] : Colors.grey[100],
+            color: DT.elevated,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
-              Icon(Icons.local_florist, size: 18, color: Colors.green[700]),
+              const Icon(Icons.local_florist, size: 18, color: DT.accent),
               const SizedBox(width: 8),
               Text(
                 'Select Fertilizers (${_selectedFertilizers.length}/${usableFertilizers.length})',
@@ -863,9 +859,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
           constraints: const BoxConstraints(maxHeight: 300),
           decoration: BoxDecoration(
             border: Border.all(
-              color: isDark
-                  ? Colors.grey[700] ?? Colors.grey
-                  : Colors.grey[300] ?? Colors.grey,
+              color: DT.border,
             ),
             borderRadius: BorderRadius.circular(8),
           ),
@@ -894,13 +888,13 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                 ),
                 subtitle: Text(
                   'NPK: ${fertilizer.npk ?? "N/A"} | ${fertilizer.ppmValue!.toStringAsFixed(1)} ppm/${fertilizer.isLiquid == true ? "ml" : "g"}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: const TextStyle(fontSize: 12, color: DT.textSecondary),
                 ),
                 secondary: Icon(
                   fertilizer.isLiquid == true
                       ? Icons.water_drop
                       : Icons.scatter_plot,
-                  color: Colors.green[700],
+                  color: DT.accent,
                 ),
               );
             },
@@ -916,15 +910,15 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
       icon: const Icon(Icons.calculate),
       label: Text(_t['calculate']),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green[700],
-        foregroundColor: Colors.white,
+        backgroundColor: DT.accent,
+        foregroundColor: DT.canvas,
         padding: const EdgeInsets.symmetric(vertical: 16),
         textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
     );
   }
 
-  Widget _buildResultSection(bool isDark) {
+  Widget _buildResultSection() {
     if (_result == null) return const SizedBox.shrink();
 
     final warningMessage = _result!.getWarningMessage((key) => _t[key]);
@@ -961,28 +955,28 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
         // Main result card
         if (_result!.isValid) ...[
           Card(
-            color: Colors.green[50],
+            color: DT.success.withValues(alpha: 0.08),
             elevation: 4,
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Icon(Icons.check_circle, size: 48, color: Colors.green[700]),
+                  const Icon(Icons.check_circle, size: 48, color: DT.accent),
                   const SizedBox(height: 12),
                   Text(
                     _t['result'],
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green[900],
+                      color: DT.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _buildMainResult(isDark),
+                  _buildMainResult(),
                   if (_recipeMode == RecipeMode.recipe &&
                       _selectedRecipe != null) ...[
                     const SizedBox(height: 24),
-                    _buildFertilizerBreakdown(isDark),
+                    _buildFertilizerBreakdown(),
                   ],
                 ],
               ),
@@ -1002,8 +996,8 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                   : const Icon(Icons.save),
               label: Text(_isSaving ? _t['saving'] : _t['save_as_log']),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[700],
-                foregroundColor: Colors.white,
+                backgroundColor: DT.secondary,
+                foregroundColor: DT.textPrimary,
                 padding: const EdgeInsets.symmetric(
                   vertical: 16,
                   horizontal: 32,
@@ -1015,7 +1009,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     );
   }
 
-  Widget _buildMainResult(bool isDark) {
+  Widget _buildMainResult() {
     if (_result == null) return const SizedBox.shrink();
 
     final volumeUnit = UnitConverter.getVolumeUnitSuffix(_settings.volumeUnit);
@@ -1023,9 +1017,9 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: DT.elevated,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade300, width: 2),
+        border: Border.all(color: DT.accent.withValues(alpha: 0.3), width: 2),
       ),
       child: Column(
         children: [
@@ -1033,9 +1027,9 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
             _recipeMode == RecipeMode.recipe && _selectedRecipe != null
                 ? '${_t['add_solution_with_recipe']} "${_selectedRecipe!.name}"'
                 : _t['add_solution'],
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
-              color: Colors.grey[600],
+              color: DT.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -1047,26 +1041,26 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
             children: [
               Text(
                 _result!.volumeToAdd.toStringAsFixed(1),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
-                  color: Colors.green[700],
+                  color: DT.accent,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
                 volumeUnit,
-                style: TextStyle(fontSize: 24, color: Colors.grey[700]),
+                style: const TextStyle(fontSize: 24, color: DT.textSecondary),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             '${_t['at']} ${UnitConverter.formatNutrient(_result!.requiredPPM, _settings.nutrientUnit, _settings.ppmScale)}',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
+              color: DT.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -1082,7 +1076,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                   _settings.volumeUnit,
                 ),
                 Icons.water,
-                Colors.blue,
+                DT.secondary,
               ),
               _buildResultStat(
                 _t['final_ppm'],
@@ -1092,7 +1086,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                   _settings.ppmScale,
                 ),
                 Icons.analytics,
-                Colors.green,
+                DT.accent,
               ),
             ],
           ),
@@ -1111,21 +1105,21 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
       children: [
         Icon(icon, color: color, size: 28),
         const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        Text(label, style: const TextStyle(fontSize: 12, color: DT.textSecondary)),
         const SizedBox(height: 4),
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+            color: DT.textPrimary,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFertilizerBreakdown(bool isDark) {
+  Widget _buildFertilizerBreakdown() {
     if (_result == null || _selectedRecipe == null) {
       return const SizedBox.shrink();
     }
@@ -1141,7 +1135,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.grey[100],
+        color: DT.elevated,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -1165,17 +1159,17 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: _result!.isHighScaling
-                        ? Colors.red.withValues(alpha: 0.1)
+                        ? DT.error.withValues(alpha: 0.1)
                         : _result!.isModerateScaling
-                        ? Colors.orange.withValues(alpha: 0.1)
-                        : Colors.blue.withValues(alpha: 0.1),
+                        ? DT.warning.withValues(alpha: 0.1)
+                        : DT.secondary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(
                       color: _result!.isHighScaling
-                          ? Colors.red
+                          ? DT.error
                           : _result!.isModerateScaling
-                          ? Colors.orange
-                          : Colors.blue,
+                          ? DT.warning
+                          : DT.secondary,
                     ),
                   ),
                   child: Text(
@@ -1184,10 +1178,10 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: _result!.isHighScaling
-                          ? Colors.red
+                          ? DT.error
                           : _result!.isModerateScaling
-                          ? Colors.orange
-                          : Colors.blue,
+                          ? DT.warning
+                          : DT.secondary,
                     ),
                   ),
                 ),
@@ -1198,9 +1192,9 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
             const SizedBox(height: 8),
             Text(
               '${_t['original_recipe_target']}: ${UnitConverter.formatNutrient(recipeTargetPPM, _settings.nutrientUnit, _settings.ppmScale)} → ${_t['scaled_to']}: ${UnitConverter.formatNutrient(_result!.requiredPPM, _settings.nutrientUnit, _settings.ppmScale)}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                color: DT.textSecondary,
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -1226,7 +1220,6 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
               scaledMlPerLiter,
               recipeFert.mlPerLiter, // Original ml/L for comparison
               scalingFactor,
-              isDark,
             );
           }),
         ],
@@ -1240,7 +1233,6 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
     double scaledMlPerLiter,
     double originalMlPerLiter,
     double scalingFactor,
-    bool isDark,
   ) {
     final isScaled = scalingFactor != 1.0;
 
@@ -1252,7 +1244,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
             width: 4,
             height: isScaled ? 60 : 40,
             decoration: BoxDecoration(
-              color: Colors.green,
+              color: DT.accent,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -1271,19 +1263,19 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                 const SizedBox(height: 2),
                 Text(
                   '${totalMl.toStringAsFixed(0)}ml ${_t['total_amount']} (${scaledMlPerLiter.toStringAsFixed(2)}ml/L)',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                    color: DT.textPrimary,
                   ),
                 ),
                 if (isScaled) ...[
                   const SizedBox(height: 2),
                   Text(
                     'Original: ${originalMlPerLiter.toStringAsFixed(1)}ml/L',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
-                      color: isDark ? Colors.grey[500] : Colors.grey[600],
+                      color: DT.textSecondary,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -1299,11 +1291,11 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
   Color _getWarningColor(WarningLevel level) {
     switch (level) {
       case WarningLevel.safe:
-        return Colors.green;
+        return DT.success;
       case WarningLevel.warning:
-        return Colors.orange;
+        return DT.warning;
       case WarningLevel.error:
-        return Colors.red;
+        return DT.error;
     }
   }
 }

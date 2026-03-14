@@ -5,6 +5,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:file_picker/file_picker.dart';
@@ -13,6 +14,8 @@ import 'package:growlog_app/services/interfaces/i_backup_service.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/screens/dashboard_screen.dart';
 import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
+import 'package:growlog_app/utils/translations.dart';
 
 class ManualRecoveryScreen extends StatefulWidget {
   final String? errorMessage;
@@ -33,6 +36,13 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
   bool _isLoading = true;
   bool _isRestoring = false;
   String? _restoreStatus;
+  late AppTranslations _t;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode);
+  }
 
   @override
   void initState() {
@@ -138,7 +148,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
   Future<void> _restoreFromBackup(BackupFileInfo backup) async {
     setState(() {
       _isRestoring = true;
-      _restoreStatus = 'Bereite Wiederherstellung vor...';
+      _restoreStatus = _t['preparing_recovery'];
     });
 
     try {
@@ -152,7 +162,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
       await backupService.importData(backup.filePath);
 
       setState(() {
-        _restoreStatus = 'Wiederherstellung erfolgreich! ✅';
+        _restoreStatus = _t['recovery_success'];
       });
 
       await Future.delayed(const Duration(seconds: 2));
@@ -181,7 +191,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Wiederherstellung fehlgeschlagen: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: DT.error,
             duration: const Duration(seconds: 5),
           ),
         );
@@ -217,7 +227,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Fehler beim Auswählen der Datei: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: DT.error,
           ),
         );
       }
@@ -228,11 +238,11 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning, color: Colors.red),
-            SizedBox(width: 12),
-            Text('Warnung'),
+            const Icon(Icons.warning, color: DT.error),
+            const SizedBox(width: 12),
+            Text(_t['warning']),
           ],
         ),
         content: const Text(
@@ -243,12 +253,12 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Abbrechen'),
+            child: Text(_t['cancel']),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Neue DB erstellen'),
+            style: FilledButton.styleFrom(backgroundColor: DT.error),
+            child: Text(_t['create_new_db']),
           ),
         ],
       ),
@@ -258,7 +268,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
 
     setState(() {
       _isRestoring = true;
-      _restoreStatus = 'Erstelle neue Datenbank...';
+      _restoreStatus = _t['creating_fresh_db'];
     });
 
     try {
@@ -287,7 +297,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
       }
 
       setState(() {
-        _restoreStatus = 'Neue Datenbank erstellt! ✅';
+        _restoreStatus = _t['new_db_created'];
       });
 
       await Future.delayed(const Duration(seconds: 1));
@@ -316,7 +326,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Fehler beim Erstellen der Datenbank: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: DT.error,
           ),
         );
       }
@@ -346,23 +356,21 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Datenwiederherstellung'),
-        automaticallyImplyLeading: widget.allowSkip,
-        actions: [
-          if (widget.allowSkip)
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const DashboardScreen()),
-                  (route) => false,
-                );
-              },
-              child: const Text('Überspringen'),
-            ),
-        ],
-      ),
+    return PlantryScaffold(
+      title: _t['data_recovery'],
+      showBack: widget.allowSkip,
+      actions: [
+        if (widget.allowSkip)
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                (route) => false,
+              );
+            },
+            child: Text(_t['skip']),
+          ),
+      ],
       body: _isRestoring
           ? Center(
               child: Column(
@@ -371,7 +379,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
                   const CircularProgressIndicator(),
                   const SizedBox(height: 24),
                   Text(
-                    _restoreStatus ?? 'Wird bearbeitet...',
+                    _restoreStatus ?? _t['processing'],
                     style: Theme.of(context).textTheme.titleMedium,
                     textAlign: TextAlign.center,
                   ),
@@ -385,17 +393,17 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
-                    color: Colors.orange.shade100,
+                    color: DT.warning.withValues(alpha: 0.12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
-                            Icon(Icons.error_outline, color: Colors.orange),
-                            SizedBox(width: 8),
+                            const Icon(Icons.error_outline, color: DT.warning),
+                            const SizedBox(width: 8),
                             Text(
-                              'Datenbankfehler erkannt',
-                              style: TextStyle(
+                              _t['db_error_detected'],
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
@@ -420,9 +428,9 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Wiederherstellungsoptionen',
-                            style: TextStyle(
+                          Text(
+                            _t['recovery_options'],
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
                             ),
@@ -449,7 +457,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
                         child: OutlinedButton.icon(
                           onPressed: _pickCustomBackup,
                           icon: const Icon(Icons.folder_open),
-                          label: const Text('Eigene Datei wählen'),
+                          label: Text(_t['choose_own_file']),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -457,9 +465,9 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
                         child: OutlinedButton.icon(
                           onPressed: _createFreshDatabase,
                           icon: const Icon(Icons.refresh),
-                          label: const Text('Neue DB'),
+                          label: Text(_t['new_db']),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
+                            foregroundColor: DT.error,
                           ),
                         ),
                       ),
@@ -478,23 +486,23 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.backup_outlined,
                                     size: 64,
-                                    color: Colors.grey.shade400,
+                                    color: DT.textSecondary,
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'Keine automatischen Backups gefunden',
-                                    style: TextStyle(
+                                    _t['no_auto_backups'],
+                                    style: const TextStyle(
                                       fontSize: 16,
-                                      color: Colors.grey.shade600,
+                                      color: DT.textSecondary,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  const Text(
-                                    'Wählen Sie eine eigene Backup-Datei',
-                                    style: TextStyle(fontSize: 14),
+                                  Text(
+                                    _t['choose_backup_file'],
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                 ],
                               ),
@@ -524,9 +532,9 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
                                         ),
                                         Text(
                                           '${_formatDate(backup.modifiedDate)} • ${_formatFileSize(backup.fileSize)}',
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             fontSize: 11,
-                                            color: Colors.grey.shade600,
+                                            color: DT.textSecondary,
                                           ),
                                         ),
                                       ],
@@ -534,7 +542,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
                                     trailing: FilledButton(
                                       onPressed: () =>
                                           _restoreFromBackup(backup),
-                                      child: const Text('Wiederherstellen'),
+                                      child: Text(_t['restore']),
                                     ),
                                   ),
                                 );

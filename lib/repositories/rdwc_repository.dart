@@ -1287,18 +1287,18 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
       final result = await db.rawQuery(
         '''
         SELECT
-          DATE(log_date) as date,
+          substr(log_date, 1, 10) as date,
           SUM(water_consumed) as total_consumed
         FROM rdwc_logs
         WHERE system_id = ?
           AND water_consumed IS NOT NULL
           AND water_consumed > 0
-          AND log_date >= ?
+          AND substr(log_date, 1, 10) >= ?
           AND archived = 0
-        GROUP BY DATE(log_date)
-        ORDER BY log_date DESC
+        GROUP BY substr(log_date, 1, 10)
+        ORDER BY substr(log_date, 1, 10) DESC
       ''',
-        [systemId, cutoffDate.toIso8601String()],
+        [systemId, cutoffDate.toIso8601String().substring(0, 10)],
       );
 
       final Map<String, double> consumption = {};

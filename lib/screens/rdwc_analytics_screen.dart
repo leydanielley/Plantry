@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/models/rdwc_system.dart';
 import 'package:growlog_app/models/rdwc_log.dart';
 import 'package:growlog_app/models/app_settings.dart';
@@ -15,6 +16,7 @@ import 'package:growlog_app/widgets/rdwc/stats_card.dart';
 import 'package:growlog_app/widgets/rdwc/consumption_chart.dart';
 import 'package:growlog_app/widgets/rdwc/drift_chart.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class RdwcAnalyticsScreen extends StatefulWidget {
   final RdwcSystem system;
@@ -106,80 +108,74 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          '${widget.system.name} - ${_isLoading ? 'Loading...' : _t['analytics']}',
-        ),
-        actions: [
-          // Day selector
-          PopupMenuButton<int>(
-            initialValue: _selectedDays,
-            onSelected: (days) {
-              setState(() => _selectedDays = days);
-              _loadData();
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 7,
-                child: Text('7 ${_isLoading ? 'Days' : _t['days']}'),
-              ),
-              PopupMenuItem(
-                value: 14,
-                child: Text('14 ${_isLoading ? 'Days' : _t['days']}'),
-              ),
-              PopupMenuItem(
-                value: 30,
-                child: Text('30 ${_isLoading ? 'Days' : _t['days']}'),
-              ),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Text('$_selectedDays ${_isLoading ? 'Days' : _t['days']}'),
-                  const Icon(Icons.arrow_drop_down),
-                ],
-              ),
+    return PlantryScaffold(
+      title: '${widget.system.name} - ${_isLoading ? 'Loading...' : _t['analytics']}',
+      actions: [
+        // Day selector
+        PopupMenuButton<int>(
+          initialValue: _selectedDays,
+          onSelected: (days) {
+            setState(() => _selectedDays = days);
+            _loadData();
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 7,
+              child: Text('7 ${_isLoading ? 'Days' : _t['days']}'),
+            ),
+            PopupMenuItem(
+              value: 14,
+              child: Text('14 ${_isLoading ? 'Days' : _t['days']}'),
+            ),
+            PopupMenuItem(
+              value: 30,
+              child: Text('30 ${_isLoading ? 'Days' : _t['days']}'),
+            ),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Text('$_selectedDays ${_isLoading ? 'Days' : _t['days']}'),
+                const Icon(Icons.arrow_drop_down),
+              ],
             ),
           ),
-        ],
-        bottom: _isLoading
-            ? null
-            : TabBar(
-                controller: _tabController,
-                tabs: [
-                  Tab(
-                    text: _t['consumption'],
-                    icon: const Icon(Icons.water_drop),
-                  ),
-                  Tab(
-                    text: 'EC ${_t['drift_analysis']}',
-                    icon: const Icon(Icons.analytics),
-                  ),
-                  Tab(
-                    text: 'pH ${_t['drift_analysis']}',
-                    icon: const Icon(Icons.water),
-                  ),
-                ],
-              ),
-      ),
+        ),
+      ],
+      bottom: _isLoading
+          ? null
+          : TabBar(
+              controller: _tabController,
+              tabs: [
+                Tab(
+                  text: _t['consumption'],
+                  icon: const Icon(Icons.water_drop),
+                ),
+                Tab(
+                  text: 'EC ${_t['drift_analysis']}',
+                  icon: const Icon(Icons.analytics),
+                ),
+                Tab(
+                  text: 'pH ${_t['drift_analysis']}',
+                  icon: const Icon(Icons.water),
+                ),
+              ],
+            ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : TabBarView(
               controller: _tabController,
               children: [
-                _buildConsumptionTab(isDark),
-                _buildEcDriftTab(isDark),
-                _buildPhDriftTab(isDark),
+                _buildConsumptionTab(),
+                _buildEcDriftTab(),
+                _buildPhDriftTab(),
               ],
             ),
     );
   }
 
-  Widget _buildConsumptionTab(bool isDark) {
+  Widget _buildConsumptionTab() {
     final avgConsumption = _consumptionStats?['average'] ?? 0.0;
     final maxConsumption = _consumptionStats?['max'] ?? 0.0;
     final minConsumption = _consumptionStats?['min'] ?? 0.0;
@@ -201,7 +197,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
                     _settings.volumeUnit,
                   ),
                   icon: Icons.water_drop,
-                  color: Colors.blue,
+                  color: DT.secondary,
                   subtitle: _t['per_day'],
                 ),
               ),
@@ -214,7 +210,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
                     _settings.volumeUnit,
                   ),
                   icon: Icons.water,
-                  color: Colors.green,
+                  color: DT.success,
                   subtitle: '$_selectedDays ${_t['days']}',
                 ),
               ),
@@ -231,7 +227,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
                     _settings.volumeUnit,
                   ),
                   icon: Icons.trending_up,
-                  color: Colors.orange,
+                  color: DT.warning,
                   trend: 'up',
                 ),
               ),
@@ -244,7 +240,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
                     _settings.volumeUnit,
                   ),
                   icon: Icons.trending_down,
-                  color: Colors.purple,
+                  color: DT.info,
                   trend: 'down',
                 ),
               ),
@@ -279,7 +275,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
     );
   }
 
-  Widget _buildEcDriftTab(bool isDark) {
+  Widget _buildEcDriftTab() {
     // ✅ FIX: Cast to avoid dynamic call error
     final avgDrift = (_ecDrift?['average'] as num?) ?? 0.0;
     final maxDrift = (_ecDrift?['max'] as num?) ?? 0.0;
@@ -305,7 +301,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
                   label: '${_t['average']} ${_t['drift_analysis']}',
                   value: '${avgDrift.toStringAsFixed(2)} mS/cm',
                   icon: Icons.analytics,
-                  color: Colors.blue,
+                  color: DT.secondary,
                   trend: trend,
                 ),
               ),
@@ -328,7 +324,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
                   label: '${_t['maximum']} ${_t['drift_analysis']}',
                   value: '${maxDrift.toStringAsFixed(2)} mS/cm',
                   icon: Icons.trending_up,
-                  color: Colors.red,
+                  color: DT.error,
                 ),
               ),
               const SizedBox(width: 12),
@@ -337,7 +333,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
                   label: '${_t['minimum']} ${_t['drift_analysis']}',
                   value: '${minDrift.toStringAsFixed(2)} mS/cm',
                   icon: Icons.trending_down,
-                  color: Colors.green,
+                  color: DT.success,
                 ),
               ),
             ],
@@ -367,7 +363,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
     );
   }
 
-  Widget _buildPhDriftTab(bool isDark) {
+  Widget _buildPhDriftTab() {
     // ✅ FIX: Cast to avoid dynamic call error
     final avgDrift = (_phDrift?['average'] as num?) ?? 0.0;
     final maxDrift = (_phDrift?['max'] as num?) ?? 0.0;
@@ -393,7 +389,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
                   label: '${_t['average']} ${_t['drift_analysis']}',
                   value: avgDrift.toStringAsFixed(2),
                   icon: Icons.water,
-                  color: Colors.green,
+                  color: DT.success,
                   trend: trend,
                 ),
               ),
@@ -416,7 +412,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
                   label: '${_t['maximum']} ${_t['drift_analysis']}',
                   value: maxDrift.toStringAsFixed(2),
                   icon: Icons.trending_up,
-                  color: Colors.red,
+                  color: DT.error,
                 ),
               ),
               const SizedBox(width: 12),
@@ -425,7 +421,7 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
                   label: '${_t['minimum']} ${_t['drift_analysis']}',
                   value: minDrift.toStringAsFixed(2),
                   icon: Icons.trending_down,
-                  color: Colors.green,
+                  color: DT.success,
                 ),
               ),
             ],
@@ -484,13 +480,13 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
   Color _getTrendColor(String trend) {
     switch (trend) {
       case 'increasing':
-        return Colors.red;
+        return DT.error;
       case 'decreasing':
-        return Colors.green;
+        return DT.success;
       case 'stable':
-        return Colors.blue;
+        return DT.secondary;
       default:
-        return Colors.blue;
+        return DT.secondary;
     }
   }
 }

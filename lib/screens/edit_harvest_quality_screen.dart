@@ -8,6 +8,8 @@ import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class EditHarvestQualityScreen extends StatefulWidget {
   final Harvest harvest;
@@ -22,7 +24,7 @@ class EditHarvestQualityScreen extends StatefulWidget {
 class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
     with SingleTickerProviderStateMixin {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
-  final AppTranslations _t = AppTranslations('de'); // Initialize with default language
+  late AppTranslations _t;
   final _formKey = GlobalKey<FormState>();
   late TabController _tabController;
 
@@ -38,6 +40,12 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
   final TextEditingController _overallNotesController = TextEditingController();
 
   bool _isSaving = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode);
+  }
 
   @override
   void initState() {
@@ -110,39 +118,31 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_t['quality_control_edit']),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
-        actions: [
-          if (!_isSaving)
-            IconButton(icon: const Icon(Icons.check), onPressed: _save),
+    return PlantryScaffold(
+      title: _t['quality_control_edit'],
+      actions: [
+        if (!_isSaving)
+          IconButton(icon: const Icon(Icons.check), onPressed: _save),
+      ],
+      bottom: TabBar(
+        controller: _tabController,
+        indicatorColor: DT.accent,
+        tabs: [
+          Tab(
+            icon: const Icon(Icons.science, color: DT.textPrimary),
+            child: Text(
+              _t['edit_harvest_tab_quality'],
+              style: const TextStyle(color: DT.textPrimary),
+            ),
+          ),
+          Tab(
+            icon: const Icon(Icons.star, color: DT.textPrimary),
+            child: Text(
+              _t['edit_harvest_tab_rating'],
+              style: const TextStyle(color: DT.textPrimary),
+            ),
+          ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          tabs: [
-            Tab(
-              icon: const Icon(Icons.science, color: Colors.white),
-              child: Text(
-                AppTranslations(
-                  Localizations.localeOf(context).languageCode,
-                )['edit_harvest_tab_quality'],
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-            Tab(
-              icon: const Icon(Icons.star, color: Colors.white),
-              child: Text(
-                AppTranslations(
-                  Localizations.localeOf(context).languageCode,
-                )['edit_harvest_tab_rating'],
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
       ),
       body: Form(
         key: _formKey,
@@ -154,10 +154,10 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: DT.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: DT.canvas.withValues(alpha: 0.5),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),
@@ -168,7 +168,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
             Expanded(
               child: OutlinedButton(
                 onPressed: _isSaving ? null : () => Navigator.pop(context),
-                child: const Text('Abbrechen'),
+                child: Text(_t['cancel']),
               ),
             ),
             const SizedBox(width: 12),
@@ -182,14 +182,14 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: DT.textPrimary,
                         ),
                       )
                     : const Icon(Icons.save),
                 label: Text(_isSaving ? 'Speichert...' : 'Speichern'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
+                  backgroundColor: DT.secondary,
+                  foregroundColor: DT.textPrimary,
                 ),
               ),
             ),
@@ -208,15 +208,15 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color: DT.secondary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue[200] ?? Colors.blue),
+              border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                Icon(Icons.science, color: Colors.blue[700]),
-                const SizedBox(width: 12),
-                const Expanded(
+                Icon(Icons.science, color: DT.secondary),
+                SizedBox(width: 12),
+                Expanded(
                   child: Text(
                     'Cannabinoid-Profil',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -234,7 +234,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
               labelText: 'THC-Gehalt',
               hintText: 'z.B. 22.5',
               suffixText: '%',
-              prefixIcon: const Icon(Icons.science, color: Colors.red),
+              prefixIcon: const Icon(Icons.science, color: DT.error),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -251,7 +251,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
               labelText: 'CBD-Gehalt',
               hintText: 'z.B. 0.5',
               suffixText: '%',
-              prefixIcon: const Icon(Icons.science, color: Colors.green),
+              prefixIcon: const Icon(Icons.science, color: DT.success),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -274,7 +274,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
               hintText: 'z.B. Myrcene, Limonene, Caryophyllene',
               prefixIcon: const Icon(
                 Icons.format_list_bulleted,
-                color: Colors.purple,
+                color: DT.info,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -316,20 +316,18 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color: DT.secondary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue[200] ?? Colors.blue),
+              border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, color: Colors.blue[700]),
+                const Icon(Icons.info_outline, color: DT.secondary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    AppTranslations(
-                      Localizations.localeOf(context).languageCode,
-                    )['edit_harvest_quality_info'],
+                    _t['edit_harvest_quality_info'],
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
@@ -350,31 +348,31 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.purple[50] ?? Colors.purple,
-            Colors.blue[50] ?? Colors.blue,
+            DT.info.withValues(alpha: 0.08),
+            DT.secondary.withValues(alpha: 0.08),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200] ?? Colors.blue),
+        border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Cannabinoid-Profil Vorschau',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
-              color: Colors.blue[900],
+              color: DT.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
-          if (thc != null) _buildCannabinoidBar('THC', thc, Colors.red),
+          if (thc != null) _buildCannabinoidBar('THC', thc, DT.error),
           if (cbd != null) ...[
             const SizedBox(height: 12),
-            _buildCannabinoidBar('CBD', cbd, Colors.green),
+            _buildCannabinoidBar('CBD', cbd, DT.success),
           ],
         ],
       ),
@@ -408,7 +406,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
           child: LinearProgressIndicator(
             value: (percentage / 30).clamp(0.0, 1.0),
             minHeight: 10,
-            backgroundColor: Colors.grey[300],
+            backgroundColor: DT.elevated,
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -425,15 +423,15 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.amber[50],
+              color: DT.warning.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber[200] ?? Colors.amber),
+              border: Border.all(color: DT.warning.withValues(alpha: 0.3)),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                Icon(Icons.star, color: Colors.amber[700]),
-                const SizedBox(width: 12),
-                const Expanded(
+                Icon(Icons.star, color: DT.warning),
+                SizedBox(width: 12),
+                Expanded(
                   child: Text(
                     'Bewertung & Notizen',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -466,7 +464,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
                               : Icons.star_border,
                           size: 40,
                         ),
-                        color: Colors.amber,
+                        color: DT.warning,
                         onPressed: () {
                           setState(() => _rating = index + 1);
                         },
@@ -477,17 +475,17 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
                     const SizedBox(height: 8),
                     Text(
                       '$_rating / 5 Sterne',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: DT.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                   if (_rating == null)
-                    Text(
+                    const Text(
                       'Tippe auf die Sterne zum Bewerten',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: 12, color: DT.textTertiary),
                     ),
                 ],
               ),
@@ -501,7 +499,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
             decoration: InputDecoration(
               labelText: 'Geschmack',
               hintText: 'z.B. fruchtig, erdig, zitrusartig...',
-              prefixIcon: const Icon(Icons.restaurant, color: Colors.orange),
+              prefixIcon: const Icon(Icons.restaurant, color: DT.warning),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -541,7 +539,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
             decoration: InputDecoration(
               labelText: 'Wirkung',
               hintText: 'z.B. entspannend, euphorisch, kreativ...',
-              prefixIcon: const Icon(Icons.psychology, color: Colors.purple),
+              prefixIcon: const Icon(Icons.psychology, color: DT.info),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -581,7 +579,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
             decoration: InputDecoration(
               labelText: 'Allgemeine Notizen',
               hintText: 'Zusätzliche Beobachtungen, Besonderheiten...',
-              prefixIcon: const Icon(Icons.note, color: Colors.blue),
+              prefixIcon: const Icon(Icons.note, color: DT.secondary),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

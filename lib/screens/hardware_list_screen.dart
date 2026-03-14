@@ -3,6 +3,10 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/widgets/plantry_list_tile.dart';
+import 'package:growlog_app/widgets/plantry_card.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/models/hardware.dart';
@@ -10,8 +14,6 @@ import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/repositories/interfaces/i_hardware_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/utils/translations.dart';
-import 'package:growlog_app/utils/app_constants.dart';
-import 'package:growlog_app/widgets/empty_state_widget.dart';
 import 'package:growlog_app/screens/add_hardware_screen.dart';
 import 'package:growlog_app/screens/edit_hardware_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
@@ -57,14 +59,13 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
   }
 
   Future<void> _loadHardware() async {
-    if (!mounted) return; // ✅ FIX: Add mounted check before setState
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
       final hardware = _showInactive
           ? await _hardwareRepo.findByRoom(widget.roomId)
           : await _hardwareRepo.findActiveByRoom(widget.roomId);
-
       final wattage = await _hardwareRepo.getTotalWattageByRoom(widget.roomId);
 
       if (mounted) {
@@ -75,10 +76,8 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
         });
       }
     } catch (e) {
-      AppLogger.error('HardwareListScreen', 'Error loading hardware: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      AppLogger.error('HardwareListScreen', 'Error: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -86,20 +85,12 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_t['delete_hardware_title']),
-        content: Text(
-          '${_t['delete_confirm'].replaceAll('?', '')} "${hardware.name}"?',
-        ),
+        backgroundColor: DT.elevated,
+        title: Text(_t['delete_hardware_title'], style: const TextStyle(color: DT.textPrimary)),
+        content: Text('${_t['delete_confirm'].replaceAll('?', '')} "${hardware.name}"?', style: const TextStyle(color: DT.textSecondary)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(_t['cancel']),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(_t['delete']),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
         ],
       ),
     );
@@ -108,54 +99,28 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
       try {
         await _hardwareRepo.delete(hardware.id!);
         _loadHardware();
-        if (mounted) {
-          AppMessages.deletedSuccessfully(context, _t['hardware']);
-        }
+        if (mounted) AppMessages.deletedSuccessfully(context, _t['hardware']);
       } catch (e) {
         AppLogger.error('HardwareListScreen', 'Error deleting: $e');
-        if (mounted) {
-          AppMessages.deletingError(context, e.toString());
-        }
-      }
-    }
-  }
-
-  Future<void> _toggleActive(Hardware hardware) async {
-    try {
-      if (hardware.active) {
-        await _hardwareRepo.deactivate(hardware.id!);
-      } else {
-        await _hardwareRepo.activate(hardware.id!);
-      }
-      _loadHardware();
-    } catch (e) {
-      AppLogger.error('HardwareListScreen', 'Error toggling active: $e');
-      if (mounted) {
-        AppMessages.showError(context, 'Fehler beim Aktivieren/Deaktivieren');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('${_t['hardware']} - ${widget.roomName}'),
-        backgroundColor: Colors.orange[700],
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: Icon(_showInactive ? Icons.visibility : Icons.visibility_off),
-            onPressed: () {
-              setState(() => _showInactive = !_showInactive);
-              _loadHardware();
-            },
-            tooltip: _showInactive ? _t['hide_inactive'] : _t['show_inactive'],
-          ),
-        ],
-      ),
+    return PlantryScaffold(
+      title: '${_t['hardware']} - ${widget.roomName}',
+      actions: [
+        IconButton(
+          icon: Icon(_showInactive ? Icons.visibility : Icons.visibility_off, color: DT.textPrimary),
+          onPressed: () {
+            setState(() => _showInactive = !_showInactive);
+            _loadHardware();
+          },
+        ),
+      ],
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : Column(
               children: [
                 _buildStatsCard(),
@@ -166,36 +131,28 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
                 ),
               ],
             ),
-      floatingActionButton: FloatingActionButton.extended(
+      fab: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => AddHardwareScreen(roomId: widget.roomId),
-            ),
+            MaterialPageRoute(builder: (context) => AddHardwareScreen(roomId: widget.roomId)),
           );
           if (result == true) _loadHardware();
         },
-        backgroundColor: Colors.orange[700],
-        icon: const Icon(Icons.add),
-        label: Text(_t['hardware']),
+        backgroundColor: DT.accent,
+        foregroundColor: DT.onAccent,
+        child: const Icon(Icons.add),
       ),
     );
   }
 
   Widget _buildStatsCard() {
-    return Card(
-      margin: AppConstants.statsCardMargin,
-      color: Colors.orange[50],
-      child: Padding(
-        padding: AppConstants.statsCardPadding,
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: PlantryCard(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildStatItem(
-              Icons.devices,
-              '${_hardware.length}',
-              _t['hardware_items'],
-            ),
+            _buildStatItem(Icons.devices, '${_hardware.length}', _t['hardware_items']),
             _buildStatItem(Icons.bolt, '$_totalWattage W', _t['total_wattage']),
           ],
         ),
@@ -206,45 +163,37 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
   Widget _buildStatItem(IconData icon, String value, String label) {
     return Column(
       children: [
-        Icon(icon, color: Colors.orange[700], size: AppConstants.statsIconSize),
-        const SizedBox(height: AppConstants.spacingSmall),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: AppConstants.statsValueFontSize,
-            fontWeight: FontWeight.bold,
-            color: Colors.orange[900],
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: AppConstants.statsLabelFontSize,
-            color: Colors.grey[600],
-          ),
-        ),
+        Icon(icon, color: DT.warning, size: 24),
+        const SizedBox(height: 8),
+        Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: DT.textPrimary)),
+        Text(label, style: const TextStyle(fontSize: 12, color: DT.textSecondary)),
       ],
     );
   }
 
-  /// ✅ PHASE 4: Replaced with shared EmptyStateWidget
   Widget _buildEmptyState() {
-    return EmptyStateWidget(
-      icon: Icons.devices,
-      title: _t['no_hardware'],
-      subtitle: _t['add_first_hardware'],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.devices_outlined, size: 80, color: DT.textTertiary),
+          const SizedBox(height: 24),
+          Text(_t['no_hardware'], style: const TextStyle(fontSize: 20, color: DT.textPrimary, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(_t['add_first_hardware'], style: const TextStyle(fontSize: 16, color: DT.textSecondary)),
+        ],
+      ),
     );
   }
 
   Widget _buildHardwareList() {
-    // Gruppiere nach Kategorie
     final grouped = <HardwareCategory, List<Hardware>>{};
     for (final hw in _hardware) {
       grouped.putIfAbsent(hw.type.category, () => []).add(hw);
     }
 
     return ListView.builder(
-      padding: AppConstants.paddingHorizontalMedium,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
       itemCount: grouped.length,
       itemBuilder: (context, index) {
         final category = grouped.keys.elementAt(index);
@@ -254,166 +203,50 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: AppConstants.paddingVerticalSmall,
-              child: Text(
-                category.displayName,
-                style: TextStyle(
-                  fontSize: AppConstants.fontSizeBody,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
-                ),
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(category.displayName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
             ),
             ...items.map((hw) => _buildHardwareCard(hw)),
-            const SizedBox(height: AppConstants.spacingSmall),
           ],
         );
       },
     );
   }
 
-  Widget _buildHardwareCard(Hardware hardware) {
-    // ✅ PERFORMANCE: RepaintBoundary isoliert jede Card für flüssigeres Scrolling
-    return RepaintBoundary(
-      child: Card(
-        margin: const EdgeInsets.only(bottom: AppConstants.spacingSmall),
-        child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: hardware.active
-                ? Colors.orange[700]
-                : Colors.grey[400],
-            child: Icon(
-              hardware.type.icon,
-              color: Colors.white,
-              size: AppConstants.iconSizeMedium,
-            ),
+  Widget _buildHardwareCard(Hardware hw) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PlantryListTile(
+        leading: Container(
+          width: 48, height: 48,
+          decoration: BoxDecoration(
+            color: hw.active ? DT.warning.withValues(alpha: 0.1) : DT.elevated,
+            borderRadius: BorderRadius.circular(12),
           ),
-          title: Text(
-            hardware.displayName,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              decoration: hardware.active ? null : TextDecoration.lineThrough,
-            ),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                hardware.type.displayName,
-                style: TextStyle(
-                  fontSize: AppConstants.fontSizeSmall,
-                  color: Colors.grey[600],
-                ),
-              ),
-              if (hardware.brand != null || hardware.model != null)
-                Text(
-                  hardware.hardwareInfo,
-                  style: TextStyle(
-                    fontSize: AppConstants.roomDimensionsFontSize,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              if (hardware.wattage != null)
-                Text(
-                  hardware.wattageDisplay,
-                  style: TextStyle(
-                    fontSize: AppConstants.roomDimensionsFontSize,
-                    color: Colors.orange[700],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ],
-          ),
-          trailing: PopupMenuButton(
-            icon: Icon(
-              Icons.more_vert,
-              size: AppConstants.popupMenuIconSize,
-              color: Colors.grey[600],
-            ),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.edit,
-                      size: AppConstants.popupMenuIconSize,
-                      color: Colors.blue[700],
-                    ),
-                    const SizedBox(width: AppConstants.spacingSmall),
-                    Text(_t['edit'], style: TextStyle(color: Colors.blue[700])),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'toggle',
-                child: Row(
-                  children: [
-                    Icon(
-                      hardware.active ? Icons.visibility_off : Icons.visibility,
-                      size: AppConstants.popupMenuIconSize,
-                      color: Colors.orange[700],
-                    ),
-                    const SizedBox(width: AppConstants.spacingSmall),
-                    Text(
-                      hardware.active ? _t['deactivate'] : _t['activate'],
-                      style: TextStyle(color: Colors.orange[700]),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.delete,
-                      size: AppConstants.popupMenuIconSize,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(width: AppConstants.spacingSmall),
-                    Text(
-                      _t['delete'],
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: (value) {
-              if (value == 'edit') {
-                Navigator.of(context)
-                    .push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EditHardwareScreen(hardware: hardware),
-                      ),
-                    )
-                    .then((result) {
-                      // ✅ CRITICAL FIX: Check mounted before calling setState
-                      if (mounted && result == true) _loadHardware();
-                    });
-              } else if (value == 'toggle') {
-                _toggleActive(hardware);
-              } else if (value == 'delete') {
-                _deleteHardware(hardware);
-              }
-            },
-          ),
-          onTap: () {
-            Navigator.of(context)
-                .push(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        EditHardwareScreen(hardware: hardware),
-                  ),
-                )
-                .then((result) {
-                  // ✅ CRITICAL FIX: Check mounted before calling setState
-                  if (mounted && result == true) _loadHardware();
-                });
-          },
+          child: Icon(hw.type.icon, color: hw.active ? DT.warning : DT.textTertiary, size: 28),
         ),
+        title: hw.displayName,
+        subtitle: '${hw.type.displayName}${hw.wattage != null ? " • ${hw.wattage}W" : ""}\n${hw.brand ?? ""} ${hw.model ?? ""}',
+        trailing: PopupMenuButton<String>(
+          color: DT.elevated,
+          icon: const Icon(Icons.more_vert, color: DT.textTertiary),
+          onSelected: (val) async {
+            if (val == 'edit') {
+              final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditHardwareScreen(hardware: hw)));
+              if (res == true) _loadHardware();
+            } else if (val == 'delete') {
+              _deleteHardware(hw);
+            }
+          },
+          itemBuilder: (ctx) => [
+            PopupMenuItem(value: 'edit', child: Text(_t['edit'], style: const TextStyle(color: DT.textPrimary))),
+            PopupMenuItem(value: 'delete', child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+          ],
+        ),
+        onTap: () async {
+          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditHardwareScreen(hardware: hw)));
+          if (res == true) _loadHardware();
+        },
       ),
     );
   }

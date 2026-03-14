@@ -407,7 +407,7 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
                 // Delete physical photo files
                 for (final photo in photos) {
                   try {
-                    final filePath = photo['image_path'] as String;
+                    final filePath = photo['file_path'] as String;
                     final file = File(filePath);
                     if (await file.exists()) {
                       await file.delete();
@@ -421,7 +421,7 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
                     }
                   } catch (e) {
                     // Collect failed deletes to abort transaction
-                    final filePath = photo['image_path'] as String;
+                    final filePath = photo['file_path'] as String;
                     failedPhotoDeletes.add(filePath);
                     AppLogger.error(
                       'PlantRepo',
@@ -855,6 +855,7 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
   /// ✅ FIX #5: Check if RDWC bucket is occupied
   /// Returns true if bucket is occupied by a non-archived plant
   /// [excludePlantId] - Optional: exclude specific plant ID (for UPDATE validation)
+  @override
   Future<bool> isBucketOccupied(
     int systemId,
     int bucketNumber, {
@@ -865,7 +866,7 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
 
       // Build WHERE clause
       String whereClause = 'rdwc_system_id = ? AND bucket_number = ? AND archived = 0';
-      List<dynamic> whereArgs = [systemId, bucketNumber];
+      final List<dynamic> whereArgs = [systemId, bucketNumber];
 
       // Exclude specific plant ID if provided (for UPDATE validation)
       if (excludePlantId != null) {

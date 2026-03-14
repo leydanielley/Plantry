@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:growlog_app/utils/app_constants.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 /// Reusable empty state widget
 ///
@@ -70,12 +71,10 @@ class EmptyStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Default colors based on theme
-    final defaultIconColor = isDark ? Colors.grey[700] : Colors.grey[400];
-    final defaultTitleColor = isDark ? Colors.grey[600] : Colors.grey[600];
-    final defaultSubtitleColor = isDark ? Colors.grey[700] : Colors.grey[600];
+    // Default colors based on DT tokens
+    const defaultIconColor = DT.textTertiary;
+    const defaultTitleColor = DT.textSecondary;
+    const defaultSubtitleColor = DT.textTertiary;
 
     return Center(
       child: Padding(

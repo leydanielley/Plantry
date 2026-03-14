@@ -608,6 +608,53 @@ class SchemaRegistry {
     },
   );
 
+  /// Schema for v39: Add is_custom flag and total N field to fertilizers
+  static final schemaV39 = SchemaDefinition(
+    version: 39,
+    requiredTables: {
+      ...schemaV38.requiredTables,
+      'fertilizers': {
+        ...schemaV38.requiredTables['fertilizers']!,
+        'is_custom', // v39 adds is_custom flag
+        'n',         // v39 adds total nitrogen field
+      },
+    },
+    requiredIndexes: schemaV38.requiredIndexes,
+  );
+
+  /// Schema for v40: Add fertilizer_sets and fertilizer_set_items tables
+  static final schemaV40 = SchemaDefinition(
+    version: 40,
+    requiredTables: {
+      ...schemaV39.requiredTables,
+      'fertilizer_sets': {
+        'id',
+        'name',
+        'created_at',
+      },
+      'fertilizer_set_items': {
+        'id',
+        'set_id',
+        'fertilizer_id',
+        'amount',
+      },
+    },
+    requiredIndexes: schemaV39.requiredIndexes,
+  );
+
+  /// Schema for v41: Add light_watts to rooms for g/W yield calculation
+  static final schemaV41 = SchemaDefinition(
+    version: 41,
+    requiredTables: {
+      ...schemaV40.requiredTables,
+      'rooms': {
+        ...schemaV40.requiredTables['rooms']!,
+        'light_watts', // v41 adds light_watts for g/W calculation
+      },
+    },
+    requiredIndexes: schemaV40.requiredIndexes,
+  );
+
   /// Map of all schema definitions
   static final Map<int, SchemaDefinition> schemas = {
     13: schemaV13,
@@ -622,6 +669,9 @@ class SchemaRegistry {
     36: schemaV36,
     37: schemaV37,
     38: schemaV38,
+    39: schemaV39,
+    40: schemaV40,
+    41: schemaV41,
   };
 
   // ===========================================

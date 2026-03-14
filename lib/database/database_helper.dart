@@ -1,5 +1,5 @@
 // =============================================
-// GROWLOG - Database Helper (✅ BUG FIX: Race Condition Fixed)
+// GROWLOG - Database Helper
 // =============================================
 import 'dart:async';
 import 'package:flutter/foundation.dart';
@@ -14,7 +14,7 @@ import 'package:growlog_app/database/database_recovery.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static final _lock = Lock(); // ✅ CRITICAL FIX: Mutex prevents race condition
+  static final _lock = Lock(); // Mutex prevents race condition on concurrent initialization
 
   DatabaseHelper._init();
 
@@ -25,8 +25,8 @@ class DatabaseHelper {
     _database = db;
   }
 
-  // ✅ CRITICAL FIX: Thread-safe database initialization with mutex lock
-  // Prevents multiple threads from initializing database simultaneously
+  // Thread-safe database initialization with mutex lock.
+  // Prevents multiple threads from initializing database simultaneously.
   Future<Database> get database async {
     // Fast path: If already initialized, return immediately
     if (_database != null) return _database!;
@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            38, // v38: CRITICAL FIX - Allow multiple logs per day per plant
+            41, // v41: Add light_watts to rooms for g/W yield calculation
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -93,7 +93,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 38,
+          version: 41,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -143,7 +143,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 38,
+          version: 41,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -168,8 +168,8 @@ class DatabaseHelper {
     await db.execute('PRAGMA foreign_keys = ON');
   }
 
-  /// ✅ CRITICAL FIX: Prevent data loss from app downgrades
-  /// If user installs older version, refuse to open DB instead of triggering recovery
+  /// Prevent data loss from app downgrades.
+  /// If user installs an older version, refuse to open the DB rather than corrupt it.
   Future<void> _onDowngradeError(
     Database db,
     int oldVersion,
@@ -252,7 +252,6 @@ class DatabaseHelper {
       );
 
       // RDWC Logs Table (Water Addback Tracking)
-      // ✅ FIX: Changed CASCADE → RESTRICT (will be corrected by migration v15)
       await db.execute('''
         CREATE TABLE IF NOT EXISTS rdwc_logs (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -416,7 +415,7 @@ class DatabaseHelper {
   Future<void> _createDB(Database db, int version) async {
     AppLogger.info('DatabaseHelper', 'Creating database schema v$version...');
 
-    // Rooms Table (v14: added archived column for soft-delete)
+    // Rooms Table (v14: added archived column for soft-delete, v41: added light_watts)
     await db.execute('''
       CREATE TABLE IF NOT EXISTS rooms (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -428,6 +427,7 @@ class DatabaseHelper {
         width REAL DEFAULT 0,
         depth REAL DEFAULT 0,
         height REAL DEFAULT 0,
+        light_watts INTEGER,
         archived INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now')),
@@ -459,8 +459,7 @@ class DatabaseHelper {
       'CREATE INDEX IF NOT EXISTS idx_grows_room ON grows(room_id)',
     );
 
-    // Plants Table - ✅ BUG FIX #4: SeedType CHECK korrigiert (ohne 'REGULAR')
-    // ✅ v10: Phase History (veg_date, bloom_date, harvest_date)
+    // Plants Table (v10: phase history — veg_date, bloom_date, harvest_date)
     await db.execute('''
       CREATE TABLE IF NOT EXISTS plants (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -564,9 +563,9 @@ class DatabaseHelper {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_plant_logs_action_date ON plant_logs(action_type, log_date DESC)',
     );
-    // v15: UNIQUE constraint on plant_id + day_number (only for non-archived)
+    // v38: UNIQUE constraint on plant_id + day_number + action_type (multiple actions per day allowed)
     await db.execute(
-      'CREATE UNIQUE INDEX IF NOT EXISTS idx_plant_logs_plant_day_unique ON plant_logs(plant_id, day_number) WHERE archived = 0',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_plant_logs_unique_per_action ON plant_logs(plant_id, day_number, action_type) WHERE archived = 0',
     );
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_plant_logs_plant_archived ON plant_logs(plant_id, archived)',
@@ -575,8 +574,7 @@ class DatabaseHelper {
       'CREATE INDEX IF NOT EXISTS idx_plant_logs_archived_date ON plant_logs(archived, log_date DESC)',
     );
 
-    // Fertilizers Table (v8: added ec_value, ppm_value for RDWC calculations)
-    // ✅ FIX: Added v11 migration fields to prevent schema mismatch on fresh installs
+    // Fertilizers Table (v8: ec_value, ppm_value for RDWC; v11 fields included to prevent schema mismatch on fresh installs)
     await db.execute('''
       CREATE TABLE IF NOT EXISTS fertilizers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -585,6 +583,7 @@ class DatabaseHelper {
         npk TEXT,
         type TEXT,
         description TEXT,
+        is_custom INTEGER DEFAULT 0,
         ec_value REAL,
         ppm_value REAL,
         formula TEXT,
@@ -592,6 +591,7 @@ class DatabaseHelper {
         purity REAL,
         is_liquid INTEGER DEFAULT 1,
         density REAL,
+        n REAL,
         n_no3 REAL,
         n_nh4 REAL,
         p REAL,
@@ -911,6 +911,27 @@ class DatabaseHelper {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_rdwc_recipe_fertilizers_fertilizer ON rdwc_recipe_fertilizers(fertilizer_id)',
     );
+
+    // Fertilizer Sets Table (v40: Global reusable fertilizer combinations)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS fertilizer_sets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    ''');
+
+    // Fertilizer Set Items Table (v40: Items belonging to a fertilizer set)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS fertilizer_set_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        set_id INTEGER NOT NULL,
+        fertilizer_id INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        FOREIGN KEY (set_id) REFERENCES fertilizer_sets(id) ON DELETE CASCADE,
+        FOREIGN KEY (fertilizer_id) REFERENCES fertilizers(id) ON DELETE CASCADE
+      )
+    ''');
 
     AppLogger.info(
       'DatabaseHelper',

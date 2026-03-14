@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/models/rdwc_recipe.dart';
 import 'package:growlog_app/models/fertilizer.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
@@ -12,6 +13,7 @@ import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class RdwcRecipeFormScreen extends StatefulWidget {
   final RdwcRecipe? recipe;
@@ -214,8 +216,6 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(),
@@ -223,12 +223,8 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.recipe == null ? _t['create_recipe'] : _t['edit_recipe'],
-        ),
-      ),
+    return PlantryScaffold(
+      title: widget.recipe == null ? _t['create_recipe'] : _t['edit_recipe'],
       body: Form(
         key: _formKey,
         child: ListView(
@@ -238,18 +234,18 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: DT.secondary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue[200] ?? Colors.blue),
+                border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
+                  const Icon(Icons.info_outline, size: 16, color: DT.secondary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _t['recipe_info_hint'],
-                      style: TextStyle(fontSize: 12, color: Colors.blue[900]),
+                      style: const TextStyle(fontSize: 12, color: DT.textPrimary),
                     ),
                   ),
                 ],
@@ -372,15 +368,15 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.red[100],
+                      color: DT.error.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       _t['required'],
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: Colors.red[900],
+                        color: DT.error,
                       ),
                     ),
                   ),
@@ -392,7 +388,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
             ..._addedFertilizers.asMap().entries.map((entry) {
               final index = entry.key;
               final fertEntry = entry.value;
-              return _buildFertilizerCard(fertEntry, index, isDark);
+              return _buildFertilizerCard(fertEntry, index);
             }),
 
             // Add Fertilizer Button
@@ -429,7 +425,6 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
   Widget _buildFertilizerCard(
     _RecipeFertilizerEntry entry,
     int index,
-    bool isDark,
   ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -440,7 +435,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.local_florist, color: Colors.green[700], size: 20),
+                const Icon(Icons.local_florist, color: DT.success, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -454,7 +449,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                 IconButton(
                   icon: const Icon(Icons.delete, size: 20),
                   onPressed: () => _removeFertilizer(index),
-                  color: Colors.red,
+                  color: DT.error,
                 ),
               ],
             ),

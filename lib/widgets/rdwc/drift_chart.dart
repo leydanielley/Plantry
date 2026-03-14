@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class DriftChart extends StatelessWidget {
   final List<DriftDataPoint> ecData;
@@ -24,8 +25,6 @@ class DriftChart extends StatelessWidget {
         (mode == 'both' && ecData.isEmpty && phData.isEmpty)) {
       return _buildEmptyState(context);
     }
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Combine all data points to find min/max
     final allValues = <double>[];
@@ -80,9 +79,9 @@ class DriftChart extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       days[dayOfWeek - 1],
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 10,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        color: DT.textSecondary,
                       ),
                     ),
                   );
@@ -96,9 +95,9 @@ class DriftChart extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   return Text(
                     value.toStringAsFixed(1),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 10,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      color: DT.textSecondary,
                     ),
                   );
                 },
@@ -116,11 +115,8 @@ class DriftChart extends StatelessWidget {
             drawVerticalLine: false,
             horizontalInterval: (maxY - minY) / 5,
             getDrawingHorizontalLine: (value) {
-              return FlLine(
-                // ✅ FIX: Replace force unwrap with null-aware operator
-                color: isDark
-                    ? (Colors.grey[800] ?? Colors.grey)
-                    : (Colors.grey[300] ?? Colors.grey),
+              return const FlLine(
+                color: DT.elevated,
                 strokeWidth: 1,
               );
             },
@@ -149,12 +145,12 @@ class DriftChart extends StatelessWidget {
                   return FlSpot(entry.key.toDouble(), entry.value.value);
                 }).toList(),
                 isCurved: true,
-                color: Colors.green,
+                color: DT.success,
                 barWidth: 3,
                 dotData: const FlDotData(show: true),
                 belowBarData: BarAreaData(
                   show: true,
-                  color: Colors.green.withValues(alpha: 0.1),
+                  color: DT.success.withValues(alpha: 0.1),
                 ),
               ),
           ],
@@ -163,10 +159,7 @@ class DriftChart extends StatelessWidget {
             horizontalLines: [
               HorizontalLine(
                 y: 0,
-                // ✅ FIX: Replace force unwrap with null-aware operator
-                color: isDark
-                    ? (Colors.grey[700] ?? Colors.grey)
-                    : (Colors.grey[400] ?? Colors.grey),
+                color: DT.textSecondary,
                 strokeWidth: 2,
                 dashArray: [5, 5],
               ),
@@ -190,7 +183,7 @@ class DriftChart extends StatelessWidget {
                   return LineTooltipItem(
                     '$label: $value\n${_formatDate(point.date)}',
                     const TextStyle(
-                      color: Colors.white,
+                      color: DT.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -212,15 +205,15 @@ class DriftChart extends StatelessWidget {
     return Container(
       height: 300,
       padding: const EdgeInsets.all(32),
-      child: Center(
+      child: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.show_chart, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
+            Icon(Icons.show_chart, size: 64, color: DT.textSecondary),
+            SizedBox(height: 16),
             Text(
               'No drift data yet',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 16, color: DT.textSecondary),
             ),
           ],
         ),
