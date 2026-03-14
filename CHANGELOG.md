@@ -5,6 +5,65 @@ All notable changes to Plantry will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-14
+
+### ✨ New Features
+
+#### Dünger-Sets / Fertilizer Sets
+- Dünger-Kombinationen speichern und per Klick in Log-Einträge laden
+- Sets können benannt, geladen und per Swipe gelöscht werden
+- Gespeicherte Sets bleiben dauerhaft in der Datenbank
+
+#### Dosierungsplan-Generator
+- Neuer Screen zum Generieren von Wochenplan-Tabellen für Rezepte
+- Eingabe: Rezept, Volumen (Liter), Anzahl Wochen
+- Ausgabe: ml-Mengen pro Dünger pro Woche, Ziel-EC und -pH
+- Erreichbar aus der Rezepte-Übersicht
+
+#### Ertrag-Kalkulation (g/m² und g/W)
+- Raumgröße und Watt-Zahl (Beleuchtung) im Raum-Profil hinterlegbar
+- Ernte-Detail: Ertrag pro m² und pro Watt (g/W) automatisch berechnet
+- Grow-Detail: Summe aller Ernten mit g/m² und g/W Auswertung
+
+#### Pflanzen-Timeline
+- Neuer Toggle in der Pflanzen-Detailansicht: Listen- oder Timeline-Ansicht
+- Chronologische Darstellung aller Log-Einträge als visueller Zeitstrahl
+
+#### Design System (vollständig)
+- Alle 50+ Screens auf einheitliche Design-Token (DT.*) migriert
+- Neue Widget-Bibliothek: PlantryScaffold, PlantryCard, PlantryButton, PlantryFormField, PlantryChips, PlantryListTile
+- Konsistentes Dark-Theme ohne hardcodierte Farben
+
+#### Vorbefüllte Dünger-Datenbank
+- Bekannte Dünger (Athena, Hesi, Canna u.a.) als Ausgangspunkt vorinstalliert
+
+### 🐛 Bug Fixes
+
+- **Kritisch**: Crash beim permanenten Löschen von Pflanzen mit Fotos (`image_path` → `file_path`)
+- **DB Migration v41**: Idempotenz-Check verhindert Fehler bei doppeltem Ausführen
+- **SchemaRegistry**: v39/v40/v41 eingetragen — Post-Migration-Validierung jetzt aktiv
+- **RDWC Tagesdurchschnitt**: SQLite `DATE()` → `substr()` Fix für ISO-8601 Timestamps
+- **Translations**: 97 neue Keys, alle Screens vollständig lokalisiert (DE + EN)
+- **DBF Import Screen**: War komplett auf Englisch — jetzt vollständig übersetzt
+- **Splash Screen**: Neues Design, einheitlich mit nativem Android Splash
+- **Inaktive Pflanzen**: Auswahl-Dialog mit Overflow-Fix
+
+### 🏗️ Architektur & Code-Qualität
+
+- `FertilizerSetRepository` + `FertilizerSet` Model eingeführt (kein direkter DB-Zugriff im Screen)
+- `enableOnBackInvokedCallback=true` (Android 13+ Predictive Back Gesture)
+- `flutter analyze`: 0 Issues
+
+### 📊 Technische Details
+
+- Build Number: 91
+- Datenbank-Version: 41 (Migrationspfad v38→v41 vollständig getestet)
+- Neue Tabellen: `fertilizer_sets`, `fertilizer_set_items`
+- Neue Spalten: `fertilizers.is_custom`, `fertilizers.n`, `rooms.light_watts`
+- Unterstützte Android-Versionen: 5.0 (API 21) bis Android 15 (API 35)
+
+---
+
 ## [4.20.69] - 2026-02-08
 
 ### Open Source Release

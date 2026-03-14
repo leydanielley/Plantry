@@ -1,0 +1,11 @@
+🌱 Neue Features:
+• Dünger-Sets: Kombinationen speichern & schnell laden
+• Dosierungsplan-Generator für Rezepte (ml/Woche)
+• Ertragsberechnung g/m² und g/W pro Ernte
+• Pflanzen-Timeline-Ansicht
+• Vorbefüllte Dünger-Datenbank (Athena, Hesi, Canna u.a.)
+
+🐛 Bugfixes:
+• Crash beim Löschen von Pflanzen mit Fotos behoben
+• Vollständige DE/EN-Übersetzungen im DBF-Import
+• RDWC-Statistiken korrigiert

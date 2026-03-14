@@ -1,0 +1,11 @@
+🌱 New Features:
+• Fertilizer Sets: Save combinations & load with one tap
+• Dosing plan generator for recipes (ml/week)
+• Yield calculation g/m² and g/W per harvest
+• Plant timeline view
+• Pre-filled fertilizer database (Athena, Hesi, Canna etc.)
+
+🐛 Bug Fixes:
+• Fixed crash when deleting plants with photos
+• Full DE/EN translations in DBF import screen
+• RDWC daily stats calculation fixed
