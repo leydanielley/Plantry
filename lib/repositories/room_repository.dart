@@ -92,20 +92,26 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
     try {
       final db = await _dbHelper.database;
 
-      // Check plants
+      // Check plants (direkt via room_id ODER indirekt via grow.room_id)
       final plantCount =
           Sqflite.firstIntValue(
-            await db.rawQuery('SELECT COUNT(*) FROM plants WHERE room_id = ?', [
-              id,
-            ]),
+            await db.rawQuery(
+              '''
+              SELECT COUNT(*) FROM plants p
+              LEFT JOIN grows g ON p.grow_id = g.id
+              WHERE (p.room_id = ? OR (p.grow_id IS NOT NULL AND g.room_id = ?))
+                AND p.archived = 0
+              ''',
+              [id, id],
+            ),
           ) ??
           0;
 
-      // Check grows (indirekt über plants in grows)
+      // Check grows (direkt zugewiesene Grows)
       final growCount =
           Sqflite.firstIntValue(
             await db.rawQuery(
-              'SELECT COUNT(DISTINCT grow_id) FROM plants WHERE room_id = ? AND grow_id IS NOT NULL',
+              'SELECT COUNT(*) FROM grows WHERE room_id = ?',
               [id],
             ),
           ) ??

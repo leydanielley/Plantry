@@ -5,9 +5,11 @@
 import 'package:flutter/material.dart';
 import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/grow.dart';
+import 'package:growlog_app/models/room.dart';
 import 'package:growlog_app/models/rdwc_system.dart';
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
@@ -30,6 +32,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   late AppTranslations _t;
   final _formKey = GlobalKey<FormState>();
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
+  final IRoomRepository _roomRepo = getIt<IRoomRepository>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
 
@@ -43,11 +46,13 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   late PlantPhase _phase;
   int? _selectedGrowId;
   int? _selectedRdwcId;
+  int? _selectedRoomId;
   DateTime? _seedDate;
   bool _isLoading = false;
 
   List<Grow> _grows = [];
   List<RdwcSystem> _rdwcSystems = [];
+  List<Room> _rooms = [];
 
   @override
   void didChangeDependencies() {
@@ -67,13 +72,18 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     _phase = widget.plant.phase;
     _selectedGrowId = widget.plant.growId;
     _selectedRdwcId = widget.plant.rdwcSystemId;
+    _selectedRoomId = widget.plant.roomId;
     _seedDate = widget.plant.seedDate;
     _loadData();
   }
 
   Future<void> _loadData() async {
-    final res = await Future.wait([_growRepo.getAll(), _rdwcRepo.getAllSystems()]);
-    if (mounted) setState(() { _grows = res[0] as List<Grow>; _rdwcSystems = res[1] as List<RdwcSystem>; });
+    final res = await Future.wait([_roomRepo.findAll(), _growRepo.getAll(), _rdwcRepo.getAllSystems()]);
+    if (mounted) setState(() {
+      _rooms = res[0] as List<Room>;
+      _grows = res[1] as List<Grow>;
+      _rdwcSystems = res[2] as List<RdwcSystem>;
+    });
   }
 
   @override
@@ -106,10 +116,17 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                   const SizedBox(height: 24),
 
                   _section('Setup'),
-                  _dropdown<Medium>('Medium', _medium, Medium.values, (v) => setState(() => _medium = v!)),
+                  _dropdown<Medium>('Medium', _medium, Medium.values, (v) {
+                    setState(() {
+                      _medium = v!;
+                      if (v != Medium.rdwc) _selectedRdwcId = null;
+                    });
+                  }),
                   const SizedBox(height: 16),
                   if (_medium == Medium.rdwc) ...[_rdwcDropdown(), const SizedBox(height: 16)],
                   _growDropdown(),
+                  const SizedBox(height: 16),
+                  _roomDropdown(),
                   const SizedBox(height: 24),
 
                   _section('Datum'),
@@ -166,7 +183,16 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
             DropdownMenuItem(value: null, child: Text(_t['no_grow'], style: const TextStyle(color: DT.textPrimary))),
             ..._grows.map((g) => DropdownMenuItem(value: g.id, child: Text(g.name, style: const TextStyle(color: DT.textPrimary)))),
           ],
-          onChanged: (v) => setState(() => _selectedGrowId = v),
+          onChanged: (v) {
+            setState(() {
+              _selectedGrowId = v;
+              // Auto-set room from grow (or clear if grow has no room)
+              if (v != null) {
+                final grow = _grows.where((g) => g.id == v).firstOrNull;
+                _selectedRoomId = grow?.roomId;
+              }
+            });
+          },
         ),
       ),
     );
@@ -186,6 +212,32 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           onChanged: (v) => setState(() => _selectedRdwcId = v),
         ),
       ),
+    );
+  }
+
+  Widget _roomDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Raum (Optional)', style: TextStyle(color: DT.textSecondary, fontSize: 12)),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int?>(
+              value: _selectedRoomId,
+              isExpanded: true,
+              dropdownColor: DT.elevated,
+              items: [
+                const DropdownMenuItem(value: null, child: Text('Kein Raum', style: TextStyle(color: DT.textPrimary))),
+                ..._rooms.map((r) => DropdownMenuItem(value: r.id, child: Text(r.name, style: const TextStyle(color: DT.textPrimary)))),
+              ],
+              onChanged: (v) => setState(() => _selectedRoomId = v),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -214,7 +266,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       final p = widget.plant.copyWith(
         name: _nameController.text, strain: _strainController.text, breeder: _breederController.text,
         feminized: _genderType == GenderType.feminized, seedType: _seedType, medium: _medium, phase: _phase,
-        growId: _selectedGrowId, rdwcSystemId: _selectedRdwcId, seedDate: _seedDate,
+        growId: _selectedGrowId, roomId: _selectedRoomId, rdwcSystemId: _selectedRdwcId, seedDate: _seedDate,
       );
       await _plantRepo.save(p);
       if (!mounted) return;

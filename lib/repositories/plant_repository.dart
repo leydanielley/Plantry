@@ -72,16 +72,21 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
     }
   }
 
-  /// Pflanzen nach Room laden
+  /// Pflanzen nach Room laden (direkt via room_id ODER indirekt via grow.room_id)
   @override
   Future<List<Plant>> findByRoom(int roomId) async {
     try {
       final db = await _dbHelper.database;
-      final maps = await db.query(
-        'plants',
-        where: 'room_id = ? AND archived = ?',
-        whereArgs: [roomId, 0],
-        orderBy: 'id DESC',
+      final maps = await db.rawQuery(
+        '''
+        SELECT DISTINCT p.*
+        FROM plants p
+        LEFT JOIN grows g ON p.grow_id = g.id
+        WHERE (p.room_id = ? OR (p.grow_id IS NOT NULL AND g.room_id = ?))
+          AND p.archived = 0
+        ORDER BY p.id DESC
+        ''',
+        [roomId, roomId],
       );
 
       return maps.map((map) => Plant.fromMap(map)).toList();

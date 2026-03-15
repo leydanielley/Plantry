@@ -40,6 +40,7 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
   List<Room> _rooms = [];
   int? _selectedRoomId;
   bool _isLoading = true;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -72,7 +73,7 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
   @override
   Widget build(BuildContext context) {
     return PlantryScaffold(
-      title: widget.system == null ? 'RDWC anlegen' : 'RDWC bearbeiten',
+      title: widget.system == null ? _t['add_rdwc_system'] : _t['edit_rdwc_system'],
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : Form(
@@ -83,9 +84,9 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                   PlantryFormField(controller: _nameController, label: _t['system_name'], hint: 'z.B. Hauptzelt System', validator: (v) => v!.isEmpty ? _t['required_field'] : null),
                   const SizedBox(height: 16),
                   Row(children: [
-                    Expanded(child: PlantryFormField(controller: _capacityController, label: 'Kapazität (L)', keyboardType: TextInputType.number)),
+                    Expanded(child: PlantryFormField(controller: _capacityController, label: _t['max_capacity'], keyboardType: TextInputType.number)),
                     const SizedBox(width: 12),
-                    Expanded(child: PlantryFormField(controller: _bucketsController, label: 'Buckets', keyboardType: TextInputType.number)),
+                    Expanded(child: PlantryFormField(controller: _bucketsController, label: _t['bucket_count'], keyboardType: TextInputType.number)),
                   ]),
                   const SizedBox(height: 24),
                   
@@ -115,11 +116,11 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                   ]),
                   const SizedBox(height: 24),
 
-                  _section('Raumzuordnung'),
+                  _section(_t['add_grow_room_section']),
                   _roomDropdown(),
                   const SizedBox(height: 32),
 
-                  PlantryButton(label: _t['save'], onPressed: _save, fullWidth: true),
+                  PlantryButton(label: _t['save'], onPressed: _isSaving ? null : _save, fullWidth: true),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -148,6 +149,7 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
     try {
       final cap = double.tryParse(_capacityController.text) ?? 100;
       final bc = int.tryParse(_bucketsController.text) ?? 4;
@@ -163,6 +165,12 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
       Navigator.pop(context, true);
     } catch (e) {
       AppLogger.error('RDWC Form', 'Error saving system', e);
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_t['error_saving']), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 }

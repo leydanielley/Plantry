@@ -61,7 +61,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
         _plantRepo.findByRoom(widget.room.id!),
         _hardwareRepo.findActiveByRoom(widget.room.id!),
         _hardwareRepo.getTotalWattageByRoom(widget.room.id!),
-        if (widget.room.rdwcSystemId != null) _rdwcRepo.getSystemById(widget.room.rdwcSystemId!) else Future.value(null),
+        if (widget.room.rdwcSystemId != null)
+          _rdwcRepo.getSystemById(widget.room.rdwcSystemId!)
+        else
+          _rdwcRepo.getSystemsByRoom(widget.room.id!).then((list) => list.isNotEmpty ? list.first : null),
       ]);
       if (mounted) {
         setState(() {
