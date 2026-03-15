@@ -34,8 +34,8 @@ android {
         applicationId = "com.plantry.growlog"
         minSdk = flutter.minSdkVersion  // Android 5.0 Lollipop (2014) - Maximum device compatibility
         targetSdk = 35  // Android 15 - Required by Google Play Store (Nov 2024+)
-        versionCode = 1000
-        versionName = "1.2.0"
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
 
         // Support for ALL Android architectures (maximum device support)
         ndk {
