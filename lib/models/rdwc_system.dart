@@ -34,6 +34,9 @@ class RdwcSystem {
   final int? chillerWattage; // Chiller power consumption in watts
   final int? chillerCoolingPower; // Chiller cooling power in watts
   final String? accessories; // Additional equipment
+  // v42: EC target zone (optional, shown as horizontal band in analytics chart)
+  final double? ecWarningMin;
+  final double? ecWarningMax;
   final DateTime createdAt;
   final bool archived;
 
@@ -60,6 +63,8 @@ class RdwcSystem {
     int? chillerWattage,
     int? chillerCoolingPower,
     this.accessories,
+    this.ecWarningMin,
+    this.ecWarningMax,
     DateTime? createdAt,
     this.archived = false,
   }) : // ✅ AUDIT FIX: Use config constants for validation
@@ -103,6 +108,8 @@ class RdwcSystem {
       chillerWattage: map['chiller_wattage'] as int?,
       chillerCoolingPower: map['chiller_cooling_power'] as int?,
       accessories: map['accessories'] as String?,
+      ecWarningMin: (map['ec_warning_min'] as num?)?.toDouble(),
+      ecWarningMax: (map['ec_warning_max'] as num?)?.toDouble(),
       createdAt: SafeParsers.parseDateTime(
         map['created_at'] as String?,
         fallback: DateTime.now(),
@@ -136,6 +143,8 @@ class RdwcSystem {
       'chiller_wattage': chillerWattage,
       'chiller_cooling_power': chillerCoolingPower,
       'accessories': accessories,
+      'ec_warning_min': ecWarningMin,
+      'ec_warning_max': ecWarningMax,
       'created_at': createdAt.toIso8601String(),
       'archived': archived ? 1 : 0,
     };
@@ -165,6 +174,8 @@ class RdwcSystem {
     Object? chillerWattage = _undefined,
     Object? chillerCoolingPower = _undefined,
     Object? accessories = _undefined,
+    Object? ecWarningMin = _undefined,
+    Object? ecWarningMax = _undefined,
     DateTime? createdAt,
     bool? archived,
   }) {
@@ -218,6 +229,12 @@ class RdwcSystem {
       accessories: accessories == _undefined
           ? this.accessories
           : accessories as String?,
+      ecWarningMin: ecWarningMin == _undefined
+          ? this.ecWarningMin
+          : ecWarningMin as double?,
+      ecWarningMax: ecWarningMax == _undefined
+          ? this.ecWarningMax
+          : ecWarningMax as double?,
       createdAt: createdAt ?? this.createdAt,
       archived: archived ?? this.archived,
     );

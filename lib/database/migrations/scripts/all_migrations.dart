@@ -23,6 +23,7 @@ import 'package:growlog_app/database/migrations/scripts/migration_v38.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v39.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v40.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v41.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v42.dart';
 
 /// All migrations in chronological order
 ///
@@ -99,6 +100,9 @@ final List<Migration> allMigrations = [
 
   // v41: Add light_watts to rooms for g/W yield calculation
   migrationV41,
+
+  // v42: RDWC log_status (pending_measurement/complete) + ec_warning_min/max per system
+  migrationV42,
 ];
 
 /// Get the latest migration version

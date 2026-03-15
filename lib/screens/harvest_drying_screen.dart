@@ -64,9 +64,17 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
   Future<void> _startDrying() async {
     if (_harvest == null) return;
 
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: _harvest!.harvestDate,
+      lastDate: DateTime.now(),
+    );
+    if (date == null) return;
+
     try {
       final updated = _harvest!.copyWith(
-        dryingStartDate: DateTime.now(),
+        dryingStartDate: date,
         updatedAt: DateTime.now(),
       );
       await _harvestRepo.updateHarvest(updated);
@@ -85,100 +93,120 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
   Future<void> _endDrying() async {
     if (_harvest == null) return;
 
-    // ✅ Zeige Dialog zum Erfassen des Trockengewichts (Datum = heute)
-    final TextEditingController dryWeightController = TextEditingController();
+    final dryWeightController = TextEditingController();
+    DateTime selectedDate = DateTime.now();
 
     try {
-      final weight = await showDialog<double>(
+      final result = await showDialog<Map<String, dynamic>>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Row(
-            children: [
-              const Icon(Icons.scale, color: DT.success),
-              const SizedBox(width: 12),
-              Text(_t['end_drying_title']),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_harvest!.wetWeight != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: DT.secondary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.water_drop, color: DT.secondary, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Nassgewicht: ${_harvest!.wetWeight!.toStringAsFixed(1)}g',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: DT.secondary,
-                          fontWeight: FontWeight.w600,
-                        ),
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.scale, color: DT.success),
+                const SizedBox(width: 12),
+                Text(_t['end_drying_title']),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Date picker
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: _harvest!.dryingStartDate ?? _harvest!.harvestDate,
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) setDialogState(() => selectedDate = picked);
+                    },
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: _t['drying_end_date_label'],
+                        prefixIcon: const Icon(Icons.calendar_today, color: DT.success),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                    ],
+                      child: Text(
+                        DateFormat('dd.MM.yyyy').format(selectedDate),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
                   ),
-                ),
-              TextFormField(
-                controller: dryWeightController,
-                decoration: InputDecoration(
-                  labelText: _t['dry_weight_label'],
-                  hintText: 'z.B. 100',
-                  suffixText: 'g',
-                  prefixIcon: const Icon(Icons.grass),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 16),
+                  if (_harvest!.wetWeight != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: DT.secondary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.water_drop, color: DT.secondary, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Nassgewicht: ${_harvest!.wetWeight!.toStringAsFixed(1)}g',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: DT.secondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  TextFormField(
+                    controller: dryWeightController,
+                    decoration: InputDecoration(
+                      labelText: _t['dry_weight_label'],
+                      hintText: 'z.B. 100',
+                      suffixText: 'g',
+                      prefixIcon: const Icon(Icons.grass),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    autofocus: true,
                   ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(_t['cancel']),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final w = double.tryParse(dryWeightController.text);
+                  if (w != null && w > 0) {
+                    Navigator.pop(dialogContext, {'weight': w, 'date': selectedDate});
+                  } else {
+                    AppMessages.showSuccess(dialogContext, 'Bitte gültiges Gewicht eingeben');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: DT.accent,
+                  foregroundColor: DT.canvas,
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                autofocus: true,
+                child: Text(_t['finish']),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              // ✅ FIX: Use dialogContext instead of context for proper navigation
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(_t['cancel']),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final w = double.tryParse(dryWeightController.text);
-                if (w != null && w > 0) {
-                  // ✅ FIX: Use dialogContext instead of context
-                  Navigator.pop(dialogContext, w);
-                } else {
-                  AppMessages.showSuccess(
-                    dialogContext,
-                    'Bitte gültiges Gewicht eingeben',
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: DT.accent,
-                foregroundColor: DT.canvas,
-              ),
-              child: Text(_t['finish']),
-            ),
-          ],
         ),
       );
 
-      if (weight == null) return;
+      if (result == null) return;
 
-      // ✅ Datum automatisch auf heute setzen
       final updated = _harvest!.copyWith(
-        dryingEndDate: DateTime.now(),
-        dryWeight: weight,
+        dryingEndDate: result['date'] as DateTime,
+        dryWeight: result['weight'] as double,
         updatedAt: DateTime.now(),
       );
       await _harvestRepo.updateHarvest(updated);
@@ -192,7 +220,6 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
         AppMessages.showError(context, 'Fehler: $e');
       }
     } finally {
-      // ✅ FIX: Dispose controller to prevent memory leak
       dryWeightController.dispose();
     }
   }
@@ -282,7 +309,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
       status = 'In Trocknung';
       subtitle = 'Laufender Trocknungsprozess';
     } else {
-      color = DT.textTertiary;
+      color = DT.info;
       icon = Icons.schedule;
       status = _t['not_started'];
       subtitle = _t['ready_to_start'];

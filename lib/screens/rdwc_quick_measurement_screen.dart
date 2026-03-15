@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/models/rdwc_system.dart';
 import 'package:growlog_app/models/rdwc_log.dart';
@@ -37,8 +38,11 @@ class _RdwcQuickMeasurementScreenState
 
   late AppTranslations _t;
   late AppSettings _settings;
+  DateTime _logDate = DateTime.now();
   bool _isLoading = true;
   bool _isSaving = false;
+  RdwcLog? _pendingLog;
+  bool _useAsCompletion = false;
 
   @override
   void initState() {
@@ -53,14 +57,55 @@ class _RdwcQuickMeasurementScreenState
   }
 
   Future<void> _loadSettings() async {
-    final settings = await _settingsRepo.getSettings();
+    final results = await Future.wait([
+      _settingsRepo.getSettings(),
+      _rdwcRepo.getPendingLog(widget.system.id!),
+    ]);
     if (mounted) {
+      final settings = results[0] as AppSettings;
+      final pending = results[1] as RdwcLog?;
       setState(() {
         _settings = settings;
         _t = AppTranslations(settings.language);
+        _pendingLog = pending;
         _isLoading = false;
       });
+      if (pending != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _showPendingDialog(pending));
+      }
     }
+  }
+
+  void _showPendingDialog(RdwcLog pending) {
+    showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2C),
+        title: Row(
+          children: [
+            const Icon(Icons.schedule, color: Color(0xFFFF9800), size: 20),
+            const SizedBox(width: 8),
+            Text(_t['pending_addback_found'], style: const TextStyle(color: Colors.white, fontSize: 16)),
+          ],
+        ),
+        content: Text(
+          '${_t['addback_step1_summary']} ${DateFormat('dd.MM.yyyy HH:mm').format(pending.logDate)}.\n\n${_t['use_as_completion']}?',
+          style: const TextStyle(color: Colors.white70, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () { setState(() => _useAsCompletion = false); Navigator.pop(ctx, false); },
+            child: Text(_t['only_snapshot'], style: const TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () { setState(() => _useAsCompletion = true); Navigator.pop(ctx, true); },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF9800), foregroundColor: Colors.black),
+            child: Text(_t['use_as_completion'], style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -78,29 +123,31 @@ class _RdwcQuickMeasurementScreenState
     setState(() => _isSaving = true);
 
     try {
-      // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
       final level = double.tryParse(_levelController.text) ?? 0.0;
-      final ph = _phController.text.isNotEmpty
-          ? double.tryParse(_phController.text)
-          : null;
-      final ec = _ecController.text.isNotEmpty
-          ? double.tryParse(_ecController.text)
-          : null;
+      final ph = _phController.text.isNotEmpty ? double.tryParse(_phController.text) : null;
+      final ec = _ecController.text.isNotEmpty ? double.tryParse(_ecController.text) : null;
 
-      final log = RdwcLog(
-        systemId: widget.system.id!,
-        logType: RdwcLogType.measurement,
-        logDate: DateTime.now(),
-        levelAfter: level,
-        phAfter: ph,
-        ecAfter: ec,
-        note: _noteController.text.isNotEmpty ? _noteController.text : null,
-      );
-
-      await _rdwcRepo.createLog(log);
-
-      // Update system level
-      await _rdwcRepo.updateSystemLevel(widget.system.id!, level);
+      if (_useAsCompletion && _pendingLog != null) {
+        // Complete the pending addback with these measurements
+        await _rdwcRepo.completeLog(
+          _pendingLog!.id!,
+          ecAfter: ec ?? 0.0,
+          phAfter: ph ?? 0.0,
+          levelAfter: level,
+        );
+      } else {
+        final log = RdwcLog(
+          systemId: widget.system.id!,
+          logType: RdwcLogType.measurement,
+          logDate: _logDate,
+          levelAfter: level,
+          phAfter: ph,
+          ecAfter: ec,
+          note: _noteController.text.isNotEmpty ? _noteController.text : null,
+        );
+        await _rdwcRepo.createLog(log);
+        await _rdwcRepo.updateSystemLevel(widget.system.id!, level);
+      }
 
       if (mounted) {
         Navigator.of(context).pop(true);
@@ -166,6 +213,31 @@ class _RdwcQuickMeasurementScreenState
               ),
             ),
             const SizedBox(height: 24),
+
+            // Date picker
+            InkWell(
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _logDate,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime.now(),
+                );
+                if (picked != null) setState(() => _logDate = picked);
+              },
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: _t['date'],
+                  prefixIcon: const Icon(Icons.calendar_today, color: Colors.purple),
+                  border: const OutlineInputBorder(),
+                ),
+                child: Text(
+                  DateFormat('dd.MM.yyyy').format(_logDate),
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // Current Level
             TextFormField(

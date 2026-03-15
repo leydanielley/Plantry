@@ -286,7 +286,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           const SizedBox(width: 16),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             Text(_t['plants'].toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: DT.textSecondary, letterSpacing: 1)),
-                            Text('$_plantCount PFLANZEN', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: DT.textPrimary)),
+                            Text('$_plantCount ${_t['plants'].toUpperCase()}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: DT.textPrimary)),
                           ])),
                           const Icon(Icons.arrow_forward_ios, color: DT.textTertiary, size: 16),
                         ]),
@@ -313,12 +313,20 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 
                 if (expert) ...[
                   const SizedBox(height: 32),
-                  _anim(6, Text(_t['system_tools'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: DT.textTertiary, letterSpacing: 2))),
+                  _anim(6, const Text('RDWC', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: DT.textTertiary, letterSpacing: 2))),
                   const SizedBox(height: 16),
                   _anim(7, Row(children: [
                     Expanded(child: _GridTile(icon: 'assets/icons/rdwc_icon.png', label: 'RDWC', stat: _rdwcCount, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RdwcSystemsScreen())).then((_) => _loadData()))),
                     const SizedBox(width: 12),
+                    const Expanded(child: SizedBox()),
+                  ])),
+                  const SizedBox(height: 32),
+                  _anim(8, Text(_t['system_tools'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: DT.textTertiary, letterSpacing: 2))),
+                  const SizedBox(height: 16),
+                  _anim(9, Row(children: [
                     Expanded(child: _GridTile(iconWidget: const Icon(Icons.calculate_outlined, color: DT.warning, size: 40), label: _t['calculator_action'], onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NutrientCalculatorScreen())).then((_) => _loadData()))),
+                    const SizedBox(width: 12),
+                    const Expanded(child: SizedBox()),
                   ])),
                 ],
 

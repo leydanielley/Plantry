@@ -32,6 +32,13 @@ abstract class IRdwcRepository {
   Future<List<RdwcLog>> getLogsBySystem(int systemId, {int? limit});
   Future<List<RdwcLog>> getRecentLogs(int systemId, {int limit = 10});
   Future<RdwcLog?> getLatestLog(int systemId);
+  Future<RdwcLog?> getPendingLog(int systemId);
+  Future<void> completeLog(
+    int logId, {
+    required double ecAfter,
+    required double phAfter,
+    required double levelAfter,
+  });
   Future<int> createLog(RdwcLog log);
   Future<int> updateLog(RdwcLog log);
   Future<int> deleteLog(int logId);

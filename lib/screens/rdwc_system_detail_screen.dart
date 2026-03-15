@@ -13,6 +13,7 @@ import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/app_settings.dart';
 import 'package:growlog_app/utils/unit_converter.dart';
 import 'package:growlog_app/screens/rdwc_addback_form_screen.dart';
+import 'package:growlog_app/screens/rdwc_addback_complete_screen.dart';
 import 'package:growlog_app/screens/rdwc_system_form_screen.dart';
 import 'package:growlog_app/screens/rdwc_recipes_screen.dart';
 import 'package:growlog_app/screens/rdwc_analytics_screen.dart';
@@ -42,6 +43,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
   List<RdwcLog> _logs = [];
   List<Plant> _linkedPlants = [];
   double? _avgConsumption;
+  RdwcLog? _pendingLog;
   bool _isLoading = true;
   late AppSettings _settings;
   late AppTranslations _t;
@@ -61,6 +63,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
         _rdwcRepo.getConsumptionStats(_system.id!, days: 30),
         _rdwcRepo.getSystemById(_system.id!),
         _plantRepo.findByRdwcSystem(_system.id!),
+        _rdwcRepo.getPendingLog(_system.id!),
       ]);
 
       if (mounted) {
@@ -73,6 +76,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           _avgConsumption = avg > 0 ? avg : null;
           if (results[3] != null) _system = results[3] as RdwcSystem;
           _linkedPlants = results[4] as List<Plant>;
+          _pendingLog = results[5] as RdwcLog?;
           _isLoading = false;
         });
       }
@@ -117,6 +121,10 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_pendingLog != null) ...[
+                _buildPendingCard(),
+                const SizedBox(height: 16),
+              ],
               _buildLevelCard(),
               const SizedBox(height: 16),
               _buildStatsRow(),
@@ -133,6 +141,59 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPendingCard() {
+    final log = _pendingLog!;
+    return Container(
+      decoration: BoxDecoration(
+        color: DT.warning.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: DT.warning.withValues(alpha: 0.4)),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          const Icon(Icons.schedule, color: DT.warning, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _t['pending_hint_title'],
+                  style: const TextStyle(color: DT.warning, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${_t['addback_step1_summary']} ${DateFormat('dd.MM.yyyy HH:mm').format(log.logDate)}',
+                  style: const TextStyle(color: DT.textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () async {
+              final res = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RdwcAddbackCompleteScreen(system: _system, pendingLog: log),
+                ),
+              );
+              if (res == true) _loadData();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: DT.warning,
+              foregroundColor: DT.canvas,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text(_t['complete_now_btn'], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }

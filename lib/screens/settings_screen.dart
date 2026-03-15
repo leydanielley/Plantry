@@ -87,7 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(children: [
               _switch(_t['dark_mode'], _settings.isDarkMode, (v) => _update(_settings.copyWith(isDarkMode: v))),
               const Divider(height: 1, color: DT.border),
-              _switch('Experten Modus', _settings.isExpertMode, (v) => _update(_settings.copyWith(isExpertMode: v))),
+              _switch(_t['expert_mode'], _settings.isExpertMode, (v) => _update(_settings.copyWith(isExpertMode: v))),
             ]),
           ),
           const SizedBox(height: 24),
@@ -96,15 +96,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _section(_t['units_section']),
           PlantryCard(
             child: Column(children: [
-              _unitRow('Nährstoffe', _settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM', () => _update(_settings.copyWith(nutrientUnit: _settings.nutrientUnit == NutrientUnit.ec ? NutrientUnit.ppm : NutrientUnit.ec))),
+              _unitRow(_t['nutrients'], _settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM', () => _update(_settings.copyWith(nutrientUnit: _settings.nutrientUnit == NutrientUnit.ec ? NutrientUnit.ppm : NutrientUnit.ec))),
               if (_settings.nutrientUnit == NutrientUnit.ppm) ...[
                 const Divider(height: 1, color: DT.border),
-                _unitRow('PPM Skala', _settings.ppmScale.toString().split('.').last.replaceAll('scale', ''), _showPpmScaleDialog),
+                _unitRow(_t['ppm_scale'], _settings.ppmScale.toString().split('.').last.replaceAll('scale', ''), _showPpmScaleDialog),
               ],
               const Divider(height: 1, color: DT.border),
-              _unitRow('Temperatur', _settings.temperatureUnit == TemperatureUnit.celsius ? '°C' : '°F', () => _update(_settings.copyWith(temperatureUnit: _settings.temperatureUnit == TemperatureUnit.celsius ? TemperatureUnit.fahrenheit : TemperatureUnit.celsius))),
+              _unitRow(_t['temperature_unit'], _settings.temperatureUnit == TemperatureUnit.celsius ? '°C' : '°F', () => _update(_settings.copyWith(temperatureUnit: _settings.temperatureUnit == TemperatureUnit.celsius ? TemperatureUnit.fahrenheit : TemperatureUnit.celsius))),
               const Divider(height: 1, color: DT.border),
-              _unitRow('Volumen', _settings.volumeUnit == VolumeUnit.liter ? 'Liter' : 'Gallonen', () => _update(_settings.copyWith(volumeUnit: _settings.volumeUnit == VolumeUnit.liter ? VolumeUnit.gallon : VolumeUnit.liter))),
+              _unitRow(_t['volume_unit'], _settings.volumeUnit == VolumeUnit.liter ? _t['liter'] : _t['gallon'], () => _update(_settings.copyWith(volumeUnit: _settings.volumeUnit == VolumeUnit.liter ? VolumeUnit.gallon : VolumeUnit.liter))),
             ]),
           ),
           const SizedBox(height: 24),
@@ -113,9 +113,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _section(_t['backup_section']),
           PlantryCard(
             child: Column(children: [
-              _actionTile('Daten exportieren', Icons.upload_file, DT.accent, _exportData),
+              _actionTile(_t['export_data'], Icons.upload_file, DT.accent, _exportData),
               const Divider(height: 1, color: DT.border),
-              _actionTile('Daten importieren', Icons.download, DT.secondary, _importData),
+              _actionTile(_t['import_data'], Icons.download, DT.secondary, _importData),
             ]),
           ),
           const SizedBox(height: 24),
@@ -126,7 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(children: [
               _actionTile(_t['archive_section'], Icons.archive_outlined, DT.warning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ArchiveScreen()))),
               const Divider(height: 1, color: DT.border),
-              _actionTile('Datenbank zurücksetzen', Icons.delete_forever, DT.error, _showResetConfirmation),
+              _actionTile(_t['reset_database'], Icons.delete_forever, DT.error, _showResetConfirmation),
             ]),
           ),
           const SizedBox(height: 24),
@@ -200,7 +200,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: DT.elevated,
-        title: const Text('PPM Skala wählen', style: TextStyle(color: DT.textPrimary)),
+        title: Text(_t['ppm_scale_select'], style: const TextStyle(color: DT.textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -225,7 +225,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await _backupService.exportData();
       if (!mounted) return;
-      AppMessages.showSuccess(context, 'Export erfolgreich!');
+      AppMessages.showSuccess(context, _t['export_success']);
     } catch (e) {
       if (!mounted) return;
       AppMessages.showError(context, 'Fehler: $e');
@@ -238,7 +238,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (res != null && res.files.single.path != null) {
         await _backupService.importData(res.files.single.path!);
         if (!mounted) return;
-        AppMessages.showSuccess(context, 'Import erfolgreich!');
+        AppMessages.showSuccess(context, _t['import_success']);
       }
     } catch (e) {
       if (!mounted) return;
@@ -250,7 +250,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
       backgroundColor: DT.elevated,
       title: Text(_t['delete_all_title'], style: const TextStyle(color: DT.error)),
-      content: const Text('Dies löscht permanent alle Daten. Ein Backup wird automatisch erstellt.', style: TextStyle(color: DT.textSecondary)),
+      content: Text(_t['reset_confirm_message'], style: const TextStyle(color: DT.textSecondary)),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
         TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(_t['delete_all_btn'], style: const TextStyle(color: DT.error))),

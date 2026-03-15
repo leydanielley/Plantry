@@ -14,6 +14,7 @@ import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/screens/add_fertilizer_screen.dart';
 import 'package:growlog_app/screens/edit_fertilizer_screen.dart';
 import 'package:growlog_app/screens/fertilizer_dbf_import_screen.dart';
+import 'package:growlog_app/screens/rdwc_recipes_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/widgets/plantry_list_tile.dart';
@@ -143,6 +144,11 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
     return PlantryScaffold(
       title: _t['fertilizers'],
       actions: [
+        IconButton(
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RdwcRecipesScreen())),
+          icon: const Icon(Icons.menu_book, color: DT.textPrimary),
+          tooltip: _t['recipes'],
+        ),
         IconButton(
           onPressed: _pickAndImportDbf,
           icon: const Icon(Icons.upload_file, color: DT.textPrimary),

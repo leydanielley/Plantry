@@ -251,10 +251,17 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
   Future<void> _endCuring() async {
     if (_harvest == null) return;
 
-    // ✅ Einfach mit heutigem Datum beenden, keine Abfrage
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: _harvest!.curingStartDate ?? _harvest!.harvestDate,
+      lastDate: DateTime.now(),
+    );
+    if (date == null) return;
+
     try {
       final updated = _harvest!.copyWith(
-        curingEndDate: DateTime.now(),
+        curingEndDate: date,
         updatedAt: DateTime.now(),
       );
       await _harvestRepo.updateHarvest(updated);
@@ -358,7 +365,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
       status = 'In Curing';
       subtitle = 'Laufender Fermentations-Prozess';
     } else {
-      color = DT.textTertiary;
+      color = DT.info;
       icon = Icons.schedule;
       status = _t['not_started'];
       subtitle = _t['ready_to_start'];

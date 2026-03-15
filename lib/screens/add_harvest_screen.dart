@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/widgets/plantry_card.dart';
 import 'package:growlog_app/widgets/plantry_form_field.dart';
@@ -13,7 +14,10 @@ import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/screens/harvest_detail_screen.dart';
+import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/di/service_locator.dart';
 
 class AddHarvestScreen extends StatefulWidget {
@@ -26,17 +30,32 @@ class AddHarvestScreen extends StatefulWidget {
 
 class _AddHarvestScreenState extends State<AddHarvestScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   final _formKey = GlobalKey<FormState>();
 
   final _wetWeightController = TextEditingController();
   final _dryingMethodController = TextEditingController();
   final _notesController = TextEditingController();
+  DateTime _harvestDate = DateTime.now();
   bool _isLoading = false;
+  late AppTranslations _t = AppTranslations('de');
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_dryingMethodController.text.isEmpty) _dryingMethodController.text = 'Hängend';
+  void initState() {
+    super.initState();
+    _initTranslations();
+  }
+
+  Future<void> _initTranslations() async {
+    final settings = await _settingsRepo.getSettings();
+    if (mounted) {
+      setState(() {
+        _t = AppTranslations(settings.language);
+        if (_dryingMethodController.text.isEmpty) {
+          _dryingMethodController.text = _t['drying_method_hanging'];
+        }
+      });
+    }
   }
 
   @override
@@ -50,7 +69,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
   @override
   Widget build(BuildContext context) {
     return PlantryScaffold(
-      title: 'Ernte erfassen',
+      title: _t['harvest'],
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : Form(
@@ -60,15 +79,48 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                 children: [
                   _buildPlantCard(),
                   const SizedBox(height: 24),
-                  _section('Ernte-Daten'),
-                  PlantryFormField(controller: _wetWeightController, label: 'Nassgewicht (g)', keyboardType: TextInputType.number, prefixIcon: const Icon(Icons.scale, color: DT.accent, size: 20)),
+                  _section(_t['edit_harvest_tab_basic']),
+                  // Harvest Date Picker
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _harvestDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) setState(() => _harvestDate = picked);
+                    },
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: _t['harvest_date_label'],
+                        prefixIcon: const Icon(Icons.calendar_today, color: DT.accent, size: 20),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        DateFormat('dd.MM.yyyy').format(_harvestDate),
+                        style: const TextStyle(fontSize: 16, color: DT.textPrimary),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _dryingMethodController, label: 'Trocknungs-Methode', hint: 'z.B. Hängend, Netz'),
+                  PlantryFormField(
+                    controller: _wetWeightController,
+                    label: _t['edit_harvest_wet_weight_label'],
+                    keyboardType: TextInputType.number,
+                    prefixIcon: const Icon(Icons.scale, color: DT.accent, size: 20),
+                  ),
+                  const SizedBox(height: 16),
+                  PlantryFormField(
+                    controller: _dryingMethodController,
+                    label: _t['edit_harvest_drying_method_label'],
+                    hint: _t['edit_harvest_drying_method_hint'],
+                  ),
                   const SizedBox(height: 24),
-                  _section('Zusätzliches'),
-                  PlantryFormField(controller: _notesController, label: 'Notizen', maxLines: 3),
+                  _section(_t['notes']),
+                  PlantryFormField(controller: _notesController, label: _t['notes'], maxLines: 3),
                   const SizedBox(height: 32),
-                  PlantryButton(label: 'Ernte speichern', onPressed: _save, fullWidth: true),
+                  PlantryButton(label: _t['save'], onPressed: _save, fullWidth: true),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -91,7 +143,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(widget.plant.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: DT.textPrimary)),
-                Text(widget.plant.strain ?? 'Unbekannter Strain', style: const TextStyle(fontSize: 13, color: DT.textSecondary)),
+                Text(widget.plant.strain ?? _t['unknown_strain'], style: const TextStyle(fontSize: 13, color: DT.textSecondary)),
               ],
             ),
           ),
@@ -100,7 +152,10 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
+  );
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
@@ -108,16 +163,17 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
     try {
       final h = Harvest(
         plantId: widget.plant.id!,
-        harvestDate: DateTime.now(),
+        harvestDate: _harvestDate,
         wetWeight: double.tryParse(_wetWeightController.text),
-        dryingStartDate: DateTime.now(),
+        dryingStartDate: _harvestDate,
         dryingMethod: _dryingMethodController.text,
         overallNotes: _notesController.text,
       );
       final id = await _harvestRepo.createHarvest(h);
-      await getIt<IPlantRepository>().update(widget.plant.copyWith(phase: PlantPhase.harvest, phaseStartDate: DateTime.now()));
-      
+      await getIt<IPlantRepository>().update(widget.plant.copyWith(phase: PlantPhase.harvest, phaseStartDate: _harvestDate));
+
       if (mounted) {
+        AppMessages.showSuccess(context, _t['harvest_created_msg']);
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => HarvestDetailScreen(harvestId: id)),
           (r) => r.isFirst,

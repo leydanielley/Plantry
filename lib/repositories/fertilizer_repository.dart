@@ -87,15 +87,13 @@ class FertilizerRepository
     );
   }
 
-  /// Prüft ob Dünger in Verwendung ist (Rezepte, Logs, etc.)
-  /// ✅ PHASE 2: Uses standardized error handling (returns false on error)
+  /// Prüft ob Dünger in aktiven Rezepten verwendet wird.
+  /// Historische Logs blockieren das Löschen NICHT — nur Rezepte.
   @override
   Future<bool> isInUse(int id) async {
     return handleQuery(
       operation: () async {
         final db = await _dbHelper.database;
-
-        // Check RDWC recipes
         final recipeCount =
             Sqflite.firstIntValue(
               await db.rawQuery(
@@ -104,28 +102,7 @@ class FertilizerRepository
               ),
             ) ??
             0;
-
-        // Check RDWC logs
-        final rdwcLogCount =
-            Sqflite.firstIntValue(
-              await db.rawQuery(
-                'SELECT COUNT(*) FROM rdwc_log_fertilizers WHERE fertilizer_id = ?',
-                [id],
-              ),
-            ) ??
-            0;
-
-        // Check plant logs
-        final plantLogCount =
-            Sqflite.firstIntValue(
-              await db.rawQuery(
-                'SELECT COUNT(*) FROM log_fertilizers WHERE fertilizer_id = ?',
-                [id],
-              ),
-            ) ??
-            0;
-
-        return (recipeCount + rdwcLogCount + plantLogCount) > 0;
+        return recipeCount > 0;
       },
       operationName: 'isInUse',
       defaultValue: false,
@@ -166,47 +143,38 @@ class FertilizerRepository
     };
   }
 
-  /// Dünger löschen
-  /// ✅ FIX v11: Check if fertilizer is in use before deleting
-  /// ✅ PHASE 2: Uses standardized error handling (rethrows on error)
-  /// Throws an exception with helpful message if fertilizer is still referenced
+  /// Dünger löschen.
+  /// Blockiert wenn der Dünger noch in aktiven Rezepten verwendet wird.
+  /// Historische Log-Verknüpfungen (rdwc_log_fertilizers, log_fertilizers)
+  /// werden automatisch mitgelöscht — die Logs selbst bleiben erhalten.
   @override
   Future<int> delete(int id) async {
     return handleMutation(
       operation: () async {
         final db = await _dbHelper.database;
 
-        // Check if fertilizer is in use
-        final usageDetails = await getUsageDetails(id);
-        final totalUsage = usageDetails.values.reduce((a, b) => a + b);
+        // Only recipes hard-block deletion
+        final recipeCount =
+            Sqflite.firstIntValue(
+              await db.rawQuery(
+                'SELECT COUNT(*) FROM rdwc_recipe_fertilizers WHERE fertilizer_id = ?',
+                [id],
+              ),
+            ) ??
+            0;
 
-        if (totalUsage > 0) {
-          // Build helpful error message
-          final parts = <String>[];
-          if (usageDetails['recipes']! > 0) {
-            parts.add(
-              '${usageDetails['recipes']} Rezept${usageDetails['recipes']! > 1 ? 'en' : ''}',
-            );
-          }
-          if (usageDetails['rdwc_logs']! > 0) {
-            parts.add(
-              '${usageDetails['rdwc_logs']} RDWC-Log${usageDetails['rdwc_logs']! > 1 ? 's' : ''}',
-            );
-          }
-          if (usageDetails['plant_logs']! > 0) {
-            parts.add(
-              '${usageDetails['plant_logs']} Pflanzen-Log${usageDetails['plant_logs']! > 1 ? 's' : ''}',
-            );
-          }
-
+        if (recipeCount > 0) {
           throw RepositoryException.conflict(
             'Dünger kann nicht gelöscht werden. '
-            'Er wird noch in ${parts.join(', ')} verwendet. '
-            'Bitte entfernen Sie zuerst alle Verwendungen.',
+            'Er wird noch in $recipeCount Rezept${recipeCount > 1 ? 'en' : ''} verwendet. '
+            'Bitte zuerst aus den Rezepten entfernen.',
           );
         }
 
-        // Safe to delete
+        // Clean up historical log references (logs themselves remain intact)
+        await db.delete('rdwc_log_fertilizers', where: 'fertilizer_id = ?', whereArgs: [id]);
+        await db.delete('log_fertilizers', where: 'fertilizer_id = ?', whereArgs: [id]);
+
         return await db.delete('fertilizers', where: 'id = ?', whereArgs: [id]);
       },
       operationName: 'delete',

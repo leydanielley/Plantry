@@ -15,6 +15,7 @@ import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/widgets/rdwc/stats_card.dart';
 import 'package:growlog_app/widgets/rdwc/consumption_chart.dart';
 import 'package:growlog_app/widgets/rdwc/drift_chart.dart';
+import 'package:growlog_app/widgets/rdwc/ec_trend_chart.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
 
@@ -288,11 +289,78 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
         .map((log) => DriftDataPoint(date: log.logDate, value: log.ecDrift!))
         .toList();
 
+    // EC trend data — only complete logs with ecAfter, sorted ascending
+    final ecTrendLogs = _logs
+        .where((l) => !l.isPending && l.ecAfter != null)
+        .toList()
+      ..sort((a, b) => a.logDate.compareTo(b.logDate));
+
+    // Warning: EC > ecWarningMax
+    final latestEc = ecTrendLogs.isNotEmpty ? ecTrendLogs.last.ecAfter! : null;
+    final ecOverMax = latestEc != null &&
+        widget.system.ecWarningMax != null &&
+        latestEc > widget.system.ecWarningMax!;
+
+    // Warning: EC rising > 0.3 in last 3 days
+    bool ecRising = false;
+    if (ecTrendLogs.length >= 2) {
+      final cutoff = DateTime.now().subtract(const Duration(days: 3));
+      final recent = ecTrendLogs.where((l) => l.logDate.isAfter(cutoff)).toList();
+      if (recent.length >= 2) {
+        final delta = recent.last.ecAfter! - recent.first.ecAfter!;
+        ecRising = delta > 0.3;
+      }
+    }
+
+    // Fullchange events in trend logs
+    final hasFullchange = ecTrendLogs.any((l) => l.logType == RdwcLogType.fullChange);
+
     return RefreshIndicator(
       onRefresh: _loadData,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Warning banners
+          if (ecOverMax) ...[
+            _warningBanner(Icons.warning_amber_rounded, _t['ec_over_max_warning'], DT.error),
+            const SizedBox(height: 8),
+          ],
+          if (ecRising) ...[
+            _warningBanner(Icons.trending_up, _t['ec_rising_warning'], DT.warning),
+            const SizedBox(height: 8),
+          ],
+          if (hasFullchange) ...[
+            _warningBanner(Icons.sync, _t['new_phase_after_fullchange'], DT.secondary),
+            const SizedBox(height: 8),
+          ],
+          if (ecOverMax || ecRising || hasFullchange) const SizedBox(height: 8),
+
+          // EC Trend Chart
+          Card(
+            color: DT.surface,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'EC ${_t['over_time']}',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: DT.textPrimary,
+                    ),
+                  ),
+                  EcTrendChart(
+                    logs: ecTrendLogs,
+                    ecMin: widget.system.ecWarningMin,
+                    ecMax: widget.system.ecWarningMax,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
           // Stats cards
           Row(
             children: [
@@ -446,6 +514,24 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _warningBanner(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500))),
         ],
       ),
     );

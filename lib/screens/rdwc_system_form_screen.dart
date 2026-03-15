@@ -33,6 +33,8 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
   late TextEditingController _nameController;
   late TextEditingController _capacityController;
   late TextEditingController _bucketsController;
+  late TextEditingController _ecMinController;
+  late TextEditingController _ecMaxController;
   
   late AppTranslations _t;
   List<Room> _rooms = [];
@@ -45,6 +47,8 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
     _nameController = TextEditingController(text: widget.system?.name ?? '');
     _capacityController = TextEditingController(text: widget.system?.maxCapacity.toString() ?? '100');
     _bucketsController = TextEditingController(text: widget.system?.bucketCount.toString() ?? '4');
+    _ecMinController = TextEditingController(text: widget.system?.ecWarningMin?.toString() ?? '');
+    _ecMaxController = TextEditingController(text: widget.system?.ecWarningMax?.toString() ?? '');
     _selectedRoomId = widget.system?.roomId;
     _loadData();
   }
@@ -60,6 +64,8 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
     _nameController.dispose();
     _capacityController.dispose();
     _bucketsController.dispose();
+    _ecMinController.dispose();
+    _ecMaxController.dispose();
     super.dispose();
   }
 
@@ -83,6 +89,32 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                   ]),
                   const SizedBox(height: 24),
                   
+                  _section(_t['ec_target_hint']),
+                  Row(children: [
+                    Expanded(child: PlantryFormField(
+                      controller: _ecMinController,
+                      label: _t['ec_target_min'],
+                      hint: 'z.B. 1.4',
+                      keyboardType: TextInputType.number,
+                      validator: (v) {
+                        if (v != null && v.isNotEmpty && double.tryParse(v) == null) return _t['invalid_number'];
+                        return null;
+                      },
+                    )),
+                    const SizedBox(width: 12),
+                    Expanded(child: PlantryFormField(
+                      controller: _ecMaxController,
+                      label: _t['ec_target_max'],
+                      hint: 'z.B. 2.0',
+                      keyboardType: TextInputType.number,
+                      validator: (v) {
+                        if (v != null && v.isNotEmpty && double.tryParse(v) == null) return _t['invalid_number'];
+                        return null;
+                      },
+                    )),
+                  ]),
+                  const SizedBox(height: 24),
+
                   _section('Raumzuordnung'),
                   _roomDropdown(),
                   const SizedBox(height: 32),
@@ -119,11 +151,13 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
     try {
       final cap = double.tryParse(_capacityController.text) ?? 100;
       final bc = int.tryParse(_bucketsController.text) ?? 4;
-      
+      final ecMin = _ecMinController.text.isNotEmpty ? double.tryParse(_ecMinController.text) : null;
+      final ecMax = _ecMaxController.text.isNotEmpty ? double.tryParse(_ecMaxController.text) : null;
+
       if (widget.system == null) {
-        await _rdwcRepo.createSystem(RdwcSystem(name: _nameController.text, maxCapacity: cap, currentLevel: cap, bucketCount: bc, roomId: _selectedRoomId));
+        await _rdwcRepo.createSystem(RdwcSystem(name: _nameController.text, maxCapacity: cap, currentLevel: cap, bucketCount: bc, roomId: _selectedRoomId, ecWarningMin: ecMin, ecWarningMax: ecMax));
       } else {
-        await _rdwcRepo.updateSystem(widget.system!.copyWith(name: _nameController.text, maxCapacity: cap, bucketCount: bc, roomId: _selectedRoomId));
+        await _rdwcRepo.updateSystem(widget.system!.copyWith(name: _nameController.text, maxCapacity: cap, bucketCount: bc, roomId: _selectedRoomId, ecWarningMin: ecMin, ecWarningMax: ecMax));
       }
       if (!mounted) return;
       Navigator.pop(context, true);

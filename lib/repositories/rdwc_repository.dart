@@ -488,6 +488,97 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
     }
   }
 
+  /// Get pending (step 1) addback log for a system, if one exists.
+  /// Returns null if no pending log found.
+  @override
+  Future<RdwcLog?> getPendingLog(int systemId) async {
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'rdwc_logs',
+        where: "system_id = ? AND log_status = 'pending_measurement' AND archived = 0",
+        whereArgs: [systemId],
+        orderBy: 'log_date DESC',
+        limit: 1,
+      );
+      if (maps.isEmpty) return null;
+      return RdwcLog.fromMap(maps.first);
+    } catch (e) {
+      AppLogger.error('RdwcRepository', 'Error loading pending log', e);
+      return null;
+    }
+  }
+
+  /// Complete a pending addback log (Step 2).
+  /// Sets ecAfter/phAfter/levelAfter, calculates waterConsumed,
+  /// updates log_status to 'complete', and updates system currentLevel.
+  @override
+  Future<void> completeLog(
+    int logId, {
+    required double ecAfter,
+    required double phAfter,
+    required double levelAfter,
+  }) async {
+    try {
+      final db = await _dbHelper.database;
+
+      await db.transaction((txn) async {
+        // Load existing log to get levelBefore + waterAdded for consumption calc
+        final rows = await txn.query(
+          'rdwc_logs',
+          columns: ['system_id', 'level_before', 'water_added'],
+          where: 'id = ?',
+          whereArgs: [logId],
+          limit: 1,
+        );
+        if (rows.isEmpty) throw Exception('Log $logId not found');
+
+        final row = rows.first;
+        final systemId = row['system_id'] as int;
+        final levelBefore = (row['level_before'] as num?)?.toDouble();
+        final waterAdded = (row['water_added'] as num?)?.toDouble();
+
+        // waterConsumed = (levelBefore + waterAdded) - levelAfter
+        double? waterConsumed;
+        if (levelBefore != null && waterAdded != null) {
+          waterConsumed = (levelBefore + waterAdded) - levelAfter;
+          if (waterConsumed < 0) waterConsumed = 0;
+        }
+
+        // Update log
+        await txn.update(
+          'rdwc_logs',
+          {
+            'ec_after': ecAfter,
+            'ph_after': phAfter,
+            'level_after': levelAfter,
+            'water_consumed': waterConsumed,
+            'log_status': 'complete',
+          },
+          where: 'id = ?',
+          whereArgs: [logId],
+        );
+
+        // Update system currentLevel
+        await txn.update(
+          'rdwc_systems',
+          {'current_level': levelAfter},
+          where: 'id = ?',
+          whereArgs: [systemId],
+        );
+
+        AppLogger.info(
+          'RdwcRepository',
+          'Completed pending log',
+          'ID: $logId, consumed: ${waterConsumed?.toStringAsFixed(1)} L',
+        );
+      });
+    } catch (e) {
+      AppLogger.error('RdwcRepository', 'Error completing pending log', e);
+      rethrow;
+    }
+  }
+
   /// Create new RDWC log and update system level
   /// ✅ FIX v11: Use transaction for atomic operation
   @override
@@ -500,8 +591,9 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         final logId = await txn.insert('rdwc_logs', log.toMap());
         AppLogger.info('RdwcRepository', 'Created RDWC log', 'ID: $logId');
 
-        // 2. Update system level if levelAfter is provided
-        if (log.levelAfter != null) {
+        // 2. Update system level only for complete logs (pending_measurement
+        //    logs don't have a confirmed levelAfter yet)
+        if (log.levelAfter != null && log.logStatus == 'complete') {
           await txn.update(
             'rdwc_systems',
             {'current_level': log.levelAfter},
@@ -1255,7 +1347,14 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
     try {
       final db = await _dbHelper.database;
 
-      // Fertilizers will be deleted automatically (ON DELETE CASCADE)
+      // Explicitly delete junction rows first (don't rely solely on CASCADE,
+      // as older DB instances may have orphaned rows)
+      await db.delete(
+        'rdwc_recipe_fertilizers',
+        where: 'recipe_id = ?',
+        whereArgs: [recipeId],
+      );
+
       final count = await db.delete(
         'rdwc_recipes',
         where: 'id = ?',

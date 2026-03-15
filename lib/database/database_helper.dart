@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            41, // v41: Add light_watts to rooms for g/W yield calculation
+            42, // v42: RDWC log_status + ec_warning_min/max per system
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -811,6 +811,8 @@ class DatabaseHelper {
         chiller_wattage INTEGER,
         chiller_cooling_power INTEGER,
         accessories TEXT,
+        ec_warning_min REAL,
+        ec_warning_max REAL,
         created_at TEXT DEFAULT (datetime('now')),
         archived INTEGER DEFAULT 0,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL,
@@ -827,7 +829,7 @@ class DatabaseHelper {
       'CREATE INDEX IF NOT EXISTS idx_rdwc_systems_archived ON rdwc_systems(archived)',
     );
 
-    // RDWC Logs Table (Water Addback Tracking, v15: NOT NULL archived)
+    // RDWC Logs Table (Water Addback Tracking, v15: NOT NULL archived, v42: log_status)
     await db.execute('''
       CREATE TABLE IF NOT EXISTS rdwc_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -844,6 +846,7 @@ class DatabaseHelper {
         ec_after REAL,
         note TEXT,
         logged_by TEXT,
+        log_status TEXT NOT NULL DEFAULT 'complete',
         archived INTEGER NOT NULL DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (system_id) REFERENCES rdwc_systems(id) ON DELETE RESTRICT

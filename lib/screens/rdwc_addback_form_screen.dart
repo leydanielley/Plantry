@@ -192,6 +192,11 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
     super.dispose();
   }
 
+  /// True only when editing an already-completed addback log.
+  /// New addbacks and pending logs use the two-step flow.
+  bool get _isEditingCompleteLog =>
+      widget.existingLog != null && !widget.existingLog!.isPending;
+
   void _calculateLevelAfter() {
     if (!_autoCalculate) return;
 
@@ -326,11 +331,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
           break;
 
         case RdwcLogType.addback:
-          // Water addback with fertilizers
           await _saveAddback();
-          successMessage = isEditing
+          successMessage = _isEditingCompleteLog
               ? 'Addback updated!'
-              : 'Addback logged successfully!';
+              : _t['addback_saved_pending'];
           break;
       }
 
@@ -381,46 +385,59 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
     return log;
   }
 
-  /// Save addback log (existing logic)
+  /// Save addback log.
+  /// New addbacks → Step 1 only (pending_measurement), no after-values.
+  /// Editing a complete log → full data saved immediately.
   Future<RdwcLog> _saveAddback() async {
     final levelBefore = double.tryParse(_levelBeforeController.text);
     final waterAdded = double.tryParse(_waterAddedController.text);
-    final levelAfter = double.tryParse(_levelAfterController.text);
     final phBefore = double.tryParse(_phBeforeController.text);
     final ecBefore = double.tryParse(_ecBeforeController.text);
-    final phAfter = double.tryParse(_phAfterController.text);
-    final ecAfter = double.tryParse(_ecAfterController.text);
     final note = _noteController.text.trim();
 
-    // Calculate water consumed
-    // ✅ FIX: Correct formula: consumed = (before + added) - after
-    double? waterConsumed;
-    if (levelBefore != null && levelAfter != null && waterAdded != null) {
-      waterConsumed = (levelBefore + waterAdded) - levelAfter;
-      // Ensure positive value (data validation issue if negative)
-      if (waterConsumed < 0) waterConsumed = 0;
+    if (_isEditingCompleteLog) {
+      // Editing a complete log: save all fields including after-values
+      final levelAfter = double.tryParse(_levelAfterController.text);
+      final phAfter = double.tryParse(_phAfterController.text);
+      final ecAfter = double.tryParse(_ecAfterController.text);
+      double? waterConsumed;
+      if (levelBefore != null && levelAfter != null && waterAdded != null) {
+        waterConsumed = (levelBefore + waterAdded) - levelAfter;
+        if (waterConsumed < 0) waterConsumed = 0;
+      }
+      final log = RdwcLog(
+        systemId: widget.system.id!,
+        logType: RdwcLogType.addback,
+        levelBefore: levelBefore,
+        waterAdded: waterAdded,
+        levelAfter: levelAfter,
+        waterConsumed: waterConsumed,
+        phBefore: phBefore,
+        ecBefore: ecBefore,
+        phAfter: phAfter,
+        ecAfter: ecAfter,
+        note: note.isNotEmpty ? note : null,
+        logStatus: 'complete',
+      );
+      final logId = await _saveOrUpdateLog(log);
+      await _saveFertilizers(logId);
+      return log;
+    } else {
+      // Step 1: Save as pending — after-values will be entered ~1h later
+      final log = RdwcLog(
+        systemId: widget.system.id!,
+        logType: RdwcLogType.addback,
+        levelBefore: levelBefore,
+        waterAdded: waterAdded,
+        phBefore: phBefore,
+        ecBefore: ecBefore,
+        note: note.isNotEmpty ? note : null,
+        logStatus: 'pending_measurement',
+      );
+      final logId = await _saveOrUpdateLog(log);
+      await _saveFertilizers(logId);
+      return log;
     }
-
-    final log = RdwcLog(
-      systemId: widget.system.id!,
-      logType: RdwcLogType.addback,
-      levelBefore: levelBefore,
-      waterAdded: waterAdded,
-      levelAfter: levelAfter,
-      waterConsumed: waterConsumed,
-      phBefore: phBefore,
-      ecBefore: ecBefore,
-      phAfter: phAfter,
-      ecAfter: ecAfter,
-      note: note.isNotEmpty ? note : null,
-    );
-
-    final logId = await _saveOrUpdateLog(log);
-
-    // Save fertilizers if any were added
-    await _saveFertilizers(logId);
-
-    return log;
   }
 
   /// Save full change log
@@ -1163,28 +1180,31 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         onChanged: (_) => _calculateLevelAfter(),
       ),
-      const SizedBox(height: 12),
-      TextFormField(
-        controller: _levelAfterController,
-        decoration: InputDecoration(
-          labelText: _t['level_after'],
-          border: const OutlineInputBorder(),
-          prefixIcon: const Icon(Icons.water_drop),
-          suffixText: UnitConverter.getVolumeUnitSuffix(_settings.volumeUnit),
+      // Level after: only needed when editing a complete log
+      if (_isEditingCompleteLog) ...[
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _levelAfterController,
+          decoration: InputDecoration(
+            labelText: _t['level_after'],
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.water_drop),
+            suffixText: UnitConverter.getVolumeUnitSuffix(_settings.volumeUnit),
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Level after is required';
+            }
+            final number = double.tryParse(value);
+            if (number == null) return 'Invalid number';
+            if (number > widget.system.maxCapacity) {
+              return 'Cannot exceed max capacity';
+            }
+            return null;
+          },
         ),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) {
-            return 'Level after is required';
-          }
-          final number = double.tryParse(value);
-          if (number == null) return 'Invalid number';
-          if (number > widget.system.maxCapacity) {
-            return 'Cannot exceed max capacity';
-          }
-          return null;
-        },
-      ),
+      ],
       const SizedBox(height: 16),
       Text(
         'pH / EC',
@@ -1228,42 +1248,68 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
           ),
         ],
       ),
-      const SizedBox(height: 12),
-      Row(
-        children: [
-          Expanded(
-            child: TextFormField(
-              controller: _phAfterController,
-              decoration: InputDecoration(
-                labelText: 'pH ${_t['level_after']}',
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.science),
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextFormField(
-              controller: _ecAfterController,
-              decoration: InputDecoration(
-                labelText:
-                    '${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'} ${_t['level_after']}',
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.science),
-                suffixText: _settings.nutrientUnit == NutrientUnit.ec
-                    ? 'mS/cm'
-                    : 'PPM',
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+      // After-values only when editing a complete log
+      if (_isEditingCompleteLog) ...[
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _phAfterController,
+                decoration: InputDecoration(
+                  labelText: 'pH ${_t['level_after']}',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.science),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
               ),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: _ecAfterController,
+                decoration: InputDecoration(
+                  labelText:
+                      '${_settings.nutrientUnit == NutrientUnit.ec ? 'EC' : 'PPM'} ${_t['level_after']}',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.science),
+                  suffixText: _settings.nutrientUnit == NutrientUnit.ec
+                      ? 'mS/cm'
+                      : 'PPM',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ] else ...[
+        // Hint: follow-up measurement will be added later
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: DT.warning.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: DT.warning.withValues(alpha: 0.4)),
           ),
-        ],
-      ),
+          child: Row(
+            children: [
+              const Icon(Icons.schedule, color: DT.warning, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _t['addback_pending_hint'],
+                  style: const TextStyle(fontSize: 13, color: DT.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     ];
   }
 

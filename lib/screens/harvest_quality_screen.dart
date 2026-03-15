@@ -134,7 +134,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
   }
 
   Widget _buildStatusCard(bool isComplete) {
-    final Color color = isComplete ? DT.success : DT.textTertiary;
+    final Color color = isComplete ? DT.success : DT.info;
     final IconData icon = isComplete ? Icons.check_circle : Icons.pending;
     final String status = isComplete ? 'Daten erfasst' : 'Offen';
     final String subtitle = isComplete

@@ -38,6 +38,9 @@ class RdwcLog {
   final String? loggedBy;
   final DateTime createdAt;
 
+  // v42: Two-step addback status
+  final String logStatus; // 'complete' | 'pending_measurement'
+
   // v8: Fertilizers added in this log (loaded separately)
   final List<RdwcLogFertilizer>? fertilizers;
 
@@ -58,6 +61,7 @@ class RdwcLog {
     this.loggedBy,
     DateTime? createdAt,
     this.fertilizers,
+    this.logStatus = 'complete',
   }) : logDate = logDate ?? DateTime.now(),
        createdAt = createdAt ?? DateTime.now();
 
@@ -111,6 +115,7 @@ class RdwcLog {
         fallback: DateTime.now(),
         context: 'RdwcLog.fromMap.createdAt',
       ),
+      logStatus: map['log_status'] as String? ?? 'complete',
     );
   }
 
@@ -148,6 +153,7 @@ class RdwcLog {
       'ec_after': ecAfter,
       'note': note,
       'logged_by': loggedBy,
+      'log_status': logStatus,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -171,6 +177,7 @@ class RdwcLog {
     Object? loggedBy = _undefined,
     DateTime? createdAt,
     Object? fertilizers = _undefined,
+    String? logStatus,
   }) {
     return RdwcLog(
       id: id ?? this.id,
@@ -199,8 +206,12 @@ class RdwcLog {
       fertilizers: fertilizers == _undefined
           ? this.fertilizers
           : fertilizers as List<RdwcLogFertilizer>?,
+      logStatus: logStatus ?? this.logStatus,
     );
   }
+
+  /// True if this addback is awaiting follow-up measurement
+  bool get isPending => logStatus == 'pending_measurement';
 
   /// Calculate EC drift (increase or decrease)
   double? get ecDrift {
