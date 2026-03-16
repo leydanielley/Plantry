@@ -9,6 +9,7 @@ import 'package:growlog_app/models/rdwc_system.dart';
 import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/widgets/plantry_form_field.dart';
 import 'package:growlog_app/widgets/plantry_button.dart';
@@ -82,7 +83,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
   @override
   Widget build(BuildContext context) {
     return PlantryScaffold(
-      title: 'Raum bearbeiten',
+      title: _t['edit_room_title'],
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : Form(
@@ -90,36 +91,36 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  PlantryFormField(controller: _nameController, label: 'Name', validator: (v) => v!.isEmpty ? 'Pflichtfeld' : null),
+                  PlantryFormField(controller: _nameController, label: _t['add_room_name_label'], validator: (v) => v!.isEmpty ? _t['error_field_required'] : null),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _descController, label: 'Beschreibung', maxLines: 2),
+                  PlantryFormField(controller: _descController, label: _t['add_room_description_label'], maxLines: 2),
                   const SizedBox(height: 24),
 
-                  _section('Setup'),
-                  _dropdown<GrowType>('Umgebung', _growType ?? GrowType.indoor, GrowType.values, (v) => setState(() => _growType = v)),
+                  _section(_t['room_section_setup']),
+                  _dropdown<GrowType>(_t['room_label_environment'], _growType ?? GrowType.indoor, GrowType.values, (v) => setState(() => _growType = v)),
                   const SizedBox(height: 16),
-                  _dropdown<WateringSystem>('Bewässerung', _wateringSystem ?? WateringSystem.manual, WateringSystem.values, (v) => setState(() => _wateringSystem = v)),
+                  _dropdown<WateringSystem>(_t['room_label_watering'], _wateringSystem ?? WateringSystem.manual, WateringSystem.values, (v) => setState(() => _wateringSystem = v)),
                   const SizedBox(height: 16),
                   if (_wateringSystem == WateringSystem.rdwc) ...[_rdwcDropdown(), const SizedBox(height: 16)],
 
-                  _section('Maße (in cm)'),
+                  _section(_t['room_section_dimensions']),
                   Row(children: [
-                    Expanded(child: PlantryFormField(controller: _widthController, label: 'Breite', keyboardType: TextInputType.number)),
+                    Expanded(child: PlantryFormField(controller: _widthController, label: _t['room_label_width'], keyboardType: TextInputType.number)),
                     const SizedBox(width: 12),
-                    Expanded(child: PlantryFormField(controller: _depthController, label: 'Tiefe', keyboardType: TextInputType.number)),
+                    Expanded(child: PlantryFormField(controller: _depthController, label: _t['room_label_depth'], keyboardType: TextInputType.number)),
                     const SizedBox(width: 12),
-                    Expanded(child: PlantryFormField(controller: _heightController, label: 'Höhe', keyboardType: TextInputType.number)),
+                    Expanded(child: PlantryFormField(controller: _heightController, label: _t['room_label_height'], keyboardType: TextInputType.number)),
                   ]),
                   const SizedBox(height: 16),
                   PlantryFormField(
                     controller: _wattsController,
                     label: _t['light_watts'],
-                    hint: 'z.B. 600',
+                    hint: _t['room_hint_watts'],
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 32),
 
-                  PlantryButton(label: 'Änderungen speichern', onPressed: _save, fullWidth: true),
+                  PlantryButton(label: _t['save_changes'], onPressed: _save, fullWidth: true),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -164,7 +165,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
         child: DropdownButton<int?>(
           value: _selectedRdwcId, isExpanded: true, dropdownColor: DT.elevated,
           items: [
-            const DropdownMenuItem(value: null, child: Text('System wählen...', style: TextStyle(color: DT.textPrimary))),
+            DropdownMenuItem(value: null, child: Text(_t['select_system'], style: const TextStyle(color: DT.textPrimary))),
             ..._rdwcSystems.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, style: const TextStyle(color: DT.textPrimary)))),
           ],
           onChanged: (v) => setState(() => _selectedRdwcId = v),
@@ -189,6 +190,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
+      if (mounted) AppMessages.showError(context, _t['error_saving']);
       setState(() => _isLoading = false);
     }
   }

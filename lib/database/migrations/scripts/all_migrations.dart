@@ -24,6 +24,7 @@ import 'package:growlog_app/database/migrations/scripts/migration_v39.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v40.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v41.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v42.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v43.dart';
 
 /// All migrations in chronological order
 ///
@@ -103,6 +104,9 @@ final List<Migration> allMigrations = [
 
   // v42: RDWC log_status (pending_measurement/complete) + ec_warning_min/max per system
   migrationV42,
+
+  // v43: Recipes: Add phase column to rdwc_recipes
+  migrationV43,
 ];
 
 /// Get the latest migration version

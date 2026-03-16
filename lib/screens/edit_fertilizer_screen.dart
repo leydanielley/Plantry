@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:growlog_app/models/fertilizer.dart';
 import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/widgets/plantry_form_field.dart';
 import 'package:growlog_app/widgets/plantry_button.dart';
@@ -90,6 +91,7 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
+      if (mounted) AppMessages.showError(context, 'Fehler beim Speichern');
       setState(() => _isLoading = false);
     }
   }

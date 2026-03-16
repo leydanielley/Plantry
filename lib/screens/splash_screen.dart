@@ -16,6 +16,7 @@ import 'package:growlog_app/utils/auto_recovery_helper.dart';
 import 'package:growlog_app/utils/backup_progress_notifier.dart';
 import 'package:growlog_app/screens/manual_recovery_screen.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
+import 'package:growlog_app/utils/translations.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -231,132 +232,133 @@ class _SplashScreenState extends State<SplashScreen> {
     final result = await showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              tooManyRetries ? Icons.error : Icons.error_outline,
-              color: tooManyRetries ? Colors.red : Colors.orange,
-              size: 32,
-            ),
-            const SizedBox(width: 12),
-            const Text('Datenbankfehler'),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (context) {
+        final t = AppTranslations(Localizations.localeOf(context).languageCode);
+        return AlertDialog(
+          title: Row(
             children: [
-              Text(
-                tooManyRetries
-                    ? 'Die Datenbank konnte nach $_initAttempts Versuchen nicht geladen werden.'
-                    : 'Die Datenbank konnte nicht geladen werden.',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              Icon(
+                tooManyRetries ? Icons.error : Icons.error_outline,
+                color: tooManyRetries ? Colors.red : Colors.orange,
+                size: 32,
               ),
-              if (tooManyRetries) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.shade200),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.warning, size: 18, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text(
-                            'Kritischer Fehler',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Bitte verwenden Sie die manuelle Wiederherstellung, um Ihre Daten zu retten.',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              const Text(
-                'Mögliche Ursachen:',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              const Text('• Migration fehlgeschlagen'),
-              const Text('• Datenbank beschädigt'),
-              const Text('• Nicht genug Speicherplatz'),
-              const Text('• App-Berechtigungen fehlen'),
-              const SizedBox(height: 16),
-              Text(
-                tooManyRetries ? 'Empfohlene Aktion:' : 'Sie können:',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              if (!tooManyRetries) ...[
-                const Text('1. Nochmal versuchen'),
-                const Text('2. Manuelle Wiederherstellung starten'),
-                const Text('3. Support kontaktieren'),
-              ] else ...[
-                const Text('→ Manuelle Wiederherstellung öffnen'),
-                const Text('   (Daten aus Backup wiederherstellen)'),
-              ],
-              if (kDebugMode) ...[
-                const SizedBox(height: 16),
-                const Text(
-                  'Debug Info:',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 10),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    errorMessage,
-                    style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
-                    maxLines: 5,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+              const SizedBox(width: 12),
+              Text(t['splash_error_db_title']),
             ],
           ),
-        ),
-        actions: [
-          if (!tooManyRetries)
-            TextButton(
-              onPressed: () => Navigator.of(context).pop('close'),
-              child: const Text('App schließen'),
-            ),
-          if (!tooManyRetries)
-            TextButton.icon(
-              onPressed: () => Navigator.of(context).pop('retry'),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Nochmal versuchen'),
-            ),
-          FilledButton.icon(
-            onPressed: () => Navigator.of(context).pop('manual_recovery'),
-            icon: const Icon(Icons.build),
-            label: Text(
-              tooManyRetries ? 'Wiederherstellung öffnen' : 'Manuelle Wiederherstellung',
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tooManyRetries
+                      ? '${t['splash_error_db_retries']} ($_initAttempts)'
+                      : t['splash_error_db_retries'],
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                if (tooManyRetries) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.warning, size: 18, color: Colors.red),
+                            const SizedBox(width: 8),
+                            Text(
+                              t['splash_error_critical'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          t['splash_error_manual_recovery'],
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                Text(
+                  t['splash_error_causes'],
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                const Text('• Migration fehlgeschlagen'),
+                const Text('• Datenbank beschädigt'),
+                const Text('• Nicht genug Speicherplatz'),
+                const Text('• App-Berechtigungen fehlen'),
+                const SizedBox(height: 16),
+                Text(
+                  tooManyRetries ? t['splash_error_action'] : 'Sie können:',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                if (!tooManyRetries) ...[
+                  Text('1. ${t['splash_btn_retry']}'),
+                  const Text('2. Manuelle Wiederherstellung starten'),
+                  const Text('3. Support kontaktieren'),
+                ] else ...[
+                  const Text('→ Manuelle Wiederherstellung öffnen'),
+                  const Text('   (Daten aus Backup wiederherstellen)'),
+                ],
+                if (kDebugMode) ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Debug Info:',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 10),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-        ],
-      ),
+          actions: [
+            if (!tooManyRetries)
+              TextButton(
+                onPressed: () => Navigator.of(context).pop('close'),
+                child: Text(t['splash_btn_close']),
+              ),
+            if (!tooManyRetries)
+              TextButton.icon(
+                onPressed: () => Navigator.of(context).pop('retry'),
+                icon: const Icon(Icons.refresh),
+                label: Text(t['splash_btn_retry']),
+              ),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(context).pop('manual_recovery'),
+              icon: const Icon(Icons.build),
+              label: Text(t['splash_btn_recovery']),
+            ),
+          ],
+        );
+      },
     );
 
     if (!mounted) return;

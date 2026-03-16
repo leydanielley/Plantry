@@ -38,6 +38,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
   List<Grow> _allGrows = [];
   Map<int, Room> _roomsById = {};
   Map<int?, List<Plant>> _plantsByGrow = {};
+  final Set<int?> _expandedGrows = {};
   bool _isLoading = true;
   bool _showOrphansOnly = false;
   late AppTranslations _t = AppTranslations('de');
@@ -91,6 +92,10 @@ class _PlantsScreenState extends State<PlantsScreen> {
           _allGrows = grows;
           _roomsById = roomMap;
           _plantsByGrow = grouped;
+          // expand new groups by default, preserve collapsed state for existing ones
+          for (final id in grouped.keys) {
+            _expandedGrows.add(id);
+          }
           _isLoading = false;
         });
       }
@@ -179,13 +184,16 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
     for (final growId in sortedGrowIds) {
       final plants = _plantsByGrow[growId]!;
+      final isExpanded = _expandedGrows.contains(growId);
 
-      items.add(_buildGrowHeader(growId, plants.length));
+      items.add(_buildGrowHeader(growId, plants.length, isExpanded));
       items.add(const SizedBox(height: 12));
 
-      for (final plant in plants) {
-        items.add(_buildPlantCard(plant));
-        items.add(const SizedBox(height: 8));
+      if (isExpanded) {
+        for (final plant in plants) {
+          items.add(_buildPlantCard(plant));
+          items.add(const SizedBox(height: 8));
+        }
       }
 
       items.add(const SizedBox(height: 24));
@@ -194,7 +202,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
     return items;
   }
 
-  Widget _buildGrowHeader(int? growId, int plantCount) {
+  Widget _buildGrowHeader(int? growId, int plantCount, bool isExpanded) {
     final growName = _getGrowName(growId);
     IconData headerIcon = Icons.park;
     Color iconColor = DT.success;
@@ -228,38 +236,51 @@ class _PlantsScreenState extends State<PlantsScreen> {
       }
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: DT.surface,
-        borderRadius: BorderRadius.circular(DT.radiusCard),
-        border: Border.all(color: DT.glassBorder),
-      ),
-      child: Row(
-        children: [
-          Icon(headerIcon, size: 24, color: iconColor),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  growName,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: DT.textPrimary,
+    return GestureDetector(
+      onTap: () => setState(() {
+        if (isExpanded) {
+          _expandedGrows.remove(growId);
+        } else {
+          _expandedGrows.add(growId);
+        }
+      }),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: DT.surface,
+          borderRadius: BorderRadius.circular(DT.radiusCard),
+          border: Border.all(color: DT.glassBorder),
+        ),
+        child: Row(
+          children: [
+            Icon(headerIcon, size: 24, color: iconColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    growName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: DT.textPrimary,
+                    ),
                   ),
-                ),
-                Text(
-                  '$plantCount ${plantCount == 1 ? _t['plant'] : _t['plants_count']}',
-                  style: const TextStyle(fontSize: 13, color: DT.textSecondary),
-                ),
-              ],
+                  Text(
+                    '$plantCount ${plantCount == 1 ? _t['plant'] : _t['plants_count']}',
+                    style: const TextStyle(fontSize: 13, color: DT.textSecondary),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Icon(Icons.keyboard_arrow_down, color: DT.textTertiary),
-        ],
+            AnimatedRotation(
+              turns: isExpanded ? 0 : -0.5,
+              duration: const Duration(milliseconds: 200),
+              child: const Icon(Icons.keyboard_arrow_down, color: DT.textTertiary),
+            ),
+          ],
+        ),
       ),
     );
   }

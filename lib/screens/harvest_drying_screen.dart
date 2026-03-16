@@ -81,7 +81,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
       _loadHarvest();
 
       if (mounted) {
-        AppMessages.showSuccess(context, 'Trocknung gestartet! 🌿');
+        AppMessages.showSuccess(context, _t['drying_started_msg']);
       }
     } catch (e) {
       if (mounted) {
@@ -150,7 +150,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                           const Icon(Icons.water_drop, color: DT.secondary, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            'Nassgewicht: ${_harvest!.wetWeight!.toStringAsFixed(1)}g',
+                            '${_t['wet_weight_display']}: ${_harvest!.wetWeight!.toStringAsFixed(1)}g',
                             style: const TextStyle(
                               fontSize: 14,
                               color: DT.secondary,
@@ -164,7 +164,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                     controller: dryWeightController,
                     decoration: InputDecoration(
                       labelText: _t['dry_weight_label'],
-                      hintText: 'z.B. 100',
+                      hintText: _t['harvest_hint_dry_weight'],
                       suffixText: 'g',
                       prefixIcon: const Icon(Icons.grass),
                       border: OutlineInputBorder(
@@ -188,7 +188,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                   if (w != null && w > 0) {
                     Navigator.pop(dialogContext, {'weight': w, 'date': selectedDate});
                   } else {
-                    AppMessages.showSuccess(dialogContext, 'Bitte gültiges Gewicht eingeben');
+                    AppMessages.showError(dialogContext, _t['harvest_error_invalid_weight']);
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -213,7 +213,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
       _loadHarvest();
 
       if (mounted) {
-        AppMessages.showSuccess(context, 'Trocknung beendet! ✅');
+        AppMessages.showSuccess(context, _t['drying_ended_msg']);
       }
     } catch (e) {
       if (mounted) {
@@ -229,7 +229,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Trocknung'),
+          title: Text(_t['drying_title']),
           backgroundColor: DT.warning,
           foregroundColor: DT.canvas,
         ),
@@ -240,11 +240,11 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
     if (_harvest == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Trocknung'),
+          title: Text(_t['drying_title']),
           backgroundColor: DT.warning,
           foregroundColor: DT.canvas,
         ),
-        body: const Center(child: Text('Ernte nicht gefunden')),
+        body: Center(child: Text(_t['harvest_not_found'])),
       );
     }
 
@@ -253,7 +253,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
     final isActive = hasStarted && !hasEnded;
 
     return PlantryScaffold(
-      title: 'Trocknung',
+      title: _t['drying_title'],
       actions: [
         if (hasStarted)
           IconButton(
@@ -301,13 +301,13 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
     if (hasEnded) {
       color = DT.success;
       icon = Icons.check_circle;
-      status = 'Abgeschlossen';
-      subtitle = 'Trocknung erfolgreich beendet';
+      status = _t['drying_completed'];
+      subtitle = _t['drying_finished'];
     } else if (isActive) {
       color = DT.warning;
       icon = Icons.dry_cleaning;
-      status = 'In Trocknung';
-      subtitle = 'Laufender Trocknungsprozess';
+      status = _t['in_drying'];
+      subtitle = _t['drying_active'];
     } else {
       color = DT.info;
       icon = Icons.schedule;
@@ -359,20 +359,20 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.dry_cleaning, color: DT.warning),
-                SizedBox(width: 8),
+                const Icon(Icons.dry_cleaning, color: DT.warning),
+                const SizedBox(width: 8),
                 Text(
-                  'Trocknungs-Daten',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  _t['drying_data'],
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const Divider(height: 20),
             if (_harvest!.dryingStartDate != null)
               _buildInfoRow(
-                'Start',
+                _t['harvest_start'],
                 DateFormat('dd.MM.yyyy').format(_harvest!.dryingStartDate!),
                 Icons.play_arrow,
                 DT.warning,
@@ -380,7 +380,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
             if (_harvest!.dryingEndDate != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
-                'Ende',
+                _t['harvest_end'],
                 DateFormat('dd.MM.yyyy').format(_harvest!.dryingEndDate!),
                 Icons.stop,
                 DT.success,
@@ -389,8 +389,8 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
             if (_harvest!.calculatedDryingDays != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
-                'Dauer',
-                '${_harvest!.calculatedDryingDays} Tage',
+                _t['drying_duration_label'],
+                '${_harvest!.calculatedDryingDays} ${_t['days']}',
                 Icons.timer,
                 DT.secondary,
                 highlight: true,
@@ -399,7 +399,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
             if (_harvest!.dryingMethod != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
-                'Methode',
+                _t['label_method'],
                 _harvest!.dryingMethod!,
                 Icons.dashboard,
                 DT.info,
@@ -408,7 +408,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
             if (_harvest!.dryingTemperature != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
-                'Temperatur',
+                _t['label_temperature_full'],
                 '${_harvest!.dryingTemperature!.toStringAsFixed(1)}°C',
                 Icons.thermostat,
                 DT.error,
@@ -417,7 +417,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
             if (_harvest!.dryingHumidity != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
-                'Luftfeuchtigkeit',
+                _t['label_humidity_full'],
                 '${_harvest!.dryingHumidity!.toStringAsFixed(0)}%',
                 Icons.water_drop,
                 DT.secondary,

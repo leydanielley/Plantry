@@ -244,7 +244,7 @@ class _RdwcQuickMeasurementScreenState
               controller: _levelController,
               decoration: InputDecoration(
                 labelText: _t['current_level'],
-                hintText: 'e.g. 50',
+                hintText: _t['rdwc_hint_level'],
                 prefixIcon: const Icon(Icons.water_drop),
                 suffixText: _settings.volumeUnit == VolumeUnit.liter
                     ? 'L'
@@ -272,7 +272,7 @@ class _RdwcQuickMeasurementScreenState
               controller: _phController,
               decoration: InputDecoration(
                 labelText: '${_t['current_ph']} (${_t['optional']})',
-                hintText: 'e.g. 5.8',
+                hintText: _t['rdwc_hint_ph'],
                 prefixIcon: const Icon(Icons.water),
                 border: const OutlineInputBorder(),
               ),
@@ -296,7 +296,7 @@ class _RdwcQuickMeasurementScreenState
               controller: _ecController,
               decoration: InputDecoration(
                 labelText: '${_t['current_ec']} (${_t['optional']})',
-                hintText: 'e.g. 1.8',
+                hintText: _t['rdwc_hint_ec'],
                 prefixIcon: const Icon(Icons.analytics),
                 suffixText: 'mS/cm',
                 border: const OutlineInputBorder(),

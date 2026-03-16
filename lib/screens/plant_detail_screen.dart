@@ -20,8 +20,10 @@ import 'package:growlog_app/screens/edit_log_screen.dart';
 import 'package:growlog_app/screens/plant_photo_gallery_screen.dart';
 import 'package:growlog_app/screens/add_harvest_screen.dart';
 import 'package:growlog_app/screens/harvest_detail_screen.dart';
+import 'package:growlog_app/models/rdwc_log.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_log_fertilizer_repository.dart';
@@ -30,6 +32,7 @@ import 'package:growlog_app/services/interfaces/i_harvest_service.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/widgets/plantry_card.dart';
+import 'package:growlog_app/widgets/plant_charts.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
 
 class PlantDetailScreen extends StatefulWidget {
@@ -48,6 +51,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   final ILogFertilizerRepository _logFertilizerRepo = getIt<ILogFertilizerRepository>();
   final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
   final IHarvestService _harvestService = getIt<IHarvestService>();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
   
   late AppTranslations _t;
   final ScrollController _scrollController = ScrollController();
@@ -60,7 +64,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   Harvest? _harvest;
   bool _isLoading = true;
   bool _isLoadingMore = false;
-  bool _showTimeline = false;
+  int _viewIndex = 0; // 0 = list, 1 = timeline, 2 = charts
+  List<PlantLog> _chartLogs = [];
+  List<RdwcLog>? _rdwcChartLogs; // non-null = RDWC plant
+  bool _chartLogsLoaded = false;
   static const int _pageSize = 20;
   int _currentPage = 0;
   bool _hasMoreLogs = true;
@@ -83,6 +90,34 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadChartLogs() async {
+    if (_chartLogsLoaded) return;
+    try {
+      final all = await _logRepo.findByPlant(widget.plant.id!);
+      List<RdwcLog>? rdwcLogs;
+      if (_currentPlant.rdwcSystemId != null) {
+        final raw =
+            await _rdwcRepo.getLogsBySystem(_currentPlant.rdwcSystemId!);
+        rdwcLogs = raw
+            .where((l) =>
+                l.logStatus == 'complete' &&
+                (l.ecAfter != null || l.phAfter != null ||
+                    l.ecBefore != null || l.phBefore != null))
+            .toList()
+          ..sort((a, b) => a.logDate.compareTo(b.logDate));
+      }
+      if (mounted) {
+        setState(() {
+          _chartLogs = all..sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
+          _rdwcChartLogs = rdwcLogs;
+          _chartLogsLoaded = true;
+        });
+      }
+    } catch (e) {
+      AppLogger.error('PlantDetailScreen', 'Error loading chart logs: $e');
+    }
   }
 
   void _onScroll() {
@@ -237,12 +272,26 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               slivers: [
                 SliverToBoxAdapter(child: _buildHeader()),
                 SliverToBoxAdapter(child: _buildViewToggle()),
-                if (_showTimeline)
+                if (_viewIndex == 1)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                       child: _buildTimeline(),
                     ),
+                  )
+                else if (_viewIndex == 2)
+                  SliverToBoxAdapter(
+                    child: _chartLogsLoaded
+                        ? PlantChartsView(
+                            logs: _chartLogs,
+                            rdwcLogs: _rdwcChartLogs,
+                            seedDate: _currentPlant.seedDate,
+                            t: _t,
+                          )
+                        : const Padding(
+                            padding: EdgeInsets.all(32),
+                            child: Center(child: CircularProgressIndicator(color: DT.accent)),
+                          ),
                   )
                 else
                   SliverPadding(
@@ -433,8 +482,18 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             ],
             if (log.waterAmount != null || log.phIn != null || log.ecIn != null) ...[
               const SizedBox(height: 8),
-              Text('${log.waterAmount != null ? "${log.waterAmount}L " : ""}${log.phIn != null ? "pH: ${log.phIn} " : ""}${log.ecIn != null ? "EC: ${log.ecIn}" : ""}',
+              Text('${log.waterAmount != null ? "${log.waterAmount}L " : ""}${log.phIn != null ? "pH↑: ${log.phIn} " : ""}${log.ecIn != null ? "EC↑: ${log.ecIn}" : ""}',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: DT.textPrimary)),
+            ],
+            if (log.runoff || log.phOut != null || log.ecOut != null) ...[
+              const SizedBox(height: 4),
+              Text('${log.phOut != null ? "pH↓: ${log.phOut} " : ""}${log.ecOut != null ? "EC↓: ${log.ecOut} " : ""}${log.cleanse ? "🧹 Gespült" : ""}',
+                style: const TextStyle(fontSize: 12, color: DT.textSecondary)),
+            ],
+            if (log.actionType == ActionType.transplant && (log.containerSize != null || log.systemReservoirSize != null)) ...[
+              const SizedBox(height: 4),
+              Text('${log.containerSize != null ? "Topf: ${log.containerSize}L " : ""}${log.systemReservoirSize != null ? "Reservoir: ${log.systemReservoirSize}L" : ""}',
+                style: const TextStyle(fontSize: 12, color: DT.textSecondary)),
             ],
           ],
         ),
@@ -453,8 +512,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         ),
         child: Row(
           children: [
-            Expanded(child: _toggleBtn(_t['view_list'], !_showTimeline, () => setState(() => _showTimeline = false))),
-            Expanded(child: _toggleBtn(_t['view_timeline'], _showTimeline, () => setState(() => _showTimeline = true))),
+            Expanded(child: _toggleBtn(_t['view_list'], _viewIndex == 0, () => setState(() => _viewIndex = 0))),
+            Expanded(child: _toggleBtn(_t['view_timeline'], _viewIndex == 1, () => setState(() => _viewIndex = 1))),
+            Expanded(child: _toggleBtn('Charts', _viewIndex == 2, () {
+              setState(() => _viewIndex = 2);
+              _loadChartLogs();
+            })),
           ],
         ),
       ),

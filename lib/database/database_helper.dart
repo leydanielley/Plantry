@@ -67,7 +67,7 @@ class DatabaseHelper {
       return await openDatabase(
         path,
         version:
-            42, // v42: RDWC log_status + ec_warning_min/max per system
+            43, // v43: Recipes: Add phase column to rdwc_recipes
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -93,7 +93,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 41,
+          version: 43,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -143,7 +143,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 41,
+          version: 43,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -890,6 +890,7 @@ class DatabaseHelper {
         description TEXT,
         target_ec REAL,
         target_ph REAL,
+        phase TEXT,
         created_at TEXT DEFAULT (datetime('now'))
       )
     ''');

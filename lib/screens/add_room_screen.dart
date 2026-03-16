@@ -14,6 +14,7 @@ import 'package:growlog_app/models/rdwc_system.dart';
 import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
 
 class AddRoomScreen extends StatefulWidget {
   const AddRoomScreen({super.key});
@@ -69,15 +70,15 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  PlantryFormField(controller: _nameController, label: _t['add_room_name_label'], hint: 'z.B. Zelt 1', validator: (v) => v!.isEmpty ? 'Name erforderlich' : null),
+                  PlantryFormField(controller: _nameController, label: _t['add_room_name_label'], hint: _t['room_hint_name'], validator: (v) => v!.isEmpty ? _t['error_field_required'] : null),
                   const SizedBox(height: 16),
                   PlantryFormField(controller: _descController, label: _t['add_room_description_label'], maxLines: 2),
                   const SizedBox(height: 24),
 
-                  _section('Setup'),
-                  _dropdown<GrowType>('Umgebung', _growType, GrowType.values, (v) => setState(() => _growType = v!)),
+                  _section(_t['room_section_setup']),
+                  _dropdown<GrowType>(_t['room_label_environment'], _growType, GrowType.values, (v) => setState(() => _growType = v!)),
                   const SizedBox(height: 16),
-                  _dropdown<WateringSystem>('Bewässerung', _wateringSystem, WateringSystem.values, (v) => setState(() => _wateringSystem = v!)),
+                  _dropdown<WateringSystem>(_t['room_label_watering'], _wateringSystem, WateringSystem.values, (v) => setState(() => _wateringSystem = v!)),
                   const SizedBox(height: 16),
                   if (_wateringSystem == WateringSystem.rdwc) ...[
                     _rdwcDropdown(),
@@ -85,21 +86,21 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
                   ],
                   const SizedBox(height: 8),
 
-                  _section('Maße (in cm)'),
+                  _section(_t['room_section_dimensions']),
                   Row(
                     children: [
-                      Expanded(child: PlantryFormField(controller: _widthController, label: 'Breite', keyboardType: TextInputType.number)),
+                      Expanded(child: PlantryFormField(controller: _widthController, label: _t['room_label_width'], keyboardType: TextInputType.number)),
                       const SizedBox(width: 12),
-                      Expanded(child: PlantryFormField(controller: _depthController, label: 'Tiefe', keyboardType: TextInputType.number)),
+                      Expanded(child: PlantryFormField(controller: _depthController, label: _t['room_label_depth'], keyboardType: TextInputType.number)),
                       const SizedBox(width: 12),
-                      Expanded(child: PlantryFormField(controller: _heightController, label: 'Höhe', keyboardType: TextInputType.number)),
+                      Expanded(child: PlantryFormField(controller: _heightController, label: _t['room_label_height'], keyboardType: TextInputType.number)),
                     ],
                   ),
                   const SizedBox(height: 16),
                   PlantryFormField(
                     controller: _wattsController,
                     label: _t['light_watts'],
-                    hint: 'z.B. 600',
+                    hint: _t['room_hint_watts'],
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 32),
@@ -153,7 +154,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
           isExpanded: true,
           dropdownColor: DT.elevated,
           items: [
-            const DropdownMenuItem(value: null, child: Text('System wählen...', style: TextStyle(color: DT.textPrimary))),
+            DropdownMenuItem(value: null, child: Text(_t['select_system'], style: const TextStyle(color: DT.textPrimary))),
             ..._rdwcSystems.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, style: const TextStyle(color: DT.textPrimary)))),
           ],
           onChanged: (v) => setState(() => _selectedRdwcId = v),
@@ -181,6 +182,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
+      if (mounted) AppMessages.showError(context, _t['error_saving']);
       setState(() => _isLoading = false);
     }
   }

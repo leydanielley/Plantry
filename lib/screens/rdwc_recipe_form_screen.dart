@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/models/rdwc_recipe.dart';
+import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/models/fertilizer.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
@@ -38,6 +39,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
   late AppTranslations _t;
   List<Fertilizer> _availableFertilizers = [];
   final List<_RecipeFertilizerEntry> _addedFertilizers = [];
+  PlantPhase? _selectedPhase;
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -58,6 +60,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
           ? widget.recipe!.targetPh.toString()
           : '',
     );
+    _selectedPhase = widget.recipe?.phase;
     _loadData();
   }
 
@@ -167,6 +170,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
             : null,
         targetEc: targetEc,
         targetPh: targetPh,
+        phase: _selectedPhase,
       );
 
       final recipeId = widget.recipe == null
@@ -265,7 +269,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
               controller: _nameController,
               decoration: InputDecoration(
                 labelText: _t['recipe_name'],
-                hintText: 'e.g. Bloom Week 3',
+                hintText: _t['recipe_name_hint'],
                 prefixIcon: const Icon(Icons.science),
                 border: const OutlineInputBorder(),
               ),
@@ -287,6 +291,32 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
               ),
               maxLines: 2,
             ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<PlantPhase?>(
+              initialValue: _selectedPhase,
+              decoration: InputDecoration(
+                labelText: _t['recipe_phase'],
+                prefixIcon: const Icon(Icons.eco),
+                border: const OutlineInputBorder(),
+              ),
+              items: [
+                DropdownMenuItem<PlantPhase?>(
+                  value: null,
+                  child: Text(_t['recipe_phase_any']),
+                ),
+                ...PlantPhase.values
+                    .where((p) => p != PlantPhase.archived)
+                    .map(
+                      (p) => DropdownMenuItem<PlantPhase?>(
+                        value: p,
+                        child: Text(p.displayName),
+                      ),
+                    ),
+              ],
+              onChanged: (value) {
+                setState(() => _selectedPhase = value);
+              },
+            ),
             const SizedBox(height: 24),
 
             // Target Values
@@ -304,7 +334,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                     controller: _targetEcController,
                     decoration: InputDecoration(
                       labelText: _t['target_ec'],
-                      hintText: 'e.g. 1.8',
+                      hintText: _t['target_ec_hint'],
                       prefixIcon: const Icon(Icons.analytics),
                       suffixText: 'mS/cm',
                       border: const OutlineInputBorder(),
@@ -329,7 +359,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                     controller: _targetPhController,
                     decoration: InputDecoration(
                       labelText: _t['target_ph'],
-                      hintText: 'e.g. 5.8',
+                      hintText: _t['target_ph_hint'],
                       prefixIcon: const Icon(Icons.water_drop),
                       border: const OutlineInputBorder(),
                     ),
@@ -458,7 +488,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
               controller: entry.mlPerLiterController,
               decoration: InputDecoration(
                 labelText: _t['amount_per_liter'],
-                hintText: 'e.g. 2.0',
+                hintText: _t['fertilizer_amount_hint'],
                 suffixText: 'ml/L',
                 border: const OutlineInputBorder(),
                 isDense: true,
@@ -509,7 +539,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                 leading: const Icon(Icons.local_florist),
                 title: Text(fertilizer.name),
                 subtitle: fertilizer.npk != null
-                    ? Text('NPK: ${fertilizer.npk}')
+                    ? Text('${_t['fertilizer_npk_label']}: ${fertilizer.npk}')
                     : null,
                 onTap: () => Navigator.pop(context, fertilizer),
               );

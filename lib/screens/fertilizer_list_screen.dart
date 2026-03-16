@@ -152,7 +152,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
         IconButton(
           onPressed: _pickAndImportDbf,
           icon: const Icon(Icons.upload_file, color: DT.textPrimary),
-          tooltip: 'Import from DBF',
+          tooltip: _t['fertilizer_import_dbf'],
         ),
       ],
       body: _isLoading

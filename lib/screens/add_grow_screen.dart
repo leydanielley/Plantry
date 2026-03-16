@@ -14,6 +14,7 @@ import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
 import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
 
 class AddGrowScreen extends StatefulWidget {
   const AddGrowScreen({super.key});
@@ -136,6 +137,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
+      if (mounted) AppMessages.showError(context, 'Fehler beim Speichern');
       setState(() => _isLoading = false);
     }
   }

@@ -15,6 +15,8 @@ import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/models/plant_log.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
+import 'package:growlog_app/models/rdwc_recipe.dart';
 import 'package:growlog_app/services/interfaces/i_log_service.dart';
 import 'package:growlog_app/utils/error_handling_mixin.dart';
 import 'package:growlog_app/utils/app_messages.dart';
@@ -52,6 +54,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   final ILogService _logService = getIt<ILogService>();
   final IPlantLogRepository _logRepo = getIt<IPlantLogRepository>();
   final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
+  final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
   final ImagePicker _imagePicker = ImagePicker();
 
   final _waterAmountController = TextEditingController();
@@ -70,6 +73,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   final _systemBucketSizeController = TextEditingController();
 
   ActionType _selectedAction = ActionType.water;
+  PlantPhase? _selectedNewPhase;
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
   int _nextDayNumber = 1;
@@ -77,6 +81,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   Map<int, double> _selectedFertilizers = {};
   List<Map<String, dynamic>> _recentFertilizerUsage = [];
   final List<XFile> _selectedPhotos = [];
+
+  bool _runoffEnabled = false;
+  bool _cleanse = false;
 
   @override
   void initState() {
@@ -158,6 +165,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         _systemBucketCountController.text = lastLog.systemBucketCount?.toString() ?? '';
         _systemBucketSizeController.text = lastLog.systemBucketSize?.toStringAsFixed(0) ?? '';
         _selectedFertilizers = {for (final fert in sourceFertilizers) fert['fertilizer_id'] as int: (fert['amount'] as num).toDouble()};
+        _runoffEnabled = lastLog.phOut != null || lastLog.ecOut != null || lastLog.runoff;
+        _cleanse = lastLog.cleanse;
       });
       if (mounted) AppMessages.logCopied(context);
     } catch (e) {
@@ -216,7 +225,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.bulkMode ? 'Massen-Log' : 'Log erstellen';
+    final title = widget.bulkMode ? _t['bulk_log_title'].replaceAll('{count}', '${widget.bulkPlantIds?.length ?? 0}') : _t['log_create_title'];
     return PlantryScaffold(
       title: title,
       actions: [
@@ -233,37 +242,56 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                   const SizedBox(height: 24),
                   _buildActionSelector(),
                   const SizedBox(height: 24),
+                  if (_selectedAction == ActionType.phaseChange) ...[
+                    _buildPhaseSelector(),
+                    const SizedBox(height: 24),
+                  ],
                   _dateTile(),
                   const SizedBox(height: 24),
                   _buildPhotoSection(),
                   const SizedBox(height: 24),
                   if (_selectedAction == ActionType.water || _selectedAction == ActionType.feed) ...[
-                    _section('Wasser & Werte'),
-                    PlantryFormField(controller: _waterAmountController, label: 'Menge (Liter)', keyboardType: TextInputType.number, prefixIcon: const Icon(Icons.water_drop, color: DT.secondary, size: 20)),
+                    _section(_t['section_water_values']),
+                    PlantryFormField(controller: _waterAmountController, label: _t['label_water_amount'], keyboardType: TextInputType.number, prefixIcon: const Icon(Icons.water_drop, color: DT.secondary, size: 20)),
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: PlantryFormField(controller: _phInController, label: 'pH In', keyboardType: TextInputType.number)),
+                        Expanded(child: PlantryFormField(controller: _phInController, label: _t['label_ph_in'], keyboardType: TextInputType.number)),
                         const SizedBox(width: 12),
-                        Expanded(child: PlantryFormField(controller: _ecInController, label: 'EC In', keyboardType: TextInputType.number)),
+                        Expanded(child: PlantryFormField(controller: _ecInController, label: _t['label_ec_in'], keyboardType: TextInputType.number)),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    _buildRunoffSection(),
+                    const SizedBox(height: 8),
+                    _buildCleanseRow(),
                     const SizedBox(height: 24),
                   ],
                   if (_selectedAction == ActionType.feed) ...[
                     _buildFertilizerSection(),
                     const SizedBox(height: 24),
                   ],
-                  _section('Umgebung & Notiz'),
+                  if (_selectedAction == ActionType.transplant) ...[
+                    _section(_t['section_container_system']),
+                    Row(
+                      children: [
+                        Expanded(child: PlantryFormField(controller: _containerSizeController, label: _t['label_pot_size'], keyboardType: TextInputType.number)),
+                        const SizedBox(width: 12),
+                        Expanded(child: PlantryFormField(controller: _systemReservoirSizeController, label: _t['label_reservoir_size'], keyboardType: TextInputType.number)),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  _section(_t['section_environment_note']),
                   Row(
                     children: [
-                      Expanded(child: PlantryFormField(controller: _temperatureController, label: 'Temp (°C)', keyboardType: TextInputType.number)),
+                      Expanded(child: PlantryFormField(controller: _temperatureController, label: _t['label_temperature'], keyboardType: TextInputType.number)),
                       const SizedBox(width: 12),
-                      Expanded(child: PlantryFormField(controller: _humidityController, label: 'Feuchte (%)', keyboardType: TextInputType.number)),
+                      Expanded(child: PlantryFormField(controller: _humidityController, label: _t['label_humidity'], keyboardType: TextInputType.number)),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _noteController, label: 'Notiz', maxLines: 3),
+                  PlantryFormField(controller: _noteController, label: _t['notes'], maxLines: 3),
                   const SizedBox(height: 32),
                   PlantryButton(label: _t['save'], onPressed: _save, fullWidth: true),
                   const SizedBox(height: 40),
@@ -286,7 +314,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Tag $_nextDayNumber', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: DT.textPrimary)),
+              Text('${_t['day']} $_nextDayNumber', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: DT.textPrimary)),
               Text(widget.plant.phase.displayName, style: const TextStyle(fontSize: 13, color: DT.textSecondary)),
             ],
           ),
@@ -306,7 +334,10 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           children: ActionType.values.map((a) {
             final sel = _selectedAction == a;
             return GestureDetector(
-              onTap: () => setState(() => _selectedAction = a),
+              onTap: () => setState(() {
+                _selectedAction = a;
+                if (a != ActionType.phaseChange) _selectedNewPhase = null;
+              }),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(color: sel ? DT.accent : DT.elevated, borderRadius: BorderRadius.circular(8), border: Border.all(color: sel ? DT.accent : DT.border)),
@@ -385,6 +416,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             const Spacer(),
             IconButton(icon: const Icon(Icons.add_circle_outline, color: DT.accent, size: 20), onPressed: _addFert),
             if (!widget.bulkMode) ...[
+              IconButton(icon: const Icon(Icons.science_outlined, color: DT.info, size: 20), tooltip: _t['load_recipe'], onPressed: _loadRecipe),
               IconButton(icon: const Icon(Icons.bookmark_outline, color: DT.textSecondary, size: 20), tooltip: _t['load_set'], onPressed: _loadSet),
               IconButton(icon: Icon(Icons.bookmark_add_outlined, color: _selectedFertilizers.isNotEmpty ? DT.accent : DT.textTertiary, size: 20), tooltip: _t['save_set'], onPressed: _selectedFertilizers.isNotEmpty ? _saveAsSet : null),
             ],
@@ -403,7 +435,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                 final fertId = usage['fertilizer_id'] as int;
                 final avgAmount = (usage['avg_amount'] as num).toDouble();
                 final roundedAmount = double.parse(avgAmount.toStringAsFixed(1));
-                final fert = _availableFertilizers.firstWhere((f) => f.id == fertId, orElse: () => Fertilizer(name: 'Unbekannt'));
+                final fert = _availableFertilizers.firstWhere((f) => f.id == fertId, orElse: () => Fertilizer(name: _t['fertilizer_unknown']));
                 final isSelected = _selectedFertilizers.containsKey(fertId);
                 return GestureDetector(
                   onTap: () {
@@ -430,7 +462,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           const SizedBox(height: 8),
         ],
         ..._selectedFertilizers.entries.map((e) {
-          final f = _availableFertilizers.firstWhere((f) => f.id == e.key, orElse: () => Fertilizer(name: 'Unbekannt'));
+          final f = _availableFertilizers.firstWhere((f) => f.id == e.key, orElse: () => Fertilizer(name: _t['fertilizer_unknown']));
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: PlantryCard(isFlat: true, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), child: Row(children: [
@@ -455,7 +487,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           controller: nameController,
           autofocus: true,
           style: const TextStyle(color: DT.textPrimary),
-          decoration: const InputDecoration(labelText: 'Set-Name', labelStyle: TextStyle(color: DT.textSecondary)),
+          decoration: InputDecoration(labelText: _t['set_name_label'], labelStyle: const TextStyle(color: DT.textSecondary)),
           onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
         ),
         actions: [
@@ -467,9 +499,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
     if (name == null || name.isEmpty) return;
     try {
       await FertilizerSetRepository().save(name, _selectedFertilizers);
-      if (mounted) AppMessages.showSuccess(context, 'Set "$name" gespeichert');
+      if (mounted) AppMessages.showSuccess(context, '${_t['set_saved']}: $name');
     } catch (e) {
-      if (mounted) AppMessages.showError(context, 'Fehler beim Speichern: $e');
+      if (mounted) AppMessages.showError(context, _t['error_saving_set']);
     }
   }
 
@@ -478,7 +510,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       final repo = FertilizerSetRepository();
       final sets = await repo.findAll();
       if (sets.isEmpty) {
-        if (mounted) AppMessages.showError(context, 'Keine Sets vorhanden');
+        if (mounted) AppMessages.showError(context, _t['no_sets_available']);
         return;
       }
 
@@ -515,7 +547,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                       },
                       child: ListTile(
                         title: Text(s.name, style: const TextStyle(color: DT.textPrimary)),
-                        subtitle: Text('${s.itemCount} Dünger', style: const TextStyle(color: DT.textSecondary, fontSize: 12)),
+                        subtitle: Text('${s.itemCount} ${_t['fertilizers']}', style: const TextStyle(color: DT.textSecondary, fontSize: 12)),
                         onTap: () => Navigator.pop(ctx, s.id),
                       ),
                     );
@@ -539,7 +571,77 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         }
       });
     } catch (e) {
-      if (mounted) AppMessages.showError(context, 'Fehler beim Laden: $e');
+      if (mounted) AppMessages.showError(context, _t['error_loading_set']);
+    }
+  }
+
+  Future<void> _loadRecipe() async {
+    try {
+      final recipes = await _rdwcRepo.getAllRecipes();
+      if (recipes.isEmpty) {
+        if (mounted) AppMessages.showError(context, _t['no_recipes_available']);
+        return;
+      }
+
+      if (!mounted) return;
+
+      final selected = await showDialog<RdwcRecipe>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: DT.elevated,
+          title: Text(_t['load_recipe'], style: const TextStyle(color: DT.textPrimary)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: recipes.length,
+              itemBuilder: (ctx, i) {
+                final recipe = recipes[i];
+                final fertCount = recipe.fertilizers.length;
+                return ListTile(
+                  leading: const Icon(Icons.science_outlined, color: DT.info),
+                  title: Text(recipe.name, style: const TextStyle(color: DT.textPrimary)),
+                  subtitle: Text(
+                    '$fertCount ${_t['fertilizers']}${recipe.targetEc != null ? ' · EC ${recipe.targetEc!.toStringAsFixed(1)}' : ''}',
+                    style: const TextStyle(color: DT.textSecondary, fontSize: 12),
+                  ),
+                  onTap: () => Navigator.pop(ctx, recipe),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
+          ],
+        ),
+      );
+
+      if (selected == null || !mounted) return;
+
+      // Calculate amounts: if water volume is set, scale ml/L → actual ml
+      final waterLiters = double.tryParse(_waterAmountController.text.replaceAll(',', '.'));
+      final hasVolume = waterLiters != null && waterLiters > 0;
+
+      setState(() {
+        _selectedFertilizers.clear();
+        for (final rf in selected.fertilizers) {
+          final amount = hasVolume
+              ? double.parse((rf.mlPerLiter * waterLiters).toStringAsFixed(1))
+              : rf.mlPerLiter;
+          _selectedFertilizers[rf.fertilizerId] = amount;
+        }
+      });
+
+      if (mounted) {
+        AppMessages.showSuccess(
+          context,
+          hasVolume
+              ? '${_t['recipe_loaded']}: ${selected.name}'
+              : '${_t['recipe_loaded']}: ${selected.name} (ml/L)',
+        );
+      }
+    } catch (e) {
+      if (mounted) AppMessages.showError(context, _t['error_loading_recipe']);
     }
   }
 
@@ -554,28 +656,161 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       final amt = await showDialog<double>(context: context, builder: (ctx) => AlertDialog(
         backgroundColor: DT.elevated,
         title: Text(sel.name, style: const TextStyle(color: DT.textPrimary)),
-        content: TextField(keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Menge in ml'), autofocus: true, onSubmitted: (v) => Navigator.pop(ctx, double.tryParse(v))),
+        content: TextField(keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _t['fertilizer_amount_label']), autofocus: true, onSubmitted: (v) => Navigator.pop(ctx, double.tryParse(v))),
       ));
       if (amt != null && amt > 0) setState(() => _selectedFertilizers[sel.id!] = amt);
     }
+  }
+
+  Widget _buildPhaseSelector() {
+    final phases = PlantPhase.values.where((p) => p != PlantPhase.archived).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(_t['section_new_phase'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: phases.map((p) {
+            final sel = _selectedNewPhase == p;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedNewPhase = p),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: sel ? DT.accent : DT.elevated,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: sel ? DT.accent : DT.border),
+                ),
+                child: Text(
+                  p.displayName,
+                  style: TextStyle(
+                    color: sel ? DT.onAccent : DT.textSecondary,
+                    fontSize: 12,
+                    fontWeight: sel ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRunoffSection() {
+    return PlantryCard(
+      isFlat: true,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(_t['runoff_measured_label'], style: const TextStyle(color: DT.textPrimary, fontSize: 13)),
+              Switch(
+                value: _runoffEnabled,
+                onChanged: (v) => setState(() {
+                  _runoffEnabled = v;
+                  if (!v) {
+                    _phOutController.clear();
+                    _ecOutController.clear();
+                  }
+                }),
+                activeThumbColor: DT.accent,
+              ),
+            ],
+          ),
+          if (_runoffEnabled) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: PlantryFormField(controller: _phOutController, label: _t['label_ph_out'], keyboardType: TextInputType.number)),
+                const SizedBox(width: 12),
+                Expanded(child: PlantryFormField(controller: _ecOutController, label: _t['label_ec_out'], keyboardType: TextInputType.number)),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCleanseRow() {
+    return PlantryCard(
+      isFlat: true,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(_t['cleanse_label'], style: const TextStyle(color: DT.textPrimary, fontSize: 13)),
+          Switch(
+            value: _cleanse,
+            onChanged: (v) => setState(() => _cleanse = v),
+            activeThumbColor: DT.accent,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12, top: 8), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedAction == ActionType.phaseChange && _selectedNewPhase == null) {
+      AppMessages.showError(context, _t['error_phase_required']);
+      return;
+    }
     setState(() => _isLoading = true);
     try {
       final photoPaths = await _savePhotos();
       if (widget.bulkMode) {
-        await _logService.saveBulkLog(plantIds: widget.bulkPlantIds!, logDate: _selectedDate, actionType: _selectedAction, waterAmount: double.tryParse(_waterAmountController.text), phIn: double.tryParse(_phInController.text), ecIn: double.tryParse(_ecInController.text), temperature: double.tryParse(_temperatureController.text), humidity: double.tryParse(_humidityController.text), note: _noteController.text, fertilizers: _selectedFertilizers, photoPaths: photoPaths);
+        await _logService.saveBulkLog(
+          plantIds: widget.bulkPlantIds!,
+          logDate: _selectedDate,
+          actionType: _selectedAction,
+          waterAmount: double.tryParse(_waterAmountController.text),
+          phIn: double.tryParse(_phInController.text),
+          ecIn: double.tryParse(_ecInController.text),
+          phOut: _runoffEnabled ? double.tryParse(_phOutController.text) : null,
+          ecOut: _runoffEnabled ? double.tryParse(_ecOutController.text) : null,
+          runoff: _runoffEnabled,
+          cleanse: _cleanse,
+          temperature: double.tryParse(_temperatureController.text),
+          humidity: double.tryParse(_humidityController.text),
+          note: _noteController.text,
+          fertilizers: _selectedFertilizers,
+          photoPaths: photoPaths,
+          newPhase: _selectedNewPhase,
+        );
       } else {
-        final log = PlantLog(plantId: widget.plant.id!, dayNumber: _nextDayNumber, logDate: _selectedDate, actionType: _selectedAction, waterAmount: double.tryParse(_waterAmountController.text), phIn: double.tryParse(_phInController.text), ecIn: double.tryParse(_ecInController.text), temperature: double.tryParse(_temperatureController.text), humidity: double.tryParse(_humidityController.text), note: _noteController.text);
-        await _logService.saveSingleLog(plant: widget.plant, log: log, fertilizers: _selectedFertilizers, photoPaths: photoPaths);
+        final log = PlantLog(
+          plantId: widget.plant.id!,
+          dayNumber: _nextDayNumber,
+          logDate: _selectedDate,
+          actionType: _selectedAction,
+          waterAmount: double.tryParse(_waterAmountController.text),
+          phIn: double.tryParse(_phInController.text),
+          ecIn: double.tryParse(_ecInController.text),
+          phOut: _runoffEnabled ? double.tryParse(_phOutController.text) : null,
+          ecOut: _runoffEnabled ? double.tryParse(_ecOutController.text) : null,
+          runoff: _runoffEnabled,
+          cleanse: _cleanse,
+          containerSize: _selectedAction == ActionType.transplant ? double.tryParse(_containerSizeController.text) : null,
+          systemReservoirSize: _selectedAction == ActionType.transplant ? double.tryParse(_systemReservoirSizeController.text) : null,
+          temperature: double.tryParse(_temperatureController.text),
+          humidity: double.tryParse(_humidityController.text),
+          note: _noteController.text,
+        );
+        await _logService.saveSingleLog(plant: widget.plant, log: log, fertilizers: _selectedFertilizers, photoPaths: photoPaths, newPhase: _selectedNewPhase);
       }
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
+      if (mounted) AppMessages.showError(context, _t['error_saving_log']);
       setState(() => _isLoading = false);
     }
   }

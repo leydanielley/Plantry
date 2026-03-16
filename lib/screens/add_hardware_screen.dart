@@ -7,6 +7,7 @@ import 'package:growlog_app/models/hardware.dart';
 import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/repositories/interfaces/i_hardware_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/widgets/plantry_form_field.dart';
 import 'package:growlog_app/widgets/plantry_button.dart';
@@ -111,6 +112,7 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
+      if (mounted) AppMessages.showError(context, 'Fehler beim Speichern');
       setState(() => _isLoading = false);
     }
   }

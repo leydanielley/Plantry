@@ -221,7 +221,7 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
                 ..._systems.map((s) {
                   return DropdownMenuItem<RdwcSystem?>(
                     value: s,
-                    child: Text('${s.name} (${s.maxCapacity.toStringAsFixed(0)} L)'),
+                    child: Text('${s.name} (${s.maxCapacity.toStringAsFixed(0)} ${_t['unit_liters']})'),
                   );
                 }),
               ],

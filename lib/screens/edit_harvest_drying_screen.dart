@@ -92,7 +92,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
 
       if (mounted) {
         Navigator.pop(context, true);
-        AppMessages.showSuccess(context, 'Trocknung aktualisiert! ✅');
+        AppMessages.showSuccess(context, _t['drying_updated_msg']);
       }
     } catch (e) {
       if (mounted) {
@@ -105,7 +105,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
   @override
   Widget build(BuildContext context) {
     return PlantryScaffold(
-      title: 'Trocknung bearbeiten',
+      title: _t['edit_drying_title'],
       actions: [
         if (!_isSaving)
           IconButton(icon: const Icon(Icons.check), onPressed: _save),
@@ -127,14 +127,14 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                     color: DT.warning.withValues(alpha: 0.3),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.dry_cleaning, color: DT.warning),
-                    SizedBox(width: 12),
+                    const Icon(Icons.dry_cleaning, color: DT.warning),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Trocknungs-Daten',
-                        style: TextStyle(
+                        _t['harvest_section_drying'],
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -147,7 +147,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
 
               // Start Date
               _buildDateField(
-                label: 'Start-Datum',
+                label: _t['label_start_date'],
                 date: _dryingStartDate,
                 icon: Icons.play_arrow,
                 color: DT.warning,
@@ -168,7 +168,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
 
               // End Date
               _buildDateField(
-                label: 'End-Datum',
+                label: _t['label_end_date'],
                 date: _dryingEndDate,
                 icon: Icons.stop,
                 color: DT.success,
@@ -201,7 +201,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                       const Icon(Icons.timer, color: DT.secondary),
                       const SizedBox(width: 8),
                       Text(
-                        'Dauer: ${_dryingEndDate!.difference(_dryingStartDate!).inDays} Tage',
+                        '${_t['drying_duration_label']}: ${_dryingEndDate!.difference(_dryingStartDate!).inDays} ${_t['days']}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: DT.secondary,
@@ -216,8 +216,8 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
               TextFormField(
                 controller: _methodController,
                 decoration: InputDecoration(
-                  labelText: 'Trocknungs-Methode',
-                  hintText: 'z.B. Hängend, Netz, Box',
+                  labelText: _t['label_drying_method'],
+                  hintText: _t['hint_drying_method'],
                   prefixIcon: const Icon(Icons.dashboard),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -229,7 +229,12 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
               // Method Suggestions
               Wrap(
                 spacing: 8,
-                children: ['Hängend', 'Netz', 'Box', 'Rack'].map((method) {
+                children: [
+                  _t['drying_method_hanging'],
+                  _t['drying_method_net'],
+                  _t['drying_method_box'],
+                  _t['drying_method_rack'],
+                ].map((method) {
                   return ActionChip(
                     label: Text(method),
                     onPressed: () => _methodController.text = method,
@@ -245,8 +250,8 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                     child: TextFormField(
                       controller: _temperatureController,
                       decoration: InputDecoration(
-                        labelText: 'Temperatur',
-                        hintText: '18-22',
+                        labelText: _t['label_temperature_full'],
+                        hintText: _t['hint_temp_range'],
                         suffixText: '°C',
                         prefixIcon: const Icon(Icons.thermostat),
                         border: OutlineInputBorder(
@@ -263,8 +268,8 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                     child: TextFormField(
                       controller: _humidityController,
                       decoration: InputDecoration(
-                        labelText: 'Luftfeuchte',
-                        hintText: '50-60',
+                        labelText: _t['label_humidity_short'],
+                        hintText: _t['hint_humidity_range'],
                         suffixText: '%',
                         prefixIcon: const Icon(Icons.water_drop),
                         border: OutlineInputBorder(
@@ -293,25 +298,25 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.lightbulb_outline,
                           color: DT.warning,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
-                          'Tipps',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          _t['drying_tips_title'],
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     ...[
-                      'Temperatur: 18-22°C ideal',
-                      'Luftfeuchtigkeit: 50-60%',
-                      'Dauer: 7-14 Tage typisch',
-                      'Dunkel und gut belüftet',
+                      _t['drying_tip_temp'],
+                      _t['drying_tip_humidity'],
+                      _t['drying_tip_duration'],
+                      _t['drying_tip_dark'],
                     ].map(
                       (tip) => Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -372,7 +377,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save),
-                label: Text(_isSaving ? 'Speichert...' : 'Speichern'),
+                label: Text(_isSaving ? _t['saving'] : _t['save']),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: DT.warning,
                   foregroundColor: DT.textPrimary,

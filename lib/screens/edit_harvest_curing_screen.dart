@@ -89,7 +89,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
 
       if (mounted) {
         Navigator.pop(context, true);
-        AppMessages.showSuccess(context, 'Curing aktualisiert! ✅');
+        AppMessages.showSuccess(context, _t['curing_updated_msg']);
       }
     } catch (e) {
       if (mounted) {
@@ -102,7 +102,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
   @override
   Widget build(BuildContext context) {
     return PlantryScaffold(
-      title: 'Curing bearbeiten',
+      title: _t['edit_curing_title'],
       actions: [
         if (!_isSaving)
           IconButton(icon: const Icon(Icons.check), onPressed: _save),
@@ -123,14 +123,14 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                     color: DT.info.withValues(alpha: 0.3),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.inventory_2, color: DT.info),
-                    SizedBox(width: 12),
+                    const Icon(Icons.inventory_2, color: DT.info),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Curing-Daten',
-                        style: TextStyle(
+                        _t['harvest_section_curing'],
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -142,7 +142,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
               const SizedBox(height: 24),
 
               _buildDateField(
-                label: 'Start-Datum',
+                label: _t['label_start_date'],
                 date: _curingStartDate,
                 icon: Icons.play_arrow,
                 color: DT.info,
@@ -162,7 +162,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
               const SizedBox(height: 16),
 
               _buildDateField(
-                label: 'End-Datum',
+                label: _t['label_end_date'],
                 date: _curingEndDate,
                 icon: Icons.stop,
                 color: DT.success,
@@ -195,7 +195,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                       const Icon(Icons.timer, color: DT.secondary),
                       const SizedBox(width: 8),
                       Text(
-                        'Dauer: ${_curingEndDate!.difference(_curingStartDate!).inDays} Tage',
+                        '${_t['drying_duration_label']}: ${_curingEndDate!.difference(_curingStartDate!).inDays} ${_t['days']}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: DT.secondary,
@@ -209,8 +209,8 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
               TextFormField(
                 controller: _methodController,
                 decoration: InputDecoration(
-                  labelText: 'Curing-Methode',
-                  hintText: 'z.B. Glass Jars, Grove Bags',
+                  labelText: _t['label_curing_method'],
+                  hintText: _t['hint_curing_method'],
                   prefixIcon: const Icon(Icons.dashboard),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -221,23 +221,27 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
 
               Wrap(
                 spacing: 8,
-                children:
-                    ['Glass Jars', 'Grove Bags', 'CVault', 'Vacuum Sealed'].map(
-                      (method) {
-                        return ActionChip(
-                          label: Text(method),
-                          onPressed: () => _methodController.text = method,
-                        );
-                      },
-                    ).toList(),
+                children: [
+                  _t['curing_method_glass_jars'],
+                  _t['curing_method_grove_bags'],
+                  _t['curing_method_cvault'],
+                  _t['curing_method_vacuum'],
+                ].map(
+                  (method) {
+                    return ActionChip(
+                      label: Text(method),
+                      onPressed: () => _methodController.text = method,
+                    );
+                  },
+                ).toList(),
               ),
               const SizedBox(height: 20),
 
               TextFormField(
                 controller: _notesController,
                 decoration: InputDecoration(
-                  labelText: 'Curing Notizen',
-                  hintText: 'Burping Schedule, Besonderheiten...',
+                  labelText: _t['label_curing_notes'],
+                  hintText: _t['hint_curing_notes'],
                   prefixIcon: const Icon(Icons.note),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -259,25 +263,25 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.lightbulb_outline,
                           color: DT.info,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
-                          'Tipps',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          _t['curing_tips_title'],
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     ...[
-                      'Mindestens 2-4 Wochen curen',
-                      'Täglich "burpen" in Woche 1-2',
-                      'Luftfeuchtigkeit: 58-62% ideal',
-                      'Dunkel und kühl lagern',
+                      _t['curing_tip_weeks'],
+                      _t['curing_tip_burp'],
+                      _t['curing_tip_humidity'],
+                      _t['curing_tip_storage'],
                     ].map(
                       (tip) => Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -338,7 +342,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save),
-                label: Text(_isSaving ? 'Speichert...' : 'Speichern'),
+                label: Text(_isSaving ? _t['saving'] : _t['save']),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: DT.info,
                   foregroundColor: DT.textPrimary,

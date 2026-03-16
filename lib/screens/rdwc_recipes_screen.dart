@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/models/rdwc_recipe.dart';
+import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart';
@@ -33,6 +34,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
   late AppTranslations _t;
   List<RdwcRecipe> _recipes = [];
   Map<int, List<Fertilizer>> _recipeFertilizers = {};
+  Map<int, List<RecipeFertilizer>> _recipeFertilizerData = {};
   bool _isLoading = true;
 
   @override
@@ -48,9 +50,11 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
 
       // Load fertilizers for each recipe
       final Map<int, List<Fertilizer>> fertilizers = {};
+      final Map<int, List<RecipeFertilizer>> fertilizerData = {};
       for (final recipe in recipes) {
         if (recipe.id != null) {
           final recipeFerts = await _rdwcRepo.getRecipeFertilizers(recipe.id!);
+          fertilizerData[recipe.id!] = recipeFerts;
           final List<Fertilizer> ferts = [];
           for (final rf in recipeFerts) {
             final fert = await _fertilizerRepo.findById(rf.fertilizerId);
@@ -65,6 +69,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
           _t = AppTranslations(settings.language);
           _recipes = recipes;
           _recipeFertilizers = fertilizers;
+          _recipeFertilizerData = fertilizerData;
           _isLoading = false;
         });
       }
@@ -155,7 +160,8 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                 itemBuilder: (context, index) {
                   final recipe = _recipes[index];
                   final fertilizers = _recipeFertilizers[recipe.id] ?? [];
-                  return _buildRecipeCard(recipe, fertilizers);
+                  final recipeFertilizerData = _recipeFertilizerData[recipe.id] ?? [];
+                  return _buildRecipeCard(recipe, fertilizers, recipeFertilizerData);
                 },
               ),
             ),
@@ -186,9 +192,40 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
     );
   }
 
+  String _getPhaseName(PlantPhase phase) {
+    switch (phase) {
+      case PlantPhase.seedling:
+        return _t['seedling'];
+      case PlantPhase.veg:
+        return _t['veg'];
+      case PlantPhase.bloom:
+        return _t['bloom'];
+      case PlantPhase.harvest:
+        return _t['harvest'];
+      case PlantPhase.archived:
+        return _t['phase_archived'];
+    }
+  }
+
+  Color _getPhaseColor(PlantPhase phase) {
+    switch (phase) {
+      case PlantPhase.seedling:
+        return DT.success;
+      case PlantPhase.veg:
+        return DT.info;
+      case PlantPhase.bloom:
+        return DT.accent;
+      case PlantPhase.harvest:
+        return DT.warning;
+      case PlantPhase.archived:
+        return DT.textSecondary;
+    }
+  }
+
   Widget _buildRecipeCard(
     RdwcRecipe recipe,
     List<Fertilizer> fertilizers,
+    List<RecipeFertilizer> recipeFertilizerData,
   ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -240,49 +277,75 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                 ),
               ],
               const SizedBox(height: 12),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
                 children: [
                   _buildInfoChip(
                     icon: Icons.science,
                     label: '${fertilizers.length} ${_t['fertilizers']}',
                     color: DT.secondary,
                   ),
-                  if (recipe.targetEc != null) ...[
-                    const SizedBox(width: 8),
+                  if (recipe.phase != null)
+                    _buildInfoChip(
+                      icon: Icons.eco,
+                      label: '${_t['recipe_phase']}: ${_getPhaseName(recipe.phase!)}',
+                      color: _getPhaseColor(recipe.phase!),
+                    ),
+                  if (recipe.targetEc != null)
                     _buildInfoChip(
                       icon: Icons.analytics,
                       label: 'EC: ${recipe.targetEc!.toStringAsFixed(1)}',
                       color: DT.success,
                     ),
-                  ],
-                  if (recipe.targetPh != null) ...[
-                    const SizedBox(width: 8),
+                  if (recipe.targetPh != null)
                     _buildInfoChip(
                       icon: Icons.water_drop,
                       label: 'pH: ${recipe.targetPh!.toStringAsFixed(1)}',
                       color: DT.warning,
                     ),
-                  ],
                 ],
               ),
               if (fertilizers.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 const Divider(),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: fertilizers.map((fert) {
-                    return Chip(
-                      label: Text(
-                        fert.name,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      avatar: const Icon(Icons.local_florist, size: 16),
-                      visualDensity: VisualDensity.compact,
-                    );
-                  }).toList(),
-                ),
+                const SizedBox(height: 4),
+                ...fertilizers.map((fert) {
+                  final rf = recipeFertilizerData
+                      .cast<RecipeFertilizer?>()
+                      .firstWhere(
+                        (r) => r?.fertilizerId == fert.id,
+                        orElse: () => null,
+                      );
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.local_florist,
+                          size: 16,
+                          color: DT.success,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            fert.name,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                        if (rf != null)
+                          Text(
+                            '${rf.mlPerLiter.toStringAsFixed(1)} ${_t['recipe_ml_per_liter']}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: DT.textSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }),
               ],
             ],
           ),

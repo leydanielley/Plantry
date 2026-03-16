@@ -13,6 +13,7 @@ import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/widgets/plantry_form_field.dart';
 import 'package:growlog_app/widgets/plantry_button.dart';
@@ -79,11 +80,13 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
 
   Future<void> _loadData() async {
     final res = await Future.wait([_roomRepo.findAll(), _growRepo.getAll(), _rdwcRepo.getAllSystems()]);
-    if (mounted) setState(() {
+    if (mounted) {
+      setState(() {
       _rooms = res[0] as List<Room>;
       _grows = res[1] as List<Grow>;
       _rdwcSystems = res[2] as List<RdwcSystem>;
     });
+    }
   }
 
   @override
@@ -230,7 +233,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
               isExpanded: true,
               dropdownColor: DT.elevated,
               items: [
-                const DropdownMenuItem(value: null, child: Text('Kein Raum', style: TextStyle(color: DT.textPrimary))),
+                DropdownMenuItem(value: null, child: Text(_t['no_room'], style: const TextStyle(color: DT.textPrimary))),
                 ..._rooms.map((r) => DropdownMenuItem(value: r.id, child: Text(r.name, style: const TextStyle(color: DT.textPrimary)))),
               ],
               onChanged: (v) => setState(() => _selectedRoomId = v),
@@ -272,6 +275,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
+      if (mounted) AppMessages.showError(context, 'Fehler beim Speichern');
       setState(() => _isLoading = false);
     }
   }

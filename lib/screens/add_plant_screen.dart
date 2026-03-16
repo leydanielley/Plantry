@@ -19,6 +19,7 @@ import 'package:growlog_app/repositories/interfaces/i_room_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_rdwc_repository.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/utils/app_messages.dart';
 
 class AddPlantScreen extends StatefulWidget {
   final int? preselectedGrowId;
@@ -225,7 +226,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
               isExpanded: true,
               dropdownColor: DT.elevated,
               items: [
-                const DropdownMenuItem(value: null, child: Text('Kein Raum', style: TextStyle(color: DT.textPrimary))),
+                DropdownMenuItem(value: null, child: Text(_t['no_room'], style: const TextStyle(color: DT.textPrimary))),
                 ..._rooms.map((r) => DropdownMenuItem(value: r.id, child: Text(r.name, style: const TextStyle(color: DT.textPrimary)))),
               ],
               onChanged: (v) => setState(() => _selectedRoomId = v),
@@ -315,6 +316,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
+      if (mounted) AppMessages.showError(context, 'Fehler beim Speichern');
       setState(() => _isLoading = false);
     }
   }

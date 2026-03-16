@@ -47,7 +47,6 @@ void main() async {
     FlutterError.presentError(details);
     AppLogger.error('Flutter', 'Error: ${details.exception}', details.exception, details.stack);
   };
-
   PlatformDispatcher.instance.onError = (error, stack) {
     AppLogger.error('AsyncError', 'Uncaught', error, stack);
     return true;

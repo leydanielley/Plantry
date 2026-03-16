@@ -153,7 +153,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
           (f) => f.id == logFert.fertilizerId,
           orElse: () => Fertilizer(
             id: logFert.fertilizerId,
-            name: 'Unknown',
+            name: _t['fertilizer_unknown'],
             brand: null,
             npk: null,
           ),
@@ -310,30 +310,30 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
           // Simple measurement: just current values
           await _saveMeasurement();
           successMessage = isEditing
-              ? 'Measurement updated!'
-              : 'Measurement logged successfully!';
+              ? _t['rdwc_measurement_updated']
+              : _t['rdwc_measurement_logged'];
           break;
 
         case RdwcLogType.fullChange:
           // Full reservoir change with new fertilizers
           await _saveFullChange();
           successMessage = isEditing
-              ? 'Full change updated!'
-              : 'Full change logged successfully!';
+              ? _t['rdwc_fullchange_updated']
+              : _t['rdwc_fullchange_logged'];
           break;
 
         case RdwcLogType.maintenance:
           // Maintenance with checklist
           await _saveMaintenance();
           successMessage = isEditing
-              ? 'Maintenance updated!'
-              : 'Maintenance logged successfully!';
+              ? _t['rdwc_maintenance_updated']
+              : _t['rdwc_maintenance_logged'];
           break;
 
         case RdwcLogType.addback:
           await _saveAddback();
           successMessage = _isEditingCompleteLog
-              ? 'Addback updated!'
+              ? _t['rdwc_addback_updated']
               : _t['addback_saved_pending'];
           break;
       }
@@ -347,7 +347,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       AppLogger.error('RdwcAddbackFormScreen', 'Error saving log', e);
       if (mounted) {
         setState(() => _isSaving = false);
-        AppMessages.showError(context, 'Error saving log: $e');
+        AppMessages.showError(context, _t['rdwc_error_save_log']);
       }
     }
   }
@@ -847,7 +847,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   List<Widget> _buildMeasurementFields() {
     return [
       Text(
-        'Quick Measurement',
+        _t['quick_measurement'],
         style: Theme.of(
           context,
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -869,10 +869,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
           Expanded(
             child: TextFormField(
               controller: _currentPhController,
-              decoration: const InputDecoration(
-                labelText: 'pH',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.science),
+              decoration: InputDecoration(
+                labelText: _t['current_ph'],
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.science),
               ),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -907,39 +907,39 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   List<Widget> _buildMaintenanceFields() {
     return [
       Text(
-        'Maintenance Checklist',
+        _t['rdwc_section_maintenance'],
         style: Theme.of(
           context,
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
       CheckboxListTile(
-        title: const Text('Pumps cleaned'),
+        title: Text(_t['rdwc_maintenance_pumps']),
         value: _cleanedPumps,
         onChanged: (value) => setState(() => _cleanedPumps = value ?? false),
         dense: true,
       ),
       CheckboxListTile(
-        title: const Text('Filters changed'),
+        title: Text(_t['rdwc_maintenance_filters']),
         value: _changedFilters,
         onChanged: (value) => setState(() => _changedFilters = value ?? false),
         dense: true,
       ),
       CheckboxListTile(
-        title: const Text('Tubes checked'),
+        title: Text(_t['rdwc_maintenance_tubes']),
         value: _checkedTubes,
         onChanged: (value) => setState(() => _checkedTubes = value ?? false),
         dense: true,
       ),
       CheckboxListTile(
-        title: const Text('Reservoir cleaned'),
+        title: Text(_t['rdwc_maintenance_reservoir']),
         value: _cleanedReservoir,
         onChanged: (value) =>
             setState(() => _cleanedReservoir = value ?? false),
         dense: true,
       ),
       CheckboxListTile(
-        title: const Text('Airstones cleaned'),
+        title: Text(_t['rdwc_maintenance_airstones']),
         value: _cleanedAirstones,
         onChanged: (value) =>
             setState(() => _cleanedAirstones = value ?? false),
@@ -947,7 +947,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       ),
       const SizedBox(height: 16),
       Text(
-        'pH / EC (optional)',
+        _t['rdwc_section_ph_ec'],
         style: Theme.of(
           context,
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -1031,7 +1031,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   List<Widget> _buildFullChangeFields() {
     return [
       Text(
-        'Old Water',
+        _t['rdwc_section_old_water'],
         style: Theme.of(
           context,
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -1042,10 +1042,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
           Expanded(
             child: TextFormField(
               controller: _phBeforeController,
-              decoration: const InputDecoration(
-                labelText: 'Old pH',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.science_outlined),
+              decoration: InputDecoration(
+                labelText: _t['rdwc_label_old_ph'],
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.science_outlined),
               ),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -1074,7 +1074,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       ),
       const SizedBox(height: 16),
       Text(
-        'New Water',
+        _t['rdwc_section_new_water'],
         style: Theme.of(
           context,
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -1091,12 +1091,12 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
-            return 'New water level is required';
+            return _t['rdwc_error_new_water_req'];
           }
           final number = double.tryParse(value);
-          if (number == null) return 'Invalid number';
+          if (number == null) return _t['invalid_number'];
           if (number > widget.system.maxCapacity) {
-            return 'Cannot exceed max capacity';
+            return _t['rdwc_error_max_capacity'];
           }
           return null;
         },
@@ -1107,10 +1107,10 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
           Expanded(
             child: TextFormField(
               controller: _phAfterController,
-              decoration: const InputDecoration(
-                labelText: 'New pH',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.science),
+              decoration: InputDecoration(
+                labelText: _t['rdwc_label_new_ph'],
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.science),
               ),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -1139,7 +1139,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
       ),
       const SizedBox(height: 16),
       CheckboxListTile(
-        title: const Text('Reservoir cleaned during change'),
+        title: Text(_t['rdwc_maintenance_res_change']),
         value: _reservoirCleanedOnChange,
         onChanged: (value) =>
             setState(() => _reservoirCleanedOnChange = value ?? false),
@@ -1151,7 +1151,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
   List<Widget> _buildAddbackFields() {
     return [
       Text(
-        'Water',
+        _t['rdwc_label_water'],
         style: Theme.of(
           context,
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -1194,12 +1194,12 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return 'Level after is required';
+              return _t['rdwc_error_new_water_req'];
             }
             final number = double.tryParse(value);
-            if (number == null) return 'Invalid number';
+            if (number == null) return _t['invalid_number'];
             if (number > widget.system.maxCapacity) {
-              return 'Cannot exceed max capacity';
+              return _t['rdwc_error_max_capacity'];
             }
             return null;
           },
@@ -1468,7 +1468,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
               controller: _noteController,
               decoration: InputDecoration(
                 labelText: _t['note'],
-                hintText: 'Week 3 of bloom, drinking heavily',
+                hintText: _t['rdwc_hint_note'],
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.notes),
               ),

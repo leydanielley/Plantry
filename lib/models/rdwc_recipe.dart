@@ -3,6 +3,7 @@
 // =============================================
 
 import 'package:growlog_app/models/rdwc_log_fertilizer.dart';
+import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/utils/safe_parsers.dart'; // ✅ FIX: Safe parsing utilities
 
 /// Fertilizer entry in a recipe
@@ -69,6 +70,7 @@ class RdwcRecipe {
   final List<RecipeFertilizer> fertilizers; // Fertilizers in this recipe
   final double? targetEc; // Desired EC after application
   final double? targetPh; // Desired pH after application
+  final PlantPhase? phase; // Optional: phase this recipe is for
   final DateTime createdAt;
 
   RdwcRecipe({
@@ -78,6 +80,7 @@ class RdwcRecipe {
     this.fertilizers = const [],
     this.targetEc,
     this.targetPh,
+    this.phase,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -123,6 +126,12 @@ class RdwcRecipe {
       description: map['description'] as String?,
       targetEc: (map['target_ec'] as num?)?.toDouble(),
       targetPh: (map['target_ph'] as num?)?.toDouble(),
+      phase: PlantPhase.values
+          .cast<PlantPhase?>()
+          .firstWhere(
+            (p) => p?.name == map['phase'],
+            orElse: () => null,
+          ),
       createdAt: SafeParsers.parseDateTime(
         map['created_at'] as String?,
         fallback: DateTime.now(),
@@ -139,6 +148,7 @@ class RdwcRecipe {
       'description': description,
       'target_ec': targetEc,
       'target_ph': targetPh,
+      'phase': phase?.name,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -152,6 +162,7 @@ class RdwcRecipe {
     List<RecipeFertilizer>? fertilizers,
     Object? targetEc = _undefined,
     Object? targetPh = _undefined,
+    Object? phase = _undefined,
     DateTime? createdAt,
   }) {
     return RdwcRecipe(
@@ -163,6 +174,7 @@ class RdwcRecipe {
       fertilizers: fertilizers ?? this.fertilizers,
       targetEc: targetEc == _undefined ? this.targetEc : targetEc as double?,
       targetPh: targetPh == _undefined ? this.targetPh : targetPh as double?,
+      phase: phase == _undefined ? this.phase : phase as PlantPhase?,
       createdAt: createdAt ?? this.createdAt,
     );
   }

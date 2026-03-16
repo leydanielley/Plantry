@@ -106,7 +106,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
 
       if (mounted) {
         Navigator.pop(context, true);
-        AppMessages.showSuccess(context, 'Quality-Daten aktualisiert! ✅');
+        AppMessages.showSuccess(context, _t['harvest_quality_updated']);
       }
     } catch (e) {
       if (mounted) {
@@ -186,7 +186,7 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
                         ),
                       )
                     : const Icon(Icons.save),
-                label: Text(_isSaving ? 'Speichert...' : 'Speichern'),
+                label: Text(_isSaving ? _t['saving'] : _t['save']),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: DT.secondary,
                   foregroundColor: DT.textPrimary,
@@ -212,14 +212,14 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.science, color: DT.secondary),
-                SizedBox(width: 12),
+                const Icon(Icons.science, color: DT.secondary),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Cannabinoid-Profil',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    _t['harvest_section_cannabinoids'],
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -231,14 +231,14 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
           TextFormField(
             controller: _thcController,
             decoration: InputDecoration(
-              labelText: 'THC-Gehalt',
-              hintText: 'z.B. 22.5',
+              labelText: _t['label_thc'],
+              hintText: _t['hint_thc'],
               suffixText: '%',
               prefixIcon: const Icon(Icons.science, color: DT.error),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              helperText: 'Tetrahydrocannabinol',
+              helperText: _t['helper_thc'],
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
@@ -248,14 +248,14 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
           TextFormField(
             controller: _cbdController,
             decoration: InputDecoration(
-              labelText: 'CBD-Gehalt',
-              hintText: 'z.B. 0.5',
+              labelText: _t['label_cbd'],
+              hintText: _t['hint_cbd'],
               suffixText: '%',
               prefixIcon: const Icon(Icons.science, color: DT.success),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              helperText: 'Cannabidiol',
+              helperText: _t['helper_cbd'],
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
@@ -270,8 +270,8 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
           TextFormField(
             controller: _terpeneController,
             decoration: InputDecoration(
-              labelText: 'Terpen-Profil',
-              hintText: 'z.B. Myrcene, Limonene, Caryophyllene',
+              labelText: _t['label_terpene'],
+              hintText: _t['hint_terpene'],
               prefixIcon: const Icon(
                 Icons.format_list_bulleted,
                 color: DT.info,
@@ -360,9 +360,9 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Cannabinoid-Profil Vorschau',
-            style: TextStyle(
+          Text(
+            _t['cannabinoid_preview_title'],
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
               color: DT.textPrimary,
@@ -427,14 +427,14 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: DT.warning.withValues(alpha: 0.3)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.star, color: DT.warning),
-                SizedBox(width: 12),
+                const Icon(Icons.star, color: DT.warning),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Bewertung & Notizen',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    _t['rating_section_title'],
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -449,9 +449,9 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  const Text(
-                    'Gesamt-Bewertung',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  Text(
+                    _t['overall_rating_title'],
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -483,9 +483,9 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
                     ),
                   ],
                   if (_rating == null)
-                    const Text(
-                      'Tippe auf die Sterne zum Bewerten',
-                      style: TextStyle(fontSize: 12, color: DT.textTertiary),
+                    Text(
+                      _t['rating_prompt'],
+                      style: const TextStyle(fontSize: 12, color: DT.textTertiary),
                     ),
                 ],
               ),
@@ -497,8 +497,8 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
           TextFormField(
             controller: _tasteController,
             decoration: InputDecoration(
-              labelText: 'Geschmack',
-              hintText: 'z.B. fruchtig, erdig, zitrusartig...',
+              labelText: _t['label_taste'],
+              hintText: _t['hint_taste'],
               prefixIcon: const Icon(Icons.restaurant, color: DT.warning),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -537,8 +537,8 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
           TextFormField(
             controller: _effectController,
             decoration: InputDecoration(
-              labelText: 'Wirkung',
-              hintText: 'z.B. entspannend, euphorisch, kreativ...',
+              labelText: _t['label_effect'],
+              hintText: _t['hint_effect'],
               prefixIcon: const Icon(Icons.psychology, color: DT.info),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -577,8 +577,8 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
           TextFormField(
             controller: _overallNotesController,
             decoration: InputDecoration(
-              labelText: 'Allgemeine Notizen',
-              hintText: 'Zusätzliche Beobachtungen, Besonderheiten...',
+              labelText: _t['label_overall_notes'],
+              hintText: _t['hint_overall_notes'],
               prefixIcon: const Icon(Icons.note, color: DT.secondary),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
