@@ -104,8 +104,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       if (isArchived && a != ActionType.note && a != ActionType.other) return false;
       // Harvest-Phase: kein Watering/Feeding/Transplanting/Training/Trimming
       if (isPostHarvest && (a == ActionType.water || a == ActionType.feed ||
-          a == ActionType.transplant || a == ActionType.training ||
-          a == ActionType.trim)) { return false; }
+          a == ActionType.transplant || a == ActionType.trim)) { return false; }
       return true;
     }).toList();
   }
