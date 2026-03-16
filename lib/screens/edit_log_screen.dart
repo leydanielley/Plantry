@@ -243,10 +243,19 @@ class _EditLogScreenState extends State<EditLogScreen> {
   }
 
   List<ActionType> _allowedActions() {
+    final phase = widget.plant.phase;
+    final isArchived = phase == PlantPhase.archived;
+    final isPostHarvest = phase == PlantPhase.harvest;
+
     final allowed = ActionType.values.where((a) {
       if (a == ActionType.harvest) return false;
       if (_isHydroSystem && a == ActionType.water) return false;
       if (_isHydroSystem && a == ActionType.feed) return false;
+      if (widget.plant.medium == Medium.rdwc && a == ActionType.transplant) return false;
+      if (isArchived && a != ActionType.note && a != ActionType.other) return false;
+      if (isPostHarvest && (a == ActionType.water || a == ActionType.feed ||
+          a == ActionType.transplant || a == ActionType.training ||
+          a == ActionType.trim)) { return false; }
       return true;
     }).toList();
     // Bestehendes Log-Action immer anzeigen, auch wenn jetzt gefiltert
@@ -256,12 +265,9 @@ class _EditLogScreenState extends State<EditLogScreen> {
     return allowed;
   }
 
-  String _actionLabel(ActionType a) {
-    if (a == ActionType.transplant && widget.plant.medium == Medium.rdwc) {
-      return _t['action_bucket_change'];
-    }
-    return a.displayName;
-  }
+  String _actionLabel(ActionType a) =>
+      a.labelForMedium(widget.plant.medium,
+          languageCode: Localizations.localeOf(context).languageCode);
 
   Widget _buildActionSelector() {
     return Column(

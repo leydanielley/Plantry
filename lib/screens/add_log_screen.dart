@@ -91,25 +91,40 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   }
 
   List<ActionType> _allowedActions() {
+    final phase = widget.plant.phase;
+    final isArchived = phase == PlantPhase.archived;
+    final isPostHarvest = phase == PlantPhase.harvest;
+
     return ActionType.values.where((a) {
       if (a == ActionType.harvest) return false;
       if (_isHydroSystem && a == ActionType.water) return false;
       if (_isHydroSystem && a == ActionType.feed) return false;
+      if (widget.plant.medium == Medium.rdwc && a == ActionType.transplant) return false;
+      // Archived: nur Note und Other
+      if (isArchived && a != ActionType.note && a != ActionType.other) return false;
+      // Harvest-Phase: kein Watering/Feeding/Transplanting/Training/Trimming
+      if (isPostHarvest && (a == ActionType.water || a == ActionType.feed ||
+          a == ActionType.transplant || a == ActionType.training ||
+          a == ActionType.trim)) { return false; }
       return true;
     }).toList();
   }
 
-  String _actionLabel(ActionType a) {
-    if (a == ActionType.transplant && widget.plant.medium == Medium.rdwc) {
-      return _t['action_bucket_change'];
-    }
-    return a.displayName;
-  }
+  String _actionLabel(ActionType a) =>
+      a.labelForMedium(widget.plant.medium,
+          languageCode: Localizations.localeOf(context).languageCode);
 
   @override
   void initState() {
     super.initState();
-    _selectedAction = _isHydroSystem ? ActionType.note : ActionType.water;
+    final phase = widget.plant.phase;
+    if (phase == PlantPhase.archived || phase == PlantPhase.harvest) {
+      _selectedAction = ActionType.note;
+    } else if (_isHydroSystem) {
+      _selectedAction = ActionType.note;
+    } else {
+      _selectedAction = ActionType.water;
+    }
     _loadNextDayNumber();
     _loadFertilizers();
   }

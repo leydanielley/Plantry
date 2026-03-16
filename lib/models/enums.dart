@@ -323,6 +323,10 @@ enum ActionType {
         return 'Other';
     }
   }
+
+  String labelForMedium(Medium medium, {String languageCode = 'de'}) {
+    return displayName;
+  }
 }
 
 // Medium Enum (Original 6 Werte)
