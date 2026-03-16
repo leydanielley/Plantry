@@ -271,11 +271,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               controller: _scrollController,
               slivers: [
                 SliverToBoxAdapter(child: _buildHeader()),
+                SliverToBoxAdapter(child: _buildActionRow()),
                 SliverToBoxAdapter(child: _buildViewToggle()),
                 if (_viewIndex == 1)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       child: _buildTimeline(),
                     ),
                   )
@@ -295,7 +296,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (ctx, i) {
@@ -308,32 +309,6 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   ),
               ],
             ),
-      fab: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_harvest == null && (_currentPlant.phase == PlantPhase.bloom || _currentPlant.phase == PlantPhase.harvest))
-            FloatingActionButton.extended(
-              heroTag: 'harvest',
-              onPressed: () async {
-                final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => AddHarvestScreen(plant: _currentPlant)));
-                if (res == true) _loadData();
-              },
-              backgroundColor: DT.accent,
-              foregroundColor: DT.onAccent,
-              label: Text(_t['plant_detail_harvest']),
-              icon: const Icon(Icons.grass),
-            ),
-          const SizedBox(height: 12),
-          FloatingActionButton.extended(
-            heroTag: 'log',
-            onPressed: _showLogOptions,
-            backgroundColor: DT.accent,
-            foregroundColor: DT.onAccent,
-            label: Text(_t['plant_detail_log_entry']),
-            icon: const Icon(Icons.add),
-          ),
-        ],
-      ),
     );
   }
 
@@ -401,6 +376,52 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           const SizedBox(height: 4),
           Text(val, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: DT.textPrimary), textAlign: TextAlign.center),
           Text(label, style: const TextStyle(fontSize: 10, color: DT.textSecondary)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionRow() {
+    final showHarvest = _harvest == null &&
+        (_currentPlant.phase == PlantPhase.bloom ||
+            _currentPlant.phase == PlantPhase.harvest);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Row(
+        children: [
+          if (showHarvest) ...[
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final res = await Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => AddHarvestScreen(plant: _currentPlant)));
+                  if (res == true) _loadData();
+                },
+                icon: const Icon(Icons.grass, size: 16),
+                label: Text(_t['plant_detail_harvest']),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: DT.accent,
+                  side: const BorderSide(color: DT.accent),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            flex: showHarvest ? 2 : 1,
+            child: ElevatedButton.icon(
+              onPressed: _showLogOptions,
+              icon: const Icon(Icons.add, size: 16),
+              label: Text(_t['plant_detail_log_entry']),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: DT.accent,
+                foregroundColor: DT.onAccent,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                elevation: 0,
+              ),
+            ),
+          ),
         ],
       ),
     );
