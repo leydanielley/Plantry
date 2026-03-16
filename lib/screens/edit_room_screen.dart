@@ -158,12 +158,13 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
   }
 
   Widget _rdwcDropdown() {
+    final validId = _rdwcSystems.any((s) => s.id == _selectedRdwcId) ? _selectedRdwcId : null;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int?>(
-          value: _selectedRdwcId, isExpanded: true, dropdownColor: DT.elevated,
+          value: validId, isExpanded: true, dropdownColor: DT.elevated,
           items: [
             DropdownMenuItem(value: null, child: Text(_t['select_system'], style: const TextStyle(color: DT.textPrimary))),
             ..._rdwcSystems.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, style: const TextStyle(color: DT.textPrimary)))),

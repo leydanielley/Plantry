@@ -230,19 +230,17 @@ class PlantFormFields extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<int>(
-                  initialValue: selectedGrowId,
+                child: DropdownButtonFormField<int?>(
+                  initialValue: grows.any((g) => g.id == selectedGrowId) ? selectedGrowId : null,
                   decoration: InputDecoration(
                     labelText: t.translate('add_plant_grow_optional'),
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.eco),
                   ),
-                  items: grows.map((grow) {
-                    return DropdownMenuItem(
-                      value: grow.id,
-                      child: Text(grow.name),
-                    );
-                  }).toList(),
+                  items: [
+                    DropdownMenuItem<int?>(value: null, child: Text(t.translate('no_grow'))),
+                    ...grows.map((grow) => DropdownMenuItem<int?>(value: grow.id, child: Text(grow.name))),
+                  ],
                   onChanged: disableGrowSelection ? null : onGrowSelected,
                 ),
               ),
@@ -261,16 +259,17 @@ class PlantFormFields extends StatelessWidget {
         if (loadingRooms)
           const Center(child: CircularProgressIndicator())
         else
-          DropdownButtonFormField<int>(
-            initialValue: selectedRoomId,
+          DropdownButtonFormField<int?>(
+            initialValue: rooms.any((r) => r.id == selectedRoomId) ? selectedRoomId : null,
             decoration: InputDecoration(
               labelText: t.translate('add_plant_room_optional'),
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.home),
             ),
-            items: rooms.map((room) {
-              return DropdownMenuItem(value: room.id, child: Text(room.name));
-            }).toList(),
+            items: [
+              DropdownMenuItem<int?>(value: null, child: Text(t.translate('no_room'))),
+              ...rooms.map((room) => DropdownMenuItem<int?>(value: room.id, child: Text(room.name))),
+            ],
             onChanged: onRoomSelected,
           ),
       ],
