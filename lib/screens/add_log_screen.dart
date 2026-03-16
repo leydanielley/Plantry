@@ -72,7 +72,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   final _systemBucketCountController = TextEditingController();
   final _systemBucketSizeController = TextEditingController();
 
-  ActionType _selectedAction = ActionType.water;
+  late ActionType _selectedAction;
   PlantPhase? _selectedNewPhase;
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
@@ -85,9 +85,31 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   bool _runoffEnabled = false;
   bool _cleanse = false;
 
+  bool get _isHydroSystem {
+    final m = widget.plant.medium;
+    return m == Medium.rdwc || m == Medium.dwc || m == Medium.hydro || m == Medium.aero;
+  }
+
+  List<ActionType> _allowedActions() {
+    return ActionType.values.where((a) {
+      if (a == ActionType.harvest) return false;
+      if (_isHydroSystem && a == ActionType.water) return false;
+      if (_isHydroSystem && a == ActionType.feed) return false;
+      return true;
+    }).toList();
+  }
+
+  String _actionLabel(ActionType a) {
+    if (a == ActionType.transplant && widget.plant.medium == Medium.rdwc) {
+      return _t['action_bucket_change'];
+    }
+    return a.displayName;
+  }
+
   @override
   void initState() {
     super.initState();
+    _selectedAction = _isHydroSystem ? ActionType.note : ActionType.water;
     _loadNextDayNumber();
     _loadFertilizers();
   }
@@ -261,10 +283,12 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
                         Expanded(child: PlantryFormField(controller: _ecInController, label: _t['label_ec_in'], keyboardType: TextInputType.number)),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    _buildRunoffSection(),
-                    const SizedBox(height: 8),
-                    _buildCleanseRow(),
+                    if (widget.plant.medium.needsRunoffFlags) ...[
+                      const SizedBox(height: 12),
+                      _buildRunoffSection(),
+                      const SizedBox(height: 8),
+                      _buildCleanseRow(),
+                    ],
                     const SizedBox(height: 24),
                   ],
                   if (_selectedAction == ActionType.feed) ...[
@@ -331,7 +355,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         const SizedBox(height: 12),
         Wrap(
           spacing: 8, runSpacing: 8,
-          children: ActionType.values.map((a) {
+          children: _allowedActions().map((a) {
             final sel = _selectedAction == a;
             return GestureDetector(
               onTap: () => setState(() {
@@ -341,7 +365,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(color: sel ? DT.accent : DT.elevated, borderRadius: BorderRadius.circular(8), border: Border.all(color: sel ? DT.accent : DT.border)),
-                child: Text(a.displayName, style: TextStyle(color: sel ? DT.onAccent : DT.textSecondary, fontSize: 12, fontWeight: sel ? FontWeight.bold : FontWeight.normal)),
+                child: Text(_actionLabel(a), style: TextStyle(color: sel ? DT.onAccent : DT.textSecondary, fontSize: 12, fontWeight: sel ? FontWeight.bold : FontWeight.normal)),
               ),
             );
           }).toList(),

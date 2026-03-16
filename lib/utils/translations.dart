@@ -221,6 +221,7 @@ class AppTranslations {
       'rdwc_hint_ec': 'z.B. 1.8',
 
       // Splash Screen Error Dialog
+      'action_bucket_change': 'Bucket-Wechsel',
       'splash_error_db_title': 'Datenbankfehler',
       'splash_error_db_retries': 'Die Datenbank konnte nicht geladen werden.',
       'splash_error_critical': 'Kritischer Fehler',
@@ -1764,6 +1765,7 @@ class AppTranslations {
       'rdwc_hint_ec': 'e.g. 1.8',
 
       // Splash Screen Error Dialog
+      'action_bucket_change': 'Bucket Change',
       'splash_error_db_title': 'Database Error',
       'splash_error_db_retries': 'The database could not be loaded.',
       'splash_error_critical': 'Critical Error',

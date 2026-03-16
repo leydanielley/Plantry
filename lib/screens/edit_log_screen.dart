@@ -173,10 +173,12 @@ class _EditLogScreenState extends State<EditLogScreen> {
                         Expanded(child: PlantryFormField(controller: _ecInController, label: _t['label_ec_in'], keyboardType: TextInputType.number)),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    _buildRunoffSection(),
-                    const SizedBox(height: 8),
-                    _buildCleanseRow(),
+                    if (widget.plant.medium.needsRunoffFlags) ...[
+                      const SizedBox(height: 12),
+                      _buildRunoffSection(),
+                      const SizedBox(height: 8),
+                      _buildCleanseRow(),
+                    ],
                     const SizedBox(height: 24),
                   ],
                   if (_selectedAction == ActionType.feed) ...[
@@ -235,6 +237,32 @@ class _EditLogScreenState extends State<EditLogScreen> {
     );
   }
 
+  bool get _isHydroSystem {
+    final m = widget.plant.medium;
+    return m == Medium.rdwc || m == Medium.dwc || m == Medium.hydro || m == Medium.aero;
+  }
+
+  List<ActionType> _allowedActions() {
+    final allowed = ActionType.values.where((a) {
+      if (a == ActionType.harvest) return false;
+      if (_isHydroSystem && a == ActionType.water) return false;
+      if (_isHydroSystem && a == ActionType.feed) return false;
+      return true;
+    }).toList();
+    // Bestehendes Log-Action immer anzeigen, auch wenn jetzt gefiltert
+    if (!allowed.contains(_selectedAction)) {
+      allowed.insert(0, _selectedAction);
+    }
+    return allowed;
+  }
+
+  String _actionLabel(ActionType a) {
+    if (a == ActionType.transplant && widget.plant.medium == Medium.rdwc) {
+      return _t['action_bucket_change'];
+    }
+    return a.displayName;
+  }
+
   Widget _buildActionSelector() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +271,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
         const SizedBox(height: 12),
         Wrap(
           spacing: 8, runSpacing: 8,
-          children: ActionType.values.map((a) {
+          children: _allowedActions().map((a) {
             final sel = _selectedAction == a;
             return GestureDetector(
               onTap: () => setState(() {
@@ -253,7 +281,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(color: sel ? DT.accent : DT.elevated, borderRadius: BorderRadius.circular(8), border: Border.all(color: sel ? DT.accent : DT.border)),
-                child: Text(a.displayName, style: TextStyle(color: sel ? DT.onAccent : DT.textSecondary, fontSize: 12, fontWeight: sel ? FontWeight.bold : FontWeight.normal)),
+                child: Text(_actionLabel(a), style: TextStyle(color: sel ? DT.onAccent : DT.textSecondary, fontSize: 12, fontWeight: sel ? FontWeight.bold : FontWeight.normal)),
               ),
             );
           }).toList(),
