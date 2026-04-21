@@ -157,10 +157,13 @@ class BackupService implements IBackupService {
         'logs_count': (backupData['plant_logs'] as List?)?.length ?? 0,
         'grows_count': (backupData['grows'] as List?)?.length ?? 0,
         'rooms_count': (backupData['rooms'] as List?)?.length ?? 0,
-        'rdwc_systems_count': (backupData['rdwc_systems'] as List?)?.length ?? 0,
+        'rdwc_systems_count':
+            (backupData['rdwc_systems'] as List?)?.length ?? 0,
       };
 
-      final metadataFile = File(path.join(exportDir.path, 'backup_metadata.json'));
+      final metadataFile = File(
+        path.join(exportDir.path, 'backup_metadata.json'),
+      );
       await metadataFile.writeAsString(
         const JsonEncoder.withIndent('  ').convert(metadata),
       );
@@ -239,7 +242,10 @@ class BackupService implements IBackupService {
       final appDir = await getApplicationDocumentsDirectory();
       // ✅ P1 FIX: Use path.join instead of string concatenation
       // ✅ NEW: Include DB version in filename for easier identification
-      final zipPath = path.join(appDir.path, 'plantry_backup_v${dbVersion}_$timestamp.zip');
+      final zipPath = path.join(
+        appDir.path,
+        'plantry_backup_v${dbVersion}_$timestamp.zip',
+      );
 
       AppLogger.info('BackupService', 'Creating ZIP file...');
       onProgress?.call(photos.length, photos.length, 'ZIP wird erstellt...');
@@ -255,13 +261,24 @@ class BackupService implements IBackupService {
       // ✅ NEW: Copy backup to Download folder for persistence
       try {
         final downloadBackupPath = await _copyToDownloadFolder(zipPath);
-        AppLogger.info('BackupService', '✅ Backup also saved to Downloads', downloadBackupPath);
+        AppLogger.info(
+          'BackupService',
+          '✅ Backup also saved to Downloads',
+          downloadBackupPath,
+        );
 
         // Cleanup old backups in Download folder
-        await _cleanupOldBackups('/storage/emulated/0/Download/Plantry Backups/Auto', maxBackups: 5);
+        await _cleanupOldBackups(
+          '/storage/emulated/0/Download/Plantry Backups/Auto',
+          maxBackups: 5,
+        );
       } catch (e) {
         // Don't fail the entire backup if Download copy fails
-        AppLogger.warning('BackupService', '⚠️ Could not copy to Downloads (backup still in app)', e);
+        AppLogger.warning(
+          'BackupService',
+          '⚠️ Could not copy to Downloads (backup still in app)',
+          e,
+        );
       }
 
       // ✅ NEW: Cleanup old backups in app documents folder
@@ -520,7 +537,9 @@ class BackupService implements IBackupService {
       AppLogger.info('BackupService', '✅ Data import complete and validated');
     } catch (e) {
       // Always re-enable FK checks, even on failure
-      try { await db.execute('PRAGMA foreign_keys = ON'); } catch (_) {}
+      try {
+        await db.execute('PRAGMA foreign_keys = ON');
+      } catch (_) {}
       AppLogger.error(
         'BackupService',
         'Import failed, transaction rolled back',
@@ -619,18 +638,20 @@ class BackupService implements IBackupService {
           // Find photo in import directory — try photos/ subdir first,
           // then flat importDir (ZIP extraction strips subdirectories)
           final importPhotoFile = File(
-            path.join(importDir.path, BackupConfig.photosDirectoryName, fileName),
+            path.join(
+              importDir.path,
+              BackupConfig.photosDirectoryName,
+              fileName,
+            ),
           );
-          final importPhotoFileFlat = File(
-            path.join(importDir.path, fileName),
-          );
+          final importPhotoFileFlat = File(path.join(importDir.path, fileName));
 
           try {
             final sourceFile = await importPhotoFile.exists()
                 ? importPhotoFile
                 : await importPhotoFileFlat.exists()
-                    ? importPhotoFileFlat
-                    : null;
+                ? importPhotoFileFlat
+                : null;
 
             if (sourceFile != null) {
               final newPath = path.join(photosDir.path, fileName);
@@ -813,11 +834,17 @@ class BackupService implements IBackupService {
   /// Returns path to copy in Download folder
   Future<String> _copyToDownloadFolder(String backupPath) async {
     // Create Download/Plantry Backups/Auto directory
-    final downloadDir = Directory('/storage/emulated/0/Download/Plantry Backups/Auto');
+    final downloadDir = Directory(
+      '/storage/emulated/0/Download/Plantry Backups/Auto',
+    );
 
     if (!await downloadDir.exists()) {
       await downloadDir.create(recursive: true);
-      AppLogger.info('BackupService', 'Created Download backup directory', downloadDir.path);
+      AppLogger.info(
+        'BackupService',
+        'Created Download backup directory',
+        downloadDir.path,
+      );
     }
 
     // Copy backup file
@@ -832,7 +859,10 @@ class BackupService implements IBackupService {
 
   /// Clean up old backups, keeping only the last [maxBackups] files
   /// Searches for plantry_backup_*.zip files and sorts by modification time
-  Future<void> _cleanupOldBackups(String backupDir, {int maxBackups = 5}) async {
+  Future<void> _cleanupOldBackups(
+    String backupDir, {
+    int maxBackups = 5,
+  }) async {
     try {
       final dir = Directory(backupDir);
       if (!await dir.exists()) return;
@@ -869,11 +899,7 @@ class BackupService implements IBackupService {
             path.basename(backupFiles[i].path),
           );
         } catch (e) {
-          AppLogger.warning(
-            'BackupService',
-            'Could not delete old backup',
-            e,
-          );
+          AppLogger.warning('BackupService', 'Could not delete old backup', e);
         }
       }
 
