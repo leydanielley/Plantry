@@ -358,10 +358,16 @@ class BackupService implements IBackupService {
 
           final outFile = File(path.join(importDir.path, sanitizedName));
 
-          // ✅ CRITICAL FIX: Verify final path is within import directory
+          // Verify final path is within import directory.
+          // Compare against a boundary with trailing separator so that a
+          // sibling like `/tmp/ab/...` is not accepted for base `/tmp/a`.
           final canonicalOut = outFile.absolute.path;
           final canonicalImport = importDir.absolute.path;
-          if (!canonicalOut.startsWith(canonicalImport)) {
+          final boundary = canonicalImport.endsWith(Platform.pathSeparator)
+              ? canonicalImport
+              : '$canonicalImport${Platform.pathSeparator}';
+          if (canonicalOut != canonicalImport &&
+              !canonicalOut.startsWith(boundary)) {
             AppLogger.error(
               'BackupService',
               'Path traversal attempt detected: $filename',
