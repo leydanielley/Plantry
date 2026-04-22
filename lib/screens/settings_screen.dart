@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as path;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/main.dart';
@@ -422,50 +423,138 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _showResetConfirmation() async {
+    final controller = TextEditingController();
+    final isGerman = _settings.language == 'de';
+    final typeHint = isGerman
+        ? 'Tippe DELETE zum Bestätigen'
+        : 'Type DELETE to confirm';
+    final irreversibleText = isGerman
+        ? 'Diese Aktion ist unwiderruflich. Ein Backup wird vorher automatisch erstellt.'
+        : 'This action cannot be undone. A backup will be created first.';
+
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: DT.elevated,
-        title: Text(
-          _t['delete_all_title'],
-          style: const TextStyle(color: DT.error),
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            final canDelete = controller.text.trim() == 'DELETE';
+            return AlertDialog(
+              backgroundColor: DT.elevated,
+              title: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: DT.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _t['delete_all_title'],
+                      style: const TextStyle(color: DT.error),
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _t['reset_confirm_message'],
+                    style: const TextStyle(color: DT.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    irreversibleText,
+                    style: const TextStyle(
+                      color: DT.error,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    autofocus: true,
+                    style: const TextStyle(color: DT.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: typeHint,
+                      hintStyle: const TextStyle(color: DT.textSecondary),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: DT.border),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: DT.error),
+                      ),
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(
+                    _t['cancel'],
+                    style: const TextStyle(color: DT.accent),
+                  ),
+                ),
+                TextButton(
+                  onPressed: canDelete ? () => Navigator.pop(ctx, true) : null,
+                  child: Text(
+                    _t['delete_all_btn'],
+                    style: TextStyle(
+                      color: canDelete ? DT.error : DT.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    controller.dispose();
+    if (ok != true) return;
+
+    String exportPath;
+    try {
+      exportPath = await _backupService.exportData();
+    } catch (e) {
+      if (!mounted) return;
+      AppMessages.showError(context, 'Backup: $e');
+      return;
+    }
+    if (!mounted) return;
+
+    final backupSavedText = isGerman ? 'Backup gespeichert' : 'Backup saved';
+    final openLabel = isGerman ? 'Öffnen' : 'Open';
+    final parentDir = path.dirname(exportPath);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 10),
+        content: Text('$backupSavedText:\n$exportPath'),
+        action: SnackBarAction(
+          label: openLabel,
+          onPressed: () async {
+            final uri = Uri.file(parentDir);
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri);
+            }
+          },
         ),
-        content: Text(
-          _t['reset_confirm_message'],
-          style: const TextStyle(color: DT.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              _t['cancel'],
-              style: const TextStyle(color: DT.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              _t['delete_all_btn'],
-              style: const TextStyle(color: DT.error),
-            ),
-          ),
-        ],
       ),
     );
-    if (ok == true) {
-      await _backupService.exportData();
-      final db = await DatabaseHelper.instance.database;
-      await db.transaction((txn) async {
-        await txn.delete('plants');
-        await txn.delete('plant_logs');
-        await txn.delete('grows');
-        await txn.delete('rooms');
-        await txn.delete('hardware');
-        await txn.delete('fertilizers');
-      });
-      if (!mounted) return;
-      Navigator.pop(context);
-    }
+
+    final db = await DatabaseHelper.instance.database;
+    await db.transaction((txn) async {
+      await txn.delete('plants');
+      await txn.delete('plant_logs');
+      await txn.delete('grows');
+      await txn.delete('rooms');
+      await txn.delete('hardware');
+      await txn.delete('fertilizers');
+    });
+    if (!mounted) return;
+    Navigator.pop(context);
   }
 
   Future<void> _launch(String url) async {
