@@ -190,8 +190,11 @@ class DatabaseRecovery {
       try {
         final dbFile = File(dbPath);
         if (await dbFile.exists()) {
+          // Platform-aware path. The previous hard-coded Android Downloads
+          // directory would throw on iOS/desktop/web.
+          final documentsDir = await getApplicationDocumentsDirectory();
           final backupDir = Directory(
-            '/storage/emulated/0/Download/Plantry Backups/Emergency',
+            path.join(documentsDir.path, 'Plantry Backups', 'Emergency'),
           );
           if (!await backupDir.exists()) {
             await backupDir.create(recursive: true);
@@ -200,7 +203,10 @@ class DatabaseRecovery {
             ':',
             '-',
           );
-          final backupPath = '${backupDir.path}/corrupted_db_$timestamp.db';
+          final backupPath = path.join(
+            backupDir.path,
+            'corrupted_db_$timestamp.db',
+          );
           await dbFile.copy(backupPath);
           emergencyBackupPath = backupPath;
           AppLogger.info(
