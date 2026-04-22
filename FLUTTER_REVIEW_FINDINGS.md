@@ -997,3 +997,53 @@ Die Auflagen sind **nicht inhaltlich**, sondern **methodisch**: Ein falsch-posit
 Danach Freigabe.
 
 — Tuvok, QS VibeCoding
+
+---
+
+## Abschnitt 5 — QS Stage 1.5 / D-001 (Tuvok)
+
+**Prüfdatum:** 2026-04-22
+**Prüfgegenstand:** Auto-Archive-Trigger-Implementierung D-001 in `lib/screens/add_harvest_screen.dart`
+**Implementierung durch:** B'Elanna Torres (Orchestrierung)
+
+---
+
+#### VC-006-KOR — `remaining.every(...)` gibt `true` bei leerem Iterator
+
+- **Schweregrad:** 🟡 Major
+- **Kategorie:** Korrektheit
+- **Prüfgegenstand:** `lib/screens/add_harvest_screen.dart` — `_save()`, Auto-Archive-Block
+- **Spezialist:** B'Elanna Torres
+- **Befund:** `plantRepo.findByGrow(growId)` fängt intern alle Exceptions und gibt bei DB-Fehler eine leere Liste zurück (plant_repository.dart:117–124). Wird `remaining` leer zurückgegeben, ergibt `remaining.every((p) => p.phase == PlantPhase.harvest)` in Dart `true` (Vacuous Truth). Folge: der Grow wird archiviert, obwohl kein einziger Plant tatsächlich geerntet wurde.
+- **Korrekturvorschlag:** Guard-Bedingung ergänzen: `if (remaining.isNotEmpty && allHarvested)` statt nur `if (allHarvested)`.
+- **Status:** erledigt
+- **Korrektur-Zyklen:** 1/2
+
+---
+
+#### VC-007-VOL — Kein Provider-Refresh nach Auto-Archive
+
+- **Schweregrad:** 🟢 Minor
+- **Kategorie:** Vollständigkeit
+- **Prüfgegenstand:** `lib/screens/add_harvest_screen.dart` — `_save()`, Navigation nach Auto-Archive
+- **Spezialist:** B'Elanna Torres
+- **Befund:** Nach erfolgreichem Auto-Archive (Plants + Grow archiviert) navigiert der Screen zum `HarvestDetailScreen` und entfernt dabei alle vorherigen Screens bis zum ersten (`r.isFirst`). Die Providers (`PlantProvider`, `GrowProvider`) werden nicht explizit refresht. Ob der erste Screen beim Wiederauftauchen neu lädt, hängt von seiner eigenen Implementierung ab — ohne Verifikation des ersten Screens ist nicht garantiert, dass die Raumansicht aktualisiert wird.
+- **Korrekturvorschlag:** Prüfen, ob der erste Screen (Dashboard/PlantList) `loadPlants()` / `loadGrows()` in `didChangeDependencies` oder via RouteAware aufruft. Falls nicht: explizit vor der Navigation refreshen (z.B. `context.read<PlantProvider>().loadPlants()`, `context.read<GrowProvider>().loadGrows()`).
+- **Status:** offen
+- **Korrektur-Zyklen:** 0/2
+
+---
+
+### 5.1 QS-Ergebnis D-001
+
+**⚠️ Freigabe mit Auflagen**
+
+Ein Major-Finding (VC-006-KOR) muss vor dem Commit behoben werden. Das `remaining.isNotEmpty`-Guard ist ein Einzeiler und blockiert die Freigabe. VC-007 kann parallel oder als Folge-Ticket behandelt werden.
+
+Der bang-Operator `p.id!` ist unbedenklich — alle aus der DB geladenen Plants haben eine ID. Der `mounted`-Check ist korrekt positioniert. Der `try/catch` um den gesamten `_save()`-Block ist ausreichend für den Fehlerfall (DB-Fehler werden gecatcht, `_isLoading` zurückgesetzt).
+
+**Auflagen:**
+1. VC-006: `remaining.isNotEmpty &&` vor `allHarvested` ergänzen. Dann Re-QS nur dieses Blocks.
+2. VC-007: Ersten Screen prüfen — bei Bedarf Provider-Refresh ergänzen.
+
+— Tuvok, QS VibeCoding, 2026-04-22

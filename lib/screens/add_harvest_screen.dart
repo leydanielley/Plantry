@@ -12,6 +12,7 @@ import 'package:growlog_app/theme/design_tokens.dart';
 import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
@@ -211,12 +212,27 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
         overallNotes: _notesController.text,
       );
       final id = await _harvestRepo.createHarvest(h);
-      await getIt<IPlantRepository>().update(
+      final plantRepo = getIt<IPlantRepository>();
+      await plantRepo.update(
         widget.plant.copyWith(
           phase: PlantPhase.harvest,
           phaseStartDate: _harvestDate,
         ),
       );
+
+      final growId = widget.plant.growId;
+      if (growId != null) {
+        final remaining = await plantRepo.findByGrow(growId);
+        final allHarvested =
+            remaining.isNotEmpty &&
+            remaining.every((p) => p.phase == PlantPhase.harvest);
+        if (allHarvested) {
+          for (final p in remaining) {
+            await plantRepo.archive(p.id!);
+          }
+          await getIt<IGrowRepository>().archive(growId);
+        }
+      }
 
       if (mounted) {
         AppMessages.showSuccess(context, _t['harvest_created_msg']);
