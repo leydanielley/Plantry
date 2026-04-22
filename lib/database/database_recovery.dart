@@ -173,15 +173,23 @@ class DatabaseRecovery {
       try {
         final dbFile = File(dbPath);
         if (await dbFile.exists()) {
-          final backupDir = Directory('/storage/emulated/0/Download/Plantry Backups/Emergency');
+          final backupDir = Directory(
+            '/storage/emulated/0/Download/Plantry Backups/Emergency',
+          );
           if (!await backupDir.exists()) {
             await backupDir.create(recursive: true);
           }
-          final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
+          final timestamp = DateTime.now().toIso8601String().replaceAll(
+            ':',
+            '-',
+          );
           final backupPath = '${backupDir.path}/corrupted_db_$timestamp.db';
           await dbFile.copy(backupPath);
           emergencyBackupPath = backupPath;
-          AppLogger.info('DatabaseRecovery', '✅ Filesystem backup created: $backupPath');
+          AppLogger.info(
+            'DatabaseRecovery',
+            '✅ Filesystem backup created: $backupPath',
+          );
         }
       } catch (backupError) {
         AppLogger.error(
@@ -217,7 +225,8 @@ class DatabaseRecovery {
 
     if (deleted) {
       // We know emergencyBackupPath is not null due to safety check above
-      final message = 'Corrupted database removed. A fresh database will be created.'
+      final message =
+          'Corrupted database removed. A fresh database will be created.'
           '\n\n✅ Emergency backup saved to:\n$emergencyBackupPath\n\n'
           'You can manually recover data from this JSON file if needed.';
 
