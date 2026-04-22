@@ -1047,3 +1047,47 @@ Der bang-Operator `p.id!` ist unbedenklich — alle aus der DB geladenen Plants 
 2. VC-007: Ersten Screen prüfen — bei Bedarf Provider-Refresh ergänzen.
 
 — Tuvok, QS VibeCoding, 2026-04-22
+
+---
+
+## Abschnitt 6 — D-002 E2E-Walkthrough (B'Elanna / statisch)
+
+**Datum:** 2026-04-22
+**Testdatensatz:** `wa_chat/plantry_export_2026-03-15T08-21-16/` (DB v38, app v1.1.0+90)
+**Methode:** Statische Code-Trace gegen Daniels reale Backup-Daten (keine UI-Ausführung möglich)
+
+### 6.1 Backup-Import-Kompatibilität (v38 → v43)
+
+| Prüfpunkt | Ergebnis |
+|-----------|----------|
+| `backup_version=1` vs. `BackupConfig.backupVersion=1` | ✅ kompatibel |
+| Alle erwarteten Tabellen-Keys vorhanden | ✅ |
+| Neue Spalten v39 (`is_custom`, `n` in fertilizers) fehlen im Backup | ✅ unkritisch — SQLite-Defaults greifen beim Insert |
+| Neue Spalten v41 (`light_watts` in rooms) fehlen | ✅ unkritisch — NULL erlaubt |
+| Neue Spalten v42 (`ec_warning_min/max`, `log_status`) fehlen | ✅ unkritisch — DEFAULT/NULL |
+| Neue Spalte v43 (`phase` in rdwc_recipes) fehlt | ✅ unkritisch — NULL erlaubt |
+| `ConflictAlgorithm.ignore` in `_importTableInTransaction` | ✅ sicher für Partial-Rows |
+| FK-Integrity-Check nach Import | ✅ Warnings erwartet, non-critical (schema migration) |
+
+### 6.2 D-001-Fix-Trace gegen Daniels Grow-Daten
+
+**Grow 1 "WinterWizzard"** (room_id=1): Plants RS 11 #1 (id=9) + RS 11 #2 (id=10), beide `grow_id=1, phase=BLOOM, archived=0`
+
+| Schritt | findByGrow(1) Ergebnis | allHarvested | Aktion |
+|---------|----------------------|--------------|--------|
+| Harvest RS 11 #1 | [#1 harvest, #2 bloom] | false | kein Archive ✅ |
+| Harvest RS 11 #2 | [#1 harvest, #2 harvest] | true | Archive #1, #2, Grow 1 ✅ |
+
+**Grow 2 "Wizzard?"** (archived=1): Plants 13+14 bereits archived → `findByGrow(2)` liefert leere Liste → `remaining.isNotEmpty=false` → kein spurious Archive ✅
+
+**Standalone Plants** (grow_id=null — Wedding Pair, RS 11 #3 etc.): `growId == null` → Auto-Archive-Block wird nicht betreten ✅
+
+### 6.3 Raumansicht nach Auto-Archive
+
+`findByRoom(1)` filtert `AND p.archived = 0` → RS 11 #1 und #2 verschwinden aus Raumansicht nach Archive. RDWC-System "Alien" (hardware-Tabelle, unabhängig) bleibt sichtbar. ✅
+
+### 6.4 Fazit D-002
+
+**✅ Kein Code-Change erforderlich.** D-001-Fix verhält sich korrekt für Daniels reale Datenlage. Backup-Import von v38 auf v43 ist kompatibel. Alle Edge-Cases (leerer Grow, standalone Plants, bereits archivierte Grows) werden korrekt behandelt.
+
+— B'Elanna Torres, VibeCoding, 2026-04-22
