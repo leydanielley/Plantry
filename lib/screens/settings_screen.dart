@@ -544,15 +544,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
 
-    final db = await DatabaseHelper.instance.database;
-    await db.transaction((txn) async {
-      await txn.delete('plants');
-      await txn.delete('plant_logs');
-      await txn.delete('grows');
-      await txn.delete('rooms');
-      await txn.delete('hardware');
-      await txn.delete('fertilizers');
-    });
+    try {
+      final db = await DatabaseHelper.instance.database;
+      await db.transaction((txn) async {
+        await txn.delete('plants');
+        await txn.delete('plant_logs');
+        await txn.delete('grows');
+        await txn.delete('rooms');
+        await txn.delete('hardware');
+        await txn.delete('fertilizers');
+      });
+    } catch (e) {
+      if (!mounted) return;
+      final resetFailedText = isGerman
+          ? 'Reset fehlgeschlagen. Backup bleibt erhalten unter: $exportPath'
+          : 'Reset failed. Backup preserved at: $exportPath';
+      AppMessages.showError(context, resetFailedText);
+      return;
+    }
     if (!mounted) return;
     Navigator.pop(context);
   }
