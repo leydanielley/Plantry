@@ -213,6 +213,39 @@ class DatabaseRecovery {
             'DatabaseRecovery',
             '✅ Filesystem backup created: $backupPath',
           );
+
+          // On Android, additionally mirror to the user-visible Downloads
+          // directory. The sandbox copy above is guaranteed but is wiped on
+          // uninstall and unreachable via a standard file manager, which
+          // defeats the purpose of a last-resort emergency backup. The mirror
+          // is best-effort; any failure leaves the sandbox copy in place.
+          if (Platform.isAndroid) {
+            try {
+              final androidDownloadsDir = Directory(
+                '/storage/emulated/0/Download/Plantry Backups/Emergency',
+              );
+              if (!await androidDownloadsDir.exists()) {
+                await androidDownloadsDir.create(recursive: true);
+              }
+              final mirrorPath = path.join(
+                androidDownloadsDir.path,
+                'corrupted_db_$timestamp.db',
+              );
+              await dbFile.copy(mirrorPath);
+              emergencyBackupPath = mirrorPath;
+              AppLogger.info(
+                'DatabaseRecovery',
+                '✅ Emergency backup mirrored to Downloads',
+                mirrorPath,
+              );
+            } catch (mirrorError) {
+              AppLogger.warning(
+                'DatabaseRecovery',
+                'Downloads mirror failed; sandbox copy remains available',
+                mirrorError,
+              );
+            }
+          }
         }
       } catch (backupError) {
         AppLogger.error(
