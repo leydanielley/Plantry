@@ -36,10 +36,27 @@ class DatabaseRecovery {
 
       final db = await openDatabase(dbPath);
 
-      // Try PRAGMA commands to repair
-      await db.execute('PRAGMA integrity_check');
-      await db.execute('VACUUM');
-      await db.execute('REINDEX');
+      // Evaluate integrity_check result. `execute` discards rows, so a
+      // corrupt database would previously still report repair success.
+      final result = await db.rawQuery('PRAGMA integrity_check');
+      final ok =
+          result.isNotEmpty &&
+          result.first.values.first?.toString().toLowerCase() == 'ok';
+      if (!ok) {
+        AppLogger.error(
+          'DatabaseRecovery',
+          'integrity_check reported errors',
+          result,
+        );
+        await db.close();
+        return false;
+      }
+
+      // VACUUM/REINDEX can take minutes on large DBs — guard with a timeout
+      // so a stuck repair does not wedge the startup path.
+      const repairTimeout = Duration(minutes: 5);
+      await db.execute('VACUUM').timeout(repairTimeout);
+      await db.execute('REINDEX').timeout(repairTimeout);
 
       await db.close();
 
