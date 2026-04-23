@@ -1091,3 +1091,230 @@ Der bang-Operator `p.id!` ist unbedenklich — alle aus der DB geladenen Plants 
 **✅ Kein Code-Change erforderlich.** D-001-Fix verhält sich korrekt für Daniels reale Datenlage. Backup-Import von v38 auf v43 ist kompatibel. Alle Edge-Cases (leerer Grow, standalone Plants, bereits archivierte Grows) werden korrekt behandelt.
 
 — B'Elanna Torres, VibeCoding, 2026-04-22
+
+---
+
+## Abschnitt 7 — Stage-2-Review: FR-C-003 + FR-C-004 (Harren)
+
+**Prüfdatum:** 2026-04-22
+**Scope:** Vollständiger Scan aller 51 Dateien in `lib/screens/` auf `setState`/`Navigator`/`context`-Nutzung nach `await` ohne `mounted`-Guard (FR-C-003) + Verifikation `dispose()` in `edit_plant_screen.dart` (FR-C-004).
+**Methode:** Direkte Code-Verifikation via grep/Read gegen aktuelle Dateien.
+
+---
+
+### 7.1 FR-C-003 — Verified Findings (nach Schweregrad)
+
+**Klassifikation der Muster:**
+- `setState` direkt nach `await` in derselben Funktion ohne `mounted`-Check → 🔴 Blocker / 🟡 Major
+- `await Navigator.push(...)` → `_loadX()` wo `_loadX` selbst `if (!mounted) return` als erste Zeile hat → ✅ Safe (guard existiert)
+- `await showDatePicker(...)` → `setState(...)` — Eltern-Widget bleibt während Dialog gemountet → 🟢 Minor
+
+---
+
+#### [S2-FC-001] `manual_recovery_screen.dart` — setState nach await ohne mounted in `_loadAvailableBackups`
+
+- **Severity:** 🔴 Blocker
+- **Kategorie:** Async / State-Lifecycle
+- **Ort:** `lib/screens/manual_recovery_screen.dart:60,66`
+- **Befund:** `_loadAvailableBackups()` ruft `await _findAllBackups()` auf und danach in try und catch `setState(...)` ohne vorherigen `mounted`-Check. Wer `ManualRecoveryScreen` öffnet und direkt wieder schließt (während der Backup-Scan läuft), löst den Crash aus.
+- **Code (aktuell):**
+  ```dart
+  final backups = await _findAllBackups();  // line 59
+  setState(() {                              // line 60 — kein mounted-Check
+    _availableBackups = backups;
+    _isLoading = false;
+  });
+  // ... catch:
+  setState(() {                              // line 66 — kein mounted-Check
+    _isLoading = false;
+  });
+  ```
+- **Fix:**
+  ```dart
+  final backups = await _findAllBackups();
+  if (!mounted) return;
+  setState(() { _availableBackups = backups; _isLoading = false; });
+  // ... catch:
+  if (!mounted) return;
+  setState(() { _isLoading = false; });
+  ```
+- **Impact:** Reproduzierbarer Crash: schnelles Öffnen + Schließen des ManualRecovery-Screens.
+- **Sicherheit der Bewertung:** Hoch (direkte Code-Verifikation)
+
+---
+
+#### [S2-FC-002] `plant_photo_gallery_screen.dart` — setState nach await ohne mounted in `_loadMorePhotos`
+
+- **Severity:** 🔴 Blocker
+- **Kategorie:** Async / State-Lifecycle
+- **Ort:** `lib/screens/plant_photo_gallery_screen.dart:114,124`
+- **Befund:** `_loadMorePhotos()` führt zwei `await`-Aufrufe durch (`_photoRepo.getPhotosByPlantId`, `_logRepo.findByIds`) und ruft danach in try und catch `setState(...)` ohne `mounted`-Check auf. Der Screen wird durch Scroll-Events getriggert — User scrollt, navigiert gleichzeitig zurück → Widget disposed → Crash.
+- **Code (aktuell):**
+  ```dart
+  final newPhotos = await _photoRepo.getPhotosByPlantId(...);  // line 102
+  final newLogs = await _logRepo.findByIds(logIds);            // line 110
+  setState(() {                                                  // line 114 — kein mounted-Check
+    _photos.addAll(newPhotos);
+    ...
+  });
+  // catch:
+  setState(() { _isLoading = false; _isLoadingMore = false; }); // line 124 — kein mounted-Check
+  ```
+- **Fix:**
+  ```dart
+  final newPhotos = await _photoRepo.getPhotosByPlantId(...);
+  final newLogs = await _logRepo.findByIds(logIds);
+  if (!mounted) return;
+  setState(() { ... });
+  // catch:
+  if (!mounted) return;
+  setState(() { _isLoading = false; _isLoadingMore = false; });
+  ```
+- **Impact:** Reproduzierbar durch Scroll-triggered Pagination + Back-Navigation.
+- **Sicherheit der Bewertung:** Hoch
+
+---
+
+#### [S2-FC-003] `harvest_detail_screen.dart` — _loadHarvest ohne mounted als erste Zeile, aufgerufen nach await Navigator.push
+
+- **Severity:** 🟡 Major
+- **Kategorie:** Async / State-Lifecycle
+- **Ort:** `lib/screens/harvest_detail_screen.dart:88-89,54`
+- **Befund:** `_loadHarvest()` ruft `setState(() => _isLoading = true)` als allererste Zeile auf (line 54) — ohne mounted-Guard. Aufgerufen wird `_loadHarvest()` nach `await Navigator.push(...)` ohne mounted-Check (line 89). Wenn das Widget in der Zwischenzeit vom Tree entfernt wird (seltene Race-Condition), crasht `setState` auf dem disposed Widget.
+- **Code (aktuell):**
+  ```dart
+  // line 88-89:
+  await Navigator.push(context, MaterialPageRoute(builder: (_) => EditHarvestScreen(...)));
+  _loadHarvest();  // kein mounted-Check vor dem Aufruf
+
+  // _loadHarvest(), line 53-54:
+  Future<void> _loadHarvest() async {
+    setState(() => _isLoading = true);  // kein mounted-Guard
+  ```
+- **Fix (zwei Stellen):**
+  ```dart
+  // Aufrufstelle:
+  await Navigator.push(...);
+  if (mounted) _loadHarvest();
+
+  // Alternativ in _loadHarvest() selbst (robuster):
+  Future<void> _loadHarvest() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+  ```
+- **Impact:** Seltene Race-Condition, aber reproduzierbar wenn Parent-Navigator das Widget entfernt.
+- **Sicherheit der Bewertung:** Mittel
+
+---
+
+#### [S2-FC-004] `fertilizer_dbf_import_screen.dart` — setState im catch-Handler nach await ohne mounted
+
+- **Severity:** 🟡 Major
+- **Kategorie:** Async / State-Lifecycle
+- **Ort:** `lib/screens/fertilizer_dbf_import_screen.dart:70-80`
+- **Befund:** `_loadData()` fängt Exceptions aus `await _parseDbfFile()` und ruft im catch-Block `setState(...)` ohne mounted-Check auf. Wenn der Screen während des DBF-Parsens verlassen wird und danach eine Exception fliegt, Crash.
+- **Code (aktuell):**
+  ```dart
+  Future<void> _loadData() async {
+    try {
+      await _parseDbfFile();
+    } catch (e) {
+      AppLogger.error(...);
+      setState(() {          // kein mounted-Check
+        _errorMessage = ...;
+        _isLoading = false;
+      });
+    }
+  }
+  ```
+- **Fix:**
+  ```dart
+  } catch (e) {
+    AppLogger.error(...);
+    if (!mounted) return;
+    setState(() { _errorMessage = ...; _isLoading = false; });
+  }
+  ```
+- **Impact:** Crash wenn DBF-Parsing fehlschlägt und User Screen verlassen hat.
+- **Sicherheit der Bewertung:** Hoch
+
+---
+
+#### [S2-FC-005] `splash_screen.dart` — mehrere setState nach await ohne mounted in `_initApp`
+
+- **Severity:** 🟡 Major
+- **Kategorie:** Async / State-Lifecycle
+- **Ort:** `lib/screens/splash_screen.dart` (Zeilen ~109, ~137, ~168)
+- **Befund:** Die lange `_initApp()`-Funktion ruft `setState(...)` an mehreren Stellen nach `await`-Aufrufen ohne mounted-Check auf. SplashScreen ist besonders risikobehaftet: Wenn der App-Start-Flow durch eine Exception abbricht und gleichzeitig der Navigator zu einer anderen Route wechselt, können diese `setState`-Aufrufe auf einem disposed Widget landen. Einige `setState`-Aufrufe haben später mounted-Guards (z.B. line 190), aber frühe Aufrufe (line 109, 137, 168) nicht.
+- **Fix:** `if (!mounted) return;` vor jeden `setState`-Aufruf nach einem `await` in `_initApp()`.
+- **Impact:** Fehlerfall bei Migrations-Problemen + gleichzeitigem Navigation-Trigger.
+- **Sicherheit der Bewertung:** Mittel
+
+---
+
+#### [S2-FC-006] DatePicker-Pattern — 10 Screens (Minor)
+
+- **Severity:** 🟢 Minor
+- **Kategorie:** Async / State-Lifecycle
+- **Ort:** Betroffen: `add_grow_screen.dart`, `add_harvest_screen.dart`, `add_log_screen.dart`, `add_plant_screen.dart`, `edit_grow_screen.dart`, `edit_harvest_curing_screen.dart` (2x), `edit_harvest_drying_screen.dart` (2x), `edit_log_screen.dart`, `edit_plant_screen.dart`, `rdwc_quick_measurement_screen.dart`
+- **Befund:** Pattern `await showDatePicker(...)` → `if (d != null) setState(...)` ohne mounted-Check. Technisch unsicher, praktisch aber sehr niedriges Risiko: Der Parent bleibt während des Dialogs gemountet; ein Crash würde nur bei ungewöhnlichem Tree-Replacement ausgelöst.
+- **Fix:** `if (!mounted) return;` nach dem await hinzufügen.
+- **Impact:** Sehr niedrig unter normalen Nutzungsbedingungen.
+- **Sicherheit der Bewertung:** Hoch (Muster bekannt, Risiko kontextabhängig)
+
+---
+
+#### Screens mit korrekter Implementierung (zur Vollständigkeit)
+
+Folgende Screens nutzen das `Navigator.push` → `_loadX()`-Pattern, haben aber `if (!mounted) return` als erste Zeile in `_loadX()` oder prüfen `mounted` vor dem Aufruf:
+- `fertilizer_list_screen.dart`, `grow_list_screen.dart`, `plants_screen.dart`, `rdwc_systems_screen.dart`, `rdwc_system_detail_screen.dart`, `room_list_screen.dart`, `hardware_list_screen.dart`, `rdwc_recipes_screen.dart` — ✅ Safe
+- `plant_detail_screen.dart` — `_loadData()` prüft `!mounted` als erste Zeile (line 130) ✅; Ausnahme: line 255-256 (`PlantPhotoGallery`-Push → `_loadData()` ohne explizites `if (mounted)` am Aufruf, aber durch Guard in `_loadData()` abgedeckt) ✅
+
+---
+
+### 7.2 FR-C-004 — Verifiziert: edit_plant_screen.dart ohne dispose()
+
+- **Severity:** 🟡 Major
+- **Kategorie:** Memory-Leak / Widget-Lifecycle
+- **Ort:** `lib/screens/edit_plant_screen.dart:40-42,67-69`
+- **Befund:** Drei `TextEditingController` werden als `late`-Felder deklariert und in `initState()` initialisiert:
+  ```dart
+  late TextEditingController _nameController;     // line 40
+  late TextEditingController _strainController;   // line 41
+  late TextEditingController _breederController;  // line 42
+  // initState:
+  _nameController = TextEditingController(text: widget.plant.name);   // line 67
+  _strainController = TextEditingController(text: widget.plant.strain ?? '');  // line 68
+  _breederController = TextEditingController(text: widget.plant.breeder ?? ''); // line 69
+  ```
+  `grep -n "dispose"` gibt keine Treffer — kein `dispose()`-Override im gesamten File.
+- **Impact:** Memory-Leak bei jedem Edit-Plant-Aufruf. `TextEditingController` hält Listeners; wird nie freigegeben.
+- **Fix:**
+  ```dart
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _strainController.dispose();
+    _breederController.dispose();
+    super.dispose();
+  }
+  ```
+- **Sicherheit der Bewertung:** Hoch (direkte Code-Verifikation, grep bestätigt Abwesenheit von dispose)
+
+---
+
+### 7.3 Zusammenfassung Stage-2-Review
+
+| ID | Schweregrad | Befund | Status |
+|----|------------|--------|--------|
+| S2-FC-001 | 🔴 Blocker | `manual_recovery_screen.dart` — setState nach await ohne mounted | offen |
+| S2-FC-002 | 🔴 Blocker | `plant_photo_gallery_screen.dart` — setState nach await ohne mounted | offen |
+| S2-FC-003 | 🟡 Major | `harvest_detail_screen.dart` — _loadHarvest ohne mounted-Guard | offen |
+| S2-FC-004 | 🟡 Major | `fertilizer_dbf_import_screen.dart` — setState im catch ohne mounted | offen |
+| S2-FC-005 | 🟡 Major | `splash_screen.dart` — mehrere setState nach await ohne mounted | offen |
+| S2-FC-006 | 🟢 Minor | DatePicker-Pattern in 10 Screens ohne mounted-Check | offen |
+| FR-C-004 | 🟡 Major | `edit_plant_screen.dart` — kein dispose() für 3 Controller | offen |
+
+**Empfohlene Fix-Reihenfolge:** S2-FC-001 → S2-FC-002 → S2-FC-004 → S2-FC-003 → FR-C-004 → S2-FC-005 → S2-FC-006 (optional)
+
+— Mortimer Harren, Flutter Code-Review, 2026-04-22
