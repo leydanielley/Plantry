@@ -57,12 +57,14 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
 
     try {
       final backups = await _findAllBackups();
+      if (!mounted) return;
       setState(() {
         _availableBackups = backups;
         _isLoading = false;
       });
     } catch (e) {
       AppLogger.error('ManualRecoveryScreen', 'Failed to load backups', e);
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });

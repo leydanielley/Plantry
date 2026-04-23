@@ -111,6 +111,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
 
       final newLogsMap = {for (final log in newLogs) log.id!: log};
 
+      if (!mounted) return;
       setState(() {
         _photos.addAll(newPhotos);
         _logs.addAll(newLogsMap);
@@ -121,6 +122,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
       });
     } catch (e) {
       AppLogger.error('PlantPhotoGalleryScreen', 'Error loading photos: $e');
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _isLoadingMore = false;
