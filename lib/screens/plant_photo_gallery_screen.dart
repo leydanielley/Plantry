@@ -111,6 +111,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
 
       final newLogsMap = {for (final log in newLogs) log.id!: log};
 
+      if (!mounted) return;
       setState(() {
         _photos.addAll(newPhotos);
         _logs.addAll(newLogsMap);
@@ -121,6 +122,7 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
       });
     } catch (e) {
       AppLogger.error('PlantPhotoGalleryScreen', 'Error loading photos: $e');
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _isLoadingMore = false;
@@ -134,7 +136,8 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.transparent, // intentionally transparent for photo dialog overlay
+        backgroundColor: Colors
+            .transparent, // intentionally transparent for photo dialog overlay
         child: Stack(
           children: [
             Center(
@@ -168,7 +171,10 @@ class _PlantPhotoGalleryScreenState extends State<PlantPhotoGalleryScreen> {
                       const SizedBox(height: 4),
                       Text(
                         DateFormat('dd.MM.yyyy HH:mm').format(log.logDate),
-                        style: const TextStyle(color: DT.textSecondary, fontSize: 12),
+                        style: const TextStyle(
+                          color: DT.textSecondary,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ],

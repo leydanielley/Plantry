@@ -36,10 +36,27 @@ class DatabaseRecovery {
 
       final db = await openDatabase(dbPath);
 
-      // Try PRAGMA commands to repair
-      await db.execute('PRAGMA integrity_check');
-      await db.execute('VACUUM');
-      await db.execute('REINDEX');
+      // Evaluate integrity_check result. `execute` discards rows, so a
+      // corrupt database would previously still report repair success.
+      final result = await db.rawQuery('PRAGMA integrity_check');
+      final ok =
+          result.isNotEmpty &&
+          result.first.values.first?.toString().toLowerCase() == 'ok';
+      if (!ok) {
+        AppLogger.error(
+          'DatabaseRecovery',
+          'integrity_check reported errors',
+          result,
+        );
+        await db.close();
+        return false;
+      }
+
+      // VACUUM/REINDEX can take minutes on large DBs — guard with a timeout
+      // so a stuck repair does not wedge the startup path.
+      const repairTimeout = Duration(minutes: 5);
+      await db.execute('VACUUM').timeout(repairTimeout);
+      await db.execute('REINDEX').timeout(repairTimeout);
 
       await db.close();
 
@@ -173,15 +190,62 @@ class DatabaseRecovery {
       try {
         final dbFile = File(dbPath);
         if (await dbFile.exists()) {
-          final backupDir = Directory('/storage/emulated/0/Download/Plantry Backups/Emergency');
+          // Platform-aware path. The previous hard-coded Android Downloads
+          // directory would throw on iOS/desktop/web.
+          final documentsDir = await getApplicationDocumentsDirectory();
+          final backupDir = Directory(
+            path.join(documentsDir.path, 'Plantry Backups', 'Emergency'),
+          );
           if (!await backupDir.exists()) {
             await backupDir.create(recursive: true);
           }
-          final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-          final backupPath = '${backupDir.path}/corrupted_db_$timestamp.db';
+          final timestamp = DateTime.now().toIso8601String().replaceAll(
+            ':',
+            '-',
+          );
+          final backupPath = path.join(
+            backupDir.path,
+            'corrupted_db_$timestamp.db',
+          );
           await dbFile.copy(backupPath);
           emergencyBackupPath = backupPath;
-          AppLogger.info('DatabaseRecovery', '✅ Filesystem backup created: $backupPath');
+          AppLogger.info(
+            'DatabaseRecovery',
+            '✅ Filesystem backup created: $backupPath',
+          );
+
+          // On Android, additionally mirror to the user-visible Downloads
+          // directory. The sandbox copy above is guaranteed but is wiped on
+          // uninstall and unreachable via a standard file manager, which
+          // defeats the purpose of a last-resort emergency backup. The mirror
+          // is best-effort; any failure leaves the sandbox copy in place.
+          if (Platform.isAndroid) {
+            try {
+              final androidDownloadsDir = Directory(
+                '/storage/emulated/0/Download/Plantry Backups/Emergency',
+              );
+              if (!await androidDownloadsDir.exists()) {
+                await androidDownloadsDir.create(recursive: true);
+              }
+              final mirrorPath = path.join(
+                androidDownloadsDir.path,
+                'corrupted_db_$timestamp.db',
+              );
+              await dbFile.copy(mirrorPath);
+              emergencyBackupPath = mirrorPath;
+              AppLogger.info(
+                'DatabaseRecovery',
+                '✅ Emergency backup mirrored to Downloads',
+                mirrorPath,
+              );
+            } catch (mirrorError) {
+              AppLogger.warning(
+                'DatabaseRecovery',
+                'Downloads mirror failed; sandbox copy remains available',
+                mirrorError,
+              );
+            }
+          }
         }
       } catch (backupError) {
         AppLogger.error(
@@ -217,7 +281,8 @@ class DatabaseRecovery {
 
     if (deleted) {
       // We know emergencyBackupPath is not null due to safety check above
-      final message = 'Corrupted database removed. A fresh database will be created.'
+      final message =
+          'Corrupted database removed. A fresh database will be created.'
           '\n\n✅ Emergency backup saved to:\n$emergencyBackupPath\n\n'
           'You can manually recover data from this JSON file if needed.';
 

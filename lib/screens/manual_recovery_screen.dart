@@ -57,12 +57,14 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
 
     try {
       final backups = await _findAllBackups();
+      if (!mounted) return;
       setState(() {
         _availableBackups = backups;
         _isLoading = false;
       });
     } catch (e) {
       AppLogger.error('ManualRecoveryScreen', 'Failed to load backups', e);
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -89,16 +91,14 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
       );
 
       if (await emergencyDir.exists()) {
-        await _scanBackupDirectory(
-          emergencyDir,
-          backups,
-          'Emergency Backups',
-        );
+        await _scanBackupDirectory(emergencyDir, backups, 'Emergency Backups');
       }
 
       // 3. Check Download folder (common user backup location)
       try {
-        final downloadDir = Directory('/storage/emulated/0/Download/Plantry Backups');
+        final downloadDir = Directory(
+          '/storage/emulated/0/Download/Plantry Backups',
+        );
         if (await downloadDir.exists()) {
           await _scanBackupDirectory(downloadDir, backups, 'Download Folder');
         }
@@ -126,13 +126,15 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
           final fileName = path.basename(entity.path);
           if (fileName.endsWith('.zip') || fileName.endsWith('.json')) {
             final stats = await entity.stat();
-            backups.add(BackupFileInfo(
-              filePath: entity.path,
-              fileName: fileName,
-              fileSize: stats.size,
-              modifiedDate: stats.modified,
-              source: source,
-            ));
+            backups.add(
+              BackupFileInfo(
+                filePath: entity.path,
+                fileName: fileName,
+                fileSize: stats.size,
+                modifiedDate: stats.modified,
+                source: source,
+              ),
+            );
           }
         }
       }
@@ -175,12 +177,7 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
         );
       }
     } catch (e, stackTrace) {
-      AppLogger.error(
-        'ManualRecoveryScreen',
-        'Restore failed',
-        e,
-        stackTrace,
-      );
+      AppLogger.error('ManualRecoveryScreen', 'Restore failed', e, stackTrace);
 
       setState(() {
         _isRestoring = false;
@@ -482,72 +479,70 @@ class _ManualRecoveryScreenState extends State<ManualRecoveryScreen> {
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : _availableBackups.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.backup_outlined,
-                                    size: 64,
-                                    color: DT.textSecondary,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    _t['no_auto_backups'],
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      color: DT.textSecondary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    _t['choose_backup_file'],
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                ],
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.backup_outlined,
+                                size: 64,
+                                color: DT.textSecondary,
                               ),
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _availableBackups.length,
-                              itemBuilder: (context, index) {
-                                final backup = _availableBackups[index];
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 8),
-                                  child: ListTile(
-                                    leading: Icon(
-                                      backup.fileName.endsWith('.json')
-                                          ? Icons.code
-                                          : Icons.archive,
-                                      color: Theme.of(context).primaryColor,
+                              const SizedBox(height: 16),
+                              Text(
+                                _t['no_auto_backups'],
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: DT.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _t['choose_backup_file'],
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _availableBackups.length,
+                          itemBuilder: (context, index) {
+                            final backup = _availableBackups[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: Icon(
+                                  backup.fileName.endsWith('.json')
+                                      ? Icons.code
+                                      : Icons.archive,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                                title: Text(backup.fileName),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      backup.source,
+                                      style: const TextStyle(fontSize: 12),
                                     ),
-                                    title: Text(backup.fileName),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          backup.source,
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                        Text(
-                                          '${_formatDate(backup.modifiedDate)} • ${_formatFileSize(backup.fileSize)}',
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            color: DT.textSecondary,
-                                          ),
-                                        ),
-                                      ],
+                                    Text(
+                                      '${_formatDate(backup.modifiedDate)} • ${_formatFileSize(backup.fileSize)}',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: DT.textSecondary,
+                                      ),
                                     ),
-                                    trailing: FilledButton(
-                                      onPressed: () =>
-                                          _restoreFromBackup(backup),
-                                      child: Text(_t['restore']),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                                  ],
+                                ),
+                                trailing: FilledButton(
+                                  onPressed: () => _restoreFromBackup(backup),
+                                  child: Text(_t['restore']),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                 ),
               ],
             ),

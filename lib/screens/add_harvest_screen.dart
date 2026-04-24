@@ -12,6 +12,7 @@ import 'package:growlog_app/theme/design_tokens.dart';
 import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/models/enums.dart';
+import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
@@ -94,12 +95,21 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                     child: InputDecorator(
                       decoration: InputDecoration(
                         labelText: _t['harvest_date_label'],
-                        prefixIcon: const Icon(Icons.calendar_today, color: DT.accent, size: 20),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: const Icon(
+                          Icons.calendar_today,
+                          color: DT.accent,
+                          size: 20,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: Text(
                         DateFormat('dd.MM.yyyy').format(_harvestDate),
-                        style: const TextStyle(fontSize: 16, color: DT.textPrimary),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: DT.textPrimary,
+                        ),
                       ),
                     ),
                   ),
@@ -108,7 +118,11 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                     controller: _wetWeightController,
                     label: _t['edit_harvest_wet_weight_label'],
                     keyboardType: TextInputType.number,
-                    prefixIcon: const Icon(Icons.scale, color: DT.accent, size: 20),
+                    prefixIcon: const Icon(
+                      Icons.scale,
+                      color: DT.accent,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   PlantryFormField(
@@ -118,9 +132,17 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                   ),
                   const SizedBox(height: 24),
                   _section(_t['notes']),
-                  PlantryFormField(controller: _notesController, label: _t['notes'], maxLines: 3),
+                  PlantryFormField(
+                    controller: _notesController,
+                    label: _t['notes'],
+                    maxLines: 3,
+                  ),
                   const SizedBox(height: 32),
-                  PlantryButton(label: _t['save'], onPressed: _save, fullWidth: true),
+                  PlantryButton(
+                    label: _t['save'],
+                    onPressed: _save,
+                    fullWidth: true,
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -134,7 +156,10 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: DT.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              color: DT.accent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: const Icon(Icons.grass, color: DT.accent, size: 24),
           ),
           const SizedBox(width: 16),
@@ -142,8 +167,18 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.plant.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: DT.textPrimary)),
-                Text(widget.plant.strain ?? _t['unknown_strain'], style: const TextStyle(fontSize: 13, color: DT.textSecondary)),
+                Text(
+                  widget.plant.name,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: DT.textPrimary,
+                  ),
+                ),
+                Text(
+                  widget.plant.strain ?? _t['unknown_strain'],
+                  style: const TextStyle(fontSize: 13, color: DT.textSecondary),
+                ),
               ],
             ),
           ),
@@ -154,7 +189,14 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
 
   Widget _section(String t) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
-    child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
   );
 
   Future<void> _save() async {
@@ -170,7 +212,27 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
         overallNotes: _notesController.text,
       );
       final id = await _harvestRepo.createHarvest(h);
-      await getIt<IPlantRepository>().update(widget.plant.copyWith(phase: PlantPhase.harvest, phaseStartDate: _harvestDate));
+      final plantRepo = getIt<IPlantRepository>();
+      await plantRepo.update(
+        widget.plant.copyWith(
+          phase: PlantPhase.harvest,
+          phaseStartDate: _harvestDate,
+        ),
+      );
+
+      final growId = widget.plant.growId;
+      if (growId != null) {
+        final remaining = await plantRepo.findByGrow(growId);
+        final allHarvested =
+            remaining.isNotEmpty &&
+            remaining.every((p) => p.phase == PlantPhase.harvest);
+        if (allHarvested) {
+          for (final p in remaining) {
+            await plantRepo.archive(p.id!);
+          }
+          await getIt<IGrowRepository>().archive(growId);
+        }
+      }
 
       if (mounted) {
         AppMessages.showSuccess(context, _t['harvest_created_msg']);
