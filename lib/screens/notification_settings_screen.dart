@@ -257,10 +257,7 @@ class _NotificationSettingsScreenState
               title: _t['notification_time'],
               children: [
                 ListTile(
-                  leading: const Icon(
-                    Icons.access_time,
-                    color: DT.accent,
-                  ),
+                  leading: const Icon(Icons.access_time, color: DT.accent),
                   title: Text(_t['notification_time']),
                   subtitle: Text(_settings!.notificationTime),
                   trailing: const Icon(Icons.chevron_right),
