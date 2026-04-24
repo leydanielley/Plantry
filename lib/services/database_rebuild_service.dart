@@ -153,7 +153,13 @@ class DatabaseRebuildService {
       onProgress?.call(1, 6, 'Phase 1/6: Pre-flight validation');
       AppLogger.info('DatabaseRebuild', '📋 Phase 1: Pre-flight validation');
 
-      final preFlightResult = await _runPreFlightChecks();
+      final preFlightResult = await _runPreFlightChecks().timeout(
+        const Duration(minutes: 2),
+        onTimeout: () => ValidationResult(
+          isValid: false,
+          errors: ['Pre-flight timed out after 2 minutes'],
+        ),
+      );
       if (!preFlightResult.isValid) {
         throw Exception(
           'Pre-flight checks failed: ${preFlightResult.errors.join(", ")}',
@@ -162,7 +168,8 @@ class DatabaseRebuildService {
       warnings.addAll(preFlightResult.warnings);
 
       // Get current database
-      final currentDb = await DatabaseHelper.instance.database;
+      final currentDb = await DatabaseHelper.instance.database
+          .timeout(const Duration(seconds: 30));
 
       // Count records in old database
       oldCounts = await MigrationValidator.countAllRecords(currentDb);
