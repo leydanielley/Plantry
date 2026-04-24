@@ -215,6 +215,7 @@ class BackupService implements IBackupService {
                 return false; // Missing
               }
             }),
+            eagerError: false,
           );
 
           // Count successes and failures
@@ -672,6 +673,7 @@ class BackupService implements IBackupService {
             return false;
           }
         }),
+        eagerError: false,
       );
 
       copiedCount += results.where((r) => r == true).length;
