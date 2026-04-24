@@ -378,6 +378,29 @@ class DatabaseRebuildService {
         warnings.addAll(integrity.warnings);
       }
 
+      // Check 4: FK violation scan — reports violations as warnings so the
+      // rebuild can still run, but the report will list affected rows so the
+      // user knows which records may be skipped during re-insert.
+      try {
+        final fkViolations = await currentDb.rawQuery(
+          'PRAGMA foreign_key_check',
+        );
+        if (fkViolations.isNotEmpty) {
+          warnings.add(
+            'Found ${fkViolations.length} foreign-key violation(s) in current '
+            'data. Affected rows may be skipped during rebuild. '
+            'Tables: ${fkViolations.map((r) => r['table']).toSet().join(', ')}',
+          );
+          AppLogger.warning(
+            'DatabaseRebuild',
+            'FK violations detected before rebuild',
+            fkViolations,
+          );
+        }
+      } catch (fkError) {
+        warnings.add('FK pre-check skipped: $fkError');
+      }
+
       AppLogger.info('DatabaseRebuild', '✅ Pre-flight checks passed');
 
       return ValidationResult(
