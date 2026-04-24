@@ -112,7 +112,16 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.paused) {
-      unawaited(_settingsRepo.saveSettings(_settings));
+      unawaited(
+        _settingsRepo.saveSettings(_settings).catchError((e, stack) {
+          AppLogger.error(
+            'GrowLogApp',
+            'Failed to save settings on pause',
+            e,
+            stack,
+          );
+        }),
+      );
     }
   }
 
@@ -127,7 +136,8 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppLogger.error('GrowLogApp', 'Failed to load settings', e, stack);
       if (mounted) setState(() => _isLoading = false);
     }
   }
