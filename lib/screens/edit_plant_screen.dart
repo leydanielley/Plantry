@@ -19,6 +19,7 @@ import 'package:growlog_app/widgets/plantry_form_field.dart';
 import 'package:growlog_app/widgets/plantry_button.dart';
 import 'package:growlog_app/widgets/plantry_card.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
+import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/translations.dart';
 
 class EditPlantScreen extends StatefulWidget {
@@ -91,17 +92,21 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Future<void> _loadData() async {
-    final res = await Future.wait([
-      _roomRepo.findAll(),
-      _growRepo.getAll(),
-      _rdwcRepo.getAllSystems(),
-    ]);
-    if (mounted) {
-      setState(() {
-        _rooms = res[0] as List<Room>;
-        _grows = res[1] as List<Grow>;
-        _rdwcSystems = res[2] as List<RdwcSystem>;
-      });
+    try {
+      final res = await Future.wait([
+        _roomRepo.findAll(),
+        _growRepo.getAll(),
+        _rdwcRepo.getAllSystems(),
+      ], eagerError: false);
+      if (mounted) {
+        setState(() {
+          _rooms = (res[0] as List?)?.cast<Room>() ?? [];
+          _grows = (res[1] as List?)?.cast<Grow>() ?? [];
+          _rdwcSystems = (res[2] as List?)?.cast<RdwcSystem>() ?? [];
+        });
+      }
+    } catch (e) {
+      AppLogger.error('EditPlantScreen', 'Failed to load data', e);
     }
   }
 
