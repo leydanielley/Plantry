@@ -2,6 +2,7 @@
 // GROWLOG - PhotoRepository Interface
 // =============================================
 
+import 'package:sqflite/sqflite.dart';
 import 'package:growlog_app/models/photo.dart';
 
 abstract class IPhotoRepository {
@@ -17,4 +18,5 @@ abstract class IPhotoRepository {
     int? offset,
   });
   Future<void> deleteByLogId(int logId);
+  Future<void> deleteByLogIdInTransaction(DatabaseExecutor txn, int logId);
 }
