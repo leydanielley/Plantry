@@ -62,6 +62,12 @@ class BackupService implements IBackupService {
 
       // ✅ P0 FIX: Check storage BEFORE starting export
       // ✅ AUDIT FIX: Magic numbers extracted to BackupConfig
+      // Note: storage check uses a fixed minimum and does not account for
+      // actual photo directory size — estimate may be too low on large datasets.
+      AppLogger.warning(
+        'BackupService',
+        'Storage check uses fixed minimum (${BackupConfig.minimumStorageBytes} bytes) — photo size not included',
+      );
       final hasSpace = await StorageHelper.hasEnoughStorage(
         bytesNeeded: BackupConfig.minimumStorageBytes,
       );
@@ -538,8 +544,8 @@ class BackupService implements IBackupService {
         );
       }
 
-      // Transaction committed successfully, now restore photo files
-      await _importPhotoFiles(data['photos'] as List<dynamic>?, importDir);
+      // Transaction committed successfully, now restore photo files and rebase paths
+      await _importPhotoFiles(data['photos'] as List<dynamic>?, importDir, db);
 
       AppLogger.info('BackupService', '✅ Data import complete and validated');
     } catch (e) {
@@ -587,6 +593,7 @@ class BackupService implements IBackupService {
   Future<void> _importPhotoFiles(
     List<dynamic>? photos,
     Directory importDir,
+    Database db,
   ) async {
     if (photos == null || photos.isEmpty) {
       AppLogger.debug('BackupService', 'No photo files to import');
@@ -663,6 +670,13 @@ class BackupService implements IBackupService {
             if (sourceFile != null) {
               final newPath = path.join(photosDir.path, fileName);
               await sourceFile.copy(newPath);
+              // Rebase DB path to current app directory
+              await db.update(
+                'photos',
+                {'file_path': newPath},
+                where: 'file_path LIKE ?',
+                whereArgs: ['%$fileName'],
+              );
               return true;
             } else {
               AppLogger.warning('BackupService', 'Photo not found', fileName);
