@@ -111,6 +111,15 @@ class MigrationManager {
         stackTrace,
       );
 
+      // Delete partial/corrupt backup file to avoid a future restore
+      // mistaking it for a valid backup.
+      if (backupPath != null) {
+        try {
+          final f = File(backupPath);
+          if (await f.exists()) await f.delete();
+        } catch (_) {}
+      }
+
       // Check if database has any data
       final hasData = await _databaseHasData(db);
 
