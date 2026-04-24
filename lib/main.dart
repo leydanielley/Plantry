@@ -121,11 +121,12 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
       final settings = await _settingsRepo.getSettings().timeout(
         const Duration(seconds: 5),
       );
-      if (mounted)
+      if (mounted) {
         setState(() {
           _settings = settings;
           _isLoading = false;
         });
+      }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -139,23 +140,20 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading)
-      return const MaterialApp(
-        home: Scaffold(
-          backgroundColor: Color(0xFF050505),
-          body: Center(
-            child: CircularProgressIndicator(color: Color(0xFF00FFBB)),
-          ),
-        ),
-      );
-
     return MaterialApp(
       title: 'Plantry',
       debugShowCheckedModeBanner: false,
       themeMode: _settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: AppTheme.lightTheme(),
       darkTheme: AppTheme.darkTheme(),
-      home: const SplashScreen(),
+      home: _isLoading
+          ? const Scaffold(
+              backgroundColor: Color(0xFF050505),
+              body: Center(
+                child: CircularProgressIndicator(color: Color(0xFF00FFBB)),
+              ),
+            )
+          : const SplashScreen(),
       routes: {'/privacy-policy': (context) => const PrivacyPolicyScreen()},
     );
   }
