@@ -45,7 +45,12 @@ void main() async {
 
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    AppLogger.error('Flutter', 'Error: ${details.exception}', details.exception, details.stack);
+    AppLogger.error(
+      'Flutter',
+      'Error: ${details.exception}',
+      details.exception,
+      details.stack,
+    );
   };
   PlatformDispatcher.instance.onError = (error, stack) {
     AppLogger.error('AsyncError', 'Uncaught', error, stack);
@@ -77,7 +82,7 @@ class GrowLogApp extends StatefulWidget {
 
 class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
-  
+
   late AppSettings _settings = AppSettings(
     language: 'de',
     isDarkMode: true,
@@ -113,8 +118,14 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
 
   Future<void> _loadSettings() async {
     try {
-      final settings = await _settingsRepo.getSettings().timeout(const Duration(seconds: 5));
-      if (mounted) setState(() { _settings = settings; _isLoading = false; });
+      final settings = await _settingsRepo.getSettings().timeout(
+        const Duration(seconds: 5),
+      );
+      if (mounted)
+        setState(() {
+          _settings = settings;
+          _isLoading = false;
+        });
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -128,7 +139,15 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const MaterialApp(home: Scaffold(backgroundColor: Color(0xFF050505), body: Center(child: CircularProgressIndicator(color: Color(0xFF00FFBB)))));
+    if (_isLoading)
+      return const MaterialApp(
+        home: Scaffold(
+          backgroundColor: Color(0xFF050505),
+          body: Center(
+            child: CircularProgressIndicator(color: Color(0xFF00FFBB)),
+          ),
+        ),
+      );
 
     return MaterialApp(
       title: 'Plantry',
