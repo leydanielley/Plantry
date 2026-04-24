@@ -247,6 +247,7 @@ class _RdwcQuickMeasurementScreenState
                   firstDate: DateTime(2020),
                   lastDate: DateTime.now(),
                 );
+                if (!mounted) return;
                 if (picked != null) setState(() => _logDate = picked);
               },
               child: InputDecorator(

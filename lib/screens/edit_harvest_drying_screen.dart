@@ -156,6 +156,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                     firstDate: widget.harvest.harvestDate,
                     lastDate: DateTime.now().add(const Duration(days: 90)),
                   );
+                  if (!mounted) return;
                   if (date != null) {
                     setState(() => _dryingStartDate = date);
                   }
@@ -177,6 +178,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                     firstDate: _dryingStartDate ?? widget.harvest.harvestDate,
                     lastDate: DateTime.now().add(const Duration(days: 120)),
                   );
+                  if (!mounted) return;
                   if (date != null) {
                     setState(() => _dryingEndDate = date);
                   }

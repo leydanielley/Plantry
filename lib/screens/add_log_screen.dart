@@ -102,11 +102,13 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       if (a == ActionType.harvest) return false;
       if (_isHydroSystem && a == ActionType.water) return false;
       if (_isHydroSystem && a == ActionType.feed) return false;
-      if (widget.plant.medium == Medium.rdwc && a == ActionType.transplant)
+      if (widget.plant.medium == Medium.rdwc && a == ActionType.transplant) {
         return false;
+      }
       // Archived: nur Note und Other
-      if (isArchived && a != ActionType.note && a != ActionType.other)
+      if (isArchived && a != ActionType.note && a != ActionType.other) {
         return false;
+      }
       // Harvest-Phase: kein Watering/Feeding/Transplanting/Training/Trimming
       if (isPostHarvest &&
           (a == ActionType.water ||
@@ -528,7 +530,8 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           firstDate: DateTime(2020),
           lastDate: DateTime.now(),
         );
-        if (d != null)
+        if (!mounted) return;
+        if (d != null) {
           setState(
             () => _selectedDate = DateTime(
               d.year,
@@ -538,6 +541,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
               _selectedDate.minute,
             ),
           );
+        }
       },
       child: Row(
         children: [
@@ -834,8 +838,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
     if (name == null || name.isEmpty) return;
     try {
       await FertilizerSetRepository().save(name, _selectedFertilizers);
-      if (mounted)
+      if (mounted) {
         AppMessages.showSuccess(context, '${_t['set_saved']}: $name');
+      }
     } catch (e) {
       if (mounted) AppMessages.showError(context, _t['error_saving_set']);
     }
@@ -1058,8 +1063,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           ),
         ),
       );
-      if (amt != null && amt > 0)
+      if (amt != null && amt > 0) {
         setState(() => _selectedFertilizers[sel.id!] = amt);
+      }
     }
   }
 

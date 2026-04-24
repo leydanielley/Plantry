@@ -169,6 +169,7 @@ class _EditGrowScreenState extends State<EditGrowScreen> {
           firstDate: DateTime(2020),
           lastDate: DateTime.now().add(const Duration(days: 365)),
         );
+        if (!mounted) return;
         if (d != null) setState(() => _startDate = d);
       },
       child: Row(

@@ -405,6 +405,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           firstDate: DateTime(2020),
           lastDate: DateTime.now(),
         );
+        if (!mounted) return;
         if (d != null) setState(() => _seedDate = d);
       },
       child: Row(

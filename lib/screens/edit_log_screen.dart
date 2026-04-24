@@ -323,10 +323,12 @@ class _EditLogScreenState extends State<EditLogScreen> {
       if (a == ActionType.harvest) return false;
       if (_isHydroSystem && a == ActionType.water) return false;
       if (_isHydroSystem && a == ActionType.feed) return false;
-      if (widget.plant.medium == Medium.rdwc && a == ActionType.transplant)
+      if (widget.plant.medium == Medium.rdwc && a == ActionType.transplant) {
         return false;
-      if (isArchived && a != ActionType.note && a != ActionType.other)
+      }
+      if (isArchived && a != ActionType.note && a != ActionType.other) {
         return false;
+      }
       if (isPostHarvest &&
           (a == ActionType.water ||
               a == ActionType.feed ||
@@ -406,7 +408,8 @@ class _EditLogScreenState extends State<EditLogScreen> {
           firstDate: DateTime(2020),
           lastDate: DateTime.now(),
         );
-        if (d != null)
+        if (!mounted) return;
+        if (d != null) {
           setState(
             () => _selectedDate = DateTime(
               d.year,
@@ -416,6 +419,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
               _selectedDate.minute,
             ),
           );
+        }
       },
       child: Row(
         children: [
@@ -650,8 +654,9 @@ class _EditLogScreenState extends State<EditLogScreen> {
           ),
         ),
       );
-      if (amt != null && amt > 0)
+      if (amt != null && amt > 0) {
         setState(() => _selectedFertilizers[sel.id!] = amt);
+      }
     }
   }
 

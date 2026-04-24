@@ -153,6 +153,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                         widget.harvest.harvestDate,
                     lastDate: DateTime.now().add(const Duration(days: 180)),
                   );
+                  if (!mounted) return;
                   if (date != null) setState(() => _curingStartDate = date);
                 },
                 onClear: () => setState(() => _curingStartDate = null),
@@ -174,6 +175,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                         widget.harvest.harvestDate,
                     lastDate: DateTime.now().add(const Duration(days: 270)),
                   );
+                  if (!mounted) return;
                   if (date != null) setState(() => _curingEndDate = date);
                 },
                 onClear: () => setState(() => _curingEndDate = null),
