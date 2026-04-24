@@ -42,7 +42,9 @@ class _EditGrowScreenState extends State<EditGrowScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.grow.name);
-    _descController = TextEditingController(text: widget.grow.description ?? '');
+    _descController = TextEditingController(
+      text: widget.grow.description ?? '',
+    );
     _startDate = widget.grow.startDate;
     _selectedRoomId = widget.grow.roomId;
     _loadData();
@@ -77,9 +79,17 @@ class _EditGrowScreenState extends State<EditGrowScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  PlantryFormField(controller: _nameController, label: 'Name', validator: (v) => v!.isEmpty ? 'Pflichtfeld' : null),
+                  PlantryFormField(
+                    controller: _nameController,
+                    label: 'Name',
+                    validator: (v) => v!.isEmpty ? 'Pflichtfeld' : null,
+                  ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _descController, label: 'Beschreibung', maxLines: 3),
+                  PlantryFormField(
+                    controller: _descController,
+                    label: 'Beschreibung',
+                    maxLines: 3,
+                  ),
                   const SizedBox(height: 24),
 
                   _section('Raumzuordnung'),
@@ -90,7 +100,11 @@ class _EditGrowScreenState extends State<EditGrowScreen> {
                   _dateTile(),
                   const SizedBox(height: 32),
 
-                  PlantryButton(label: 'Änderungen speichern', onPressed: _save, fullWidth: true),
+                  PlantryButton(
+                    label: 'Änderungen speichern',
+                    onPressed: _save,
+                    fullWidth: true,
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -98,18 +112,47 @@ class _EditGrowScreenState extends State<EditGrowScreen> {
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
 
   Widget _roomDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+      decoration: BoxDecoration(
+        color: DT.elevated,
+        borderRadius: BorderRadius.circular(DT.radiusInput),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int?>(
-          value: _selectedRoomId, isExpanded: true, dropdownColor: DT.elevated,
+          value: _selectedRoomId,
+          isExpanded: true,
+          dropdownColor: DT.elevated,
           items: [
-            DropdownMenuItem(value: null, child: Text(_t['add_grow_no_room'], style: const TextStyle(color: DT.textPrimary))),
-            ..._rooms.map((r) => DropdownMenuItem(value: r.id, child: Text(r.name, style: const TextStyle(color: DT.textPrimary)))),
+            DropdownMenuItem(
+              value: null,
+              child: Text(
+                _t['add_grow_no_room'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            ..._rooms.map(
+              (r) => DropdownMenuItem(
+                value: r.id,
+                child: Text(
+                  r.name,
+                  style: const TextStyle(color: DT.textPrimary),
+                ),
+              ),
+            ),
           ],
           onChanged: (v) => setState(() => _selectedRoomId = v),
         ),
@@ -120,14 +163,22 @@ class _EditGrowScreenState extends State<EditGrowScreen> {
   Widget _dateTile() {
     return PlantryCard(
       onTap: () async {
-        final d = await showDatePicker(context: context, initialDate: _startDate, firstDate: DateTime(2020), lastDate: DateTime.now().add(const Duration(days: 365)));
+        final d = await showDatePicker(
+          context: context,
+          initialDate: _startDate,
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
+        );
         if (d != null) setState(() => _startDate = d);
       },
       child: Row(
         children: [
           const Icon(Icons.calendar_today, color: DT.accent, size: 20),
           const SizedBox(width: 12),
-          Text('${_startDate.day}.${_startDate.month}.${_startDate.year}', style: const TextStyle(color: DT.textPrimary)),
+          Text(
+            '${_startDate.day}.${_startDate.month}.${_startDate.year}',
+            style: const TextStyle(color: DT.textPrimary),
+          ),
           const Spacer(),
           const Icon(Icons.edit, color: DT.accent, size: 18),
         ],
@@ -139,7 +190,14 @@ class _EditGrowScreenState extends State<EditGrowScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
-      await _growRepo.update(widget.grow.copyWith(name: _nameController.text, description: _descController.text, startDate: _startDate, roomId: _selectedRoomId));
+      await _growRepo.update(
+        widget.grow.copyWith(
+          name: _nameController.text,
+          description: _descController.text,
+          startDate: _startDate,
+          roomId: _selectedRoomId,
+        ),
+      );
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {

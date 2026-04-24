@@ -71,7 +71,9 @@ class _RdwcQuickMeasurementScreenState
         _isLoading = false;
       });
       if (pending != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _showPendingDialog(pending));
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _showPendingDialog(pending),
+        );
       }
     }
   }
@@ -86,7 +88,10 @@ class _RdwcQuickMeasurementScreenState
           children: [
             const Icon(Icons.schedule, color: Color(0xFFFF9800), size: 20),
             const SizedBox(width: 8),
-            Text(_t['pending_addback_found'], style: const TextStyle(color: Colors.white, fontSize: 16)),
+            Text(
+              _t['pending_addback_found'],
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
           ],
         ),
         content: Text(
@@ -95,13 +100,28 @@ class _RdwcQuickMeasurementScreenState
         ),
         actions: [
           TextButton(
-            onPressed: () { setState(() => _useAsCompletion = false); Navigator.pop(ctx, false); },
-            child: Text(_t['only_snapshot'], style: const TextStyle(color: Colors.white54)),
+            onPressed: () {
+              setState(() => _useAsCompletion = false);
+              Navigator.pop(ctx, false);
+            },
+            child: Text(
+              _t['only_snapshot'],
+              style: const TextStyle(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
-            onPressed: () { setState(() => _useAsCompletion = true); Navigator.pop(ctx, true); },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF9800), foregroundColor: Colors.black),
-            child: Text(_t['use_as_completion'], style: const TextStyle(fontWeight: FontWeight.bold)),
+            onPressed: () {
+              setState(() => _useAsCompletion = true);
+              Navigator.pop(ctx, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF9800),
+              foregroundColor: Colors.black,
+            ),
+            child: Text(
+              _t['use_as_completion'],
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -124,8 +144,12 @@ class _RdwcQuickMeasurementScreenState
 
     try {
       final level = double.tryParse(_levelController.text) ?? 0.0;
-      final ph = _phController.text.isNotEmpty ? double.tryParse(_phController.text) : null;
-      final ec = _ecController.text.isNotEmpty ? double.tryParse(_ecController.text) : null;
+      final ph = _phController.text.isNotEmpty
+          ? double.tryParse(_phController.text)
+          : null;
+      final ec = _ecController.text.isNotEmpty
+          ? double.tryParse(_ecController.text)
+          : null;
 
       if (_useAsCompletion && _pendingLog != null) {
         // Complete the pending addback with these measurements
@@ -228,7 +252,10 @@ class _RdwcQuickMeasurementScreenState
               child: InputDecorator(
                 decoration: InputDecoration(
                   labelText: _t['date'],
-                  prefixIcon: const Icon(Icons.calendar_today, color: Colors.purple),
+                  prefixIcon: const Icon(
+                    Icons.calendar_today,
+                    color: Colors.purple,
+                  ),
                   border: const OutlineInputBorder(),
                 ),
                 child: Text(

@@ -119,9 +119,7 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 decoration: BoxDecoration(
                   color: DT.info.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: DT.info.withValues(alpha: 0.3),
-                  ),
+                  border: Border.all(color: DT.info.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -221,19 +219,18 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
 
               Wrap(
                 spacing: 8,
-                children: [
-                  _t['curing_method_glass_jars'],
-                  _t['curing_method_grove_bags'],
-                  _t['curing_method_cvault'],
-                  _t['curing_method_vacuum'],
-                ].map(
-                  (method) {
-                    return ActionChip(
-                      label: Text(method),
-                      onPressed: () => _methodController.text = method,
-                    );
-                  },
-                ).toList(),
+                children:
+                    [
+                      _t['curing_method_glass_jars'],
+                      _t['curing_method_grove_bags'],
+                      _t['curing_method_cvault'],
+                      _t['curing_method_vacuum'],
+                    ].map((method) {
+                      return ActionChip(
+                        label: Text(method),
+                        onPressed: () => _methodController.text = method,
+                      );
+                    }).toList(),
               ),
               const SizedBox(height: 20),
 
@@ -256,19 +253,14 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 decoration: BoxDecoration(
                   color: DT.info.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: DT.info.withValues(alpha: 0.3),
-                  ),
+                  border: Border.all(color: DT.info.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(
-                          Icons.lightbulb_outline,
-                          color: DT.info,
-                        ),
+                        const Icon(Icons.lightbulb_outline, color: DT.info),
                         const SizedBox(width: 8),
                         Text(
                           _t['curing_tips_title'],
@@ -381,7 +373,10 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(fontSize: 12, color: DT.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: DT.textSecondary,
+                    ),
                   ),
                   Text(
                     date != null
