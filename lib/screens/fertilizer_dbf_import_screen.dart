@@ -235,7 +235,9 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
       }
 
       if (mounted) {
-        final skippedText = skipped > 0 ? ' ($skipped ${_t['dbf_import_skipped']})' : '';
+        final skippedText = skipped > 0
+            ? ' ($skipped ${_t['dbf_import_skipped']})'
+            : '';
         AppMessages.showSuccess(
           context,
           '$imported ${_t['dbf_import_success']}$skippedText',
@@ -254,7 +256,10 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
         setState(() {
           _isImporting = false;
         });
-        AppMessages.showError(context, '${_t['dbf_import_error_importing']}: ${e.toString()}');
+        AppMessages.showError(
+          context,
+          '${_t['dbf_import_error_importing']}: ${e.toString()}',
+        );
       }
     }
   }
@@ -353,27 +358,77 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          _buildSummaryRow(_t['dbf_import_file'], widget.dbfFile.path.split('/').last, DT.secondary),
-          _buildSummaryRow(_t['dbf_import_total_items'], '${_parsedFertilizers.length}', DT.success),
-          _buildSummaryRow(_t['dbf_import_substances_label'], '$substanceCount', DT.success),
-          _buildSummaryRow(_t['dbf_import_recipes_label'], '$recipeCount', DT.info),
+          _buildSummaryRow(
+            _t['dbf_import_file'],
+            widget.dbfFile.path.split('/').last,
+            DT.secondary,
+          ),
+          _buildSummaryRow(
+            _t['dbf_import_total_items'],
+            '${_parsedFertilizers.length}',
+            DT.success,
+          ),
+          _buildSummaryRow(
+            _t['dbf_import_substances_label'],
+            '$substanceCount',
+            DT.success,
+          ),
+          _buildSummaryRow(
+            _t['dbf_import_recipes_label'],
+            '$recipeCount',
+            DT.info,
+          ),
           if (_duplicateNames.isNotEmpty)
-            _buildSummaryRow(_t['dbf_import_duplicates_label'], '${_duplicateNames.length}', DT.warning),
+            _buildSummaryRow(
+              _t['dbf_import_duplicates_label'],
+              '${_duplicateNames.length}',
+              DT.warning,
+            ),
           if (invalidCount > 0)
-            _buildSummaryRow(_t['dbf_import_invalid_label'], '$invalidCount', DT.error),
+            _buildSummaryRow(
+              _t['dbf_import_invalid_label'],
+              '$invalidCount',
+              DT.error,
+            ),
           if (incompleteCount > 0)
-            _buildSummaryRow(_t['dbf_import_incomplete_label'], '$incompleteCount', DT.warning),
+            _buildSummaryRow(
+              _t['dbf_import_incomplete_label'],
+              '$incompleteCount',
+              DT.warning,
+            ),
           const Divider(height: 24),
-          _buildSummaryRow(_t['dbf_import_selected_label'], '${_getSelectedCount()}', DT.secondary),
+          _buildSummaryRow(
+            _t['dbf_import_selected_label'],
+            '${_getSelectedCount()}',
+            DT.secondary,
+          ),
           const SizedBox(height: 12),
           // Filter Buttons
           Row(
             children: [
-              Expanded(child: _buildFilterButton(_t['dbf_import_filter_all'], 'all', Icons.list)),
+              Expanded(
+                child: _buildFilterButton(
+                  _t['dbf_import_filter_all'],
+                  'all',
+                  Icons.list,
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: _buildFilterButton(_t['dbf_import_filter_substances'], 'substances', Icons.science)),
+              Expanded(
+                child: _buildFilterButton(
+                  _t['dbf_import_filter_substances'],
+                  'substances',
+                  Icons.science,
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: _buildFilterButton(_t['dbf_import_filter_recipes'], 'recipes', Icons.auto_awesome)),
+              Expanded(
+                child: _buildFilterButton(
+                  _t['dbf_import_filter_recipes'],
+                  'recipes',
+                  Icons.auto_awesome,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -397,7 +452,9 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
                   },
                   icon: const Icon(Icons.check_box, size: 16),
                   label: Text(
-                    _filterMode == 'all' ? _t['dbf_import_select_all'] : _t['dbf_import_select_filtered'],
+                    _filterMode == 'all'
+                        ? _t['dbf_import_select_all']
+                        : _t['dbf_import_select_filtered'],
                     style: const TextStyle(fontSize: 12),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -419,7 +476,9 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
                   },
                   icon: const Icon(Icons.check_box_outline_blank, size: 16),
                   label: Text(
-                    _filterMode == 'all' ? _t['dbf_import_deselect_all'] : _t['dbf_import_deselect_filtered'],
+                    _filterMode == 'all'
+                        ? _t['dbf_import_deselect_all']
+                        : _t['dbf_import_deselect_filtered'],
                     style: const TextStyle(fontSize: 12),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -445,7 +504,10 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
         });
       },
       icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 12)), // label comes from _t[...]
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 12),
+      ), // label comes from _t[...]
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected ? DT.secondary : DT.elevated,
         foregroundColor: isSelected ? DT.textPrimary : DT.textSecondary,
@@ -710,9 +772,7 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
                         ? DT.warning
                         : (isDuplicate
                               ? DT.warning
-                              : (isRecipe
-                                    ? DT.info
-                                    : DT.success))),
+                              : (isRecipe ? DT.info : DT.success))),
             ),
             onTap: (isDuplicate || isInvalid)
                 ? null

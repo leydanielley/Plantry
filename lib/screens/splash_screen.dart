@@ -79,7 +79,10 @@ class _SplashScreenState extends State<SplashScreen> {
       // Check if migration crashed/stuck - show recovery screen immediately
       final migrationStuck = await VersionManager.isMigrationInProgress();
       if (migrationStuck) {
-        AppLogger.error('SplashScreen', '⚠️ Previous migration appears stuck or crashed');
+        AppLogger.error(
+          'SplashScreen',
+          '⚠️ Previous migration appears stuck or crashed',
+        );
 
         if (mounted) {
           // Navigate to Manual Recovery Screen - user MUST make a choice
@@ -271,7 +274,11 @@ class _SplashScreenState extends State<SplashScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.warning, size: 18, color: Colors.red),
+                            const Icon(
+                              Icons.warning,
+                              size: 18,
+                              color: Colors.red,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               t['splash_error_critical'],
@@ -330,7 +337,10 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                     child: Text(
                       errorMessage,
-                      style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontFamily: 'monospace',
+                      ),
                       maxLines: 5,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -603,16 +613,22 @@ class _SplashScreenState extends State<SplashScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
-                        value: _backupProgress!.current / _backupProgress!.total,
+                        value:
+                            _backupProgress!.current / _backupProgress!.total,
                         minHeight: 6,
                         backgroundColor: DT.elevated,
-                        valueColor: const AlwaysStoppedAnimation<Color>(DT.accent),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          DT.accent,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _backupProgress!.message,
-                      style: const TextStyle(fontSize: 12, color: DT.textTertiary),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: DT.textTertiary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -624,7 +640,10 @@ class _SplashScreenState extends State<SplashScreen> {
             if (kDebugMode) ...[
               const SizedBox(height: 24),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: DT.elevated,
                   borderRadius: BorderRadius.circular(8),

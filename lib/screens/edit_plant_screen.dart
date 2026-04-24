@@ -66,9 +66,13 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.plant.name);
     _strainController = TextEditingController(text: widget.plant.strain ?? '');
-    _breederController = TextEditingController(text: widget.plant.breeder ?? '');
+    _breederController = TextEditingController(
+      text: widget.plant.breeder ?? '',
+    );
     _seedType = widget.plant.seedType;
-    _genderType = widget.plant.feminized ? GenderType.feminized : GenderType.regular;
+    _genderType = widget.plant.feminized
+        ? GenderType.feminized
+        : GenderType.regular;
     _medium = widget.plant.medium;
     _phase = widget.plant.phase;
     _selectedGrowId = widget.plant.growId;
@@ -79,13 +83,17 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Future<void> _loadData() async {
-    final res = await Future.wait([_roomRepo.findAll(), _growRepo.getAll(), _rdwcRepo.getAllSystems()]);
+    final res = await Future.wait([
+      _roomRepo.findAll(),
+      _growRepo.getAll(),
+      _rdwcRepo.getAllSystems(),
+    ]);
     if (mounted) {
       setState(() {
-      _rooms = res[0] as List<Room>;
-      _grows = res[1] as List<Grow>;
-      _rdwcSystems = res[2] as List<RdwcSystem>;
-    });
+        _rooms = res[0] as List<Room>;
+        _grows = res[1] as List<Grow>;
+        _rdwcSystems = res[2] as List<RdwcSystem>;
+      });
     }
   }
 
@@ -94,7 +102,10 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     return PlantryScaffold(
       title: 'Pflanze bearbeiten',
       actions: [
-        IconButton(icon: const Icon(Icons.delete_outline, color: DT.error), onPressed: _delete),
+        IconButton(
+          icon: const Icon(Icons.delete_outline, color: DT.error),
+          onPressed: _delete,
+        ),
       ],
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: DT.accent))
@@ -103,19 +114,47 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  PlantryFormField(controller: _nameController, label: 'Name', validator: (v) => v!.isEmpty ? 'Pflichtfeld' : null),
+                  PlantryFormField(
+                    controller: _nameController,
+                    label: 'Name',
+                    validator: (v) => v!.isEmpty ? 'Pflichtfeld' : null,
+                  ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _strainController, label: 'Strain'),
+                  PlantryFormField(
+                    controller: _strainController,
+                    label: 'Strain',
+                  ),
                   const SizedBox(height: 24),
 
                   _section('Genetik & Phase'),
-                  _dropdown<PlantPhase>('Phase', _phase, PlantPhase.values, (v) => setState(() => _phase = v!)),
+                  _dropdown<PlantPhase>(
+                    'Phase',
+                    _phase,
+                    PlantPhase.values,
+                    (v) => setState(() => _phase = v!),
+                  ),
                   const SizedBox(height: 16),
-                  Row(children: [
-                    Expanded(child: _dropdown<SeedType>('Typ', _seedType, SeedType.values, (v) => setState(() => _seedType = v!))),
-                    const SizedBox(width: 12),
-                    Expanded(child: _dropdown<GenderType>('Geschlecht', _genderType, GenderType.values, (v) => setState(() => _genderType = v!))),
-                  ]),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _dropdown<SeedType>(
+                          'Typ',
+                          _seedType,
+                          SeedType.values,
+                          (v) => setState(() => _seedType = v!),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _dropdown<GenderType>(
+                          'Geschlecht',
+                          _genderType,
+                          GenderType.values,
+                          (v) => setState(() => _genderType = v!),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 24),
 
                   _section('Setup'),
@@ -126,7 +165,10 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                     });
                   }),
                   const SizedBox(height: 16),
-                  if (_medium == Medium.rdwc) ...[_rdwcDropdown(), const SizedBox(height: 16)],
+                  if (_medium == Medium.rdwc) ...[
+                    _rdwcDropdown(),
+                    const SizedBox(height: 16),
+                  ],
                   _growDropdown(),
                   const SizedBox(height: 16),
                   _roomDropdown(),
@@ -136,7 +178,11 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                   _dateTile(),
                   const SizedBox(height: 32),
 
-                  PlantryButton(label: 'Änderungen speichern', onPressed: _save, fullWidth: true),
+                  PlantryButton(
+                    label: 'Änderungen speichern',
+                    onPressed: _save,
+                    fullWidth: true,
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -144,21 +190,54 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
 
-  Widget _dropdown<T>(String label, T value, List<T> items, ValueChanged<T?> onChanged) {
+  Widget _dropdown<T>(
+    String label,
+    T value,
+    List<T> items,
+    ValueChanged<T?> onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: DT.textSecondary, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: DT.textSecondary, fontSize: 12),
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+          decoration: BoxDecoration(
+            color: DT.elevated,
+            borderRadius: BorderRadius.circular(DT.radiusInput),
+          ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T>(
-              value: value, isExpanded: true, dropdownColor: DT.elevated,
-              items: items.map((i) => DropdownMenuItem(value: i, child: Text(_getLabel(i), style: const TextStyle(color: DT.textPrimary)))).toList(),
+              value: value,
+              isExpanded: true,
+              dropdownColor: DT.elevated,
+              items: items
+                  .map(
+                    (i) => DropdownMenuItem(
+                      value: i,
+                      child: Text(
+                        _getLabel(i),
+                        style: const TextStyle(color: DT.textPrimary),
+                      ),
+                    ),
+                  )
+                  .toList(),
               onChanged: onChanged,
             ),
           ),
@@ -178,13 +257,32 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   Widget _growDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+      decoration: BoxDecoration(
+        color: DT.elevated,
+        borderRadius: BorderRadius.circular(DT.radiusInput),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int?>(
-          value: _selectedGrowId, isExpanded: true, dropdownColor: DT.elevated,
+          value: _selectedGrowId,
+          isExpanded: true,
+          dropdownColor: DT.elevated,
           items: [
-            DropdownMenuItem(value: null, child: Text(_t['no_grow'], style: const TextStyle(color: DT.textPrimary))),
-            ..._grows.map((g) => DropdownMenuItem(value: g.id, child: Text(g.name, style: const TextStyle(color: DT.textPrimary)))),
+            DropdownMenuItem(
+              value: null,
+              child: Text(
+                _t['no_grow'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            ..._grows.map(
+              (g) => DropdownMenuItem(
+                value: g.id,
+                child: Text(
+                  g.name,
+                  style: const TextStyle(color: DT.textPrimary),
+                ),
+              ),
+            ),
           ],
           onChanged: (v) {
             setState(() {
@@ -204,13 +302,32 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   Widget _rdwcDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+      decoration: BoxDecoration(
+        color: DT.elevated,
+        borderRadius: BorderRadius.circular(DT.radiusInput),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int?>(
-          value: _selectedRdwcId, isExpanded: true, dropdownColor: DT.elevated,
+          value: _selectedRdwcId,
+          isExpanded: true,
+          dropdownColor: DT.elevated,
           items: [
-            DropdownMenuItem(value: null, child: Text(_t['choose_system'], style: const TextStyle(color: DT.textPrimary))),
-            ..._rdwcSystems.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, style: const TextStyle(color: DT.textPrimary)))),
+            DropdownMenuItem(
+              value: null,
+              child: Text(
+                _t['choose_system'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            ..._rdwcSystems.map(
+              (s) => DropdownMenuItem(
+                value: s.id,
+                child: Text(
+                  s.name,
+                  style: const TextStyle(color: DT.textPrimary),
+                ),
+              ),
+            ),
           ],
           onChanged: (v) => setState(() => _selectedRdwcId = v),
         ),
@@ -222,19 +339,39 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Raum (Optional)', style: TextStyle(color: DT.textSecondary, fontSize: 12)),
+        const Text(
+          'Raum (Optional)',
+          style: TextStyle(color: DT.textSecondary, fontSize: 12),
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+          decoration: BoxDecoration(
+            color: DT.elevated,
+            borderRadius: BorderRadius.circular(DT.radiusInput),
+          ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int?>(
               value: _selectedRoomId,
               isExpanded: true,
               dropdownColor: DT.elevated,
               items: [
-                DropdownMenuItem(value: null, child: Text(_t['no_room'], style: const TextStyle(color: DT.textPrimary))),
-                ..._rooms.map((r) => DropdownMenuItem(value: r.id, child: Text(r.name, style: const TextStyle(color: DT.textPrimary)))),
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(
+                    _t['no_room'],
+                    style: const TextStyle(color: DT.textPrimary),
+                  ),
+                ),
+                ..._rooms.map(
+                  (r) => DropdownMenuItem(
+                    value: r.id,
+                    child: Text(
+                      r.name,
+                      style: const TextStyle(color: DT.textPrimary),
+                    ),
+                  ),
+                ),
               ],
               onChanged: (v) => setState(() => _selectedRoomId = v),
             ),
@@ -247,14 +384,24 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   Widget _dateTile() {
     return PlantryCard(
       onTap: () async {
-        final d = await showDatePicker(context: context, initialDate: _seedDate ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime.now());
+        final d = await showDatePicker(
+          context: context,
+          initialDate: _seedDate ?? DateTime.now(),
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now(),
+        );
         if (d != null) setState(() => _seedDate = d);
       },
       child: Row(
         children: [
           const Icon(Icons.calendar_today, color: DT.accent, size: 20),
           const SizedBox(width: 12),
-          Text(_seedDate == null ? 'Kein Datum' : '${_seedDate!.day}.${_seedDate!.month}.${_seedDate!.year}', style: const TextStyle(color: DT.textPrimary)),
+          Text(
+            _seedDate == null
+                ? 'Kein Datum'
+                : '${_seedDate!.day}.${_seedDate!.month}.${_seedDate!.year}',
+            style: const TextStyle(color: DT.textPrimary),
+          ),
           const Spacer(),
           const Icon(Icons.edit, color: DT.accent, size: 18),
         ],
@@ -267,9 +414,17 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     setState(() => _isLoading = true);
     try {
       final p = widget.plant.copyWith(
-        name: _nameController.text, strain: _strainController.text, breeder: _breederController.text,
-        feminized: _genderType == GenderType.feminized, seedType: _seedType, medium: _medium, phase: _phase,
-        growId: _selectedGrowId, roomId: _selectedRoomId, rdwcSystemId: _selectedRdwcId, seedDate: _seedDate,
+        name: _nameController.text,
+        strain: _strainController.text,
+        breeder: _breederController.text,
+        feminized: _genderType == GenderType.feminized,
+        seedType: _seedType,
+        medium: _medium,
+        phase: _phase,
+        growId: _selectedGrowId,
+        roomId: _selectedRoomId,
+        rdwcSystemId: _selectedRdwcId,
+        seedDate: _seedDate,
       );
       await _plantRepo.save(p);
       if (!mounted) return;
@@ -281,15 +436,37 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Future<void> _delete() async {
-    final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
-      backgroundColor: DT.elevated,
-      title: Text(_t['confirm_archive'], style: const TextStyle(color: DT.textPrimary)),
-      content: Text(_t['plant_will_be_archived'], style: const TextStyle(color: DT.textSecondary)),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
-        TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(_t['archive'], style: const TextStyle(color: DT.error))),
-      ],
-    ));
-    if (ok == true) { await _plantRepo.delete(widget.plant.id!); if (!mounted) return; Navigator.pop(context, true); }
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: DT.elevated,
+        title: Text(
+          _t['confirm_archive'],
+          style: const TextStyle(color: DT.textPrimary),
+        ),
+        content: Text(
+          _t['plant_will_be_archived'],
+          style: const TextStyle(color: DT.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              _t['cancel'],
+              style: const TextStyle(color: DT.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(_t['archive'], style: const TextStyle(color: DT.error)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await _plantRepo.delete(widget.plant.id!);
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    }
   }
 }
