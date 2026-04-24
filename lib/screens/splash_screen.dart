@@ -71,9 +71,11 @@ class _SplashScreenState extends State<SplashScreen> {
       final updateInfo = await VersionManager.getUpdateInfo();
       if (updateInfo.isUpdate) {
         AppLogger.info('SplashScreen', '🆕 ${updateInfo.changeDescription}');
-        setState(() {
-          _status = 'Update wird vorbereitet...';
-        });
+        if (mounted) {
+          setState(() {
+            _status = 'Update wird vorbereitet...';
+          });
+        }
       }
 
       // Check if migration crashed/stuck - show recovery screen immediately
@@ -109,10 +111,12 @@ class _SplashScreenState extends State<SplashScreen> {
           'SplashScreen',
           '❌ App in crash loop! Count: ${recoveryInfo.crashCount}',
         );
-        setState(() {
-          _hasError = true;
-          _status = 'App-Wiederherstellung läuft...';
-        });
+        if (mounted) {
+          setState(() {
+            _hasError = true;
+            _status = 'App-Wiederherstellung läuft...';
+          });
+        }
 
         // Give user feedback and reset
         await Future.delayed(const Duration(seconds: 2));
@@ -136,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       }
 
-      if (updateInfo.isUpdate) {
+      if (updateInfo.isUpdate && mounted) {
         setState(() {
           _status = 'Datenbank wird migriert...';
         });
@@ -168,9 +172,11 @@ class _SplashScreenState extends State<SplashScreen> {
       // Mark successful initialization
       await AppStateRecovery.resetCrashCount();
 
-      setState(() {
-        _status = 'Daten werden überprüft...';
-      });
+      if (mounted) {
+        setState(() {
+          _status = 'Daten werden überprüft...';
+        });
+      }
 
       final recoveryNeeded = await _checkAutoRecovery(db);
       if (recoveryNeeded) {
@@ -181,9 +187,11 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       if (updateInfo.isUpdate) {
-        setState(() {
-          _status = 'Aufräumen...';
-        });
+        if (mounted) {
+          setState(() {
+            _status = 'Aufräumen...';
+          });
+        }
         await UpdateCleanup.performPostUpdateCleanup();
       }
 
@@ -214,10 +222,12 @@ class _SplashScreenState extends State<SplashScreen> {
       BackupProgressNotifier.instance.clear();
 
       // Stay on splash screen and show error state — do NOT navigate to Dashboard
-      setState(() {
-        _hasError = true;
-        _status = 'Kritischer Fehler beim Laden der Datenbank';
-      });
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _status = 'Kritischer Fehler beim Laden der Datenbank';
+        });
+      }
 
       // Show error dialog with options
       if (mounted) {

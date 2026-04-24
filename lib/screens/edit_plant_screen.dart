@@ -62,6 +62,14 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _strainController.dispose();
+    _breederController.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.plant.name);

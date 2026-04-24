@@ -51,6 +51,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
   }
 
   Future<void> _loadHarvest() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final hwp = await _harvestRepo.getHarvestWithPlant(widget.harvestId);
@@ -68,13 +69,14 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
           }
         }
       }
-      if (mounted)
+      if (mounted) {
         setState(() {
           _harvest = h;
           _harvestWithPlant = hwp;
           _room = room;
           _isLoading = false;
         });
+      }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -82,12 +84,13 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading)
+    if (_isLoading) {
       return const Scaffold(
         backgroundColor: DT.canvas,
         body: Center(child: CircularProgressIndicator(color: DT.accent)),
       );
-    if (_harvest == null)
+    }
+    if (_harvest == null) {
       return const Scaffold(
         backgroundColor: DT.canvas,
         body: Center(
@@ -97,6 +100,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
           ),
         ),
       );
+    }
 
     return PlantryScaffold(
       title: 'Ernte Details',
@@ -110,7 +114,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
                 builder: (_) => EditHarvestScreen(harvest: _harvest!),
               ),
             );
-            _loadHarvest();
+            if (mounted) _loadHarvest();
           },
         ),
         IconButton(

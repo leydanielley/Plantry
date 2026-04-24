@@ -1307,13 +1307,13 @@ Folgende Screens nutzen das `Navigator.push` → `_loadX()`-Pattern, haben aber 
 
 | ID | Schweregrad | Befund | Status |
 |----|------------|--------|--------|
-| S2-FC-001 | 🔴 Blocker | `manual_recovery_screen.dart` — setState nach await ohne mounted | offen |
-| S2-FC-002 | 🔴 Blocker | `plant_photo_gallery_screen.dart` — setState nach await ohne mounted | offen |
-| S2-FC-003 | 🟡 Major | `harvest_detail_screen.dart` — _loadHarvest ohne mounted-Guard | offen |
-| S2-FC-004 | 🟡 Major | `fertilizer_dbf_import_screen.dart` — setState im catch ohne mounted | offen |
-| S2-FC-005 | 🟡 Major | `splash_screen.dart` — mehrere setState nach await ohne mounted | offen |
+| S2-FC-001 | 🔴 Blocker | `manual_recovery_screen.dart` — setState nach await ohne mounted | ✅ erledigt (d8dca36) |
+| S2-FC-002 | 🔴 Blocker | `plant_photo_gallery_screen.dart` — setState nach await ohne mounted | ✅ erledigt (d8dca36) |
+| S2-FC-003 | 🟡 Major | `harvest_detail_screen.dart` — _loadHarvest ohne mounted-Guard | ✅ erledigt (Stage 3) |
+| S2-FC-004 | 🟡 Major | `fertilizer_dbf_import_screen.dart` — setState im catch ohne mounted | ✅ erledigt (Stage 3) |
+| S2-FC-005 | 🟡 Major | `splash_screen.dart` — mehrere setState nach await ohne mounted | ✅ erledigt (Stage 3) |
 | S2-FC-006 | 🟢 Minor | DatePicker-Pattern in 10 Screens ohne mounted-Check | offen |
-| FR-C-004 | 🟡 Major | `edit_plant_screen.dart` — kein dispose() für 3 Controller | offen |
+| FR-C-004 | 🟡 Major | `edit_plant_screen.dart` — kein dispose() für 3 Controller | ✅ erledigt (Stage 3) |
 
 **Empfohlene Fix-Reihenfolge:** S2-FC-001 → S2-FC-002 → S2-FC-004 → S2-FC-003 → FR-C-004 → S2-FC-005 → S2-FC-006 (optional)
 

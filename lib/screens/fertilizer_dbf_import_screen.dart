@@ -73,10 +73,12 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
     } catch (e) {
       // ✅ ARCHITECTURE FIX: Central error handling - now reachable!
       AppLogger.error('FertilizerDbfImportScreen', 'Error loading data', e);
-      setState(() {
-        _errorMessage = '${_t['dbf_import_error_loading']}: ${e.toString()}';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = '${_t['dbf_import_error_loading']}: ${e.toString()}';
+          _isLoading = false;
+        });
+      }
     }
   }
 
