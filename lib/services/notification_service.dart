@@ -3,6 +3,7 @@
 // =============================================
 
 import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -19,11 +20,26 @@ class NotificationService implements INotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   bool _initialized = false;
+  bool _platformSupported = false;
+
+  static bool get _isSupportedPlatform =>
+      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   /// Initialize notification service
   @override
   Future<void> initialize() async {
     if (_initialized) return;
+
+    if (!_isSupportedPlatform) {
+      AppLogger.info(
+        'NotificationService',
+        'Platform not supported, skipping notification init',
+      );
+      _initialized = true;
+      _platformSupported = false;
+      return;
+    }
+    _platformSupported = true;
 
     try {
       // Initialize timezone with device's actual timezone
@@ -215,6 +231,15 @@ class NotificationService implements INotificationService {
         NotificationConfig.defaultNotificationTime, // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
+    if (!_platformSupported) return;
+
+    if (intervalDays <= 0) {
+      AppLogger.warning(
+        'NotificationService',
+        'scheduleWateringReminder: invalid intervalDays=$intervalDays, must be > 0',
+      );
+      return;
+    }
 
     try {
       final nextWatering = lastWatering.add(Duration(days: intervalDays));
@@ -303,6 +328,15 @@ class NotificationService implements INotificationService {
         NotificationConfig.defaultNotificationTime, // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
+    if (!_platformSupported) return;
+
+    if (intervalDays <= 0) {
+      AppLogger.warning(
+        'NotificationService',
+        'scheduleFertilizingReminder: invalid intervalDays=$intervalDays, must be > 0',
+      );
+      return;
+    }
 
     try {
       final nextFertilizing = lastFertilizing.add(Duration(days: intervalDays));
@@ -386,6 +420,15 @@ class NotificationService implements INotificationService {
         NotificationConfig.defaultNotificationTime, // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
+    if (!_platformSupported) return;
+
+    if (intervalDays <= 0) {
+      AppLogger.warning(
+        'NotificationService',
+        'schedulePhotoReminder: invalid intervalDays=$intervalDays, must be > 0',
+      );
+      return;
+    }
 
     try {
       final nextPhoto = lastPhoto.add(Duration(days: intervalDays));
@@ -468,6 +511,7 @@ class NotificationService implements INotificationService {
         NotificationConfig.defaultNotificationTime, // ✅ AUDIT FIX
   }) async {
     if (!_initialized) await initialize();
+    if (!_platformSupported) return;
 
     try {
       final timeParts = notificationTime.split(':');
@@ -606,6 +650,7 @@ class NotificationService implements INotificationService {
   @override
   Future<void> showTestNotification() async {
     if (!_initialized) await initialize();
+    if (!_platformSupported) return;
 
     try {
       // ✅ AUDIT FIX: Magic numbers extracted to NotificationConfig
