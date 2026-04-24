@@ -18,6 +18,11 @@ import 'package:growlog_app/screens/archive_screen.dart';
 import 'package:growlog_app/screens/privacy_policy_screen.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
+import 'package:growlog_app/screens/dashboard_screen.dart';
+import 'package:growlog_app/providers/plant_provider.dart';
+import 'package:growlog_app/providers/grow_provider.dart';
+import 'package:growlog_app/providers/room_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:growlog_app/widgets/plantry_card.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
 
@@ -563,7 +568,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     if (!mounted) return;
-    Navigator.pop(context);
+    ScaffoldMessenger.of(context).clearSnackBars();
+    await Future.wait([
+      context.read<PlantProvider>().loadPlants(),
+      context.read<GrowProvider>().loadGrows(),
+      context.read<RoomProvider>().loadRooms(),
+    ]);
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      (route) => false,
+    );
   }
 
   Future<void> _launch(String url) async {
