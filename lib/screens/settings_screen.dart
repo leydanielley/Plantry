@@ -512,7 +512,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       },
     );
 
-    controller.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
     if (ok != true) return;
 
     String exportPath;
