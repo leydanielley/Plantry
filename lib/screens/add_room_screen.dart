@@ -49,6 +49,17 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _descController.dispose();
+    _widthController.dispose();
+    _depthController.dispose();
+    _heightController.dispose();
+    _wattsController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _t = AppTranslations(Localizations.localeOf(context).languageCode);

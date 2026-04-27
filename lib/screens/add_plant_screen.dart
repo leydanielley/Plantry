@@ -64,6 +64,15 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _strainController.dispose();
+    _breederController.dispose();
+    _quantityController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _t = AppTranslations(Localizations.localeOf(context).languageCode);

@@ -28,6 +28,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
   Harvest? _harvest;
   bool _isLoading = true;
   late AppTranslations _t;
+  final _dryWeightController = TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -39,6 +40,12 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
   void initState() {
     super.initState();
     _loadHarvest();
+  }
+
+  @override
+  void dispose() {
+    _dryWeightController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadHarvest() async {
@@ -93,7 +100,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
   Future<void> _endDrying() async {
     if (_harvest == null) return;
 
-    final dryWeightController = TextEditingController();
+    _dryWeightController.clear();
     DateTime selectedDate = DateTime.now();
 
     try {
@@ -161,9 +168,10 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                       ),
                     ),
                   TextFormField(
-                    controller: dryWeightController,
+                    controller: _dryWeightController,
                     decoration: InputDecoration(
                       labelText: _t['dry_weight_label'],
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
                       hintText: _t['harvest_hint_dry_weight'],
                       suffixText: 'g',
                       prefixIcon: const Icon(Icons.grass),
@@ -184,7 +192,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  final w = double.tryParse(dryWeightController.text);
+                  final w = double.tryParse(_dryWeightController.text);
                   if (w != null && w > 0) {
                     Navigator.pop(dialogContext, {'weight': w, 'date': selectedDate});
                   } else {
@@ -219,8 +227,6 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
       if (mounted) {
         AppMessages.showError(context, 'Fehler: $e');
       }
-    } finally {
-      dryWeightController.dispose();
     }
   }
 

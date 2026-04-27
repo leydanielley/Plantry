@@ -71,6 +71,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   final _systemReservoirSizeController = TextEditingController();
   final _systemBucketCountController = TextEditingController();
   final _systemBucketSizeController = TextEditingController();
+  final _setNameController = TextEditingController();
 
   late ActionType _selectedAction;
   PlantPhase? _selectedNewPhase;
@@ -291,6 +292,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
     _systemReservoirSizeController.dispose();
     _systemBucketCountController.dispose();
     _systemBucketSizeController.dispose();
+    _setNameController.dispose();
     super.dispose();
   }
 
@@ -801,7 +803,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
   }
 
   Future<void> _saveAsSet() async {
-    final nameController = TextEditingController();
+    _setNameController.clear();
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -811,11 +813,12 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           style: const TextStyle(color: DT.textPrimary),
         ),
         content: TextField(
-          controller: nameController,
+          controller: _setNameController,
           autofocus: true,
           style: const TextStyle(color: DT.textPrimary),
           decoration: InputDecoration(
             labelText: _t['set_name_label'],
+            floatingLabelBehavior: FloatingLabelBehavior.always,
             labelStyle: const TextStyle(color: DT.textSecondary),
           ),
           onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
@@ -829,7 +832,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             ),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, nameController.text.trim()),
+            onPressed: () => Navigator.pop(ctx, _setNameController.text.trim()),
             child: Text(_t['save'], style: const TextStyle(color: DT.accent)),
           ),
         ],
@@ -1057,6 +1060,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: _t['fertilizer_amount_label'],
+              floatingLabelBehavior: FloatingLabelBehavior.always,
             ),
             autofocus: true,
             onSubmitted: (v) => Navigator.pop(ctx, double.tryParse(v)),
