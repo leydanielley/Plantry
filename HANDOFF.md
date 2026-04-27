@@ -386,3 +386,153 @@ Kopiere den folgenden Block in die neue Session, damit Claude ohne Vorkontext we
 **Ende Handoff.** Viel Erfolg, Admin. Beim Freund punkten wir mit Qualität, nicht mit Speed — die Top-4-Fixes reichen für den ersten PR und machen einen klaren Eindruck.
 
 — B'Elanna Torres
+
+---
+
+## 10 — Session 2026-04-27: Crash-Fixes + Integration Tests (Daniel)
+
+**PR #5 gemergt** — alle Stage 2–4 Fixes sind jetzt in `main`.
+
+---
+
+### 10.1 — Gefundene Bugs (durch echten Emulator-Test)
+
+#### Bug A — Roter Screen beim App-Start (S3-MA-001)
+
+**Root Cause:** `GrowLogApp` hatte ein `_isLoading`-Flag. Wenn dieses umschaltet, ändert sich `MaterialApp.home` von `Scaffold(CircularProgressIndicator)` zu `SplashScreen()`. Flutter baut dabei den gesamten `MaterialApp`-Baum neu auf. Jedes `TextFormField` das gerade „dirty" war (z.B. durch eine laufende Tastatureingabe oder Animation) verlor seinen Build-Scope → `setState() called in wrong build context`.
+
+**Fix** (`lib/main.dart`):
+- `_isLoading` und `_loadingWidget` vollständig entfernt.
+- `home: const SplashScreen()` ist jetzt **statisch** — ändert sich nie.
+- `_loadSettings()` lädt nur noch die Settings für Theme-Propagation, aber triggert kein Home-Swap mehr.
+
+**Regel für zukünftige Änderungen:** `MaterialApp.home` darf **niemals** dynamisch sein (d.h. nie von einem State-Variable abhängen, die sich nach dem ersten Build ändert). Wenn du einen Loading-State vor dem ersten Screen brauchst, mach das innerhalb des Target-Screens (z.B. `SplashScreen` selbst), nicht im Root-Widget.
+
+---
+
+#### Bug B — Roter Screen beim Schließen von Dialogen (AnimatedDefaultTextStyle)
+
+**Root Cause:** In Dialogen (`showDialog`) wurden `TextFormField`s mit `labelText` verwendet. Flutter rendert `labelText` mit einem `AnimatedDefaultTextStyle` — das ist ein `AnimatedWidget` mit eigenem `AnimationController`. Wenn der Dialog geschlossen wird, wird er deaktiviert (`_deactivateRecursively`). Die `FloatingLabelAnimation` ist dabei noch „dirty" und versucht einen Build in einem nicht mehr gültigen Scope → Debug-only assert `_dependents.isEmpty` → roter Screen.
+
+**Zusätzlich:** Die `TextEditingController` wurden als lokale Variablen innerhalb der Dialog-Builder-Funktion erstellt. Wenn Flutter den Dialog-State zerstört, kann der Controller bereits disposed sein, bevor das `TextField` fertig gebaut hat → `_MergingListenable` crash.
+
+**Fix** (betrifft **6 Screens**):
+
+| Screen | Controller | Fix |
+|--------|-----------|-----|
+| `harvest_drying_screen.dart` | `_dryWeightController` | Class field + `dispose()` + `FloatingLabelBehavior.always` |
+| `harvest_curing_screen.dart` | `_curingMethodController`, `_curingNotesController` | Class field + `dispose()` + `FloatingLabelBehavior.always` |
+| `add_log_screen.dart` | `_setNameController` | Class field (war lokal in `_saveAsSet()`) + `dispose()` + `FloatingLabelBehavior.always` |
+| `add_plant_screen.dart` | alle Controller | `dispose()` Methode fehlte komplett |
+| `add_grow_screen.dart` | alle Controller | `dispose()` Methode fehlte komplett |
+| `add_room_screen.dart` | alle Controller | `dispose()` Methode fehlte komplett |
+
+**Regel für zukünftige Dialog-Implementierungen:**
+
+1. **`TextEditingController` in Dialogen IMMER als `State`-Klassen-Feld**, nicht als lokale Variable im Builder.
+2. **IMMER in `dispose()` disposen.**
+3. Jedes `TextFormField` mit `labelText` in einem Dialog MUSS `floatingLabelBehavior: FloatingLabelBehavior.always` haben — das eliminiert die `AnimatedDefaultTextStyle` komplett.
+4. Diese Bugs sind **debug-only** (`assert()` Blocks) — in Release-APKs crashen sie nicht. Aber sie machen Development zur Hölle.
+
+---
+
+#### Bug C — Merge-Konflikt `settings_screen.dart` (PR #5)
+
+Beim Mergen von `review` → `main` gab es einen Konflikt in `settings_screen.dart`:
+- **`review`-Branch** (Kai): hatte einen Backup-Pfad-Dialog nach dem DB-Reset.
+- **`main`-Branch** (Daniel): hatte `clearSnackBars()` + Provider-Reload + `pushAndRemoveUntil(Dashboard)`.
+
+**Lösung:** Beide Teile kombiniert — erst Kai's Dialog zeigen, dann Daniel's Navigation.
+
+```dart
+// Erst Kai's Dialog:
+await showDialog<void>(context: context, builder: (ctx) => AlertDialog(...));
+if (!mounted) return;
+// Dann Daniel's Navigation:
+ScaffoldMessenger.of(context).clearSnackBars();
+await Future.wait([...provider reloads...]);
+if (!mounted) return;
+Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(...Dashboard...), (r) => r.isFirst);
+```
+
+---
+
+### 10.2 — Integration Tests hinzugefügt
+
+**Neuer Ordner:** `integration_test/`
+
+```
+integration_test/
+  app_test.dart                  ← Einstiegspunkt (alle Flows)
+  helpers/
+    app_driver.dart              ← Hilfsklasse für UI-Interaktion
+  flows/
+    room_flow_test.dart          ← Raum anlegen (valid + Fehler)
+    grow_flow_test.dart          ← Grow anlegen (valid + Fehler)
+    plant_flow_test.dart         ← Pflanze anlegen + Phase setzen
+    harvest_flow_test.dart       ← Vollständiger Ernte-Lifecycle
+    settings_flow_test.dart      ← Sprache, Theme, Expertenmodus
+    error_cases_test.dart        ← Fehleingaben für alle Flows
+```
+
+**Ausführen:**
+```bash
+# Alle Tests:
+flutter test integration_test/app_test.dart -d <emulator-id>
+
+# Einzelner Flow:
+flutter test integration_test/app_test.dart -d <emulator-id> --name "Room Flow"
+
+# Emulator-ID ermitteln:
+adb devices
+```
+
+**Wichtig — `integration_test` Package:** In `pubspec.yaml` unter `dev_dependencies` hinzugefügt:
+```yaml
+integration_test:
+  sdk: flutter
+```
+
+---
+
+### 10.3 — Kritische Erkenntnisse über die App-Architektur (für zukünftige Tests)
+
+Diese Dinge sind nicht offensichtlich und haben die Integration-Tests initial zum Scheitern gebracht:
+
+1. **Dashboard GridTile-Labels sind `.toUpperCase()`** — `find.text('Räume')` findet nichts, korrekt ist `find.text('RÄUME')`. Betrifft: RÄUME, ANBAUTEN, ERNTEN, PFLANZEN, EINSTELLUNGEN.
+
+2. **`ListView(children: [...])` ist lazy** — Flutter baut nur die sichtbaren Items. Buttons am Ende einer langen Form (z.B. „Raum speichern") sind **nicht im Widget-Tree** bis man zu ihnen scrollt. Vor jedem `tapText('Save-Button')` muss `scrollToText('Save-Button')` aufgerufen werden.
+
+3. **`PlantryButton` verwendet `GestureDetector(onTapDown/onTapUp)`** — kein Standard `ElevatedButton`. `tester.tap()` funktioniert trotzdem, aber es gibt kein `InkWell`-Feedback.
+
+4. **`PlantryPremiumCard` verwendet `GestureDetector(onTap: ...)`** — tap propagiert normal zu Eltern-Widgets.
+
+5. **SplashScreen hat `Future.delayed(2s)`** — `tester.pumpAndSettle()` in Widget-Tests kann diesen Delay nicht überwinden (der Timer läuft nicht in der Test-Zeit). In Integration-Tests (Live-Device) läuft er in Echtzeit. Deshalb verwendet `AppDriver.launch()` echtes Polling (`pump(200ms)` in einer Schleife) statt `pumpAndSettle`.
+
+6. **`AddHarvestScreen._save()` setzt `dryingStartDate = harvestDate`** — eine neue Ernte startet die Trocknung automatisch. Auf dem `HarvestDryingScreen` ist der Status also sofort „In Trocknung", nicht „Nicht gestartet". Tests müssen das berücksichtigen.
+
+---
+
+### 10.4 — Aktueller Git-Stand (nach Session)
+
+- Branch `main` ist auf `29e1eb8` (Merge PR #5)
+- `integration_test/` und `pubspec.yaml`/`pubspec.lock` sind lokal uncommitted (nächster Commit)
+- RDWC-Redesign-Änderungen sind auf dem `review`-Branch gestasht (`git stash@{0}`)
+
+**Nächste sinnvolle Schritte:**
+1. Integration Tests auf Emulator zum Laufen bringen (WIP — einige Tests scheitern noch an Navigation-Details)
+2. RDWC-Stash reviewen: `git checkout review && git stash pop`
+3. versionCode auf 1010 setzen für nächsten Release
+
+---
+
+### 10.5 — Feature-Ideen und Erweiterungsvorschläge (an Kai)
+
+Wenn dir beim Arbeiten an der Codebase gute Ideen für neue Features oder Verbesserungen auffallen, die über deinen aktuellen Scope hinausgehen — schreib sie **am Ende deines nächsten Handoffs** auf. Nicht als TODO, sondern als kurze Liste „Das würde Sinn machen, weil …". Daniel entscheidet dann, ob und wann das kommt.
+
+Relevante Bereiche, auf die du achten solltest:
+- UX-Verbesserungen (z.B. fehlende Ladeanimationen, unklare Fehlertexte)
+- Datenkonsistenz (z.B. kaskadierendes Löschen, fehlende Validierungen im Datenmodell)
+- Performance (z.B. unnötige Rebuilds, teure Operationen auf dem Main-Thread)
+- Fehlende Features die sich aus bestehenden Flows ergeben (z.B. „Ernte exportieren" wenn Trocknung abgeschlossen)
+- Testbarkeit (z.B. fehlende `Key`-Annotationen an UI-Elementen, die Integration-Tests erleichtern würden)
