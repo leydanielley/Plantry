@@ -93,7 +93,6 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
     lengthUnit: LengthUnit.cm,
     volumeUnit: VolumeUnit.liter,
   );
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -130,15 +129,9 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
       final settings = await _settingsRepo.getSettings().timeout(
         const Duration(seconds: 5),
       );
-      if (mounted) {
-        setState(() {
-          _settings = settings;
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _settings = settings);
     } catch (e, stack) {
       AppLogger.error('GrowLogApp', 'Failed to load settings', e, stack);
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -156,14 +149,7 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
       themeMode: _settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: AppTheme.lightTheme(),
       darkTheme: AppTheme.darkTheme(),
-      home: _isLoading
-          ? const Scaffold(
-              backgroundColor: Color(0xFF050505),
-              body: Center(
-                child: CircularProgressIndicator(color: Color(0xFF00FFBB)),
-              ),
-            )
-          : const SplashScreen(),
+      home: const SplashScreen(),
       routes: {'/privacy-policy': (context) => const PrivacyPolicyScreen()},
     );
   }
