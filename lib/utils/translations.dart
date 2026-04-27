@@ -1067,7 +1067,7 @@ class AppTranslations {
       'dashboard_nutrient_calculator': 'Nährstoff Kalkulator',
       'dashboard_nutrient_calculator_subtitle':
           'Universeller Rechner für Nährstoffmischungen',
-      'dashboard_app_version': 'Plantry v1.0',
+      'dashboard_app_version': 'Plantry v1.2',
 
       // ✅ AUDIT FIX: Add Grow screen translations
       'add_grow_title': 'Neuer Grow',
@@ -2599,7 +2599,7 @@ class AppTranslations {
       'dashboard_nutrient_calculator': 'Nutrient Calculator',
       'dashboard_nutrient_calculator_subtitle':
           'Universal calculator for nutrient mixtures',
-      'dashboard_app_version': 'Plantry v1.0',
+      'dashboard_app_version': 'Plantry v1.2',
 
       // ✅ AUDIT FIX: Add Grow screen translations
       'add_grow_title': 'New Grow',
