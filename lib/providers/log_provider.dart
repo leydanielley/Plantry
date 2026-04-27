@@ -108,9 +108,8 @@ class LogProvider with ChangeNotifier {
         _logsForPlant = Error('Failed to load logs', e, stack);
         AppLogger.error('LogProvider', 'Failed to load logs', e, stack);
       }
+      _safeNotifyListeners();
     });
-
-    _safeNotifyListeners();
   }
 
   /// Load logs with full details (includes fertilizers/photos)

@@ -87,8 +87,16 @@ class RawDbfParser {
         offset++;
 
         final record = <String, String>{};
+        bool truncated = false;
         for (final field in fields) {
-          if (offset + field.length > bytes.length) break;
+          if (offset + field.length > bytes.length) {
+            AppLogger.warning(
+              'RawDbfParser',
+              'Record $i truncated at field ${field.name} — discarding partial record',
+            );
+            truncated = true;
+            break;
+          }
 
           final fieldBytes = bytes.sublist(offset, offset + field.length);
           final value = String.fromCharCodes(fieldBytes).trim();
@@ -96,7 +104,7 @@ class RawDbfParser {
           offset += field.length;
         }
 
-        records.add(record);
+        if (!truncated) records.add(record);
 
         // Log first 3 records for debugging
         if (i < 3) {

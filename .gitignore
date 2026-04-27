@@ -136,3 +136,6 @@ coverage/
 SESSION_*.md
 PHASE*.md
 SPRINT*.md
+baseline_analyze.txt
+baseline_test.txt
+wa_chat/

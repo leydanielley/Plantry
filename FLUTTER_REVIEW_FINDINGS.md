@@ -1029,8 +1029,8 @@ Danach Freigabe.
 - **Spezialist:** B'Elanna Torres
 - **Befund:** Nach erfolgreichem Auto-Archive (Plants + Grow archiviert) navigiert der Screen zum `HarvestDetailScreen` und entfernt dabei alle vorherigen Screens bis zum ersten (`r.isFirst`). Die Providers (`PlantProvider`, `GrowProvider`) werden nicht explizit refresht. Ob der erste Screen beim Wiederauftauchen neu lädt, hängt von seiner eigenen Implementierung ab — ohne Verifikation des ersten Screens ist nicht garantiert, dass die Raumansicht aktualisiert wird.
 - **Korrekturvorschlag:** Prüfen, ob der erste Screen (Dashboard/PlantList) `loadPlants()` / `loadGrows()` in `didChangeDependencies` oder via RouteAware aufruft. Falls nicht: explizit vor der Navigation refreshen (z.B. `context.read<PlantProvider>().loadPlants()`, `context.read<GrowProvider>().loadGrows()`).
-- **Status:** offen
-- **Korrektur-Zyklen:** 0/2
+- **Status:** ✅ erledigt — Provider-Refresh vor Navigation eingefügt (VC-007-VOL)
+- **Korrektur-Zyklen:** 1/2
 
 ---
 
@@ -1307,13 +1307,13 @@ Folgende Screens nutzen das `Navigator.push` → `_loadX()`-Pattern, haben aber 
 
 | ID | Schweregrad | Befund | Status |
 |----|------------|--------|--------|
-| S2-FC-001 | 🔴 Blocker | `manual_recovery_screen.dart` — setState nach await ohne mounted | offen |
-| S2-FC-002 | 🔴 Blocker | `plant_photo_gallery_screen.dart` — setState nach await ohne mounted | offen |
-| S2-FC-003 | 🟡 Major | `harvest_detail_screen.dart` — _loadHarvest ohne mounted-Guard | offen |
-| S2-FC-004 | 🟡 Major | `fertilizer_dbf_import_screen.dart` — setState im catch ohne mounted | offen |
-| S2-FC-005 | 🟡 Major | `splash_screen.dart` — mehrere setState nach await ohne mounted | offen |
-| S2-FC-006 | 🟢 Minor | DatePicker-Pattern in 10 Screens ohne mounted-Check | offen |
-| FR-C-004 | 🟡 Major | `edit_plant_screen.dart` — kein dispose() für 3 Controller | offen |
+| S2-FC-001 | 🔴 Blocker | `manual_recovery_screen.dart` — setState nach await ohne mounted | ✅ erledigt (d8dca36) |
+| S2-FC-002 | 🔴 Blocker | `plant_photo_gallery_screen.dart` — setState nach await ohne mounted | ✅ erledigt (d8dca36) |
+| S2-FC-003 | 🟡 Major | `harvest_detail_screen.dart` — _loadHarvest ohne mounted-Guard | ✅ erledigt (Stage 3) |
+| S2-FC-004 | 🟡 Major | `fertilizer_dbf_import_screen.dart` — setState im catch ohne mounted | ✅ erledigt (Stage 3) |
+| S2-FC-005 | 🟡 Major | `splash_screen.dart` — mehrere setState nach await ohne mounted | ✅ erledigt (Stage 3) |
+| S2-FC-006 | 🟢 Minor | DatePicker-Pattern in 10 Screens ohne mounted-Check | ✅ erledigt |
+| FR-C-004 | 🟡 Major | `edit_plant_screen.dart` — kein dispose() für 3 Controller | ✅ erledigt (Stage 3) |
 
 **Empfohlene Fix-Reihenfolge:** S2-FC-001 → S2-FC-002 → S2-FC-004 → S2-FC-003 → FR-C-004 → S2-FC-005 → S2-FC-006 (optional)
 

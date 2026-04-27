@@ -45,7 +45,12 @@ void main() async {
 
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    AppLogger.error('Flutter', 'Error: ${details.exception}', details.exception, details.stack);
+    AppLogger.error(
+      'Flutter',
+      'Error: ${details.exception}',
+      details.exception,
+      details.stack,
+    );
   };
   PlatformDispatcher.instance.onError = (error, stack) {
     AppLogger.error('AsyncError', 'Uncaught', error, stack);
@@ -77,7 +82,7 @@ class GrowLogApp extends StatefulWidget {
 
 class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
-  
+
   late AppSettings _settings = AppSettings(
     language: 'de',
     isDarkMode: true,
@@ -88,7 +93,6 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
     lengthUnit: LengthUnit.cm,
     volumeUnit: VolumeUnit.liter,
   );
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -107,16 +111,27 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.paused) {
-      unawaited(_settingsRepo.saveSettings(_settings));
+      unawaited(
+        _settingsRepo.saveSettings(_settings).catchError((e, stack) {
+          AppLogger.error(
+            'GrowLogApp',
+            'Failed to save settings on pause',
+            e,
+            stack,
+          );
+        }),
+      );
     }
   }
 
   Future<void> _loadSettings() async {
     try {
-      final settings = await _settingsRepo.getSettings().timeout(const Duration(seconds: 5));
-      if (mounted) setState(() { _settings = settings; _isLoading = false; });
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      final settings = await _settingsRepo.getSettings().timeout(
+        const Duration(seconds: 5),
+      );
+      if (mounted) setState(() => _settings = settings);
+    } catch (e, stack) {
+      AppLogger.error('GrowLogApp', 'Failed to load settings', e, stack);
     }
   }
 
@@ -128,8 +143,6 @@ class GrowLogAppState extends State<GrowLogApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const MaterialApp(home: Scaffold(backgroundColor: Color(0xFF050505), body: Center(child: CircularProgressIndicator(color: Color(0xFF00FFBB)))));
-
     return MaterialApp(
       title: 'Plantry',
       debugShowCheckedModeBanner: false,

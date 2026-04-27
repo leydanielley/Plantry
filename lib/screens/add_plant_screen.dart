@@ -35,7 +35,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
-  
+
   late AppTranslations _t;
   final _nameController = TextEditingController();
   final _strainController = TextEditingController();
@@ -61,6 +61,15 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     super.initState();
     _selectedGrowId = widget.preselectedGrowId;
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _strainController.dispose();
+    _breederController.dispose();
+    _quantityController.dispose();
+    super.dispose();
   }
 
   @override
@@ -101,26 +110,53 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   _section('Basis Info'),
-                  PlantryFormField(controller: _nameController, label: _t['add_plant_name_label'], hint: 'z.B. White Widow #1', validator: (v) => v!.isEmpty ? 'Name erforderlich' : null),
+                  PlantryFormField(
+                    controller: _nameController,
+                    label: _t['add_plant_name_label'],
+                    hint: 'z.B. White Widow #1',
+                    validator: (v) => v!.isEmpty ? 'Name erforderlich' : null,
+                  ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _quantityController, label: _t['add_plant_quantity'], keyboardType: TextInputType.number),
+                  PlantryFormField(
+                    controller: _quantityController,
+                    label: _t['add_plant_quantity'],
+                    keyboardType: TextInputType.number,
+                  ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _strainController, label: _t['add_plant_strain']),
+                  PlantryFormField(
+                    controller: _strainController,
+                    label: _t['add_plant_strain'],
+                  ),
                   const SizedBox(height: 24),
-                  
+
                   _section('Genetik'),
-                  _dropdown<SeedType>(_t['add_plant_seed_type'], _seedType, SeedType.values, (v) => setState(() => _seedType = v!)),
+                  _dropdown<SeedType>(
+                    _t['add_plant_seed_type'],
+                    _seedType,
+                    SeedType.values,
+                    (v) => setState(() => _seedType = v!),
+                  ),
                   const SizedBox(height: 16),
-                  _dropdown<GenderType>(_t['add_plant_gender'], _genderType, GenderType.values, (v) => setState(() => _genderType = v!)),
+                  _dropdown<GenderType>(
+                    _t['add_plant_gender'],
+                    _genderType,
+                    GenderType.values,
+                    (v) => setState(() => _genderType = v!),
+                  ),
                   const SizedBox(height: 24),
 
                   _section('Setup'),
-                  _dropdown<Medium>(_t['add_plant_medium'], _medium, Medium.values, (v) {
-                    setState(() {
-                      _medium = v!;
-                      if (v != Medium.rdwc) _selectedRdwcSystemId = null;
-                    });
-                  }),
+                  _dropdown<Medium>(
+                    _t['add_plant_medium'],
+                    _medium,
+                    Medium.values,
+                    (v) {
+                      setState(() {
+                        _medium = v!;
+                        if (v != Medium.rdwc) _selectedRdwcSystemId = null;
+                      });
+                    },
+                  ),
                   const SizedBox(height: 16),
                   if (_medium == Medium.rdwc) ...[
                     _rdwcDropdown(),
@@ -135,7 +171,11 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                   _dateTile(),
                   const SizedBox(height: 32),
 
-                  PlantryButton(label: _t['add_plant_create_button'], onPressed: _save, fullWidth: true),
+                  PlantryButton(
+                    label: _t['add_plant_create_button'],
+                    onPressed: _save,
+                    fullWidth: true,
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -143,23 +183,54 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
 
-  Widget _dropdown<T>(String label, T value, List<T> items, ValueChanged<T?> onChanged) {
+  Widget _dropdown<T>(
+    String label,
+    T value,
+    List<T> items,
+    ValueChanged<T?> onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: DT.textSecondary, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: DT.textSecondary, fontSize: 12),
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+          decoration: BoxDecoration(
+            color: DT.elevated,
+            borderRadius: BorderRadius.circular(DT.radiusInput),
+          ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T>(
               value: value,
               isExpanded: true,
               dropdownColor: DT.elevated,
-              items: items.map((i) => DropdownMenuItem(value: i, child: Text(_getLabel(i), style: const TextStyle(color: DT.textPrimary)))).toList(),
+              items: items
+                  .map(
+                    (i) => DropdownMenuItem(
+                      value: i,
+                      child: Text(
+                        _getLabel(i),
+                        style: const TextStyle(color: DT.textPrimary),
+                      ),
+                    ),
+                  )
+                  .toList(),
               onChanged: onChanged,
             ),
           ),
@@ -180,19 +251,39 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Grow (Optional)', style: TextStyle(color: DT.textSecondary, fontSize: 12)),
+        const Text(
+          'Grow (Optional)',
+          style: TextStyle(color: DT.textSecondary, fontSize: 12),
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+          decoration: BoxDecoration(
+            color: DT.elevated,
+            borderRadius: BorderRadius.circular(DT.radiusInput),
+          ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int?>(
               value: _selectedGrowId,
               isExpanded: true,
               dropdownColor: DT.elevated,
               items: [
-                DropdownMenuItem(value: null, child: Text(_t['no_grow'], style: const TextStyle(color: DT.textPrimary))),
-                ..._grows.map((g) => DropdownMenuItem(value: g.id, child: Text(g.name, style: const TextStyle(color: DT.textPrimary)))),
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(
+                    _t['no_grow'],
+                    style: const TextStyle(color: DT.textPrimary),
+                  ),
+                ),
+                ..._grows.map(
+                  (g) => DropdownMenuItem(
+                    value: g.id,
+                    child: Text(
+                      g.name,
+                      style: const TextStyle(color: DT.textPrimary),
+                    ),
+                  ),
+                ),
               ],
               onChanged: (v) {
                 setState(() {
@@ -215,19 +306,39 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Raum (Optional)', style: TextStyle(color: DT.textSecondary, fontSize: 12)),
+        const Text(
+          'Raum (Optional)',
+          style: TextStyle(color: DT.textSecondary, fontSize: 12),
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+          decoration: BoxDecoration(
+            color: DT.elevated,
+            borderRadius: BorderRadius.circular(DT.radiusInput),
+          ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int?>(
               value: _selectedRoomId,
               isExpanded: true,
               dropdownColor: DT.elevated,
               items: [
-                DropdownMenuItem(value: null, child: Text(_t['no_room'], style: const TextStyle(color: DT.textPrimary))),
-                ..._rooms.map((r) => DropdownMenuItem(value: r.id, child: Text(r.name, style: const TextStyle(color: DT.textPrimary)))),
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(
+                    _t['no_room'],
+                    style: const TextStyle(color: DT.textPrimary),
+                  ),
+                ),
+                ..._rooms.map(
+                  (r) => DropdownMenuItem(
+                    value: r.id,
+                    child: Text(
+                      r.name,
+                      style: const TextStyle(color: DT.textPrimary),
+                    ),
+                  ),
+                ),
               ],
               onChanged: (v) => setState(() => _selectedRoomId = v),
             ),
@@ -241,26 +352,48 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('RDWC System', style: TextStyle(color: DT.textSecondary, fontSize: 12)),
+        const Text(
+          'RDWC System',
+          style: TextStyle(color: DT.textSecondary, fontSize: 12),
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+          decoration: BoxDecoration(
+            color: DT.elevated,
+            borderRadius: BorderRadius.circular(DT.radiusInput),
+          ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int?>(
               value: _selectedRdwcSystemId,
               isExpanded: true,
               dropdownColor: DT.elevated,
               items: [
-                DropdownMenuItem(value: null, child: Text(_t['choose_system'], style: const TextStyle(color: DT.textPrimary))),
-                ..._rdwcSystems.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, style: const TextStyle(color: DT.textPrimary)))),
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(
+                    _t['choose_system'],
+                    style: const TextStyle(color: DT.textPrimary),
+                  ),
+                ),
+                ..._rdwcSystems.map(
+                  (s) => DropdownMenuItem(
+                    value: s.id,
+                    child: Text(
+                      s.name,
+                      style: const TextStyle(color: DT.textPrimary),
+                    ),
+                  ),
+                ),
               ],
               onChanged: (v) {
                 setState(() {
                   _selectedRdwcSystemId = v;
                   // Auto-set room from RDWC system
                   if (v != null) {
-                    final sys = _rdwcSystems.where((s) => s.id == v).firstOrNull;
+                    final sys = _rdwcSystems
+                        .where((s) => s.id == v)
+                        .firstOrNull;
                     if (sys?.roomId != null) _selectedRoomId = sys!.roomId;
                   }
                 });
@@ -275,16 +408,30 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   Widget _dateTile() {
     return PlantryCard(
       onTap: () async {
-        final d = await showDatePicker(context: context, initialDate: _seedDate ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime.now());
+        final d = await showDatePicker(
+          context: context,
+          initialDate: _seedDate ?? DateTime.now(),
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now(),
+        );
+        if (!mounted) return;
         if (d != null) setState(() => _seedDate = d);
       },
       child: Row(
         children: [
           const Icon(Icons.calendar_today, color: DT.accent, size: 20),
           const SizedBox(width: 12),
-          Text(_seedDate == null ? 'Kein Datum gesetzt' : '${_seedDate!.day}.${_seedDate!.month}.${_seedDate!.year}', style: const TextStyle(color: DT.textPrimary)),
+          Text(
+            _seedDate == null
+                ? 'Kein Datum gesetzt'
+                : '${_seedDate!.day}.${_seedDate!.month}.${_seedDate!.year}',
+            style: const TextStyle(color: DT.textPrimary),
+          ),
           const Spacer(),
-          Text(_t['change_btn'], style: const TextStyle(color: DT.accent, fontSize: 12)),
+          Text(
+            _t['change_btn'],
+            style: const TextStyle(color: DT.accent, fontSize: 12),
+          ),
         ],
       ),
     );

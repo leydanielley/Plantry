@@ -28,6 +28,8 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
   Harvest? _harvest;
   bool _isLoading = true;
   late AppTranslations _t;
+  final _curingMethodController = TextEditingController();
+  final _curingNotesController = TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -39,6 +41,13 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
   void initState() {
     super.initState();
     _loadHarvest();
+  }
+
+  @override
+  void dispose() {
+    _curingMethodController.dispose();
+    _curingNotesController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadHarvest() async {
@@ -85,18 +94,13 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
   }
 
   Future<Map<String, dynamic>?> _showStartCuringDialog() async {
-    final TextEditingController methodController = TextEditingController(
-      text: _harvest!.curingMethod ?? 'Glass Jars',
-    );
-    final TextEditingController notesController = TextEditingController(
-      text: _harvest!.curingNotes ?? '',
-    );
+    _curingMethodController.text = _harvest!.curingMethod ?? 'Glass Jars';
+    _curingNotesController.text = _harvest!.curingNotes ?? '';
     DateTime selectedStartDate = DateTime.now();
 
-    try {
-      return await showDialog<Map<String, dynamic>>(
-        context: context,
-        builder: (dialogContext) => StatefulBuilder(
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
               title: Row(
@@ -148,9 +152,10 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
 
                     // Method
                     TextFormField(
-                      controller: methodController,
+                      controller: _curingMethodController,
                       decoration: InputDecoration(
                         labelText: 'Curing-Methode',
+                        floatingLabelBehavior: FloatingLabelBehavior.always,
                         hintText: 'z.B. Glass Jars, Grove Bags',
                         prefixIcon: const Icon(
                           Icons.dashboard,
@@ -180,11 +185,11 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                                     style: const TextStyle(fontSize: 12),
                                   ),
                                   onPressed: () {
-                                    methodController.text = method;
+                                    _curingMethodController.text = method;
                                     setDialogState(() {});
                                   },
                                   backgroundColor:
-                                      methodController.text == method
+                                      _curingMethodController.text == method
                                       ? DT.info.withValues(alpha: 0.2)
                                       : null,
                                 ),
@@ -195,9 +200,10 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
 
                     // Notes
                     TextFormField(
-                      controller: notesController,
+                      controller: _curingNotesController,
                       decoration: InputDecoration(
                         labelText: 'Notizen (optional)',
+                        floatingLabelBehavior: FloatingLabelBehavior.always,
                         hintText: 'Burping Schedule, Besonderheiten...',
                         prefixIcon: const Icon(
                           Icons.note,
@@ -221,11 +227,11 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                   onPressed: () {
                     Navigator.pop(context, {
                       'startDate': selectedStartDate,
-                      'method': methodController.text.isNotEmpty
-                          ? methodController.text
+                      'method': _curingMethodController.text.isNotEmpty
+                          ? _curingMethodController.text
                           : null,
-                      'notes': notesController.text.isNotEmpty
-                          ? notesController.text
+                      'notes': _curingNotesController.text.isNotEmpty
+                          ? _curingNotesController.text
                           : null,
                     });
                   },
@@ -240,12 +246,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
             );
           },
         ),
-      );
-    } finally {
-      // ✅ FIX: Dispose controllers to prevent memory leak
-      methodController.dispose();
-      notesController.dispose();
-    }
+    );
   }
 
   Future<void> _endCuring() async {

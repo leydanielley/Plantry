@@ -89,7 +89,11 @@ class AppLogger {
     buffer.write('${level.emoji} [$tag] $message');
 
     if (data != null) {
-      buffer.write('\n  Data: $data');
+      final dataStr = data.toString();
+      final truncated = dataStr.length > 200
+          ? '${dataStr.substring(0, 200)}…'
+          : dataStr;
+      buffer.write('\n  Data: $truncated');
     }
 
     debugPrint(buffer.toString());

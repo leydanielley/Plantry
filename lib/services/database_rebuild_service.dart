@@ -19,11 +19,8 @@ import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/database/database_helper.dart';
 
 /// Progress callback for rebuild operations
-typedef RebuildProgressCallback = void Function(
-  int current,
-  int total,
-  String message,
-);
+typedef RebuildProgressCallback =
+    void Function(int current, int total, String message);
 
 /// Rebuild phase enum
 enum RebuildPhase {
@@ -156,7 +153,13 @@ class DatabaseRebuildService {
       onProgress?.call(1, 6, 'Phase 1/6: Pre-flight validation');
       AppLogger.info('DatabaseRebuild', '📋 Phase 1: Pre-flight validation');
 
-      final preFlightResult = await _runPreFlightChecks();
+      final preFlightResult = await _runPreFlightChecks().timeout(
+        const Duration(minutes: 2),
+        onTimeout: () => ValidationResult(
+          isValid: false,
+          errors: ['Pre-flight timed out after 2 minutes'],
+        ),
+      );
       if (!preFlightResult.isValid) {
         throw Exception(
           'Pre-flight checks failed: ${preFlightResult.errors.join(", ")}',
@@ -165,7 +168,8 @@ class DatabaseRebuildService {
       warnings.addAll(preFlightResult.warnings);
 
       // Get current database
-      final currentDb = await DatabaseHelper.instance.database;
+      final currentDb = await DatabaseHelper.instance.database
+          .timeout(const Duration(seconds: 30));
 
       // Count records in old database
       oldCounts = await MigrationValidator.countAllRecords(currentDb);
@@ -195,10 +199,7 @@ class DatabaseRebuildService {
 
       // Extract to temporary directory for additional safety
       tempDir = await _extractBackupToTemp(backupPath, onProgress);
-      AppLogger.info(
-        'DatabaseRebuild',
-        '✅ Data extracted to: $tempDir',
-      );
+      AppLogger.info('DatabaseRebuild', '✅ Data extracted to: $tempDir');
 
       // =============================================
       // PHASE 3: CLEAN SCHEMA REBUILD
@@ -230,13 +231,9 @@ class DatabaseRebuildService {
       onProgress?.call(4, 6, 'Phase 4/6: Migrating data');
       AppLogger.info('DatabaseRebuild', '📦 Phase 4: Data migration');
 
-      await _importDataFromBackup(
-        newDb,
-        tempDir,
-        (current, total, message) {
-          onProgress?.call(4, 6, 'Import: $message ($current/$total)');
-        },
-      );
+      await _importDataFromBackup(newDb, tempDir, (current, total, message) {
+        onProgress?.call(4, 6, 'Import: $message ($current/$total)');
+      });
 
       AppLogger.info('DatabaseRebuild', '✅ Data migration complete');
 
@@ -250,8 +247,10 @@ class DatabaseRebuildService {
       newCounts = await MigrationValidator.countAllRecords(newDb);
 
       // Validate record counts match
-      final countComparison =
-          MigrationValidator.compareRecordCounts(oldCounts, newCounts);
+      final countComparison = MigrationValidator.compareRecordCounts(
+        oldCounts,
+        newCounts,
+      );
       if (!countComparison.isValid) {
         throw Exception(
           'Record count validation failed: ${countComparison.errors.join(", ")}',
@@ -357,10 +356,7 @@ class DatabaseRebuildService {
 
     try {
       // Check 1: Verify database exists
-      final dbPath = path.join(
-        await getDatabasesPath(),
-        'growlog.db',
-      );
+      final dbPath = path.join(await getDatabasesPath(), 'growlog.db');
       final dbFile = File(dbPath);
 
       if (!await dbFile.exists()) {
@@ -378,14 +374,38 @@ class DatabaseRebuildService {
 
       // Check 3: Validate current database integrity
       final currentDb = await DatabaseHelper.instance.database;
-      final integrity =
-          await MigrationValidator.validateDatabaseIntegrity(currentDb);
+      final integrity = await MigrationValidator.validateDatabaseIntegrity(
+        currentDb,
+      );
 
       if (!integrity.isValid) {
         warnings.add(
           'Current database has integrity issues (will attempt rebuild anyway)',
         );
         warnings.addAll(integrity.warnings);
+      }
+
+      // Check 4: FK violation scan — reports violations as warnings so the
+      // rebuild can still run, but the report will list affected rows so the
+      // user knows which records may be skipped during re-insert.
+      try {
+        final fkViolations = await currentDb.rawQuery(
+          'PRAGMA foreign_key_check',
+        );
+        if (fkViolations.isNotEmpty) {
+          warnings.add(
+            'Found ${fkViolations.length} foreign-key violation(s) in current '
+            'data. Affected rows may be skipped during rebuild. '
+            'Tables: ${fkViolations.map((r) => r['table']).toSet().join(', ')}',
+          );
+          AppLogger.warning(
+            'DatabaseRebuild',
+            'FK violations detected before rebuild',
+            fkViolations,
+          );
+        }
+      } catch (fkError) {
+        warnings.add('FK pre-check skipped: $fkError');
       }
 
       AppLogger.info('DatabaseRebuild', '✅ Pre-flight checks passed');
@@ -411,8 +431,9 @@ class DatabaseRebuildService {
   ) async {
     try {
       // Create temp directory
-      final tempDir = Directory.systemTemp
-          .createTempSync('plantry_rebuild_${DateTime.now().millisecondsSinceEpoch}');
+      final tempDir = Directory.systemTemp.createTempSync(
+        'plantry_rebuild_${DateTime.now().millisecondsSinceEpoch}',
+      );
 
       // Extract ZIP
       final bytes = await File(backupPath).readAsBytes();
@@ -459,10 +480,7 @@ class DatabaseRebuildService {
       await DatabaseHelper.instance.close();
 
       // Get database path
-      final dbPath = path.join(
-        await getDatabasesPath(),
-        'growlog.db',
-      );
+      final dbPath = path.join(await getDatabasesPath(), 'growlog.db');
 
       // Backup old database file
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -590,8 +608,7 @@ class DatabaseRebuildService {
           transformed['ph_in'] = record['ph'];
           transformed.remove('ph');
         }
-        if (record.containsKey('nutrient_ec') &&
-            !record.containsKey('ec_in')) {
+        if (record.containsKey('nutrient_ec') && !record.containsKey('ec_in')) {
           transformed['ec_in'] = record['nutrient_ec'];
           transformed.remove('nutrient_ec');
         }
@@ -638,10 +655,7 @@ class DatabaseRebuildService {
       }
 
       final photosDestDir = Directory(
-        path.join(
-          (await getApplicationDocumentsDirectory()).path,
-          'photos',
-        ),
+        path.join((await getApplicationDocumentsDirectory()).path, 'photos'),
       );
       await photosDestDir.create(recursive: true);
 
@@ -676,10 +690,7 @@ class DatabaseRebuildService {
       await DatabaseHelper.instance.close();
 
       // Get current database path
-      final dbPath = path.join(
-        await getDatabasesPath(),
-        'growlog.db',
-      );
+      final dbPath = path.join(await getDatabasesPath(), 'growlog.db');
 
       // Delete new (failed) database
       final newDbFile = File(dbPath);

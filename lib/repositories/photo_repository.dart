@@ -222,6 +222,7 @@ class PhotoRepository with RepositoryErrorHandler implements IPhotoRepository {
   /// Usage:
   /// - From within a transaction: call this method directly
   /// - Standalone: use deleteByLogId() which creates its own transaction
+  @override
   Future<void> deleteByLogIdInTransaction(
     DatabaseExecutor txn,
     int logId,

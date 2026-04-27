@@ -319,9 +319,8 @@ class Harvest {
       return null;
     }
 
-    // Validate that dry weight is not greater than wet weight
     if (dry > wet) {
-      return 0.0; // Invalid data, return 0 instead of negative
+      return null;
     }
 
     return ((wet - dry) / wet) * 100;

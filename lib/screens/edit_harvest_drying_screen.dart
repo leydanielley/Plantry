@@ -123,9 +123,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 decoration: BoxDecoration(
                   color: DT.warning.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: DT.warning.withValues(alpha: 0.3),
-                  ),
+                  border: Border.all(color: DT.warning.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -158,6 +156,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                     firstDate: widget.harvest.harvestDate,
                     lastDate: DateTime.now().add(const Duration(days: 90)),
                   );
+                  if (!mounted) return;
                   if (date != null) {
                     setState(() => _dryingStartDate = date);
                   }
@@ -179,6 +178,7 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                     firstDate: _dryingStartDate ?? widget.harvest.harvestDate,
                     lastDate: DateTime.now().add(const Duration(days: 120)),
                   );
+                  if (!mounted) return;
                   if (date != null) {
                     setState(() => _dryingEndDate = date);
                   }
@@ -229,17 +229,18 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
               // Method Suggestions
               Wrap(
                 spacing: 8,
-                children: [
-                  _t['drying_method_hanging'],
-                  _t['drying_method_net'],
-                  _t['drying_method_box'],
-                  _t['drying_method_rack'],
-                ].map((method) {
-                  return ActionChip(
-                    label: Text(method),
-                    onPressed: () => _methodController.text = method,
-                  );
-                }).toList(),
+                children:
+                    [
+                      _t['drying_method_hanging'],
+                      _t['drying_method_net'],
+                      _t['drying_method_box'],
+                      _t['drying_method_rack'],
+                    ].map((method) {
+                      return ActionChip(
+                        label: Text(method),
+                        onPressed: () => _methodController.text = method,
+                      );
+                    }).toList(),
               ),
               const SizedBox(height: 20),
 
@@ -291,19 +292,14 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 decoration: BoxDecoration(
                   color: DT.warning.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: DT.warning.withValues(alpha: 0.3),
-                  ),
+                  border: Border.all(color: DT.warning.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(
-                          Icons.lightbulb_outline,
-                          color: DT.warning,
-                        ),
+                        const Icon(Icons.lightbulb_outline, color: DT.warning),
                         const SizedBox(width: 8),
                         Text(
                           _t['drying_tips_title'],
@@ -416,7 +412,10 @@ class _EditHarvestDryingScreenState extends State<EditHarvestDryingScreen> {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(fontSize: 12, color: DT.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: DT.textSecondary,
+                    ),
                   ),
                   Text(
                     date != null

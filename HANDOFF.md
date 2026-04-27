@@ -1,8 +1,64 @@
 # HANDOFF — Plantry Code-Review-Fixes
 
 **Für:** Admin (Kai) — nach Context-Clear
-**Vom:** B'Elanna Torres, 2026-04-21
+**Vom:** B'Elanna Torres, zuletzt aktualisiert: 2026-04-24
 **Ziel:** Selbst-enthaltendes Briefing, um die Fixes aus `FLUTTER_REVIEW_FINDINGS.md` zu implementieren, auf einem Feature-Branch zu pushen und einen PR zu öffnen.
+
+---
+
+## Stage 4 — ABGESCHLOSSEN (2026-04-24)
+
+**Status:** Alle Phasen P0–P7 implementiert, Tuvok QS bestanden, Fixes committed.
+
+### Was wurde gemacht (Stage 4 / Branch `review`)
+
+| Phase | Findings | Fixes | Falsch-Positive |
+|-------|----------|-------|-----------------|
+| P0 | FR-B-001, FR-A-002, QA-002, QA-012 | 3 | 1 |
+| P1 | FR-A-012, FR-A-013, FR-A-014 | 2 | 1 |
+| P2 | FR-B-004, FR-B-008, FR-B-009, FR-B-010, FR-B-012 | 3 | 2 |
+| P4 | FR-B-002, FR-B-003, FR-X-001, FR-X-002 | 2 | 2 |
+| P5 | FR-B-011, FR-B-013, QA-014 | 3 | 0 |
+| P6 | FR-C-005–010, FR-C-013, FR-C-019, QA-009 | 3 | 6 |
+| P7 | FR-C-012, FR-C-015, QA-003, QA-010, QA-011, QA-015 | 4 | 2 |
+
+**Offene Minors** (akzeptiert, kein Blocker für PR):
+- VC-008-VOL: Partial-Backup-Cleanup-Lücke in `_createPreMigrationBackup` (sehr edge case)
+- VC-009-VOL: `PlantLogRepository._photoRepository` direkt konstruiert statt DI (Test-Compat)
+
+**Baseline nach Stage 4:** `flutter test` → +580 -59, `flutter analyze` → 2 pre-existing style infos.
+
+### Nächste Schritte für den PR
+
+```bash
+# Branch pushen
+git push origin review
+
+# PR erstellen
+gh pr create --base main --head review \
+  --title "Fix: Stage 4 — Major code-review findings (P0-P7)" \
+  --body "$(cat <<'EOF'
+## Summary
+
+Stage 4 des externen Code-Reviews (FLUTTER_REVIEW_FINDINGS.md) implementiert.
+46 Findings geprüft, ~20 Fixes committed, ~25 als Falsch-Positive bestätigt.
+
+Schwerpunkte:
+- Race-Condition in LogProvider (FR-B-001) geschlossen
+- Migration-Manager: Partial-Backup-Cleanup (FR-A-002)
+- NotificationService: Platform-Guard + Interval-Validation
+- BackupService: Photo-Pfad-Rebase auf Restore (QA-011)
+- AppLogger: PII-Truncation (FR-C-012)
+- Dashboard + EditPlantScreen: error-isolated Future.wait
+
+## Test plan
+
+- [x] flutter analyze → 0 neue Errors
+- [x] flutter test → +580 -59 (unveränderte Baseline)
+- [x] Tuvok QS → Freigabe P0–P7
+EOF
+)"
+```
 
 ---
 

@@ -71,15 +71,20 @@ class _SplashScreenState extends State<SplashScreen> {
       final updateInfo = await VersionManager.getUpdateInfo();
       if (updateInfo.isUpdate) {
         AppLogger.info('SplashScreen', '🆕 ${updateInfo.changeDescription}');
-        setState(() {
-          _status = 'Update wird vorbereitet...';
-        });
+        if (mounted) {
+          setState(() {
+            _status = 'Update wird vorbereitet...';
+          });
+        }
       }
 
       // Check if migration crashed/stuck - show recovery screen immediately
       final migrationStuck = await VersionManager.isMigrationInProgress();
       if (migrationStuck) {
-        AppLogger.error('SplashScreen', '⚠️ Previous migration appears stuck or crashed');
+        AppLogger.error(
+          'SplashScreen',
+          '⚠️ Previous migration appears stuck or crashed',
+        );
 
         if (mounted) {
           // Navigate to Manual Recovery Screen - user MUST make a choice
@@ -106,10 +111,12 @@ class _SplashScreenState extends State<SplashScreen> {
           'SplashScreen',
           '❌ App in crash loop! Count: ${recoveryInfo.crashCount}',
         );
-        setState(() {
-          _hasError = true;
-          _status = 'App-Wiederherstellung läuft...';
-        });
+        if (mounted) {
+          setState(() {
+            _hasError = true;
+            _status = 'App-Wiederherstellung läuft...';
+          });
+        }
 
         // Give user feedback and reset
         await Future.delayed(const Duration(seconds: 2));
@@ -133,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       }
 
-      if (updateInfo.isUpdate) {
+      if (updateInfo.isUpdate && mounted) {
         setState(() {
           _status = 'Datenbank wird migriert...';
         });
@@ -165,9 +172,11 @@ class _SplashScreenState extends State<SplashScreen> {
       // Mark successful initialization
       await AppStateRecovery.resetCrashCount();
 
-      setState(() {
-        _status = 'Daten werden überprüft...';
-      });
+      if (mounted) {
+        setState(() {
+          _status = 'Daten werden überprüft...';
+        });
+      }
 
       final recoveryNeeded = await _checkAutoRecovery(db);
       if (recoveryNeeded) {
@@ -178,9 +187,11 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       if (updateInfo.isUpdate) {
-        setState(() {
-          _status = 'Aufräumen...';
-        });
+        if (mounted) {
+          setState(() {
+            _status = 'Aufräumen...';
+          });
+        }
         await UpdateCleanup.performPostUpdateCleanup();
       }
 
@@ -211,10 +222,12 @@ class _SplashScreenState extends State<SplashScreen> {
       BackupProgressNotifier.instance.clear();
 
       // Stay on splash screen and show error state — do NOT navigate to Dashboard
-      setState(() {
-        _hasError = true;
-        _status = 'Kritischer Fehler beim Laden der Datenbank';
-      });
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _status = 'Kritischer Fehler beim Laden der Datenbank';
+        });
+      }
 
       // Show error dialog with options
       if (mounted) {
@@ -271,7 +284,11 @@ class _SplashScreenState extends State<SplashScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.warning, size: 18, color: Colors.red),
+                            const Icon(
+                              Icons.warning,
+                              size: 18,
+                              color: Colors.red,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               t['splash_error_critical'],
@@ -330,7 +347,10 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                     child: Text(
                       errorMessage,
-                      style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontFamily: 'monospace',
+                      ),
                       maxLines: 5,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -603,16 +623,22 @@ class _SplashScreenState extends State<SplashScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
-                        value: _backupProgress!.current / _backupProgress!.total,
+                        value:
+                            _backupProgress!.current / _backupProgress!.total,
                         minHeight: 6,
                         backgroundColor: DT.elevated,
-                        valueColor: const AlwaysStoppedAnimation<Color>(DT.accent),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          DT.accent,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _backupProgress!.message,
-                      style: const TextStyle(fontSize: 12, color: DT.textTertiary),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: DT.textTertiary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -624,7 +650,10 @@ class _SplashScreenState extends State<SplashScreen> {
             if (kDebugMode) ...[
               const SizedBox(height: 24),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: DT.elevated,
                   borderRadius: BorderRadius.circular(8),

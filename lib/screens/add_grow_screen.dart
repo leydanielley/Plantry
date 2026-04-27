@@ -44,11 +44,19 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _t = AppTranslations(Localizations.localeOf(context).languageCode);
     if (_nameController.text.isEmpty) {
-      _nameController.text = 'Grow ${DateTime.now().year}-${DateTime.now().month}';
+      _nameController.text =
+          'Grow ${DateTime.now().year}-${DateTime.now().month}';
     }
   }
 
@@ -68,11 +76,20 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  PlantryFormField(controller: _nameController, label: _t['add_grow_name_label'], hint: 'z.B. Winter Grow 2024', validator: (v) => v!.isEmpty ? 'Name erforderlich' : null),
+                  PlantryFormField(
+                    controller: _nameController,
+                    label: _t['add_grow_name_label'],
+                    hint: 'z.B. Winter Grow 2024',
+                    validator: (v) => v!.isEmpty ? 'Name erforderlich' : null,
+                  ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _descriptionController, label: _t['add_grow_description_label'], maxLines: 3),
+                  PlantryFormField(
+                    controller: _descriptionController,
+                    label: _t['add_grow_description_label'],
+                    maxLines: 3,
+                  ),
                   const SizedBox(height: 24),
-                  
+
                   _section('Raumzuordnung'),
                   _roomDropdown(),
                   const SizedBox(height: 24),
@@ -81,7 +98,11 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
                   _dateTile(),
                   const SizedBox(height: 32),
 
-                  PlantryButton(label: _t['add_grow_create_button'], onPressed: _save, fullWidth: true),
+                  PlantryButton(
+                    label: _t['add_grow_create_button'],
+                    onPressed: _save,
+                    fullWidth: true,
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -89,20 +110,47 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
 
   Widget _roomDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+      decoration: BoxDecoration(
+        color: DT.elevated,
+        borderRadius: BorderRadius.circular(DT.radiusInput),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int?>(
           value: _selectedRoomId,
           isExpanded: true,
           dropdownColor: DT.elevated,
           items: [
-            DropdownMenuItem(value: null, child: Text(_t['add_grow_no_room'], style: const TextStyle(color: DT.textPrimary))),
-            ..._rooms.map((r) => DropdownMenuItem(value: r.id, child: Text(r.name, style: const TextStyle(color: DT.textPrimary)))),
+            DropdownMenuItem(
+              value: null,
+              child: Text(
+                _t['add_grow_no_room'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            ..._rooms.map(
+              (r) => DropdownMenuItem(
+                value: r.id,
+                child: Text(
+                  r.name,
+                  style: const TextStyle(color: DT.textPrimary),
+                ),
+              ),
+            ),
           ],
           onChanged: (v) => setState(() => _selectedRoomId = v),
         ),
@@ -113,16 +161,28 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
   Widget _dateTile() {
     return PlantryCard(
       onTap: () async {
-        final d = await showDatePicker(context: context, initialDate: _startDate, firstDate: DateTime(2020), lastDate: DateTime.now().add(const Duration(days: 365)));
+        final d = await showDatePicker(
+          context: context,
+          initialDate: _startDate,
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
+        );
+        if (!mounted) return;
         if (d != null) setState(() => _startDate = d);
       },
       child: Row(
         children: [
           const Icon(Icons.calendar_today, color: DT.accent, size: 20),
           const SizedBox(width: 12),
-          Text('${_startDate.day}.${_startDate.month}.${_startDate.year}', style: const TextStyle(color: DT.textPrimary)),
+          Text(
+            '${_startDate.day}.${_startDate.month}.${_startDate.year}',
+            style: const TextStyle(color: DT.textPrimary),
+          ),
           const Spacer(),
-          Text(_t['change_btn'], style: const TextStyle(color: DT.accent, fontSize: 12)),
+          Text(
+            _t['change_btn'],
+            style: const TextStyle(color: DT.accent, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -132,7 +192,12 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
-      final g = Grow(name: _nameController.text, description: _descriptionController.text, startDate: _startDate, roomId: _selectedRoomId);
+      final g = Grow(
+        name: _nameController.text,
+        description: _descriptionController.text,
+        startDate: _startDate,
+        roomId: _selectedRoomId,
+      );
       await _growRepo.create(g);
       if (!mounted) return;
       Navigator.pop(context, true);

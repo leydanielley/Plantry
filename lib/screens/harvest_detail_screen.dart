@@ -51,6 +51,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
   }
 
   Future<void> _loadHarvest() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final hwp = await _harvestRepo.getHarvestWithPlant(widget.harvestId);
@@ -68,7 +69,14 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
           }
         }
       }
-      if (mounted) setState(() { _harvest = h; _harvestWithPlant = hwp; _room = room; _isLoading = false; });
+      if (mounted) {
+        setState(() {
+          _harvest = h;
+          _harvestWithPlant = hwp;
+          _room = room;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -76,8 +84,23 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(backgroundColor: DT.canvas, body: Center(child: CircularProgressIndicator(color: DT.accent)));
-    if (_harvest == null) return const Scaffold(backgroundColor: DT.canvas, body: Center(child: Text('Ernte nicht gefunden', style: TextStyle(color: DT.textPrimary))));
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: DT.canvas,
+        body: Center(child: CircularProgressIndicator(color: DT.accent)),
+      );
+    }
+    if (_harvest == null) {
+      return const Scaffold(
+        backgroundColor: DT.canvas,
+        body: Center(
+          child: Text(
+            'Ernte nicht gefunden',
+            style: TextStyle(color: DT.textPrimary),
+          ),
+        ),
+      );
+    }
 
     return PlantryScaffold(
       title: 'Ernte Details',
@@ -85,8 +108,13 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
         IconButton(
           icon: const Icon(Icons.edit, color: DT.textPrimary),
           onPressed: () async {
-            await Navigator.push(context, MaterialPageRoute(builder: (_) => EditHarvestScreen(harvest: _harvest!)));
-            _loadHarvest();
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => EditHarvestScreen(harvest: _harvest!),
+              ),
+            );
+            if (mounted) _loadHarvest();
           },
         ),
         IconButton(
@@ -105,18 +133,39 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
             _buildActions(),
             const SizedBox(height: 16),
             _buildSection(_t['harvest_weight_section'], Icons.scale, [
-              _row(_t['harvest_wet_weight'], '${_harvest!.wetWeight?.toStringAsFixed(1) ?? "—"}g'),
-              _row(_t['harvest_dry_weight'], '${_harvest!.dryWeight?.toStringAsFixed(1) ?? "—"}g'),
+              _row(
+                _t['harvest_wet_weight'],
+                '${_harvest!.wetWeight?.toStringAsFixed(1) ?? "—"}g',
+              ),
+              _row(
+                _t['harvest_dry_weight'],
+                '${_harvest!.dryWeight?.toStringAsFixed(1) ?? "—"}g',
+              ),
               if (_harvest!.weightLossPercentage != null)
-                _row(_t['harvest_weight_loss'], '${_harvest!.weightLossPercentage!.toStringAsFixed(1)}%', highlight: true),
+                _row(
+                  _t['harvest_weight_loss'],
+                  '${_harvest!.weightLossPercentage!.toStringAsFixed(1)}%',
+                  highlight: true,
+                ),
             ]),
-            if (_harvest!.dryWeight != null && _room != null && (_room!.area > 0 || (_room!.lightWatts != null && _room!.lightWatts! > 0))) ...[
+            if (_harvest!.dryWeight != null &&
+                _room != null &&
+                (_room!.area > 0 ||
+                    (_room!.lightWatts != null && _room!.lightWatts! > 0))) ...[
               const SizedBox(height: 16),
               _buildSection(_t['harvest_yield_section'], Icons.bar_chart, [
                 if (_room!.area > 0)
-                  _row(_t['harvest_yield_per_sqm'], '${(_harvest!.dryWeight! / _room!.area).toStringAsFixed(1)} g/m²', highlight: true),
+                  _row(
+                    _t['harvest_yield_per_sqm'],
+                    '${(_harvest!.dryWeight! / _room!.area).toStringAsFixed(1)} g/m²',
+                    highlight: true,
+                  ),
                 if (_room!.lightWatts != null && _room!.lightWatts! > 0)
-                  _row(_t['yield_per_watt_label'], '${(_harvest!.dryWeight! / _room!.lightWatts!).toStringAsFixed(1)} ${_t['yield_per_watt']}', highlight: true),
+                  _row(
+                    _t['yield_per_watt_label'],
+                    '${(_harvest!.dryWeight! / _room!.lightWatts!).toStringAsFixed(1)} ${_t['yield_per_watt']}',
+                    highlight: true,
+                  ),
               ]),
             ],
             const SizedBox(height: 16),
@@ -147,8 +196,18 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_harvestWithPlant?['plant_name'] ?? 'Pflanze', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: DT.textPrimary)),
-                Text(_harvestWithPlant?['plant_strain'] ?? 'Unbekannter Strain', style: const TextStyle(fontSize: 14, color: DT.textSecondary)),
+                Text(
+                  _harvestWithPlant?['plant_name'] ?? 'Pflanze',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: DT.textPrimary,
+                  ),
+                ),
+                Text(
+                  _harvestWithPlant?['plant_strain'] ?? 'Unbekannter Strain',
+                  style: const TextStyle(fontSize: 14, color: DT.textSecondary),
+                ),
               ],
             ),
           ),
@@ -158,17 +217,31 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
   }
 
   Widget _buildStatusCard() {
-    final status = _harvest!.isComplete ? 'Fertig' : (_harvest!.curingStartDate != null ? 'In Curing' : 'In Trocknung');
-    final color = _harvest!.isComplete ? DT.success : (_harvest!.curingStartDate != null ? DT.info : DT.warning);
-    
+    final status = _harvest!.isComplete
+        ? 'Fertig'
+        : (_harvest!.curingStartDate != null ? 'In Curing' : 'In Trocknung');
+    final color = _harvest!.isComplete
+        ? DT.success
+        : (_harvest!.curingStartDate != null ? DT.info : DT.warning);
+
     return PlantryCard(
       child: Row(
         children: [
           Icon(Icons.info_outline, color: color),
           const SizedBox(width: 12),
-          Text(status, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          Text(
+            status,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
           const Spacer(),
-          Text(DateFormat('dd.MM.yyyy').format(_harvest!.harvestDate), style: const TextStyle(color: DT.textTertiary, fontSize: 12)),
+          Text(
+            DateFormat('dd.MM.yyyy').format(_harvest!.harvestDate),
+            style: const TextStyle(color: DT.textTertiary, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -178,18 +251,29 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
     return Column(
       children: [
         PlantryButton(
-          label: 'Trocknung bearbeiten', 
+          label: 'Trocknung bearbeiten',
           icon: Icons.dry_cleaning,
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HarvestDryingScreen(harvestId: widget.harvestId))).then((_) => _loadHarvest()),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => HarvestDryingScreen(harvestId: widget.harvestId),
+            ),
+          ).then((_) => _loadHarvest()),
           fullWidth: true,
           isPrimary: false,
         ),
         const SizedBox(height: 8),
-        if (_harvest!.dryingEndDate != null) 
+        if (_harvest!.dryingEndDate != null)
           PlantryButton(
-            label: 'Curing bearbeiten', 
+            label: 'Curing bearbeiten',
             icon: Icons.inventory_2,
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HarvestCuringScreen(harvestId: widget.harvestId))).then((_) => _loadHarvest()),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    HarvestCuringScreen(harvestId: widget.harvestId),
+              ),
+            ).then((_) => _loadHarvest()),
             fullWidth: true,
             isPrimary: false,
           ),
@@ -202,7 +286,19 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [Icon(icon, size: 18, color: DT.accent), const SizedBox(width: 8), Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: DT.textPrimary))]),
+          Row(
+            children: [
+              Icon(icon, size: 18, color: DT.accent),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: DT.textPrimary,
+                ),
+              ),
+            ],
+          ),
           const Divider(height: 24, color: DT.border),
           ...children,
         ],
@@ -216,25 +312,54 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(l, style: const TextStyle(fontSize: 13, color: DT.textSecondary)),
-          Text(v, style: TextStyle(fontSize: 14, fontWeight: highlight ? FontWeight.bold : FontWeight.w500, color: highlight ? DT.error : DT.textPrimary)),
+          Text(
+            l,
+            style: const TextStyle(fontSize: 13, color: DT.textSecondary),
+          ),
+          Text(
+            v,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: highlight ? FontWeight.bold : FontWeight.w500,
+              color: highlight ? DT.error : DT.textPrimary,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  String _format(DateTime? d) => d != null ? DateFormat('dd.MM.yyyy').format(d) : '—';
+  String _format(DateTime? d) =>
+      d != null ? DateFormat('dd.MM.yyyy').format(d) : '—';
 
   Future<void> _delete() async {
-    final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
-      backgroundColor: DT.elevated,
-      title: Text(_t['delete_confirm'], style: const TextStyle(color: DT.textPrimary)),
-      content: Text(_t['delete_harvest_confirm'], style: const TextStyle(color: DT.textSecondary)),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
-        TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
-      ],
-    ));
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: DT.elevated,
+        title: Text(
+          _t['delete_confirm'],
+          style: const TextStyle(color: DT.textPrimary),
+        ),
+        content: Text(
+          _t['delete_harvest_confirm'],
+          style: const TextStyle(color: DT.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              _t['cancel'],
+              style: const TextStyle(color: DT.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(_t['delete'], style: const TextStyle(color: DT.error)),
+          ),
+        ],
+      ),
+    );
     if (ok == true) {
       await _harvestRepo.deleteHarvest(widget.harvestId);
       if (!mounted) return;

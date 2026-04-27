@@ -20,6 +20,9 @@ import 'package:growlog_app/screens/harvest_detail_screen.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/providers/plant_provider.dart';
+import 'package:growlog_app/providers/grow_provider.dart';
+import 'package:provider/provider.dart';
 
 class AddHarvestScreen extends StatefulWidget {
   final Plant plant;
@@ -90,6 +93,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                         firstDate: DateTime(2020),
                         lastDate: DateTime.now(),
                       );
+                      if (!mounted) return;
                       if (picked != null) setState(() => _harvestDate = picked);
                     },
                     child: InputDecorator(
@@ -234,6 +238,10 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
         }
       }
 
+      if (mounted) {
+        context.read<PlantProvider>().loadPlants();
+        context.read<GrowProvider>().loadGrows();
+      }
       if (mounted) {
         AppMessages.showSuccess(context, _t['harvest_created_msg']);
         Navigator.of(context).pushAndRemoveUntil(

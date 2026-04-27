@@ -22,8 +22,8 @@ class NotificationSettingsScreen extends StatefulWidget {
       _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState
-    extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
+    with WidgetsBindingObserver {
   final INotificationRepository _repo = getIt<INotificationRepository>();
   final INotificationService _notificationService =
       getIt<INotificationService>();
@@ -36,8 +36,31 @@ class _NotificationSettingsScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initTranslations();
     _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && _settings?.enabled == true) {
+      _notificationService.requestPermissions().then((granted) {
+        if (!mounted) return;
+        if (!granted) {
+          AppLogger.warning(
+            'NotificationSettingsScreen',
+            'Notification permission no longer granted after resume',
+          );
+        }
+      });
+    }
   }
 
   Future<void> _initTranslations() async {
@@ -257,10 +280,7 @@ class _NotificationSettingsScreenState
               title: _t['notification_time'],
               children: [
                 ListTile(
-                  leading: const Icon(
-                    Icons.access_time,
-                    color: DT.accent,
-                  ),
+                  leading: const Icon(Icons.access_time, color: DT.accent),
                   title: Text(_t['notification_time']),
                   subtitle: Text(_settings!.notificationTime),
                   trailing: const Icon(Icons.chevron_right),

@@ -568,6 +568,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     if (!mounted) return;
+    final resetDoneText = isGerman
+        ? 'Daten gelöscht. Backup gesichert unter:\n$exportPath'
+        : 'Data deleted. Backup saved at:\n$exportPath';
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isGerman ? 'Reset abgeschlossen' : 'Reset complete'),
+        content: SelectableText(resetDoneText),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(_t['ok']),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
     await Future.wait([
       context.read<PlantProvider>().loadPlants(),

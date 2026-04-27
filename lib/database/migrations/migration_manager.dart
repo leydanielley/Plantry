@@ -103,7 +103,6 @@ class MigrationManager {
         );
       }
       AppLogger.info('MigrationManager', '✅ Backup verified successfully');
-
     } catch (e, stackTrace) {
       AppLogger.error(
         'MigrationManager',
@@ -111,6 +110,15 @@ class MigrationManager {
         e,
         stackTrace,
       );
+
+      // Delete partial/corrupt backup file to avoid a future restore
+      // mistaking it for a valid backup.
+      if (backupPath != null) {
+        try {
+          final f = File(backupPath);
+          if (await f.exists()) await f.delete();
+        } catch (_) {}
+      }
 
       // Check if database has any data
       final hasData = await _databaseHasData(db);
@@ -224,7 +232,8 @@ class MigrationManager {
               final schemaValid = await SchemaRegistry.validateSchema(
                 txn,
                 newVersion,
-                strict: false, // Allow extra columns for backwards compatibility
+                strict:
+                    false, // Allow extra columns for backwards compatibility
               );
 
               if (!schemaValid) {
@@ -332,7 +341,11 @@ class MigrationManager {
 
       // Check 1: File exists
       if (!await backupFile.exists()) {
-        AppLogger.error('MigrationManager', 'Backup file does not exist', backupPath);
+        AppLogger.error(
+          'MigrationManager',
+          'Backup file does not exist',
+          backupPath,
+        );
         return false;
       }
 
@@ -354,7 +367,9 @@ class MigrationManager {
         }
 
         // Check 4: data.json exists
-        final hasDataJson = archive.any((file) => file.name.endsWith('data.json'));
+        final hasDataJson = archive.any(
+          (file) => file.name.endsWith('data.json'),
+        );
         if (!hasDataJson) {
           AppLogger.error('MigrationManager', 'Backup missing data.json');
           return false;

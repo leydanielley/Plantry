@@ -41,7 +41,8 @@ class _EditLogScreenState extends State<EditLogScreen> {
   late AppTranslations _t;
   final ILogService _logService = getIt<ILogService>();
   final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
-  final ILogFertilizerRepository _logFertilizerRepo = getIt<ILogFertilizerRepository>();
+  final ILogFertilizerRepository _logFertilizerRepo =
+      getIt<ILogFertilizerRepository>();
   final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -95,18 +96,24 @@ class _EditLogScreenState extends State<EditLogScreen> {
     _temperatureController.text = widget.log.temperature?.toString() ?? '';
     _humidityController.text = widget.log.humidity?.toString() ?? '';
     _noteController.text = widget.log.note ?? '';
-    _runoffEnabled = widget.log.phOut != null || widget.log.ecOut != null || widget.log.runoff;
+    _runoffEnabled =
+        widget.log.phOut != null ||
+        widget.log.ecOut != null ||
+        widget.log.runoff;
     _cleanse = widget.log.cleanse;
     _phOutController.text = widget.log.phOut?.toString() ?? '';
     _ecOutController.text = widget.log.ecOut?.toString() ?? '';
     _containerSizeController.text = widget.log.containerSize?.toString() ?? '';
-    _systemReservoirSizeController.text = widget.log.systemReservoirSize?.toString() ?? '';
+    _systemReservoirSizeController.text =
+        widget.log.systemReservoirSize?.toString() ?? '';
 
     if (widget.log.id != null) {
       final logFerts = await _logFertilizerRepo.findByLog(widget.log.id!);
       if (mounted) {
         setState(() {
-          _selectedFertilizers = {for (final lf in logFerts) lf.fertilizerId: lf.amount};
+          _selectedFertilizers = {
+            for (final lf in logFerts) lf.fertilizerId: lf.amount,
+          };
         });
       }
     }
@@ -162,15 +169,32 @@ class _EditLogScreenState extends State<EditLogScreen> {
                   const SizedBox(height: 24),
                   _buildPhotoSection(),
                   const SizedBox(height: 24),
-                  if (_selectedAction == ActionType.water || _selectedAction == ActionType.feed) ...[
+                  if (_selectedAction == ActionType.water ||
+                      _selectedAction == ActionType.feed) ...[
                     _section(_t['section_water_values']),
-                    PlantryFormField(controller: _waterAmountController, label: _t['label_water_amount'], keyboardType: TextInputType.number),
+                    PlantryFormField(
+                      controller: _waterAmountController,
+                      label: _t['label_water_amount'],
+                      keyboardType: TextInputType.number,
+                    ),
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: PlantryFormField(controller: _phInController, label: _t['label_ph_in'], keyboardType: TextInputType.number)),
+                        Expanded(
+                          child: PlantryFormField(
+                            controller: _phInController,
+                            label: _t['label_ph_in'],
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
                         const SizedBox(width: 12),
-                        Expanded(child: PlantryFormField(controller: _ecInController, label: _t['label_ec_in'], keyboardType: TextInputType.number)),
+                        Expanded(
+                          child: PlantryFormField(
+                            controller: _ecInController,
+                            label: _t['label_ec_in'],
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
                       ],
                     ),
                     if (widget.plant.medium.needsRunoffFlags) ...[
@@ -189,9 +213,21 @@ class _EditLogScreenState extends State<EditLogScreen> {
                     _section(_t['section_container_system']),
                     Row(
                       children: [
-                        Expanded(child: PlantryFormField(controller: _containerSizeController, label: _t['label_pot_size'], keyboardType: TextInputType.number)),
+                        Expanded(
+                          child: PlantryFormField(
+                            controller: _containerSizeController,
+                            label: _t['label_pot_size'],
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
                         const SizedBox(width: 12),
-                        Expanded(child: PlantryFormField(controller: _systemReservoirSizeController, label: _t['label_reservoir_size'], keyboardType: TextInputType.number)),
+                        Expanded(
+                          child: PlantryFormField(
+                            controller: _systemReservoirSizeController,
+                            label: _t['label_reservoir_size'],
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -199,15 +235,35 @@ class _EditLogScreenState extends State<EditLogScreen> {
                   _section(_t['section_environment_note']),
                   Row(
                     children: [
-                      Expanded(child: PlantryFormField(controller: _temperatureController, label: _t['label_temperature'], keyboardType: TextInputType.number)),
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _temperatureController,
+                          label: _t['label_temperature'],
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(child: PlantryFormField(controller: _humidityController, label: _t['label_humidity'], keyboardType: TextInputType.number)),
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _humidityController,
+                          label: _t['label_humidity'],
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _noteController, label: _t['notes'], maxLines: 3),
+                  PlantryFormField(
+                    controller: _noteController,
+                    label: _t['notes'],
+                    maxLines: 3,
+                  ),
                   const SizedBox(height: 32),
-                  PlantryButton(label: _t['save_changes'], onPressed: _save, fullWidth: true),
+                  PlantryButton(
+                    label: _t['save_changes'],
+                    onPressed: _save,
+                    fullWidth: true,
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -221,15 +277,28 @@ class _EditLogScreenState extends State<EditLogScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: DT.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              color: DT.accent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: const Icon(Icons.edit_note, color: DT.accent, size: 24),
           ),
           const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${_t['day']} $_dayNumber', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: DT.textPrimary)),
-              Text(widget.plant.name, style: const TextStyle(fontSize: 13, color: DT.textSecondary)),
+              Text(
+                '${_t['day']} $_dayNumber',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: DT.textPrimary,
+                ),
+              ),
+              Text(
+                widget.plant.name,
+                style: const TextStyle(fontSize: 13, color: DT.textSecondary),
+              ),
             ],
           ),
         ],
@@ -239,7 +308,10 @@ class _EditLogScreenState extends State<EditLogScreen> {
 
   bool get _isHydroSystem {
     final m = widget.plant.medium;
-    return m == Medium.rdwc || m == Medium.dwc || m == Medium.hydro || m == Medium.aero;
+    return m == Medium.rdwc ||
+        m == Medium.dwc ||
+        m == Medium.hydro ||
+        m == Medium.aero;
   }
 
   List<ActionType> _allowedActions() {
@@ -251,10 +323,19 @@ class _EditLogScreenState extends State<EditLogScreen> {
       if (a == ActionType.harvest) return false;
       if (_isHydroSystem && a == ActionType.water) return false;
       if (_isHydroSystem && a == ActionType.feed) return false;
-      if (widget.plant.medium == Medium.rdwc && a == ActionType.transplant) return false;
-      if (isArchived && a != ActionType.note && a != ActionType.other) return false;
-      if (isPostHarvest && (a == ActionType.water || a == ActionType.feed ||
-          a == ActionType.transplant || a == ActionType.trim)) { return false; }
+      if (widget.plant.medium == Medium.rdwc && a == ActionType.transplant) {
+        return false;
+      }
+      if (isArchived && a != ActionType.note && a != ActionType.other) {
+        return false;
+      }
+      if (isPostHarvest &&
+          (a == ActionType.water ||
+              a == ActionType.feed ||
+              a == ActionType.transplant ||
+              a == ActionType.trim)) {
+        return false;
+      }
       return true;
     }).toList();
     // Bestehendes Log-Action immer anzeigen, auch wenn jetzt gefiltert
@@ -264,18 +345,27 @@ class _EditLogScreenState extends State<EditLogScreen> {
     return allowed;
   }
 
-  String _actionLabel(ActionType a) =>
-      a.labelForMedium(widget.plant.medium,
-          languageCode: Localizations.localeOf(context).languageCode);
+  String _actionLabel(ActionType a) => a.labelForMedium(
+    widget.plant.medium,
+    languageCode: Localizations.localeOf(context).languageCode,
+  );
 
   Widget _buildActionSelector() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(_t['action'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
+        Text(
+          _t['action'],
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: DT.textSecondary,
+          ),
+        ),
         const SizedBox(height: 12),
         Wrap(
-          spacing: 8, runSpacing: 8,
+          spacing: 8,
+          runSpacing: 8,
           children: _allowedActions().map((a) {
             final sel = _selectedAction == a;
             return GestureDetector(
@@ -284,9 +374,23 @@ class _EditLogScreenState extends State<EditLogScreen> {
                 if (a != ActionType.phaseChange) _selectedNewPhase = null;
               }),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(color: sel ? DT.accent : DT.elevated, borderRadius: BorderRadius.circular(8), border: Border.all(color: sel ? DT.accent : DT.border)),
-                child: Text(_actionLabel(a), style: TextStyle(color: sel ? DT.onAccent : DT.textSecondary, fontSize: 12, fontWeight: sel ? FontWeight.bold : FontWeight.normal)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: sel ? DT.accent : DT.elevated,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: sel ? DT.accent : DT.border),
+                ),
+                child: Text(
+                  _actionLabel(a),
+                  style: TextStyle(
+                    color: sel ? DT.onAccent : DT.textSecondary,
+                    fontSize: 12,
+                    fontWeight: sel ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
               ),
             );
           }).toList(),
@@ -298,14 +402,33 @@ class _EditLogScreenState extends State<EditLogScreen> {
   Widget _dateTile() {
     return PlantryCard(
       onTap: () async {
-        final d = await showDatePicker(context: context, initialDate: _selectedDate, firstDate: DateTime(2020), lastDate: DateTime.now());
-        if (d != null) setState(() => _selectedDate = DateTime(d.year, d.month, d.day, _selectedDate.hour, _selectedDate.minute));
+        final d = await showDatePicker(
+          context: context,
+          initialDate: _selectedDate,
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now(),
+        );
+        if (!mounted) return;
+        if (d != null) {
+          setState(
+            () => _selectedDate = DateTime(
+              d.year,
+              d.month,
+              d.day,
+              _selectedDate.hour,
+              _selectedDate.minute,
+            ),
+          );
+        }
       },
       child: Row(
         children: [
           const Icon(Icons.access_time, color: DT.textTertiary, size: 20),
           const SizedBox(width: 12),
-          Text(DateFormat('dd.MM.yyyy HH:mm').format(_selectedDate), style: const TextStyle(color: DT.textPrimary)),
+          Text(
+            DateFormat('dd.MM.yyyy HH:mm').format(_selectedDate),
+            style: const TextStyle(color: DT.textPrimary),
+          ),
           const Spacer(),
           const Icon(Icons.edit, color: DT.accent, size: 18),
         ],
@@ -317,10 +440,23 @@ class _EditLogScreenState extends State<EditLogScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(_t['photos'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
-          IconButton(icon: const Icon(Icons.add_a_photo, color: DT.accent, size: 20), onPressed: () => _pickPhoto(ImageSource.camera)),
-        ]),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              _t['photos'],
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: DT.textSecondary,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.add_a_photo, color: DT.accent, size: 20),
+              onPressed: () => _pickPhoto(ImageSource.camera),
+            ),
+          ],
+        ),
         const SizedBox(height: 8),
         SizedBox(
           height: 80,
@@ -332,21 +468,67 @@ class _EditLogScreenState extends State<EditLogScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
-                    onTap: () => setState(() => del ? _photosToDelete.remove(p.id) : _photosToDelete.add(p.id!)),
-                    child: Stack(children: [
-                      ClipRRect(borderRadius: BorderRadius.circular(8), child: Opacity(opacity: del ? 0.3 : 1.0, child: Image.file(File(p.filePath), width: 80, height: 80, fit: BoxFit.cover))),
-                      if (del) const Positioned.fill(child: Icon(Icons.delete_forever, color: DT.error)),
-                    ]),
+                    onTap: () => setState(
+                      () => del
+                          ? _photosToDelete.remove(p.id)
+                          : _photosToDelete.add(p.id!),
+                    ),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Opacity(
+                            opacity: del ? 0.3 : 1.0,
+                            child: Image.file(
+                              File(p.filePath),
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        if (del)
+                          const Positioned.fill(
+                            child: Icon(Icons.delete_forever, color: DT.error),
+                          ),
+                      ],
+                    ),
                   ),
                 );
               }),
-              ..._newPhotos.map((p) => Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Stack(children: [
-                  ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.file(File(p.path), width: 80, height: 80, fit: BoxFit.cover)),
-                  Positioned(top: 2, right: 2, child: GestureDetector(onTap: () => setState(() => _newPhotos.remove(p)), child: Container(color: DT.canvas.withValues(alpha: 0.54), child: const Icon(Icons.close, color: DT.textPrimary, size: 16)))),
-                ]),
-              )),
+              ..._newPhotos.map(
+                (p) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(p.path),
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: GestureDetector(
+                          onTap: () => setState(() => _newPhotos.remove(p)),
+                          child: Container(
+                            color: DT.canvas.withValues(alpha: 0.54),
+                            child: const Icon(
+                              Icons.close,
+                              color: DT.textPrimary,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -363,19 +545,67 @@ class _EditLogScreenState extends State<EditLogScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(_t['fertilizers'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
-          IconButton(icon: const Icon(Icons.add_circle_outline, color: DT.accent, size: 20), onPressed: _addFert),
-        ]),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              _t['fertilizers'],
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: DT.textSecondary,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(
+                Icons.add_circle_outline,
+                color: DT.accent,
+                size: 20,
+              ),
+              onPressed: _addFert,
+            ),
+          ],
+        ),
         ..._selectedFertilizers.entries.map((e) {
-          final f = _availableFertilizers.firstWhere((f) => f.id == e.key, orElse: () => Fertilizer(name: _t['fertilizer_unknown']));
+          final f = _availableFertilizers.firstWhere(
+            (f) => f.id == e.key,
+            orElse: () => Fertilizer(name: _t['fertilizer_unknown']),
+          );
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: PlantryCard(isFlat: true, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), child: Row(children: [
-              Expanded(child: Text(f.name, style: const TextStyle(color: DT.textPrimary, fontSize: 13))),
-              Text('${e.value}ml', style: const TextStyle(fontWeight: FontWeight.bold, color: DT.accent)),
-              IconButton(icon: const Icon(Icons.remove_circle_outline, color: DT.error, size: 18), onPressed: () => setState(() => _selectedFertilizers.remove(e.key))),
-            ])),
+            child: PlantryCard(
+              isFlat: true,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      f.name,
+                      style: const TextStyle(
+                        color: DT.textPrimary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${e.value}ml',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: DT.accent,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.remove_circle_outline,
+                      color: DT.error,
+                      size: 18,
+                    ),
+                    onPressed: () =>
+                        setState(() => _selectedFertilizers.remove(e.key)),
+                  ),
+                ],
+              ),
+            ),
           );
         }),
       ],
@@ -383,28 +613,68 @@ class _EditLogScreenState extends State<EditLogScreen> {
   }
 
   Future<void> _addFert() async {
-    final sel = await showDialog<Fertilizer>(context: context, builder: (ctx) => AlertDialog(
-      backgroundColor: DT.elevated,
-      title: Text(_t['choose_fertilizer'], style: const TextStyle(color: DT.textPrimary)),
-      content: SizedBox(width: double.maxFinite, child: ListView.builder(shrinkWrap: true, itemCount: _availableFertilizers.length, itemBuilder: (ctx, i) => ListTile(title: Text(_availableFertilizers[i].name, style: const TextStyle(color: DT.textPrimary)), onTap: () => Navigator.pop(ctx, _availableFertilizers[i])))),
-    ));
+    final sel = await showDialog<Fertilizer>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: DT.elevated,
+        title: Text(
+          _t['choose_fertilizer'],
+          style: const TextStyle(color: DT.textPrimary),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: _availableFertilizers.length,
+            itemBuilder: (ctx, i) => ListTile(
+              title: Text(
+                _availableFertilizers[i].name,
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+              onTap: () => Navigator.pop(ctx, _availableFertilizers[i]),
+            ),
+          ),
+        ),
+      ),
+    );
     if (sel != null) {
       if (!mounted) return;
-      final amt = await showDialog<double>(context: context, builder: (ctx) => AlertDialog(
-        backgroundColor: DT.elevated,
-        title: Text(sel.name, style: const TextStyle(color: DT.textPrimary)),
-        content: TextField(keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _t['fertilizer_amount_label']), autofocus: true, onSubmitted: (v) => Navigator.pop(ctx, double.tryParse(v))),
-      ));
-      if (amt != null && amt > 0) setState(() => _selectedFertilizers[sel.id!] = amt);
+      final amt = await showDialog<double>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: DT.elevated,
+          title: Text(sel.name, style: const TextStyle(color: DT.textPrimary)),
+          content: TextField(
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: _t['fertilizer_amount_label'],
+            ),
+            autofocus: true,
+            onSubmitted: (v) => Navigator.pop(ctx, double.tryParse(v)),
+          ),
+        ),
+      );
+      if (amt != null && amt > 0) {
+        setState(() => _selectedFertilizers[sel.id!] = amt);
+      }
     }
   }
 
   Widget _buildPhaseSelector() {
-    final phases = PlantPhase.values.where((p) => p != PlantPhase.archived).toList();
+    final phases = PlantPhase.values
+        .where((p) => p != PlantPhase.archived)
+        .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(_t['section_new_phase'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
+        Text(
+          _t['section_new_phase'],
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: DT.textSecondary,
+          ),
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -414,7 +684,10 @@ class _EditLogScreenState extends State<EditLogScreen> {
             return GestureDetector(
               onTap: () => setState(() => _selectedNewPhase = p),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: sel ? DT.accent : DT.elevated,
                   borderRadius: BorderRadius.circular(8),
@@ -446,7 +719,10 @@ class _EditLogScreenState extends State<EditLogScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(_t['runoff_measured_label'], style: const TextStyle(color: DT.textPrimary, fontSize: 13)),
+              Text(
+                _t['runoff_measured_label'],
+                style: const TextStyle(color: DT.textPrimary, fontSize: 13),
+              ),
               Switch(
                 value: _runoffEnabled,
                 onChanged: (v) => setState(() {
@@ -464,9 +740,21 @@ class _EditLogScreenState extends State<EditLogScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: PlantryFormField(controller: _phOutController, label: _t['label_ph_out'], keyboardType: TextInputType.number)),
+                Expanded(
+                  child: PlantryFormField(
+                    controller: _phOutController,
+                    label: _t['label_ph_out'],
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: PlantryFormField(controller: _ecOutController, label: _t['label_ec_out'], keyboardType: TextInputType.number)),
+                Expanded(
+                  child: PlantryFormField(
+                    controller: _ecOutController,
+                    label: _t['label_ec_out'],
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
               ],
             ),
           ],
@@ -482,7 +770,10 @@ class _EditLogScreenState extends State<EditLogScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(_t['cleanse_label'], style: const TextStyle(color: DT.textPrimary, fontSize: 13)),
+          Text(
+            _t['cleanse_label'],
+            style: const TextStyle(color: DT.textPrimary, fontSize: 13),
+          ),
           Switch(
             value: _cleanse,
             onChanged: (v) => setState(() => _cleanse = v),
@@ -493,11 +784,22 @@ class _EditLogScreenState extends State<EditLogScreen> {
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12, top: 8), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12, top: 8),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedAction == ActionType.phaseChange && _selectedNewPhase == null) {
+    if (_selectedAction == ActionType.phaseChange &&
+        _selectedNewPhase == null) {
       AppMessages.showError(context, _t['error_phase_required']);
       return;
     }
@@ -512,7 +814,8 @@ class _EditLogScreenState extends State<EditLogScreen> {
       final photoPaths = <String>[];
       final dir = await getApplicationDocumentsDirectory();
       for (final p in _newPhotos) {
-        final f = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(p.path)}';
+        final f =
+            '${DateTime.now().millisecondsSinceEpoch}_${path.basename(p.path)}';
         final saved = await File(p.path).copy(path.join(dir.path, 'photos', f));
         photoPaths.add(saved.path);
       }
@@ -531,8 +834,12 @@ class _EditLogScreenState extends State<EditLogScreen> {
         ecOut: _runoffEnabled ? double.tryParse(_ecOutController.text) : null,
         runoff: _runoffEnabled,
         cleanse: _cleanse,
-        containerSize: _selectedAction == ActionType.transplant ? double.tryParse(_containerSizeController.text) : null,
-        systemReservoirSize: _selectedAction == ActionType.transplant ? double.tryParse(_systemReservoirSizeController.text) : null,
+        containerSize: _selectedAction == ActionType.transplant
+            ? double.tryParse(_containerSizeController.text)
+            : null,
+        systemReservoirSize: _selectedAction == ActionType.transplant
+            ? double.tryParse(_systemReservoirSizeController.text)
+            : null,
         temperature: double.tryParse(_temperatureController.text),
         humidity: double.tryParse(_humidityController.text),
         note: _noteController.text,
