@@ -38,6 +38,10 @@ dependencies:
   # Date/Time formatting
   intl: ^0.20.2
 
+  # Material/Cupertino/Widget localizations (DE/EN)
+  flutter_localizations:
+    sdk: flutter
+
   # URL Launcher (Donate link)
   url_launcher: ^6.2.5
 
