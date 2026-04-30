@@ -73,38 +73,44 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
           ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : Form(
               key: _formKey,
-              child: ListView(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
-                children: [
-                  PlantryFormField(
-                    controller: _nameController,
-                    label: _t['add_grow_name_label'],
-                    hint: 'z.B. Winter Grow 2024',
-                    validator: (v) => v!.isEmpty ? 'Name erforderlich' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  PlantryFormField(
-                    controller: _descriptionController,
-                    label: _t['add_grow_description_label'],
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    PlantryFormField(
+                      key: const Key('field_grow_name'),
+                      controller: _nameController,
+                      label: _t['add_grow_name_label'],
+                      hint: 'z.B. Winter Grow 2024',
+                      validator: (v) => v!.isEmpty ? 'Name erforderlich' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    PlantryFormField(
+                      key: const Key('field_grow_desc'),
+                      controller: _descriptionController,
+                      label: _t['add_grow_description_label'],
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 24),
 
-                  _section('Raumzuordnung'),
-                  _roomDropdown(),
-                  const SizedBox(height: 24),
+                    _section('Raumzuordnung'),
+                    _roomDropdown(),
+                    const SizedBox(height: 24),
 
-                  _section('Zeitplan'),
-                  _dateTile(),
-                  const SizedBox(height: 32),
+                    _section('Zeitplan'),
+                    _dateTile(),
+                    const SizedBox(height: 32),
 
-                  PlantryButton(
-                    label: _t['add_grow_create_button'],
-                    onPressed: _save,
-                    fullWidth: true,
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                    PlantryButton(
+                      key: const Key('save_grow'),
+                      label: _t['add_grow_create_button'],
+                      onPressed: _save,
+                      fullWidth: true,
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
     );

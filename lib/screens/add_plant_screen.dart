@@ -106,78 +106,85 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : Form(
               key: _formKey,
-              child: ListView(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
-                children: [
-                  _section('Basis Info'),
-                  PlantryFormField(
-                    controller: _nameController,
-                    label: _t['add_plant_name_label'],
-                    hint: 'z.B. White Widow #1',
-                    validator: (v) => v!.isEmpty ? 'Name erforderlich' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  PlantryFormField(
-                    controller: _quantityController,
-                    label: _t['add_plant_quantity'],
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  PlantryFormField(
-                    controller: _strainController,
-                    label: _t['add_plant_strain'],
-                  ),
-                  const SizedBox(height: 24),
-
-                  _section('Genetik'),
-                  _dropdown<SeedType>(
-                    _t['add_plant_seed_type'],
-                    _seedType,
-                    SeedType.values,
-                    (v) => setState(() => _seedType = v!),
-                  ),
-                  const SizedBox(height: 16),
-                  _dropdown<GenderType>(
-                    _t['add_plant_gender'],
-                    _genderType,
-                    GenderType.values,
-                    (v) => setState(() => _genderType = v!),
-                  ),
-                  const SizedBox(height: 24),
-
-                  _section('Setup'),
-                  _dropdown<Medium>(
-                    _t['add_plant_medium'],
-                    _medium,
-                    Medium.values,
-                    (v) {
-                      setState(() {
-                        _medium = v!;
-                        if (v != Medium.rdwc) _selectedRdwcSystemId = null;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  if (_medium == Medium.rdwc) ...[
-                    _rdwcDropdown(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _section('Basis Info'),
+                    PlantryFormField(
+                      key: const Key('field_plant_name'),
+                      controller: _nameController,
+                      label: _t['add_plant_name_label'],
+                      hint: 'z.B. White Widow #1',
+                      validator: (v) => v!.isEmpty ? 'Name erforderlich' : null,
+                    ),
                     const SizedBox(height: 16),
+                    PlantryFormField(
+                      key: const Key('field_plant_quantity'),
+                      controller: _quantityController,
+                      label: _t['add_plant_quantity'],
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+                    PlantryFormField(
+                      key: const Key('field_plant_strain'),
+                      controller: _strainController,
+                      label: _t['add_plant_strain'],
+                    ),
+                    const SizedBox(height: 24),
+
+                    _section('Genetik'),
+                    _dropdown<SeedType>(
+                      _t['add_plant_seed_type'],
+                      _seedType,
+                      SeedType.values,
+                      (v) => setState(() => _seedType = v!),
+                    ),
+                    const SizedBox(height: 16),
+                    _dropdown<GenderType>(
+                      _t['add_plant_gender'],
+                      _genderType,
+                      GenderType.values,
+                      (v) => setState(() => _genderType = v!),
+                    ),
+                    const SizedBox(height: 24),
+
+                    _section('Setup'),
+                    _dropdown<Medium>(
+                      _t['add_plant_medium'],
+                      _medium,
+                      Medium.values,
+                      (v) {
+                        setState(() {
+                          _medium = v!;
+                          if (v != Medium.rdwc) _selectedRdwcSystemId = null;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    if (_medium == Medium.rdwc) ...[
+                      _rdwcDropdown(),
+                      const SizedBox(height: 16),
+                    ],
+                    _growDropdown(),
+                    const SizedBox(height: 16),
+                    _roomDropdown(),
+                    const SizedBox(height: 24),
+
+                    _section('Datum'),
+                    _dateTile(),
+                    const SizedBox(height: 32),
+
+                    PlantryButton(
+                      key: const Key('save_plant'),
+                      label: _t['add_plant_create_button'],
+                      onPressed: _save,
+                      fullWidth: true,
+                    ),
+                    const SizedBox(height: 40),
                   ],
-                  _growDropdown(),
-                  const SizedBox(height: 16),
-                  _roomDropdown(),
-                  const SizedBox(height: 24),
-
-                  _section('Datum'),
-                  _dateTile(),
-                  const SizedBox(height: 32),
-
-                  PlantryButton(
-                    label: _t['add_plant_create_button'],
-                    onPressed: _save,
-                    fullWidth: true,
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                ),
               ),
             ),
     );
