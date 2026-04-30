@@ -27,8 +27,8 @@ void errorCasesTests() {
       await d.launch();
       await d.tapText('RÄUME');
       await d.tapFAB();
-      await d.scrollToText('Raum speichern');
-      await d.tapText('Raum speichern');
+      await d.scrollToKey('save_room');
+      await d.tapKey('save_room');
       d.expectText('ist erforderlich');
     });
 
@@ -37,9 +37,9 @@ void errorCasesTests() {
       await d.launch();
       await d.tapText('RÄUME');
       await d.tapFAB();
-      await d.enterTextAt(0, '   ');
-      await d.scrollToText('Raum speichern');
-      await d.tapText('Raum speichern');
+      await d.enterTextByKey('field_room_name', '   ');
+      await d.scrollToKey('save_room');
+      await d.tapKey('save_room');
       await d.settle(const Duration(seconds: 3));
       expect(find.byType(Exception), findsNothing);
     });
@@ -51,9 +51,11 @@ void errorCasesTests() {
       await d.launch();
       await d.tapText('ANBAUTEN');
       await d.tapFAB();
-      await d.scrollToText('Grow erstellen');
-      await d.tapText('Grow erstellen');
-      d.expectText('ist erforderlich');
+      // Default-Name aus didChangeDependencies leeren, damit Validator greift.
+      await d.enterTextByKey('field_grow_name', '');
+      await d.scrollToKey('save_grow');
+      await d.tapKey('save_grow');
+      d.expectText('Name erforderlich');
     });
   });
 
@@ -64,8 +66,8 @@ void errorCasesTests() {
       await d.tapText('PFLANZEN');
       await d.settle(const Duration(seconds: 2));
       await d.tapText('Neue Pflanze');
-      await d.scrollToText('Pflanze(n) erstellen');
-      await d.tapText('Pflanze(n) erstellen');
+      await d.scrollToKey('save_plant');
+      await d.tapKey('save_plant');
       d.expectText('Name erforderlich');
     });
 
@@ -75,10 +77,10 @@ void errorCasesTests() {
       await d.tapText('PFLANZEN');
       await d.settle(const Duration(seconds: 2));
       await d.tapText('Neue Pflanze');
-      await d.enterTextAt(0, 'Fehler-Test-Pflanze');
-      await d.enterTextAt(1, 'fünf');
-      await d.scrollToText('Pflanze(n) erstellen');
-      await d.tapText('Pflanze(n) erstellen');
+      await d.enterTextByKey('field_plant_name', 'Fehler-Test-Pflanze');
+      await d.enterTextByKey('field_plant_quantity', 'fünf');
+      await d.scrollToKey('save_plant');
+      await d.tapKey('save_plant');
       await d.settle(const Duration(seconds: 3));
       expect(find.byType(Exception), findsNothing);
     });
@@ -89,10 +91,10 @@ void errorCasesTests() {
       await d.tapText('PFLANZEN');
       await d.settle(const Duration(seconds: 2));
       await d.tapText('Neue Pflanze');
-      await d.enterTextAt(0, 'Negativ-Test');
-      await d.enterTextAt(1, '-3');
-      await d.scrollToText('Pflanze(n) erstellen');
-      await d.tapText('Pflanze(n) erstellen');
+      await d.enterTextByKey('field_plant_name', 'Negativ-Test');
+      await d.enterTextByKey('field_plant_quantity', '-3');
+      await d.scrollToKey('save_plant');
+      await d.tapKey('save_plant');
       await d.settle(const Duration(seconds: 3));
       expect(find.byType(Exception), findsNothing);
     });
@@ -105,7 +107,7 @@ void errorCasesTests() {
       final reached = await _navigateToDryingDialog(d);
       if (!reached) return;
       await d.tapText('Beenden');
-      d.expectText('Ungültiges Gewicht');
+      d.expectSnackBar('Bitte gültiges Gewicht eingeben');
     });
 
     testWidgets('Text statt Zahl → Fehlermeldung', (tester) async {
@@ -115,7 +117,7 @@ void errorCasesTests() {
       if (!reached) return;
       await d.enterTextAt(0, 'keine Ahnung');
       await d.tapText('Beenden');
-      d.expectText('Ungültiges Gewicht');
+      d.expectSnackBar('Bitte gültiges Gewicht eingeben');
     });
 
     testWidgets('Negatives Gewicht → Fehlermeldung', (tester) async {
@@ -125,7 +127,7 @@ void errorCasesTests() {
       if (!reached) return;
       await d.enterTextAt(0, '-10');
       await d.tapText('Beenden');
-      d.expectText('Ungültiges Gewicht');
+      d.expectSnackBar('Bitte gültiges Gewicht eingeben');
     });
 
     testWidgets('Null-Gewicht → Fehlermeldung', (tester) async {
@@ -135,7 +137,7 @@ void errorCasesTests() {
       if (!reached) return;
       await d.enterTextAt(0, '0');
       await d.tapText('Beenden');
-      d.expectText('Ungültiges Gewicht');
+      d.expectSnackBar('Bitte gültiges Gewicht eingeben');
     });
 
     testWidgets('Dialog abbrechen → Daten unverändert', (tester) async {

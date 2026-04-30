@@ -16,18 +16,20 @@ void plantFlowTests() {
       // Extended FAB mit Label "Neue Pflanze"
       await d.tapText('Neue Pflanze');
 
-      // Name (Index 0), Strain (Index 2) — ListView ist lazy, erst scrollen
-      await d.enterTextAt(0, 'Test-Pflanze Bloom');
-      await d.enterTextAt(2, 'OG Kush');
+      // Felder per Key — robust gegen Lazy-ListView
+      await d.enterTextByKey('field_plant_name', 'Test-Pflanze Bloom');
+      await d.enterTextByKey('field_plant_strain', 'OG Kush');
 
-      await d.scrollToText('Pflanze(n) erstellen');
-      await d.tapText('Pflanze(n) erstellen');
+      await d.scrollToKey('save_plant');
+      await d.tapKey('save_plant');
       await d.settle(const Duration(seconds: 3));
 
       d.expectText('Test-Pflanze Bloom');
     });
 
-    testWidgets('Pflanze anlegen – Pflichtfeld leer → Fehlermeldung', (tester) async {
+    testWidgets('Pflanze anlegen – Pflichtfeld leer → Fehlermeldung', (
+      tester,
+    ) async {
       final d = AppDriver(tester);
       await d.launch();
 
@@ -35,8 +37,8 @@ void plantFlowTests() {
       await d.settle(const Duration(seconds: 2));
       await d.tapText('Neue Pflanze');
 
-      await d.scrollToText('Pflanze(n) erstellen');
-      await d.tapText('Pflanze(n) erstellen');
+      await d.scrollToKey('save_plant');
+      await d.tapKey('save_plant');
 
       d.expectText('Name erforderlich');
     });

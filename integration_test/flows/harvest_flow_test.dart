@@ -9,17 +9,19 @@ void harvestFlowTests() {
       await d.settle(const Duration(seconds: 2));
       await d.tapText('Test-Pflanze Bloom');
 
-      expect(find.text('Ernte'), findsOneWidget,
-          reason: 'Ernte-Button fehlt – Pflanze nicht im Bloom-Status');
+      expect(
+        find.text('Ernte'),
+        findsOneWidget,
+        reason: 'Ernte-Button fehlt – Pflanze nicht im Bloom-Status',
+      );
       await d.tapText('Ernte');
 
-      // AddHarvestScreen: Nassgewicht (Index 0 in dieser ListView)
-      // Erstes TextFormField ist das Gewichtsfeld
-      await d.enterTextAt(0, '150');
+      // Nassgewicht per Key — robust gegen Lazy-ListView
+      await d.enterTextByKey('field_harvest_wet_weight', '150');
 
-      // Speichern-Button in ListView → scrollen
-      await d.scrollToText('Speichern');
-      await d.tapText('Speichern');
+      // Save-Button via Key (i18n-stabil)
+      await d.scrollToKey('save_harvest');
+      await d.tapKey('save_harvest');
       await d.settle(const Duration(seconds: 3));
     }
 
@@ -47,7 +49,9 @@ void harvestFlowTests() {
       d.expectText('Weiter zum Curing');
     });
 
-    testWidgets('Trocknung beenden – leeres Gewicht → Fehlermeldung', (tester) async {
+    testWidgets('Trocknung beenden – leeres Gewicht → Fehlermeldung', (
+      tester,
+    ) async {
       final d = AppDriver(tester);
       await d.launch();
 
@@ -68,10 +72,12 @@ void harvestFlowTests() {
 
       expect(find.byType(AlertDialog), findsOneWidget);
       await d.tapText('Beenden');
-      d.expectText('Ungültiges Gewicht');
+      d.expectSnackBar('Bitte gültiges Gewicht eingeben');
     });
 
-    testWidgets('Trocknung beenden – negatives Gewicht → Fehlermeldung', (tester) async {
+    testWidgets('Trocknung beenden – negatives Gewicht → Fehlermeldung', (
+      tester,
+    ) async {
       final d = AppDriver(tester);
       await d.launch();
 
@@ -91,10 +97,12 @@ void harvestFlowTests() {
       expect(find.byType(AlertDialog), findsOneWidget);
       await d.enterTextAt(0, '-50');
       await d.tapText('Beenden');
-      d.expectText('Ungültiges Gewicht');
+      d.expectSnackBar('Bitte gültiges Gewicht eingeben');
     });
 
-    testWidgets('Trocknung beenden – Text statt Zahl → Fehlermeldung', (tester) async {
+    testWidgets('Trocknung beenden – Text statt Zahl → Fehlermeldung', (
+      tester,
+    ) async {
       final d = AppDriver(tester);
       await d.launch();
 
@@ -114,7 +122,7 @@ void harvestFlowTests() {
       expect(find.byType(AlertDialog), findsOneWidget);
       await d.enterTextAt(0, 'abc');
       await d.tapText('Beenden');
-      d.expectText('Ungültiges Gewicht');
+      d.expectSnackBar('Bitte gültiges Gewicht eingeben');
     });
   });
 
