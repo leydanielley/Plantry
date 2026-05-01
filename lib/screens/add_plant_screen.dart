@@ -111,13 +111,13 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _section('Basis Info'),
+                    _section(_t['add_plant_basic_info']),
                     PlantryFormField(
                       key: const Key('field_plant_name'),
                       controller: _nameController,
                       label: _t['add_plant_name_label'],
-                      hint: 'z.B. White Widow #1',
-                      validator: (v) => v!.isEmpty ? 'Name erforderlich' : null,
+                      hint: _t['add_plant_name_hint'],
+                      validator: (v) => v!.isEmpty ? _t['add_plant_name_required'] : null,
                     ),
                     const SizedBox(height: 16),
                     PlantryFormField(
@@ -134,7 +134,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    _section('Genetik'),
+                    _section(_t['add_plant_genetics']),
                     _dropdown<SeedType>(
                       _t['add_plant_seed_type'],
                       _seedType,
@@ -150,7 +150,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    _section('Setup'),
+                    _section(_t['add_plant_grow_setup']),
                     _dropdown<Medium>(
                       _t['add_plant_medium'],
                       _medium,
@@ -172,7 +172,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     _roomDropdown(),
                     const SizedBox(height: 24),
 
-                    _section('Datum'),
+                    _section(_t['add_plant_seed_date']),
                     _dateTile(),
                     const SizedBox(height: 32),
 
@@ -258,9 +258,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Grow (Optional)',
-          style: TextStyle(color: DT.textSecondary, fontSize: 12),
+        Text(
+          _t['add_plant_grow_optional'],
+          style: const TextStyle(color: DT.textSecondary, fontSize: 12),
         ),
         const SizedBox(height: 8),
         Container(
@@ -313,9 +313,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Raum (Optional)',
-          style: TextStyle(color: DT.textSecondary, fontSize: 12),
+        Text(
+          _t['add_plant_room_optional'],
+          style: const TextStyle(color: DT.textSecondary, fontSize: 12),
         ),
         const SizedBox(height: 8),
         Container(
@@ -359,9 +359,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'RDWC System',
-          style: TextStyle(color: DT.textSecondary, fontSize: 12),
+        Text(
+          _t['add_plant_rdwc_system'],
+          style: const TextStyle(color: DT.textSecondary, fontSize: 12),
         ),
         const SizedBox(height: 8),
         Container(
@@ -396,12 +396,20 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
               onChanged: (v) {
                 setState(() {
                   _selectedRdwcSystemId = v;
-                  // Auto-set room from RDWC system
                   if (v != null) {
-                    final sys = _rdwcSystems
-                        .where((s) => s.id == v)
-                        .firstOrNull;
-                    if (sys?.roomId != null) _selectedRoomId = sys!.roomId;
+                    final sys = _rdwcSystems.where((s) => s.id == v).firstOrNull;
+                    if (sys?.roomId != null) {
+                      // RDWC is physical hardware in a specific room — room is authoritative.
+                      // If the selected grow belongs to a different room, clear the grow
+                      // to prevent plant.roomId ≠ grow.roomId inconsistency.
+                      if (_selectedGrowId != null) {
+                        final grow = _grows.where((g) => g.id == _selectedGrowId).firstOrNull;
+                        if (grow?.roomId != null && grow!.roomId != sys!.roomId) {
+                          _selectedGrowId = null;
+                        }
+                      }
+                      _selectedRoomId = sys!.roomId;
+                    }
                   }
                 });
               },
@@ -430,7 +438,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
           const SizedBox(width: 12),
           Text(
             _seedDate == null
-                ? 'Kein Datum gesetzt'
+                ? _t['add_plant_seed_date_not_set']
                 : '${_seedDate!.day}.${_seedDate!.month}.${_seedDate!.year}',
             style: const TextStyle(color: DT.textPrimary),
           ),
@@ -470,7 +478,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) AppMessages.showError(context, 'Fehler beim Speichern');
+      if (mounted) AppMessages.showError(context, _t['error_saving']);
       setState(() => _isLoading = false);
     }
   }

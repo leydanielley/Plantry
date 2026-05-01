@@ -15,7 +15,6 @@ import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
-import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/screens/harvest_detail_screen.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/translations.dart';
@@ -34,7 +33,6 @@ class AddHarvestScreen extends StatefulWidget {
 
 class _AddHarvestScreenState extends State<AddHarvestScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
-  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   final _formKey = GlobalKey<FormState>();
 
   final _wetWeightController = TextEditingController();
@@ -42,23 +40,14 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
   final _notesController = TextEditingController();
   DateTime _harvestDate = DateTime.now();
   bool _isLoading = false;
-  late AppTranslations _t = AppTranslations('de');
+  late AppTranslations _t;
 
   @override
-  void initState() {
-    super.initState();
-    _initTranslations();
-  }
-
-  Future<void> _initTranslations() async {
-    final settings = await _settingsRepo.getSettings();
-    if (mounted) {
-      setState(() {
-        _t = AppTranslations(settings.language);
-        if (_dryingMethodController.text.isEmpty) {
-          _dryingMethodController.text = _t['drying_method_hanging'];
-        }
-      });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode);
+    if (_dryingMethodController.text.isEmpty) {
+      _dryingMethodController.text = _t['drying_method_hanging'];
     }
   }
 
@@ -78,81 +67,84 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
           ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : Form(
               key: _formKey,
-              child: ListView(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
-                children: [
-                  _buildPlantCard(),
-                  const SizedBox(height: 24),
-                  _section(_t['edit_harvest_tab_basic']),
-                  // Harvest Date Picker
-                  InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _harvestDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now(),
-                      );
-                      if (!mounted) return;
-                      if (picked != null) setState(() => _harvestDate = picked);
-                    },
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: _t['harvest_date_label'],
-                        prefixIcon: const Icon(
-                          Icons.calendar_today,
-                          color: DT.accent,
-                          size: 20,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildPlantCard(),
+                    const SizedBox(height: 24),
+                    _section(_t['edit_harvest_tab_basic']),
+                    // Harvest Date Picker
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _harvestDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (!mounted) return;
+                        if (picked != null) setState(() => _harvestDate = picked);
+                      },
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: _t['harvest_date_label'],
+                          prefixIcon: const Icon(
+                            Icons.calendar_today,
+                            color: DT.accent,
+                            size: 20,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        DateFormat('dd.MM.yyyy').format(_harvestDate),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: DT.textPrimary,
+                        child: Text(
+                          DateFormat('dd.MM.yyyy').format(_harvestDate),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: DT.textPrimary,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  PlantryFormField(
-                    key: const Key('field_harvest_wet_weight'),
-                    controller: _wetWeightController,
-                    label: _t['edit_harvest_wet_weight_label'],
-                    keyboardType: TextInputType.number,
-                    prefixIcon: const Icon(
-                      Icons.scale,
-                      color: DT.accent,
-                      size: 20,
+                    const SizedBox(height: 16),
+                    PlantryFormField(
+                      key: const Key('field_harvest_wet_weight'),
+                      controller: _wetWeightController,
+                      label: _t['edit_harvest_wet_weight_label'],
+                      keyboardType: TextInputType.number,
+                      prefixIcon: const Icon(
+                        Icons.scale,
+                        color: DT.accent,
+                        size: 20,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  PlantryFormField(
-                    key: const Key('field_harvest_drying_method'),
-                    controller: _dryingMethodController,
-                    label: _t['edit_harvest_drying_method_label'],
-                    hint: _t['edit_harvest_drying_method_hint'],
-                  ),
-                  const SizedBox(height: 24),
-                  _section(_t['notes']),
-                  PlantryFormField(
-                    key: const Key('field_harvest_notes'),
-                    controller: _notesController,
-                    label: _t['notes'],
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 32),
-                  PlantryButton(
-                    key: const Key('save_harvest'),
-                    label: _t['save'],
-                    onPressed: _save,
-                    fullWidth: true,
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                    const SizedBox(height: 16),
+                    PlantryFormField(
+                      key: const Key('field_harvest_drying_method'),
+                      controller: _dryingMethodController,
+                      label: _t['edit_harvest_drying_method_label'],
+                      hint: _t['edit_harvest_drying_method_hint'],
+                    ),
+                    const SizedBox(height: 24),
+                    _section(_t['notes']),
+                    PlantryFormField(
+                      key: const Key('field_harvest_notes'),
+                      controller: _notesController,
+                      label: _t['notes'],
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 32),
+                    PlantryButton(
+                      key: const Key('save_harvest'),
+                      label: _t['save'],
+                      onPressed: _save,
+                      fullWidth: true,
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
     );
@@ -254,7 +246,10 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
         );
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        AppMessages.showError(context, _t['error_saving'] ?? 'Fehler beim Speichern');
+      }
     }
   }
 }

@@ -41,7 +41,7 @@ void errorCasesTests() {
       await d.scrollToKey('save_room');
       await d.tapKey('save_room');
       await d.settle(const Duration(seconds: 3));
-      expect(find.byType(Exception), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 
@@ -82,7 +82,7 @@ void errorCasesTests() {
       await d.scrollToKey('save_plant');
       await d.tapKey('save_plant');
       await d.settle(const Duration(seconds: 3));
-      expect(find.byType(Exception), findsNothing);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('Negative Menge → kein Crash', (tester) async {
@@ -96,7 +96,7 @@ void errorCasesTests() {
       await d.scrollToKey('save_plant');
       await d.tapKey('save_plant');
       await d.settle(const Duration(seconds: 3));
-      expect(find.byType(Exception), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 

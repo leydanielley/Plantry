@@ -233,11 +233,12 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading)
+    if (_isLoading) {
       return const Scaffold(
         backgroundColor: DT.canvas,
         body: Center(child: CircularProgressIndicator(color: DT.accent)),
       );
+    }
 
     final top = MediaQuery.of(context).padding.top;
     final expert = GrowLogApp.of(context)?.settings.isExpertMode ?? false;
@@ -687,8 +688,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildPhaseTimerRow() {
-    if (_plantCount == 0 || _phaseAvgDays.isEmpty)
+    if (_plantCount == 0 || _phaseAvgDays.isEmpty) {
       return const SizedBox.shrink();
+    }
 
     final phaseLabels = {
       PlantPhase.seedling: 'SEEDLING',

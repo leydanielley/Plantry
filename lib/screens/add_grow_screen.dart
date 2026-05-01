@@ -82,8 +82,8 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
                       key: const Key('field_grow_name'),
                       controller: _nameController,
                       label: _t['add_grow_name_label'],
-                      hint: 'z.B. Winter Grow 2024',
-                      validator: (v) => v!.isEmpty ? 'Name erforderlich' : null,
+                      hint: _t['add_grow_name_hint'],
+                      validator: (v) => v!.isEmpty ? _t['error_field_required'] : null,
                     ),
                     const SizedBox(height: 16),
                     PlantryFormField(
@@ -94,11 +94,11 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    _section('Raumzuordnung'),
+                    _section(_t['add_grow_room_section']),
                     _roomDropdown(),
                     const SizedBox(height: 24),
 
-                    _section('Zeitplan'),
+                    _section(_t['add_grow_start_date_section']),
                     _dateTile(),
                     const SizedBox(height: 32),
 
@@ -208,7 +208,7 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) AppMessages.showError(context, 'Fehler beim Speichern');
+      if (mounted) AppMessages.showError(context, _t['error_saving']);
       setState(() => _isLoading = false);
     }
   }

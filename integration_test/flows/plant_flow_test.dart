@@ -63,7 +63,7 @@ void plantFlowTests() {
       await d.tapText('Änderungen speichern');
       await d.settle(const Duration(seconds: 3));
 
-      expect(find.byType(Exception), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 }

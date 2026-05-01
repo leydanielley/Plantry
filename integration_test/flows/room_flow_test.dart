@@ -56,7 +56,7 @@ void roomFlowTests() {
       await d.tapKey('save_room');
       await d.settle(const Duration(seconds: 3));
 
-      expect(find.byType(Exception), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 }

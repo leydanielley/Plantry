@@ -53,7 +53,7 @@ void growFlowTests() {
       await d.tapKey('save_grow');
       await d.settle(const Duration(seconds: 3));
 
-      expect(find.byType(Exception), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 }

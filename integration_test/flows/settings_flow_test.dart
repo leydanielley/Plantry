@@ -47,7 +47,7 @@ void settingsFlowTests() {
         await d.tapText('English');
 
         await d.settle(const Duration(seconds: 2));
-        expect(find.byType(Exception), findsNothing);
+        expect(tester.takeException(), isNull);
 
         // Zurück auf Deutsch setzen
         await d.tapTextIfExists('Deutsch');
@@ -70,7 +70,7 @@ void settingsFlowTests() {
       }
 
       await d.settle(const Duration(seconds: 2));
-      expect(find.byType(Exception), findsNothing);
+      expect(tester.takeException(), isNull);
     }, skip: true); // VC-T-009-VOL: Settings-Driver-Refactor (Phase 6)
 
     testWidgets(
@@ -87,7 +87,7 @@ void settingsFlowTests() {
         await tester.tap(toggle);
         await d.settle(const Duration(seconds: 2));
 
-        expect(find.byType(Exception), findsNothing);
+        expect(tester.takeException(), isNull);
       },
       skip: true, // VC-T-009-VOL: Settings-Driver-Refactor (Phase 6)
     );
