@@ -119,6 +119,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                   ),
                   const SizedBox(height: 16),
                   PlantryFormField(
+                    key: const Key('field_harvest_wet_weight'),
                     controller: _wetWeightController,
                     label: _t['edit_harvest_wet_weight_label'],
                     keyboardType: TextInputType.number,
@@ -130,6 +131,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                   ),
                   const SizedBox(height: 16),
                   PlantryFormField(
+                    key: const Key('field_harvest_drying_method'),
                     controller: _dryingMethodController,
                     label: _t['edit_harvest_drying_method_label'],
                     hint: _t['edit_harvest_drying_method_hint'],
@@ -137,12 +139,14 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                   const SizedBox(height: 24),
                   _section(_t['notes']),
                   PlantryFormField(
+                    key: const Key('field_harvest_notes'),
                     controller: _notesController,
                     label: _t['notes'],
                     maxLines: 3,
                   ),
                   const SizedBox(height: 32),
                   PlantryButton(
+                    key: const Key('save_harvest'),
                     label: _t['save'],
                     onPressed: _save,
                     fullWidth: true,

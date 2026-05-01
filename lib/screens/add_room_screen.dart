@@ -78,69 +78,152 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
           ? const Center(child: CircularProgressIndicator(color: DT.accent))
           : Form(
               key: _formKey,
-              child: ListView(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
-                children: [
-                  PlantryFormField(controller: _nameController, label: _t['add_room_name_label'], hint: _t['room_hint_name'], validator: (v) => v!.isEmpty ? _t['error_field_required'] : null),
-                  const SizedBox(height: 16),
-                  PlantryFormField(controller: _descController, label: _t['add_room_description_label'], maxLines: 2),
-                  const SizedBox(height: 24),
-
-                  _section(_t['room_section_setup']),
-                  _dropdown<GrowType>(_t['room_label_environment'], _growType, GrowType.values, (v) => setState(() => _growType = v!)),
-                  const SizedBox(height: 16),
-                  _dropdown<WateringSystem>(_t['room_label_watering'], _wateringSystem, WateringSystem.values, (v) => setState(() => _wateringSystem = v!)),
-                  const SizedBox(height: 16),
-                  if (_wateringSystem == WateringSystem.rdwc) ...[
-                    _rdwcDropdown(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    PlantryFormField(
+                      key: const Key('field_room_name'),
+                      controller: _nameController,
+                      label: _t['add_room_name_label'],
+                      hint: _t['room_hint_name'],
+                      validator: (v) =>
+                          v!.isEmpty ? _t['error_field_required'] : null,
+                    ),
                     const SizedBox(height: 16),
-                  ],
-                  const SizedBox(height: 8),
+                    PlantryFormField(
+                      key: const Key('field_room_desc'),
+                      controller: _descController,
+                      label: _t['add_room_description_label'],
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 24),
 
-                  _section(_t['room_section_dimensions']),
-                  Row(
-                    children: [
-                      Expanded(child: PlantryFormField(controller: _widthController, label: _t['room_label_width'], keyboardType: TextInputType.number)),
-                      const SizedBox(width: 12),
-                      Expanded(child: PlantryFormField(controller: _depthController, label: _t['room_label_depth'], keyboardType: TextInputType.number)),
-                      const SizedBox(width: 12),
-                      Expanded(child: PlantryFormField(controller: _heightController, label: _t['room_label_height'], keyboardType: TextInputType.number)),
+                    _section(_t['room_section_setup']),
+                    _dropdown<GrowType>(
+                      _t['room_label_environment'],
+                      _growType,
+                      GrowType.values,
+                      (v) => setState(() => _growType = v!),
+                    ),
+                    const SizedBox(height: 16),
+                    _dropdown<WateringSystem>(
+                      _t['room_label_watering'],
+                      _wateringSystem,
+                      WateringSystem.values,
+                      (v) => setState(() => _wateringSystem = v!),
+                    ),
+                    const SizedBox(height: 16),
+                    if (_wateringSystem == WateringSystem.rdwc) ...[
+                      _rdwcDropdown(),
+                      const SizedBox(height: 16),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-                  PlantryFormField(
-                    controller: _wattsController,
-                    label: _t['light_watts'],
-                    hint: _t['room_hint_watts'],
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 8),
 
-                  PlantryButton(label: _t['add_room_save_button'], onPressed: _save, fullWidth: true),
-                  const SizedBox(height: 40),
-                ],
+                    _section(_t['room_section_dimensions']),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: PlantryFormField(
+                            key: const Key('field_room_width'),
+                            controller: _widthController,
+                            label: _t['room_label_width'],
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: PlantryFormField(
+                            key: const Key('field_room_depth'),
+                            controller: _depthController,
+                            label: _t['room_label_depth'],
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: PlantryFormField(
+                            key: const Key('field_room_height'),
+                            controller: _heightController,
+                            label: _t['room_label_height'],
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    PlantryFormField(
+                      key: const Key('field_room_watts'),
+                      controller: _wattsController,
+                      label: _t['light_watts'],
+                      hint: _t['room_hint_watts'],
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 32),
+
+                    PlantryButton(
+                      key: const Key('save_room'),
+                      label: _t['add_room_save_button'],
+                      onPressed: _save,
+                      fullWidth: true,
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
 
-  Widget _dropdown<T>(String label, T value, List<T> items, ValueChanged<T?> onChanged) {
+  Widget _dropdown<T>(
+    String label,
+    T value,
+    List<T> items,
+    ValueChanged<T?> onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: DT.textSecondary, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: DT.textSecondary, fontSize: 12),
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+          decoration: BoxDecoration(
+            color: DT.elevated,
+            borderRadius: BorderRadius.circular(DT.radiusInput),
+          ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T>(
               value: value,
               isExpanded: true,
               dropdownColor: DT.elevated,
-              items: items.map((i) => DropdownMenuItem(value: i, child: Text(_getLabel(i), style: const TextStyle(color: DT.textPrimary)))).toList(),
+              items: items
+                  .map(
+                    (i) => DropdownMenuItem(
+                      value: i,
+                      child: Text(
+                        _getLabel(i),
+                        style: const TextStyle(color: DT.textPrimary),
+                      ),
+                    ),
+                  )
+                  .toList(),
               onChanged: onChanged,
             ),
           ),
@@ -158,15 +241,32 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
   Widget _rdwcDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+      decoration: BoxDecoration(
+        color: DT.elevated,
+        borderRadius: BorderRadius.circular(DT.radiusInput),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int?>(
           value: _selectedRdwcId,
           isExpanded: true,
           dropdownColor: DT.elevated,
           items: [
-            DropdownMenuItem(value: null, child: Text(_t['select_system'], style: const TextStyle(color: DT.textPrimary))),
-            ..._rdwcSystems.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, style: const TextStyle(color: DT.textPrimary)))),
+            DropdownMenuItem(
+              value: null,
+              child: Text(
+                _t['select_system'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            ..._rdwcSystems.map(
+              (s) => DropdownMenuItem(
+                value: s.id,
+                child: Text(
+                  s.name,
+                  style: const TextStyle(color: DT.textPrimary),
+                ),
+              ),
+            ),
           ],
           onChanged: (v) => setState(() => _selectedRdwcId = v),
         ),
