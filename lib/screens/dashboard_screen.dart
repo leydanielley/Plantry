@@ -406,7 +406,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const PlantsScreen()),
-                    ).then((_) => _loadData()),
+                    ).then((_) { if (mounted) _loadData(); }),
                     padding: EdgeInsets.zero,
                     child: Column(
                       children: [
@@ -481,7 +481,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             MaterialPageRoute(
                               builder: (_) => const GrowListScreen(),
                             ),
-                          ).then((_) => _loadData()),
+                          ).then((_) { if (mounted) _loadData(); }),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -495,7 +495,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             MaterialPageRoute(
                               builder: (_) => const RoomListScreen(),
                             ),
-                          ).then((_) => _loadData()),
+                          ).then((_) { if (mounted) _loadData(); }),
                         ),
                       ),
                     ],
@@ -517,7 +517,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             MaterialPageRoute(
                               builder: (_) => const FertilizerListScreen(),
                             ),
-                          ).then((_) => _loadData()),
+                          ).then((_) { if (mounted) _loadData(); }),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -531,7 +531,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             MaterialPageRoute(
                               builder: (_) => const HarvestListScreen(),
                             ),
-                          ).then((_) => _loadData()),
+                          ).then((_) { if (mounted) _loadData(); }),
                         ),
                       ),
                     ],
@@ -567,7 +567,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                               MaterialPageRoute(
                                 builder: (_) => const RdwcSystemsScreen(),
                               ),
-                            ).then((_) => _loadData()),
+                            ).then((_) { if (mounted) _loadData(); }),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -607,7 +607,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 builder: (_) =>
                                     const NutrientCalculatorScreen(),
                               ),
-                            ).then((_) => _loadData()),
+                            ).then((_) { if (mounted) _loadData(); }),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -628,7 +628,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           onSettingsChanged: _onSettingsChanged,
                         ),
                       ),
-                    ).then((_) => _loadData()),
+                    ).then((_) { if (mounted) _loadData(); }),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 16,
@@ -777,7 +777,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => AddLogScreen(plant: p)),
-        ).then((_) => _loadData());
+        ).then((_) { if (mounted) _loadData(); });
       }
     }
   }
@@ -787,7 +787,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AddLogScreen(plant: plant)),
-    ).then((_) => _loadData());
+    ).then((_) { if (mounted) _loadData(); });
   }
 
   Future<void> _showInactivePlantsSheet() async {

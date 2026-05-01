@@ -106,7 +106,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                   _buildHeader(),
                   if (_rdwcSystem != null) ...[const SizedBox(height: 12), _buildRdwc()],
                   const SizedBox(height: 24),
-                  _buildSectionHeader('Hardware', Icons.devices, () => Navigator.push(context, MaterialPageRoute(builder: (_) => HardwareListScreen(roomId: widget.room.id!, roomName: widget.room.name))).then((_) => _loadData())),
+                  _buildSectionHeader('Hardware', Icons.devices, () => Navigator.push(context, MaterialPageRoute(builder: (_) => HardwareListScreen(roomId: widget.room.id!, roomName: widget.room.name))).then((_) { if (mounted) _loadData(); })),
                   ..._hardware.take(3).map((hw) => _buildHwTile(hw)),
                   if (_hardware.isEmpty) _empty('Keine Hardware'),
                   const SizedBox(height: 24),
@@ -159,7 +159,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   Widget _buildRdwc() {
     final s = _rdwcSystem!;
     return PlantryCard(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcSystemDetailScreen(system: s))).then((_) => _loadData()),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcSystemDetailScreen(system: s))).then((_) { if (mounted) _loadData(); }),
       child: Row(
         children: [
           Image.asset('assets/icons/rdwc_icon.png', width: 32, height: 32),
@@ -215,7 +215,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
         leading: Text(_getEmoji(p.phase), style: const TextStyle(fontSize: 20)),
         title: p.name,
         subtitle: 'Tag ${p.totalDays} • ${p.strain ?? "Unbekannt"}',
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PlantDetailScreen(plant: p))).then((_) => _loadData()),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PlantDetailScreen(plant: p))).then((_) { if (mounted) _loadData(); }),
       ),
     );
   }

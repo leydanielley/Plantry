@@ -201,6 +201,13 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Capture provider references before any await — `context.read` after an
+    // async gap is unsafe even with a mounted-check, because the Element may
+    // have been unmounted between the check and the lookup.
+    final plantProvider = context.read<PlantProvider>();
+    final growProvider = context.read<GrowProvider>();
+
     setState(() => _isLoading = true);
     try {
       final h = Harvest(
@@ -234,17 +241,16 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
         }
       }
 
-      if (mounted) {
-        context.read<PlantProvider>().loadPlants();
-        context.read<GrowProvider>().loadGrows();
-      }
-      if (mounted) {
-        AppMessages.showSuccess(context, _t['harvest_created_msg']);
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => HarvestDetailScreen(harvestId: id)),
-          (r) => r.isFirst,
-        );
-      }
+      // Providers don't need a context — refresh them unconditionally.
+      plantProvider.loadPlants();
+      growProvider.loadGrows();
+
+      if (!mounted) return;
+      AppMessages.showSuccess(context, _t['harvest_created_msg']);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => HarvestDetailScreen(harvestId: id)),
+        (r) => r.isFirst,
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);

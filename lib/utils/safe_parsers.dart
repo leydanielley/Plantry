@@ -137,6 +137,24 @@ class SafeParsers {
     }
   }
 
+  /// Safely parse a double from user-typed text, accepting both ',' and '.'
+  /// as decimal separator (DE-Locale uses comma, validator messages must
+  /// not reject "3,5" the user typed correctly on a German keyboard).
+  ///
+  /// Returns null if the text is empty/blank or cannot be parsed.
+  ///
+  /// Usage:
+  /// ```dart
+  /// final v = SafeParsers.parseUserDouble(controller.text);
+  /// if (v == null) return 'Ungültige Zahl';
+  /// ```
+  static double? parseUserDouble(String? text) {
+    if (text == null) return null;
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+    return double.tryParse(trimmed.replaceAll(',', '.'));
+  }
+
   /// Safely parse double from dynamic value
   ///
   /// Usage:

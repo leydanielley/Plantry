@@ -258,7 +258,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
             MaterialPageRoute(
               builder: (_) => HarvestDryingScreen(harvestId: widget.harvestId),
             ),
-          ).then((_) => _loadHarvest()),
+          ).then((_) { if (mounted) _loadHarvest(); }),
           fullWidth: true,
           isPrimary: false,
         ),
@@ -273,7 +273,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
                 builder: (_) =>
                     HarvestCuringScreen(harvestId: widget.harvestId),
               ),
-            ).then((_) => _loadHarvest()),
+            ).then((_) { if (mounted) _loadHarvest(); }),
             fullWidth: true,
             isPrimary: false,
           ),

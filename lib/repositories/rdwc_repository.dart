@@ -717,7 +717,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         );
 
         if (mostRecentLog.isNotEmpty) {
-          final newLevel = mostRecentLog.first['level_after'] as double;
+          final newLevel = (mostRecentLog.first['level_after'] as num?)?.toDouble() ?? 0.0;
           // Inline update within transaction instead of calling method
           await txn.update(
             'rdwc_systems',
@@ -806,7 +806,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         );
 
         if (mostRecentLog.isNotEmpty) {
-          final newLevel = mostRecentLog.first['level_after'] as double;
+          final newLevel = (mostRecentLog.first['level_after'] as num?)?.toDouble() ?? 0.0;
           await txn.update(
             'rdwc_systems',
             {'current_level': newLevel},

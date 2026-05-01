@@ -13,6 +13,7 @@ import 'package:growlog_app/models/app_settings.dart';
 import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/utils/unit_converter.dart';
 import 'package:growlog_app/utils/app_messages.dart';
+import 'package:growlog_app/utils/safe_parsers.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
 
@@ -74,9 +75,9 @@ class _RdwcAddbackCompleteScreenState
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final levelAfter = double.tryParse(_levelAfterController.text);
-    final phAfter = double.tryParse(_phAfterController.text);
-    final ecAfter = double.tryParse(_ecAfterController.text);
+    final levelAfter = SafeParsers.parseUserDouble(_levelAfterController.text);
+    final phAfter = SafeParsers.parseUserDouble(_phAfterController.text);
+    final ecAfter = SafeParsers.parseUserDouble(_ecAfterController.text);
 
     if (levelAfter == null || phAfter == null || ecAfter == null) {
       AppMessages.showError(context, 'Alle Felder ausfüllen');
@@ -198,8 +199,9 @@ class _RdwcAddbackCompleteScreenState
                   const TextInputType.numberWithOptions(decimal: true),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
-                if (double.tryParse(v) == null) return 'Ungültige Zahl';
-                if (double.parse(v) > widget.system.maxCapacity) {
+                final parsed = SafeParsers.parseUserDouble(v);
+                if (parsed == null) return 'Ungültige Zahl';
+                if (parsed > widget.system.maxCapacity) {
                   return 'Überschreitet max. Kapazität';
                 }
                 return null;
@@ -222,7 +224,7 @@ class _RdwcAddbackCompleteScreenState
                         const TextInputType.numberWithOptions(decimal: true),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
-                      if (double.tryParse(v) == null) return 'Ungültige Zahl';
+                      if (SafeParsers.parseUserDouble(v) == null) return 'Ungültige Zahl';
                       return null;
                     },
                   ),

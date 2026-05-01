@@ -370,7 +370,11 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
     try {
       final db = await _dbHelper.database;
 
-      return await db
+      // Phase 1: Collect file paths AND delete DB records in a single transaction.
+      // File deletion happens AFTER commit — filesystem is not transactional, so
+      // deleting files inside the TX risks losing real photos when a later step
+      // fails and the TX rolls back.
+      final txResult = await db
           .transaction((txn) async {
             AppLogger.warning(
               'PlantRepo',
@@ -378,7 +382,6 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
               'plantId=$id',
             );
 
-            // Step 1: Get all log IDs for this plant
             final logs = await txn.query(
               'plant_logs',
               columns: ['id'],
@@ -387,14 +390,25 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
             );
             final logIds = logs.map((log) => log['id'] as int).toList();
 
+            final List<String> photoFilePaths = [];
             int deletedLogFertilizers = 0;
             int deletedPhotos = 0;
-            int deletedPhotoFiles = 0;
-            final List<String> failedPhotoDeletes = [];
 
             if (logIds.isNotEmpty) {
+              final placeholders = List.filled(logIds.length, '?').join(',');
+
+              // Snapshot file paths inside the TX for a consistent view
+              final photos = await txn.query(
+                'photos',
+                columns: ['file_path'],
+                where: 'log_id IN ($placeholders)',
+                whereArgs: logIds,
+              );
+              photoFilePaths.addAll(
+                photos.map((p) => p['file_path'] as String),
+              );
+
               for (final logId in logIds) {
-                // Delete log_fertilizers first (FK to plant_logs)
                 final fertCount = await txn.delete(
                   'log_fertilizers',
                   where: 'log_id = ?',
@@ -402,41 +416,6 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
                 );
                 deletedLogFertilizers += fertCount;
 
-                // Get photo records
-                final photos = await txn.query(
-                  'photos',
-                  where: 'log_id = ?',
-                  whereArgs: [logId],
-                );
-
-                // Delete physical photo files
-                for (final photo in photos) {
-                  try {
-                    final filePath = photo['file_path'] as String;
-                    final file = File(filePath);
-                    if (await file.exists()) {
-                      await file.delete();
-                      deletedPhotoFiles++;
-                    } else {
-                      // File doesn't exist - log warning but don't fail
-                      AppLogger.warning(
-                        'PlantRepo',
-                        'Photo file not found (already deleted?): $filePath',
-                      );
-                    }
-                  } catch (e) {
-                    // Collect failed deletes to abort transaction
-                    final filePath = photo['file_path'] as String;
-                    failedPhotoDeletes.add(filePath);
-                    AppLogger.error(
-                      'PlantRepo',
-                      'Failed to delete photo file: $filePath',
-                      e,
-                    );
-                  }
-                }
-
-                // Delete photo records
                 final photoCount = await txn.delete(
                   'photos',
                   where: 'log_id = ?',
@@ -446,34 +425,18 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
               }
             }
 
-            // ✅ CRITICAL FIX: Abort transaction if photo file deletion failed
-            if (failedPhotoDeletes.isNotEmpty) {
-              final errorMsg =
-                  'Failed to delete ${failedPhotoDeletes.length} photo files:\n'
-                  '${failedPhotoDeletes.take(5).join("\n")}'
-                  '${failedPhotoDeletes.length > 5 ? "\n... and ${failedPhotoDeletes.length - 5} more" : ""}';
-              AppLogger.error('PlantRepo', errorMsg);
-              throw Exception(
-                'Cannot permanently delete plant: Failed to delete photo files. '
-                'This prevents orphaned files in filesystem. Please check file permissions.',
-              );
-            }
-
-            // Step 2: Delete all plant logs
             final deletedLogs = await txn.delete(
               'plant_logs',
               where: 'plant_id = ?',
               whereArgs: [id],
             );
 
-            // Step 3: Delete all harvests
             final deletedHarvests = await txn.delete(
               'harvests',
               where: 'plant_id = ?',
               whereArgs: [id],
             );
 
-            // Step 4: Finally, delete the plant itself
             final deletedPlant = await txn.delete(
               'plants',
               where: 'id = ?',
@@ -482,12 +445,15 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
 
             AppLogger.warning(
               'PlantRepo',
-              '⚠️ PERMANENT DELETE completed',
+              '⚠️ PERMANENT DELETE: DB records purged',
               'plant=$deletedPlant, logs=$deletedLogs, harvests=$deletedHarvests, '
-                  'photos=$deletedPhotos, photoFiles=$deletedPhotoFiles, fertilizers=$deletedLogFertilizers',
+                  'photos=$deletedPhotos, fertilizers=$deletedLogFertilizers',
             );
 
-            return deletedPlant;
+            return (
+              deletedPlant: deletedPlant,
+              photoFilePaths: photoFilePaths,
+            );
           })
           .timeout(
             DatabaseConfig.heavyOperationTimeout,
@@ -495,6 +461,49 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
               'Permanent delete transaction timeout after ${DatabaseConfig.heavyOperationTimeout.inSeconds}s',
             ),
           );
+
+      // Phase 2: Delete physical photo files AFTER successful TX commit.
+      // Failures leave orphan files on disk — logged for cleanup, but DB is
+      // already consistent so we never lose real plant data on file errors.
+      int deletedPhotoFiles = 0;
+      final List<String> failedPhotoDeletes = [];
+      for (final filePath in txResult.photoFilePaths) {
+        try {
+          final file = File(filePath);
+          if (await file.exists()) {
+            await file.delete();
+            deletedPhotoFiles++;
+          } else {
+            AppLogger.warning(
+              'PlantRepo',
+              'Photo file not found (already deleted?): $filePath',
+            );
+          }
+        } catch (e) {
+          failedPhotoDeletes.add(filePath);
+          AppLogger.error(
+            'PlantRepo',
+            'Failed to delete photo file (orphan on disk): $filePath',
+            e,
+          );
+        }
+      }
+
+      if (failedPhotoDeletes.isNotEmpty) {
+        AppLogger.warning(
+          'PlantRepo',
+          '⚠️ PERMANENT DELETE: ${failedPhotoDeletes.length} photo files left as orphans',
+          failedPhotoDeletes.take(5).join('\n'),
+        );
+      }
+
+      AppLogger.warning(
+        'PlantRepo',
+        '⚠️ PERMANENT DELETE completed',
+        'plant=${txResult.deletedPlant}, photoFiles=$deletedPhotoFiles, orphans=${failedPhotoDeletes.length}',
+      );
+
+      return txResult.deletedPlant;
     } catch (e, stackTrace) {
       AppLogger.error(
         'PlantRepository',

@@ -451,7 +451,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   color: DT.elevated,
                   icon: const Icon(Icons.more_vert, size: 18, color: DT.textTertiary),
                   onSelected: (v) {
-                    if (v == 'edit') Navigator.push(context, MaterialPageRoute(builder: (_) => EditLogScreen(plant: _currentPlant, log: log))).then((_) => _loadData());
+                    if (v == 'edit') Navigator.push(context, MaterialPageRoute(builder: (_) => EditLogScreen(plant: _currentPlant, log: log))).then((_) { if (mounted) _loadData(); });
                     if (v == 'delete') _deleteLog(log);
                   },
                   itemBuilder: (ctx) => [

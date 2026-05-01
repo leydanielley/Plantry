@@ -288,8 +288,8 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           Wrap(
             spacing: 8, runSpacing: 8,
             children: [
-              _actionBtn(_t['addback_action'], Icons.add_circle_outline, DT.success, () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcAddbackFormScreen(system: _system))).then((_) => _loadData())),
-              _actionBtn(_t['measurement_action'], Icons.science_outlined, DT.info, () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcQuickMeasurementScreen(system: _system))).then((_) => _loadData())),
+              _actionBtn(_t['addback_action'], Icons.add_circle_outline, DT.success, () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcAddbackFormScreen(system: _system))).then((_) { if (mounted) _loadData(); })),
+              _actionBtn(_t['measurement_action'], Icons.science_outlined, DT.info, () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcQuickMeasurementScreen(system: _system))).then((_) { if (mounted) _loadData(); })),
               _actionBtn(_t['recipes'], Icons.menu_book, DT.accent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RdwcRecipesScreen()))),
               _actionBtn(_t['analytics'], Icons.analytics_outlined, DT.info, () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcAnalyticsScreen(system: _system)))),
               _actionBtn('Rechner', Icons.calculate_outlined, DT.warning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => NutrientCalculatorScreen(system: _system)))),
@@ -339,7 +339,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
         title: _logLabel(l.logType),
         subtitle: '${DateFormat('dd.MM HH:mm').format(l.logDate)}${l.waterAdded != null ? " • +${l.waterAdded}L" : ""}',
         trailing: l.ecAfter != null ? Text(UnitConverter.formatNutrient(l.ecAfter!, _settings.nutrientUnit, _settings.ppmScale), style: const TextStyle(fontWeight: FontWeight.bold, color: DT.textPrimary)) : null,
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcAddbackFormScreen(system: _system, existingLog: l))).then((_) => _loadData()),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcAddbackFormScreen(system: _system, existingLog: l))).then((_) { if (mounted) _loadData(); }),
       ),
     );
   }
