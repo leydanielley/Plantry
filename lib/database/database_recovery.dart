@@ -221,8 +221,19 @@ class DatabaseRecovery {
           // is best-effort; any failure leaves the sandbox copy in place.
           if (Platform.isAndroid) {
             try {
+              // path_provider statt hardcoded /storage/emulated/0/...
+              // Hardcoded path bricht auf Samsung One UI (anderer Mount),
+              // Multi-User-Tablets und scoped storage ab Android 11.
+              // getExternalStorageDirectory() liefert den korrekten
+              // app-spezifischen Ordner unter /Android/data/<pkg>/files (H10).
+              final externalDir = await getExternalStorageDirectory();
+              if (externalDir == null) {
+                throw const FileSystemException(
+                  'getExternalStorageDirectory() returned null',
+                );
+              }
               final androidDownloadsDir = Directory(
-                '/storage/emulated/0/Download/Plantry Backups/Emergency',
+                path.join(externalDir.path, 'Plantry Backups', 'Emergency'),
               );
               if (!await androidDownloadsDir.exists()) {
                 await androidDownloadsDir.create(recursive: true);
@@ -235,13 +246,13 @@ class DatabaseRecovery {
               emergencyBackupPath = mirrorPath;
               AppLogger.info(
                 'DatabaseRecovery',
-                '✅ Emergency backup mirrored to Downloads',
-                mirrorPath,
+                '✅ Emergency backup mirrored to external storage',
+                path.basename(mirrorPath),
               );
             } catch (mirrorError) {
               AppLogger.warning(
                 'DatabaseRecovery',
-                'Downloads mirror failed; sandbox copy remains available',
+                'External storage mirror failed; sandbox copy remains available',
                 mirrorError,
               );
             }
