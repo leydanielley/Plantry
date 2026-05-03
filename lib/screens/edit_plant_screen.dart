@@ -113,7 +113,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   @override
   Widget build(BuildContext context) {
     return PlantryScaffold(
-      title: 'Pflanze bearbeiten',
+      title: _t['edit_plant_title'],
       actions: [
         IconButton(
           icon: const Icon(Icons.delete_outline, color: DT.error),
