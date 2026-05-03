@@ -40,17 +40,25 @@ class _SplashScreenState extends State<SplashScreen> {
     _initializeApp();
   }
 
-  /// Setup listener for backup progress
+  /// Setup listener for backup progress.
+  /// onError ist Pflicht: ein Throw aus dem Stream ohne Handler killt die
+  /// Subscription und der SplashScreen hängt für immer im Loading-State —
+  /// die App startet nicht (H9).
   void _setupProgressListener() {
-    _progressSubscription = BackupProgressNotifier.instance.stream.listen((
-      event,
-    ) {
-      if (mounted) {
-        setState(() {
-          _backupProgress = event;
-        });
-      }
-    });
+    _progressSubscription = BackupProgressNotifier.instance.stream.listen(
+      (event) {
+        if (mounted) {
+          setState(() {
+            _backupProgress = event;
+          });
+        }
+      },
+      onError: (Object e, StackTrace st) {
+        AppLogger.error('SplashScreen', 'Backup progress stream error', e, st);
+        // Subscription weiterleben lassen, App-Init nicht blockieren
+      },
+      cancelOnError: false,
+    );
   }
 
   @override

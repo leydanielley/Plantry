@@ -123,13 +123,21 @@ class _DashboardScreenState extends State<DashboardScreen>
       final plants = await _plantRepo.findAll();
       final recentLogs = await _logRepo.getRecentActivity(limit: 1);
 
+      // Pro Count ein eigener catchError → ein einzelner Repo-Fail zerstört
+      // nicht das ganze Dashboard. Vorher wurde der Throw von Future.wait
+      // rebroadcastet → outer catch → Dashboard zeigt leeren State (H8).
+      Future<int> safeCount(Future<int> f, String label) =>
+          f.catchError((e) {
+            AppLogger.warning('DashboardScreen', '$label count failed', e);
+            return 0;
+          });
       final res = await Future.wait([
-        _plantRepo.count(),
-        _growRepo.getAll().then((l) => l.length),
-        _roomRepo.count(),
-        _fertilizerRepo.count(),
-        _harvestRepo.getHarvestCount(),
-        _rdwcRepo.getAllSystems().then((l) => l.length),
+        safeCount(_plantRepo.count(), 'plants'),
+        safeCount(_growRepo.getAll().then((l) => l.length), 'grows'),
+        safeCount(_roomRepo.count(), 'rooms'),
+        safeCount(_fertilizerRepo.count(), 'fertilizers'),
+        safeCount(_harvestRepo.getHarvestCount(), 'harvests'),
+        safeCount(_rdwcRepo.getAllSystems().then((l) => l.length), 'rdwc'),
       ], eagerError: false);
 
       final Map<PlantPhase, int> dist = {};
