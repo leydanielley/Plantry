@@ -61,25 +61,74 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
   }
 
   /// Raum speichern (INSERT oder UPDATE)
+  ///
+  /// Synchronisiert die bidirektionale RDWC-FK in einer Transaction:
+  /// `rooms.rdwc_system_id` UND `rdwc_systems.room_id` müssen konsistent
+  /// bleiben, sonst tauchen "gelöschte" Systeme über den Reverse-Lookup
+  /// (`getSystemsByRoom`) wieder auf — siehe Bug C aus dem Review.
   @override
   Future<Room> save(Room room) async {
     try {
       final db = await _dbHelper.database;
 
-      if (room.id == null) {
-        // INSERT
-        final id = await db.insert('rooms', room.toMap());
-        return room.copyWith(id: id);
-      } else {
-        // UPDATE
-        await db.update(
-          'rooms',
-          room.toMap(),
-          where: 'id = ?',
-          whereArgs: [room.id],
-        );
-        return room;
-      }
+      return await db.transaction((txn) async {
+        if (room.id == null) {
+          // INSERT
+          final id = await txn.insert('rooms', room.toMap());
+          // Wenn beim Anlegen direkt ein RDWC verknüpft ist, Reverse-FK setzen
+          if (room.rdwcSystemId != null) {
+            await txn.update(
+              'rdwc_systems',
+              {'room_id': id},
+              where: 'id = ?',
+              whereArgs: [room.rdwcSystemId],
+            );
+          }
+          return room.copyWith(id: id);
+        } else {
+          // UPDATE — alten RDWC-Link lesen, um Drift zu vermeiden
+          final oldRows = await txn.query(
+            'rooms',
+            columns: ['rdwc_system_id'],
+            where: 'id = ?',
+            whereArgs: [room.id],
+            limit: 1,
+          );
+          final oldRdwcId = oldRows.isNotEmpty
+              ? oldRows.first['rdwc_system_id'] as int?
+              : null;
+
+          await txn.update(
+            'rooms',
+            room.toMap(),
+            where: 'id = ?',
+            whereArgs: [room.id],
+          );
+
+          // Reverse-FK nur anfassen wenn sich die Verknüpfung ändert
+          if (oldRdwcId != room.rdwcSystemId) {
+            // Alten Link kappen (nur wenn er noch auf diesen Raum zeigt)
+            if (oldRdwcId != null) {
+              await txn.update(
+                'rdwc_systems',
+                {'room_id': null},
+                where: 'id = ? AND room_id = ?',
+                whereArgs: [oldRdwcId, room.id],
+              );
+            }
+            // Neuen Link setzen
+            if (room.rdwcSystemId != null) {
+              await txn.update(
+                'rdwc_systems',
+                {'room_id': room.id},
+                where: 'id = ?',
+                whereArgs: [room.rdwcSystemId],
+              );
+            }
+          }
+          return room;
+        }
+      });
     } catch (e, stackTrace) {
       AppLogger.error('RoomRepository', 'Failed to save room', e, stackTrace);
       rethrow;
