@@ -184,14 +184,20 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
     }
   }
 
-  /// Archive/unarchive system
+  /// Archive/unarchive system. Setzt archived_at als Pair zu archived
+  /// (M4): bei archive auf jetzt, bei unarchive auf null. Ein System mit
+  /// archived=1 aber archived_at=null ist ein Limbo-State (abgebrochene
+  /// Archive-TX), der von Maintenance-Tasks aufgespürt werden kann.
   @override
   Future<void> archiveSystem(int systemId, bool archived) async {
     try {
       final db = await _dbHelper.database;
       await db.update(
         'rdwc_systems',
-        {'archived': archived ? 1 : 0},
+        {
+          'archived': archived ? 1 : 0,
+          'archived_at': archived ? DateTime.now().toIso8601String() : null,
+        },
         where: 'id = ?',
         whereArgs: [systemId],
       );
@@ -261,9 +267,16 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         );
 
         // Archive system + null reverse FKs (room_id, grow_id) für Symmetrie
+        // + archived_at Timestamp (M4) — markiert wann Archive erfolgte und
+        // signalisiert "abgeschlossen" (vs. archived=1 ohne Timestamp = Limbo).
         final result = await txn.update(
           'rdwc_systems',
-          {'archived': 1, 'room_id': null, 'grow_id': null},
+          {
+            'archived': 1,
+            'archived_at': DateTime.now().toIso8601String(),
+            'room_id': null,
+            'grow_id': null,
+          },
           where: 'id = ?',
           whereArgs: [systemId],
         );
@@ -300,10 +313,10 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           whereArgs: [systemId],
         );
 
-        // Restore the system itself
+        // Restore the system itself + clear archived_at Timestamp
         final result = await txn.update(
           'rdwc_systems',
-          {'archived': 0},
+          {'archived': 0, 'archived_at': null},
           where: 'id = ?',
           whereArgs: [systemId],
         );

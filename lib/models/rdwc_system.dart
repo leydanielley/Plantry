@@ -39,6 +39,11 @@ class RdwcSystem {
   final double? ecWarningMax;
   final DateTime createdAt;
   final bool archived;
+  /// Wann das System archiviert wurde. Null wenn aktiv. Wird von
+  /// archiveSystem/deleteSystem gesetzt und von restoreSystem genullt.
+  /// Verhindert Race-Limbo: ein System mit `archived=1` aber ohne Timestamp
+  /// signalisiert einen abgebrochenen Archive-Vorgang (M4).
+  final DateTime? archivedAt;
 
   // ✅ FIX: Replace assertions with safe validation and clamping
   RdwcSystem({
@@ -67,6 +72,7 @@ class RdwcSystem {
     this.ecWarningMax,
     DateTime? createdAt,
     this.archived = false,
+    this.archivedAt,
   }) : // ✅ AUDIT FIX: Use config constants for validation
        name = RdwcSystemConfig.validateName(name),
        maxCapacity = RdwcSystemConfig.validateCapacity(maxCapacity),
@@ -116,6 +122,10 @@ class RdwcSystem {
         context: 'RdwcSystem.fromMap.createdAt',
       ),
       archived: (map['archived'] as int?) == 1,
+      archivedAt: SafeParsers.parseDateTimeNullable(
+        map['archived_at'] as String?,
+        context: 'RdwcSystem.fromMap.archivedAt',
+      ),
     );
   }
 
@@ -147,6 +157,7 @@ class RdwcSystem {
       'ec_warning_max': ecWarningMax,
       'created_at': createdAt.toIso8601String(),
       'archived': archived ? 1 : 0,
+      'archived_at': archivedAt?.toIso8601String(),
     };
   }
 
@@ -178,6 +189,7 @@ class RdwcSystem {
     Object? ecWarningMax = _undefined,
     DateTime? createdAt,
     bool? archived,
+    Object? archivedAt = _undefined,
   }) {
     return RdwcSystem(
       id: id ?? this.id,
@@ -237,6 +249,9 @@ class RdwcSystem {
           : ecWarningMax as double?,
       createdAt: createdAt ?? this.createdAt,
       archived: archived ?? this.archived,
+      archivedAt: archivedAt == _undefined
+          ? this.archivedAt
+          : archivedAt as DateTime?,
     );
   }
 

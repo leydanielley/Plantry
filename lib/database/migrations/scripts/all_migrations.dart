@@ -25,6 +25,7 @@ import 'package:growlog_app/database/migrations/scripts/migration_v40.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v41.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v42.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v43.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v44.dart';
 
 /// All migrations in chronological order
 ///
@@ -107,6 +108,9 @@ final List<Migration> allMigrations = [
 
   // v43: Recipes: Add phase column to rdwc_recipes
   migrationV43,
+
+  // v44: RDWC archived_at TEXT for race-Limbo prevention (M4)
+  migrationV44,
 ];
 
 /// Get the latest migration version

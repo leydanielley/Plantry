@@ -351,6 +351,7 @@ class TestDatabaseHelper {
         ec_warning_min REAL,
         ec_warning_max REAL,
         archived INTEGER DEFAULT 0,
+        archived_at TEXT,
         created_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE SET NULL,
         FOREIGN KEY (grow_id) REFERENCES grows (id) ON DELETE SET NULL

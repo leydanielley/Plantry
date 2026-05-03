@@ -686,6 +686,19 @@ class SchemaRegistry {
     requiredIndexes: schemaV42.requiredIndexes,
   );
 
+  /// Schema for v44: Add archived_at TEXT to rdwc_systems for race-Limbo prevention (M4)
+  static final schemaV44 = SchemaDefinition(
+    version: 44,
+    requiredTables: {
+      ...schemaV43.requiredTables,
+      'rdwc_systems': {
+        ...schemaV43.requiredTables['rdwc_systems']!,
+        'archived_at',
+      },
+    },
+    requiredIndexes: schemaV43.requiredIndexes,
+  );
+
   /// Earliest version for which schema validation is mandatory.
   /// Migrations targeting >= MIN_REQUIRED_SCHEMA_VERSION MÜSSEN eine
   /// SchemaDefinition haben — sonst hard-fail im migration_manager.
@@ -711,6 +724,7 @@ class SchemaRegistry {
     41: schemaV41,
     42: schemaV42,
     43: schemaV43,
+    44: schemaV44,
   };
 
   // ===========================================

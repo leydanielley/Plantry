@@ -702,6 +702,48 @@ void main() {
       expect(plants, isNotEmpty);
       expect(plants.first['rdwc_system_id'], isNull);
       expect(plants.first['bucket_number'], isNull);
+
+      // Assert 4 (M4): archived_at wurde gesetzt
+      expect(systems.first['archived_at'], isNotNull);
+    });
+
+    test('archiveSystem(true) setzt archived_at, archiveSystem(false) nullt es (M4)', () async {
+      final id = await repository.createSystem(
+        RdwcSystem(
+          name: 'Archive Cycle',
+          maxCapacity: 100.0,
+          currentLevel: 50.0,
+          bucketCount: 4,
+        ),
+      );
+
+      // Initial: archived_at ist null
+      var rows = await testDb.query(
+        'rdwc_systems',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      expect(rows.first['archived_at'], isNull);
+
+      // Archive: archived_at wird gesetzt
+      await repository.archiveSystem(id, true);
+      rows = await testDb.query(
+        'rdwc_systems',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      expect(rows.first['archived'], equals(1));
+      expect(rows.first['archived_at'], isNotNull);
+
+      // Unarchive: archived_at wieder null
+      await repository.archiveSystem(id, false);
+      rows = await testDb.query(
+        'rdwc_systems',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      expect(rows.first['archived'], equals(0));
+      expect(rows.first['archived_at'], isNull);
     });
   });
 }

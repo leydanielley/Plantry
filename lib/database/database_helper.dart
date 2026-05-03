@@ -93,7 +93,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 43,
+          version: 44,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -143,7 +143,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 43,
+          version: 44,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -815,6 +815,7 @@ class DatabaseHelper {
         ec_warning_max REAL,
         created_at TEXT DEFAULT (datetime('now')),
         archived INTEGER DEFAULT 0,
+        archived_at TEXT,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL,
         FOREIGN KEY (grow_id) REFERENCES grows(id) ON DELETE SET NULL
       )
