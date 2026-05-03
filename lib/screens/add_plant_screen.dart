@@ -45,7 +45,10 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   SeedType _seedType = SeedType.photo;
   GenderType _genderType = GenderType.feminized;
   Medium _medium = Medium.erde;
-  final PlantPhase _phase = PlantPhase.seedling;
+  // Neue Pflanzen starten immer in der Seedling-Phase. Konstant, daher
+  // static const statt instance-final (war als final irreführend, wirkte
+  // änderbar).
+  static const PlantPhase _phase = PlantPhase.seedling;
   int? _selectedGrowId;
   int? _selectedRdwcSystemId;
   int? _selectedRoomId;
