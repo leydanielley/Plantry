@@ -10,5 +10,9 @@ final migrationV43 = Migration(
       await db.execute('ALTER TABLE rdwc_recipes ADD COLUMN phase TEXT');
     }
   },
-  down: (db) async {},
+  down: (db) async {
+    throw UnsupportedError(
+      'migration_v43: downgrade not supported (Pre-Migration-Backup verwenden)',
+    );
+  },
 );

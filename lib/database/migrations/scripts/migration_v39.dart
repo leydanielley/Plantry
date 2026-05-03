@@ -16,7 +16,11 @@ final migrationV39 = Migration(
     }
   },
   down: (db) async {
-    // Standard SQLite doesn't support DROP COLUMN, so we'd need to recreate the table
-    // For now, we leave it as is or implement complex table recreation if absolutely needed
+    // Lautes Fail statt silent no-op: ein leerer down() würde die DB-Version
+    // zurückstellen ohne die Spalte zu entfernen → Schema-Drift. Wer wirklich
+    // downgraden muss: Pre-Migration-Backup einspielen oder Tabellen-Rebuild.
+    throw UnsupportedError(
+      'migration_v39: downgrade not supported (ALTER TABLE DROP COLUMN nicht zuverlässig)',
+    );
   },
 );

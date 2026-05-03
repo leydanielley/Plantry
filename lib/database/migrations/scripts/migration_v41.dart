@@ -11,6 +11,8 @@ final migrationV41 = Migration(
     }
   },
   down: (db) async {
-    // SQLite doesn't support DROP COLUMN easily — left intentionally empty
+    throw UnsupportedError(
+      'migration_v41: downgrade not supported (Pre-Migration-Backup verwenden)',
+    );
   },
 );
