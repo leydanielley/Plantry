@@ -120,6 +120,25 @@ class ImageCacheHelper {
     await _cacheLock.synchronized(() {
       final dataSize = data.length;
 
+      // Self-heal: einmaliger Recompute aus _memoryCache.values gegen den
+      // gepflegten Counter. Wenn die zwei auseinanderlaufen (z.B. weil
+      // clearMemoryCache von außen ohne Lock aufgerufen wurde, oder ein
+      // früherer evict-Pfad eine Mutation verloren hat), den Counter aus
+      // der einzig zuverlässigen Quelle (cache.values) rekonstruieren.
+      // Ohne Self-Heal kann der Counter über die Zeit driften → OOM auf
+      // Low-End-Geräten weil maxCacheSizeBytes nie greift (H4).
+      final actualSize = _memoryCache.values.fold<int>(
+        0,
+        (sum, b) => sum + b.length,
+      );
+      if (_currentCacheSizeBytes != actualSize) {
+        AppLogger.warning(
+          'ImageCacheHelper',
+          'Byte counter drift detected: tracked=$_currentCacheSizeBytes actual=$actualSize — recomputing',
+        );
+        _currentCacheSizeBytes = actualSize;
+      }
+
       // ✅ FIX: Validate byte counter integrity BEFORE loop
       if (_currentCacheSizeBytes < 0) {
         AppLogger.error(
@@ -182,14 +201,19 @@ class ImageCacheHelper {
     _currentCacheSizeBytes = 0; // Reset byte counter
   }
 
-  /// Alle Thumbnails löschen
+  /// Alle Thumbnails löschen.
+  /// clearMemoryCache wird im Lock aufgerufen damit der Reset von
+  /// _currentCacheSizeBytes nicht zwischen ein laufendes _addToCache fällt
+  /// (sonst Counter-Drift → maxCacheSizeBytes greift nicht mehr → OOM).
   Future<void> clearDiskCache() async {
     try {
       final thumbDir = await _thumbnailDir;
       if (await thumbDir.exists()) {
         await thumbDir.delete(recursive: true);
       }
-      clearMemoryCache();
+      await _cacheLock.synchronized(() {
+        clearMemoryCache();
+      });
     } catch (e) {
       AppLogger.error('ImageCacheHelper', 'Error clearing disk cache', e);
     }
