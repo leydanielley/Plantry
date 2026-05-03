@@ -32,8 +32,31 @@ class NotificationHelper {
         return;
       }
 
-      // Schedule watering reminder
-      if (settings.wateringReminders) {
+      // Per-Reminder Try-Catch: ein einzelner Fail (z.B. Notification-API
+      // throw bei Channel-Issue) darf nicht die folgenden Reminder
+      // verschlucken. Vorher: Watering wirft → kein Fertilizing/Photo/Harvest.
+      // Jetzt: jeder Reminder unabhängig, am Ende Summary-Log (H12).
+      final failures = <String>[];
+
+      Future<void> tryScheduleReminder(
+        String label,
+        bool enabled,
+        Future<void> Function() schedule,
+      ) async {
+        if (!enabled) return;
+        try {
+          await schedule();
+        } catch (e) {
+          failures.add('$label: $e');
+          AppLogger.warning(
+            'NotificationHelper',
+            '$label reminder failed for ${plant.name}',
+            e,
+          );
+        }
+      }
+
+      await tryScheduleReminder('watering', settings.wateringReminders, () async {
         final lastWatering = await _getLastWateringDate(plant.id!);
         if (lastWatering != null) {
           await _notificationService.scheduleWateringReminder(
@@ -44,10 +67,9 @@ class NotificationHelper {
             notificationTime: settings.notificationTime,
           );
         }
-      }
+      });
 
-      // Schedule fertilizing reminder
-      if (settings.fertilizingReminders) {
+      await tryScheduleReminder('fertilizing', settings.fertilizingReminders, () async {
         final lastFertilizing = await _getLastFertilizingDate(plant.id!);
         if (lastFertilizing != null) {
           await _notificationService.scheduleFertilizingReminder(
@@ -58,10 +80,9 @@ class NotificationHelper {
             notificationTime: settings.notificationTime,
           );
         }
-      }
+      });
 
-      // Schedule photo reminder
-      if (settings.photoReminders) {
+      await tryScheduleReminder('photo', settings.photoReminders, () async {
         final lastPhoto = await _getLastPhotoDate(plant.id!);
         if (lastPhoto != null) {
           await _notificationService.schedulePhotoReminder(
@@ -72,10 +93,9 @@ class NotificationHelper {
             notificationTime: settings.notificationTime,
           );
         }
-      }
+      });
 
-      // Schedule harvest reminder (estimated based on phase)
-      if (settings.harvestReminders) {
+      await tryScheduleReminder('harvest', settings.harvestReminders, () async {
         final estimatedHarvest = _estimateHarvestDate(plant);
         if (estimatedHarvest != null) {
           await _notificationService.scheduleHarvestReminder(
@@ -85,12 +105,20 @@ class NotificationHelper {
             notificationTime: settings.notificationTime,
           );
         }
-      }
+      });
 
-      AppLogger.info(
-        'NotificationHelper',
-        'Scheduled all reminders for ${plant.name}',
-      );
+      if (failures.isEmpty) {
+        AppLogger.info(
+          'NotificationHelper',
+          'Scheduled all reminders for ${plant.name}',
+        );
+      } else {
+        AppLogger.warning(
+          'NotificationHelper',
+          'Scheduled reminders for ${plant.name} with ${failures.length} failure(s)',
+          failures.join(' | '),
+        );
+      }
     } catch (e) {
       AppLogger.error(
         'NotificationHelper',
