@@ -61,7 +61,9 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
         _settingsRepo.getSettings(),
         _rdwcRepo.getRecentLogsWithFertilizers(_system.id!, limit: 20),
         _rdwcRepo.getConsumptionStats(_system.id!, days: 30),
-        _rdwcRepo.getSystemById(_system.id!),
+        // includeArchived: true — Detail-Screen muss das System auch nach
+        // Archive-Toggle reloaden können, sonst zeigt UI veralteten Zustand.
+        _rdwcRepo.getSystemById(_system.id!, includeArchived: true),
         _plantRepo.findByRdwcSystem(_system.id!),
         _rdwcRepo.getPendingLog(_system.id!),
       ]);

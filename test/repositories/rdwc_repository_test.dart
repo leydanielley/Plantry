@@ -187,7 +187,7 @@ void main() {
       expect(deleted, equals(1));
 
       // System should still exist but be archived
-      final found = await repository.getSystemById(id);
+      final found = await repository.getSystemById(id, includeArchived: true);
       expect(found, isNotNull);
       expect(found!.archived, isTrue);
     });
@@ -419,7 +419,7 @@ void main() {
       await repository.archiveSystem(id, true);
 
       // Assert
-      final found = await repository.getSystemById(id);
+      final found = await repository.getSystemById(id, includeArchived: true);
       expect(found, isNotNull);
       expect(found!.archived, isTrue);
     });
@@ -639,8 +639,10 @@ void main() {
       expect(found!.isCriticallyLow, isTrue);
     });
 
-    test('deleteSystem() - soft delete keeps plant associations', () async {
-      // Arrange
+    test('deleteSystem() - soft delete detaches plants and rooms', () async {
+      // Setup: room linkt auf System, plant linkt auf System.
+      // Vor dem Fix wurden diese Verknüpfungen NICHT gekappt → archiviertes
+      // System tauchte im Room-Detail weiter auf (Bug A/B).
       final systemId = await repository.createSystem(
         RdwcSystem(
           name: 'System to Delete',
@@ -651,8 +653,16 @@ void main() {
         ),
       );
 
-      // Create plant attached to system
-      await testDb.insert('plants', {
+      // Verlinke Room ↔ System bidirektional (rooms.rdwc_system_id)
+      await testDb.update(
+        'rooms',
+        {'rdwc_system_id': systemId},
+        where: 'id = ?',
+        whereArgs: [1],
+      );
+
+      // Plant attached to system
+      final plantId = await testDb.insert('plants', {
         'name': 'Test Plant',
         'seed_type': 'REGULAR',
         'medium': 'HYDRO',
@@ -665,18 +675,33 @@ void main() {
       // Act - Soft delete the system
       await repository.deleteSystem(systemId);
 
-      // Assert - With soft delete, plant associations remain
-      // (they're only cleared on permanent delete)
+      // Assert 1: System ist archived, room_id/grow_id genullt
+      final systems = await testDb.query(
+        'rdwc_systems',
+        where: 'id = ?',
+        whereArgs: [systemId],
+      );
+      expect(systems.first['archived'], equals(1));
+      expect(systems.first['room_id'], isNull);
+      expect(systems.first['grow_id'], isNull);
+
+      // Assert 2: Room ist nicht mehr mit System verlinkt
+      final rooms = await testDb.query(
+        'rooms',
+        where: 'id = ?',
+        whereArgs: [1],
+      );
+      expect(rooms.first['rdwc_system_id'], isNull);
+
+      // Assert 3: Plant existiert noch, ist aber detached (rdwc_system_id + bucket_number = null)
       final plants = await testDb.query(
         'plants',
-        where: 'name = ?',
-        whereArgs: ['Test Plant'],
+        where: 'id = ?',
+        whereArgs: [plantId],
       );
-
       expect(plants, isNotEmpty);
-      // Plant stays attached to archived system
-      expect(plants.first['rdwc_system_id'], equals(systemId));
-      expect(plants.first['bucket_number'], equals(1));
+      expect(plants.first['rdwc_system_id'], isNull);
+      expect(plants.first['bucket_number'], isNull);
     });
   });
 }

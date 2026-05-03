@@ -99,15 +99,21 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
     }
   }
 
-  /// Get system by ID
+  /// Get system by ID. By default archived systems are filtered out so that
+  /// stale references (e.g. `rooms.rdwc_system_id` pointing at a soft-deleted
+  /// system) don't resurrect deleted UI. Pass `includeArchived: true` from
+  /// screens that explicitly need archived systems (e.g. archive list, the
+  /// system's own detail screen which can toggle archive state).
   @override
-  Future<RdwcSystem?> getSystemById(int id) async {
+  Future<RdwcSystem?> getSystemById(int id, {bool includeArchived = false}) async {
     try {
       final db = await _dbHelper.database;
+      final where = includeArchived ? 'id = ?' : 'id = ? AND archived = ?';
+      final whereArgs = includeArchived ? [id] : [id, 0];
       final maps = await db.query(
         'rdwc_systems',
-        where: 'id = ?',
-        whereArgs: [id],
+        where: where,
+        whereArgs: whereArgs,
         limit: 1,
       );
 
@@ -200,22 +206,24 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
     }
   }
 
-  /// Delete RDWC system (and all its logs via CASCADE)
+  /// Soft-delete (archive) an RDWC system and detach it from rooms/plants.
   ///
-  /// ⚠️ WICHTIGES VERHALTEN: Pflanzen und Räume im System werden NICHT gelöscht!
+  /// Effekte in der Transaction:
+  /// 1. `rdwc_logs.archived = 1` für alle Logs des Systems
+  /// 2. `rooms.rdwc_system_id = NULL` (entkoppelt Raum-Verlinkung)
+  /// 3. `plants.rdwc_system_id = NULL`, `bucket_number = NULL` (entkoppelt Pflanzen)
+  /// 4. `rdwc_systems.archived = 1`, `room_id = NULL`, `grow_id = NULL`
   ///
-  /// Architektonische Entscheidung:
-  /// - RDWC System ist ein Container-Objekt (wie Grow, Room)
-  /// - Beim Löschen wird `plants.rdwc_system_id` und `rooms.rdwc_system_id` auf NULL gesetzt
-  /// - Pflanzen und Räume bleiben mit allen Daten erhalten
+  /// Pflanzen und Räume bleiben physisch erhalten, nur die Verknüpfung wird
+  /// gekappt. Das System selbst kann via `restoreSystem()` reaktiviert werden,
+  /// die Verlinkung muss dann aber manuell neu gesetzt werden.
   ///
-  /// Vorteile dieses Designs:
-  /// ✅ Datensicherheit: Versehentliches Löschen ist umkehrbar
-  /// ✅ Flexibilität: Pflanzen/Räume können später neu zugeordnet werden
-  /// ✅ Konsistenz: Gleiches Verhalten wie Grow/Room
-  /// 🔒 SOFT DELETE: Archive RDWC system instead of deleting
-  /// After migration v14, this method archives the system and its logs
-  /// Use deleteSystemPermanently() for actual deletion
+  /// Achtung: `rooms.rdwc_system_id` und `rdwc_systems.room_id` sind redundante
+  /// FKs. Beide werden hier gleichzeitig genullt, sonst zeigt der Room-Detail
+  /// das System weiter über den jeweils anderen Pfad an (siehe room_detail_screen
+  /// `getSystemById` vs. `getSystemsByRoom` Pfade).
+  ///
+  /// Für irreversibles Löschen: `deleteSystemPermanently()`.
   @override
   Future<int> deleteSystem(int systemId) async {
     try {
@@ -236,17 +244,33 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
           whereArgs: [systemId],
         );
 
-        // Archive the system itself
+        // Detach rooms (rooms.rdwc_system_id → NULL)
+        await txn.update(
+          'rooms',
+          {'rdwc_system_id': null},
+          where: 'rdwc_system_id = ?',
+          whereArgs: [systemId],
+        );
+
+        // Detach plants (plants.rdwc_system_id + bucket_number → NULL)
+        await txn.update(
+          'plants',
+          {'rdwc_system_id': null, 'bucket_number': null},
+          where: 'rdwc_system_id = ?',
+          whereArgs: [systemId],
+        );
+
+        // Archive system + null reverse FKs (room_id, grow_id) für Symmetrie
         final result = await txn.update(
           'rdwc_systems',
-          {'archived': 1},
+          {'archived': 1, 'room_id': null, 'grow_id': null},
           where: 'id = ?',
           whereArgs: [systemId],
         );
 
         AppLogger.info(
           'RdwcRepo',
-          '✅ RDWC system archived (soft delete completed)',
+          '✅ RDWC system archived + detached from rooms/plants',
         );
         return result;
       });

@@ -18,7 +18,7 @@ abstract class IRdwcRepository {
     int growId, {
     bool includeArchived = false,
   });
-  Future<RdwcSystem?> getSystemById(int id);
+  Future<RdwcSystem?> getSystemById(int id, {bool includeArchived = false});
   Future<int> createSystem(RdwcSystem system);
   Future<int> updateSystem(RdwcSystem system);
   Future<void> updateSystemLevel(int systemId, double newLevel);
