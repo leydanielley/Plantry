@@ -105,7 +105,7 @@ class BackupService implements IBackupService {
       AppLogger.debug(
         'BackupService',
         'Export directory created',
-        exportDir.path,
+        path.basename(exportDir.path),
       );
 
       // Export all tables to JSON
@@ -271,7 +271,7 @@ class BackupService implements IBackupService {
         AppLogger.info(
           'BackupService',
           '✅ Backup also saved to Downloads',
-          downloadBackupPath,
+          path.basename(downloadBackupPath),
         );
 
         // Cleanup old backups in Download folder
@@ -291,7 +291,7 @@ class BackupService implements IBackupService {
       // ✅ NEW: Cleanup old backups in app documents folder
       await _cleanupOldBackups(appDir.path, maxBackups: 5);
 
-      AppLogger.info('BackupService', '✅ Export complete', zipPath);
+      AppLogger.info('BackupService', '✅ Export complete', path.basename(zipPath));
       return zipPath;
     } catch (e, stackTrace) {
       AppLogger.error('BackupService', 'Export failed', e, stackTrace);
@@ -323,7 +323,7 @@ class BackupService implements IBackupService {
     Directory? importDir;
 
     try {
-      AppLogger.info('BackupService', 'Starting import from', zipFilePath);
+      AppLogger.info('BackupService', 'Starting import from', path.basename(zipFilePath));
 
       final zipFile = File(zipFilePath);
       if (!await zipFile.exists()) {
