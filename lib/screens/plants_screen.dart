@@ -145,7 +145,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const AddPlantScreen()),
           );
-          if (result == true) _loadData();
+          if (result == true && mounted) _loadData();
         },
         icon: const Icon(Icons.add),
         label: Text(_t['new_plant']),
@@ -307,7 +307,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
         final result = await Navigator.of(context).push(
           MaterialPageRoute(builder: (context) => PlantDetailScreen(plant: plant)),
         );
-        if (result == true) _loadData();
+        if (result == true && mounted) _loadData();
       },
     );
   }

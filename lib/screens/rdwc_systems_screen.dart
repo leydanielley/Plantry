@@ -89,7 +89,7 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
       fab: FloatingActionButton(
         onPressed: () async {
           final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => const RdwcSystemFormScreen()));
-          if (res == true) _loadData();
+          if (res == true && mounted) _loadData();
         },
         backgroundColor: DT.accent,
         foregroundColor: DT.onAccent,
@@ -128,7 +128,7 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
       child: PlantryCard(
         onTap: () async {
           final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcSystemDetailScreen(system: system)));
-          if (res == true) _loadData();
+          if (res == true && mounted) _loadData();
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

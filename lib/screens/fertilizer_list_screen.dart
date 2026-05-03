@@ -132,7 +132,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
       final file = File(filePath);
       if (mounted) {
         final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => FertilizerDbfImportScreen(dbfFile: file)));
-        if (res == true) _loadFertilizers();
+        if (res == true && mounted) _loadFertilizers();
       }
     } catch (e) {
       AppLogger.error('FertilizerListScreen', 'Error DBF', e);
@@ -165,7 +165,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const AddFertilizerScreen()),
           );
-          if (result == true) _loadFertilizers();
+          if (result == true && mounted) _loadFertilizers();
         },
         backgroundColor: DT.accent,
         foregroundColor: DT.onAccent,
@@ -222,7 +222,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
           onSelected: (val) async {
             if (val == 'edit') {
               final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditFertilizerScreen(fertilizer: f)));
-              if (res == true) _loadFertilizers();
+              if (res == true && mounted) _loadFertilizers();
             } else if (val == 'delete') {
               _deleteFertilizer(f);
             }
@@ -234,7 +234,7 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
         ),
         onTap: () async {
           final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditFertilizerScreen(fertilizer: f)));
-          if (res == true) _loadFertilizers();
+          if (res == true && mounted) _loadFertilizers();
         },
       ),
     );

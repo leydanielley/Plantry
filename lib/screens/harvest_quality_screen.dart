@@ -99,7 +99,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
                     EditHarvestQualityScreen(harvest: _harvest!),
               ),
             );
-            if (result == true) _loadHarvest();
+            if (result == true && mounted) _loadHarvest();
           },
         ),
       ],
@@ -391,7 +391,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
                   EditHarvestQualityScreen(harvest: _harvest!),
             ),
           );
-          if (result == true) _loadHarvest();
+          if (result == true && mounted) _loadHarvest();
         },
         icon: const Icon(Icons.add),
         label: Text(_t['quality_data_capture']),

@@ -253,7 +253,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           icon: const Icon(Icons.photo_library, color: DT.textPrimary),
           onPressed: () async {
             await Navigator.push(context, MaterialPageRoute(builder: (_) => PlantPhotoGalleryScreen(plant: _currentPlant)));
-            _loadData();
+            if (mounted) _loadData();
           },
         ),
         IconButton(
@@ -395,7 +395,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 onPressed: () async {
                   final res = await Navigator.push(context,
                       MaterialPageRoute(builder: (_) => AddHarvestScreen(plant: _currentPlant)));
-                  if (res == true) _loadData();
+                  if (res == true && mounted) _loadData();
                 },
                 icon: const Icon(Icons.grass, size: 16),
                 label: Text(_t['plant_detail_harvest']),

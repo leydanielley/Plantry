@@ -272,7 +272,7 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                       EditHarvestDryingScreen(harvest: _harvest!),
                 ),
               );
-              if (result == true) _loadHarvest();
+              if (result == true && mounted) _loadHarvest();
             },
           ),
       ],

@@ -155,7 +155,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const AddRoomScreen()),
           );
-          if (result == true) _loadRooms();
+          if (result == true && mounted) _loadRooms();
         },
         backgroundColor: DT.accent,
         foregroundColor: DT.onAccent,
@@ -215,7 +215,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
           onSelected: (val) async {
             if (val == 'edit') {
               final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditRoomScreen(room: room)));
-              if (res == true) _loadRooms();
+              if (res == true && mounted) _loadRooms();
             } else if (val == 'delete') {
               _deleteRoom(room);
             }
@@ -227,7 +227,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
         ),
         onTap: () async {
           final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => RoomDetailScreen(room: room)));
-          if (res == true) _loadRooms();
+          if (res == true && mounted) _loadRooms();
         },
       ),
     );

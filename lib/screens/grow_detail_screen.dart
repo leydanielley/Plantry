@@ -352,7 +352,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
           subtitle: '${_plants[i].strain ?? "Unbekannt"} • Tag ${_plants[i].totalDays}',
           onTap: () async {
             final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => PlantDetailScreen(plant: _plants[i])));
-            if (res == true) _loadPlants();
+            if (res == true && mounted) _loadPlants();
           },
         ),
       ),
@@ -381,7 +381,7 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
     if (!mounted) return;
     if (res == 'new') {
       final r = await Navigator.push(context, MaterialPageRoute(builder: (_) => AddPlantScreen(preselectedGrowId: widget.grow.id)));
-      if (r == true) _loadPlants();
+      if (r == true && mounted) _loadPlants();
     } else if (res == 'existing') {
       _assignExisting();
     }
@@ -413,6 +413,6 @@ class _GrowDetailScreenState extends State<GrowDetailScreen> {
 
   Future<void> _bulkLog() async {
     final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => AddLogScreen(plant: _plants.first, bulkMode: true, bulkPlantIds: _plants.map((p) => p.id!).toList())));
-    if (res == true) _loadPlants();
+    if (res == true && mounted) _loadPlants();
   }
 }

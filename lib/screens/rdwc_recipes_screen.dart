@@ -142,7 +142,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
               builder: (context) => const RdwcRecipeFormScreen(),
             ),
           );
-          if (result == true) {
+          if (result == true && mounted) {
             _loadData();
           }
         },
@@ -182,7 +182,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
               builder: (context) => const RdwcRecipeFormScreen(),
             ),
           );
-          if (result == true) {
+          if (result == true && mounted) {
             _loadData();
           }
         },
@@ -237,7 +237,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
               builder: (context) => RdwcRecipeFormScreen(recipe: recipe),
             ),
           );
-          if (result == true) {
+          if (result == true && mounted) {
             _loadData();
           }
         },

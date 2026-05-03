@@ -82,7 +82,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
     final result = await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (context) => EditGrowScreen(grow: grow)));
-    if (result == true) _loadGrows();
+    if (result == true && mounted) _loadGrows();
   }
 
   Future<void> _deleteGrow(Grow grow) async {
@@ -205,7 +205,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const AddGrowScreen()),
           );
-          if (result == true) _loadGrows();
+          if (result == true && mounted) _loadGrows();
         },
         backgroundColor: DT.accent,
         foregroundColor: DT.onAccent,
@@ -286,7 +286,7 @@ class _GrowListScreenState extends State<GrowListScreen> {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => GrowDetailScreen(grow: grow)),
           );
-          if (result == true) _loadGrows();
+          if (result == true && mounted) _loadGrows();
         },
       ),
     );

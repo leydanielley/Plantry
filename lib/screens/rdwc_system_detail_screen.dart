@@ -98,7 +98,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           icon: const Icon(Icons.edit, color: DT.textPrimary),
           onPressed: () async {
             final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcSystemFormScreen(system: _system)));
-            if (res == true) _loadData();
+            if (res == true && mounted) _loadData();
           },
         ),
         PopupMenuButton<String>(
@@ -185,7 +185,7 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
                   builder: (_) => RdwcAddbackCompleteScreen(system: _system, pendingLog: log),
                 ),
               );
-              if (res == true) _loadData();
+              if (res == true && mounted) _loadData();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: DT.warning,

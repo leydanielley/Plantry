@@ -136,7 +136,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => AddHardwareScreen(roomId: widget.roomId)),
           );
-          if (result == true) _loadHardware();
+          if (result == true && mounted) _loadHardware();
         },
         backgroundColor: DT.accent,
         foregroundColor: DT.onAccent,
@@ -233,7 +233,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
           onSelected: (val) async {
             if (val == 'edit') {
               final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditHardwareScreen(hardware: hw)));
-              if (res == true) _loadHardware();
+              if (res == true && mounted) _loadHardware();
             } else if (val == 'delete') {
               _deleteHardware(hw);
             }
@@ -245,7 +245,7 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
         ),
         onTap: () async {
           final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditHardwareScreen(hardware: hw)));
-          if (res == true) _loadHardware();
+          if (res == true && mounted) _loadHardware();
         },
       ),
     );

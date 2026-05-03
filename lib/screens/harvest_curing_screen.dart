@@ -320,7 +320,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                       EditHarvestCuringScreen(harvest: _harvest!),
                 ),
               );
-              if (result == true) _loadHarvest();
+              if (result == true && mounted) _loadHarvest();
             },
           ),
       ],
