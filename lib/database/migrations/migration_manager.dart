@@ -129,12 +129,20 @@ class MigrationManager {
       );
 
       // Delete partial/corrupt backup file to avoid a future restore
-      // mistaking it for a valid backup.
+      // mistaking it for a valid backup. Wenn DELETE fehlschlägt → loggen,
+      // sonst landen verwaiste Half-Backups im Ordner und können später
+      // einen Restore in einen unklaren State führen.
       if (backupPath != null) {
         try {
           final f = File(backupPath);
           if (await f.exists()) await f.delete();
-        } catch (_) {}
+        } catch (cleanupError) {
+          AppLogger.warning(
+            'MigrationManager',
+            'Failed to delete corrupt pre-migration backup',
+            cleanupError,
+          );
+        }
       }
 
       // Check if database has any data

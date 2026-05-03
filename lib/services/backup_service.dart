@@ -549,10 +549,19 @@ class BackupService implements IBackupService {
 
       AppLogger.info('BackupService', '✅ Data import complete and validated');
     } catch (e) {
-      // Always re-enable FK checks, even on failure
+      // Always re-enable FK checks, even on failure. Wenn DAS hier schief
+      // geht läuft die App ohne FK-Constraints weiter → Orphan-Records,
+      // stille Datenkorruption. Loggen statt schlucken.
       try {
         await db.execute('PRAGMA foreign_keys = ON');
-      } catch (_) {}
+      } catch (fkError, fkStack) {
+        AppLogger.error(
+          'BackupService',
+          '🔥 FK re-enable failed after import error — DB may run without FK constraints',
+          fkError,
+          fkStack,
+        );
+      }
       AppLogger.error(
         'BackupService',
         'Import failed, transaction rolled back',
