@@ -670,13 +670,24 @@ class BackupService implements IBackupService {
             if (sourceFile != null) {
               final newPath = path.join(photosDir.path, fileName);
               await sourceFile.copy(newPath);
-              // Rebase DB path to current app directory
-              await db.update(
-                'photos',
-                {'file_path': newPath},
-                where: 'file_path LIKE ?',
-                whereArgs: ['%$fileName'],
-              );
+              // Rebase DB path per Photo-ID, NICHT per LIKE auf fileName.
+              // LIKE '%foo.jpg' matched auch /a/foo.jpg + /b/sub/foo.jpg
+              // → fremde Records würden überschrieben.
+              final photoId = photo['id'];
+              if (photoId != null) {
+                await db.update(
+                  'photos',
+                  {'file_path': newPath},
+                  where: 'id = ?',
+                  whereArgs: [photoId],
+                );
+              } else {
+                AppLogger.warning(
+                  'BackupService',
+                  'Photo without id, cannot rebase path',
+                  fileName,
+                );
+              }
               return true;
             } else {
               AppLogger.warning('BackupService', 'Photo not found', fileName);
