@@ -900,7 +900,8 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         return null;
       }
 
-      return (result.first['avg_consumption'] as num).toDouble();
+      // Safe-Cast wie K1: bei AVG auf NULL/Int returnt SQLite mal num/int/null
+      return (result.first['avg_consumption'] as num?)?.toDouble() ?? 0.0;
     } catch (e) {
       AppLogger.error(
         'RdwcRepository',
@@ -941,7 +942,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         return 0.0;
       }
 
-      return (result.first['total'] as num).toDouble();
+      return (result.first['total'] as num?)?.toDouble() ?? 0.0;
     } catch (e) {
       AppLogger.error(
         'RdwcRepository',
@@ -1427,7 +1428,7 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
       final Map<String, double> consumption = {};
       for (final row in result) {
         final date = row['date'] as String;
-        final consumed = (row['total_consumed'] as num).toDouble();
+        final consumed = (row['total_consumed'] as num?)?.toDouble() ?? 0.0;
         consumption[date] = consumed;
       }
 

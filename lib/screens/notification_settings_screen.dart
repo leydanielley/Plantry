@@ -51,6 +51,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed && _settings?.enabled == true) {
+      // .catchError ist Pflicht: requestPermissions wirft auf manchen
+      // Plattformen wenn der NotificationChannel deinstalliert wurde —
+      // ohne Handler unhandled async exception → kein UI-Feedback (H14).
       _notificationService.requestPermissions().then((granted) {
         if (!mounted) return;
         if (!granted) {
@@ -59,6 +62,13 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             'Notification permission no longer granted after resume',
           );
         }
+      }).catchError((Object e, StackTrace st) {
+        AppLogger.error(
+          'NotificationSettingsScreen',
+          'Failed to query notification permission on resume',
+          e,
+          st,
+        );
       });
     }
   }
