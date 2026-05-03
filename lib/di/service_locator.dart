@@ -142,11 +142,14 @@ Future<void> setupServiceLocator() async {
   );
 }
 
-/// Reset all dependencies (useful for testing)
+/// Reset all dependencies (useful for testing).
+/// dispose=true ist Pflicht damit Services mit Cleanup-Logik (z.B.
+/// DatabaseHelper.close, NotificationService.cancel) ihre Resources
+/// freigeben — sonst Resource-Leaks zwischen Test-Runs (M3).
 Future<void> resetServiceLocator() async {
   AppLogger.warning('ServiceLocator', 'Resetting all dependencies...');
-  await getIt.reset();
-  AppLogger.info('ServiceLocator', '✅ Dependencies reset');
+  await getIt.reset(dispose: true);
+  AppLogger.info('ServiceLocator', '✅ Dependencies reset (with dispose)');
 }
 
 /// Check if a dependency is registered
