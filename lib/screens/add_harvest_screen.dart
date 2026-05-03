@@ -15,6 +15,7 @@ import 'package:growlog_app/models/enums.dart';
 import 'package:growlog_app/repositories/interfaces/i_grow_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_repository.dart';
+import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/screens/harvest_detail_screen.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/translations.dart';
@@ -33,6 +34,7 @@ class AddHarvestScreen extends StatefulWidget {
 
 class _AddHarvestScreenState extends State<AddHarvestScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
+  final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
   final _formKey = GlobalKey<FormState>();
 
   final _wetWeightController = TextEditingController();
@@ -40,15 +42,25 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
   final _notesController = TextEditingController();
   DateTime _harvestDate = DateTime.now();
   bool _isLoading = false;
-  late AppTranslations _t;
+  // Default 'de' damit `_t` schon vor dem ersten Build sicher initialisiert ist
+  // (verhindert LateInitializationError); wird in _initTranslations() überschrieben.
+  late AppTranslations _t = AppTranslations('de');
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _t = AppTranslations(Localizations.localeOf(context).languageCode);
-    if (_dryingMethodController.text.isEmpty) {
-      _dryingMethodController.text = _t['drying_method_hanging'];
-    }
+  void initState() {
+    super.initState();
+    _initTranslations();
+  }
+
+  Future<void> _initTranslations() async {
+    final settings = await _settingsRepo.getSettings();
+    if (!mounted) return;
+    setState(() {
+      _t = AppTranslations(settings.language);
+      if (_dryingMethodController.text.isEmpty) {
+        _dryingMethodController.text = _t['drying_method_hanging'];
+      }
+    });
   }
 
   @override
@@ -254,7 +266,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        AppMessages.showError(context, _t['error_saving'] ?? 'Fehler beim Speichern');
+        AppMessages.showError(context, _t['error_saving']);
       }
     }
   }
