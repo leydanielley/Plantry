@@ -153,72 +153,88 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
         final id = await db.insert('plants', plant.toMap());
         return plant.copyWith(id: id);
       } else {
-        // UPDATE - Check if seed date or phase start changed
-        final oldPlant = await findById(plant.id!);
-
-        if (oldPlant != null) {
-          final seedDateChanged = oldPlant.seedDate != plant.seedDate;
-          final phaseStartChanged =
-              oldPlant.phaseStartDate != plant.phaseStartDate;
-
-          // ✅ v10: Check for phase history date changes
-          final vegDateChanged = oldPlant.vegDate != plant.vegDate;
-          final bloomDateChanged = oldPlant.bloomDate != plant.bloomDate;
-          final harvestDateChanged = oldPlant.harvestDate != plant.harvestDate;
-          final anyPhaseDateChanged =
-              vegDateChanged || bloomDateChanged || harvestDateChanged;
-
-          // ✅ FIX: Recalculate ALL log data if ANY date changes
-          // This ensures consistency: seedDate changes affect phases too!
-          final anyDateChanged =
-              seedDateChanged || anyPhaseDateChanged || phaseStartChanged;
-
-          // ✅ CRITICAL FIX: Warn user before deleting logs
-          if (seedDateChanged && plant.seedDate != null) {
-            final logsToDelete = await countLogsToBeDeleted(
-              plant.id!,
-              plant.seedDate!,
-            );
-            if (logsToDelete > 0) {
-              AppLogger.warning(
-                'PlantRepository',
-                'Seed date change will delete $logsToDelete logs',
-                'plantId=${plant.id}, oldDate=${oldPlant.seedDate}, newDate=${plant.seedDate}',
+        // UPDATE — Read-Modify-Write atomar in einer Transaction.
+        // Vorher: findById + countLogsToBeDeleted liefen ausserhalb der TX
+        // → bei concurrent saves auf demselben Plant lost-update möglich
+        // (zwei UI-Pfade lesen v1, einer schreibt v2, der andere überschreibt
+        // mit v3 basierend auf v1). Jetzt: alle Reads + Writes in einer TX (H13).
+        final transactionResult = await db
+            .transaction<bool>((txn) async {
+              // 1. Read inside TX
+              final oldRows = await txn.query(
+                'plants',
+                where: 'id = ?',
+                whereArgs: [plant.id],
+                limit: 1,
               );
-              throw Exception(
-                'SEED_DATE_CHANGE_WARNING: Changing seed date will delete $logsToDelete log(s). '
-                'This action cannot be undone. Please confirm in the UI before proceeding.',
-              );
-            }
-          }
+              if (oldRows.isEmpty) return false; // signal: not found
 
-          // ✅ FIX v11: All updates in transaction for consistency
-          await db
-              .transaction((txn) async {
-                // 1. Update plant
-                await txn.update(
-                  'plants',
-                  plant.toMap(),
-                  where: 'id = ?',
-                  whereArgs: [plant.id],
+              final oldPlant = Plant.fromMap(oldRows.first);
+
+              final seedDateChanged = oldPlant.seedDate != plant.seedDate;
+              final phaseStartChanged =
+                  oldPlant.phaseStartDate != plant.phaseStartDate;
+              final vegDateChanged = oldPlant.vegDate != plant.vegDate;
+              final bloomDateChanged = oldPlant.bloomDate != plant.bloomDate;
+              final harvestDateChanged =
+                  oldPlant.harvestDate != plant.harvestDate;
+              final anyPhaseDateChanged =
+                  vegDateChanged || bloomDateChanged || harvestDateChanged;
+              final anyDateChanged = seedDateChanged ||
+                  anyPhaseDateChanged ||
+                  phaseStartChanged;
+
+              // 2. Warn-on-data-loss check inside TX
+              if (seedDateChanged && plant.seedDate != null) {
+                final seedDay = DateTime(
+                  plant.seedDate!.year,
+                  plant.seedDate!.month,
+                  plant.seedDate!.day,
                 );
-
-                // 2. Recalculate log data if any date changed
-                if (anyDateChanged && plant.seedDate != null) {
-                  await _recalculateAllLogDataInTransaction(
-                    txn,
-                    plant.id!,
-                    plant,
+                final cntRes = await txn.rawQuery(
+                  'SELECT COUNT(*) as count FROM plant_logs '
+                  'WHERE plant_id = ? AND DATE(log_date) < DATE(?)',
+                  [plant.id, seedDay.toIso8601String()],
+                );
+                final logsToDelete = Sqflite.firstIntValue(cntRes) ?? 0;
+                if (logsToDelete > 0) {
+                  AppLogger.warning(
+                    'PlantRepository',
+                    'Seed date change will delete $logsToDelete logs',
+                    'plantId=${plant.id}, oldDate=${oldPlant.seedDate}, newDate=${plant.seedDate}',
+                  );
+                  throw Exception(
+                    'SEED_DATE_CHANGE_WARNING: Changing seed date will delete $logsToDelete log(s). '
+                    'This action cannot be undone. Please confirm in the UI before proceeding.',
                   );
                 }
-              })
-              .timeout(
-                DatabaseConfig.complexTransactionTimeout,
-                onTimeout: () => throw TimeoutException(
-                  'Plant update transaction timeout after ${DatabaseConfig.complexTransactionTimeout.inSeconds}s',
-                ),
+              }
+
+              // 3. Write inside TX
+              await txn.update(
+                'plants',
+                plant.toMap(),
+                where: 'id = ?',
+                whereArgs: [plant.id],
               );
-        } else {
+
+              if (anyDateChanged && plant.seedDate != null) {
+                await _recalculateAllLogDataInTransaction(
+                  txn,
+                  plant.id!,
+                  plant,
+                );
+              }
+              return true; // signal: updated
+            })
+            .timeout(
+              DatabaseConfig.complexTransactionTimeout,
+              onTimeout: () => throw TimeoutException(
+                'Plant update transaction timeout after ${DatabaseConfig.complexTransactionTimeout.inSeconds}s',
+              ),
+            );
+
+        if (!transactionResult) {
           // ✅ LOW PRIORITY BUG FIX: Log warning instead of silently updating when old plant not found
           AppLogger.warning(
             'PlantRepository',
