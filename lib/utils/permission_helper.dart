@@ -4,84 +4,66 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 
 class PermissionHelper {
-  /// Check and request camera permission
-  static Future<bool> checkCameraPermission(BuildContext context) async {
+  /// image_picker semantik:
+  ///  - returnt null  → User hat abgebrochen (Permission ist gewährt!)
+  ///  - returnt XFile → Permission gewährt + Bild gewählt
+  ///  - wirft        → Permission verweigert (PlatformException) oder System-Fehler
+  ///
+  /// Vorher: ALLES wurde als "OK" interpretiert → Permission-Denied wurde
+  /// fälschlich als "gewährt" gemeldet. Jetzt: nur ein Wurf führt zu false.
+  static Future<bool> _probeImagePickerPermission(
+    BuildContext context, {
+    required ImageSource source,
+    required String dialogTitle,
+    required String dialogMessage,
+  }) async {
     try {
       final ImagePicker picker = ImagePicker();
-
-      // ✅ HIGH FIX: Use standard try-catch instead of mixing with .catchError()
-      // Try to pick an image - this will trigger permission request
-      try {
-        await picker.pickImage(
-          source: ImageSource.camera,
-          maxWidth: 1,
-          maxHeight: 1,
-        );
-      } catch (error) {
-        AppLogger.warning(
-          'PermissionHelper',
-          'Camera permission check failed: $error',
-        );
-        // Continue - this might be user cancellation, which is OK
-      }
-
-      // If we got here, permission was granted (even if user cancelled)
+      await picker.pickImage(source: source, maxWidth: 1, maxHeight: 1);
+      // null (cancel) oder XFile → Permission gewährt
       return true;
-    } catch (e) {
-      AppLogger.error('PermissionHelper', 'Camera permission error', e);
-
+    } on PlatformException catch (e) {
+      // Häufige codes: 'camera_access_denied', 'photo_access_denied',
+      // 'photo_access_restricted', 'invalid_image'.
+      AppLogger.warning(
+        'PermissionHelper',
+        '$source permission denied: ${e.code} ${e.message}',
+      );
       if (context.mounted) {
-        _showPermissionDeniedDialog(
-          context,
-          'Kamera-Zugriff',
-          'Plantry benötigt Zugriff auf die Kamera um Fotos aufzunehmen.',
-        );
+        _showPermissionDeniedDialog(context, dialogTitle, dialogMessage);
       }
-
+      return false;
+    } catch (e) {
+      AppLogger.error('PermissionHelper', '$source permission probe error', e);
+      if (context.mounted) {
+        _showPermissionDeniedDialog(context, dialogTitle, dialogMessage);
+      }
       return false;
     }
   }
 
-  /// Check and request photo library permission
-  static Future<bool> checkPhotoPermission(BuildContext context) async {
-    try {
-      final ImagePicker picker = ImagePicker();
+  static Future<bool> checkCameraPermission(BuildContext context) {
+    return _probeImagePickerPermission(
+      context,
+      source: ImageSource.camera,
+      dialogTitle: 'Kamera-Zugriff',
+      dialogMessage:
+          'Plantry benötigt Zugriff auf die Kamera um Fotos aufzunehmen.',
+    );
+  }
 
-      // ✅ HIGH FIX: Use standard try-catch instead of mixing with .catchError()
-      // Try to pick an image - this will trigger permission request
-      try {
-        await picker.pickImage(
-          source: ImageSource.gallery,
-          maxWidth: 1,
-          maxHeight: 1,
-        );
-      } catch (error) {
-        AppLogger.warning(
-          'PermissionHelper',
-          'Photo permission check failed: $error',
-        );
-        // Continue - this might be user cancellation, which is OK
-      }
-
-      // If we got here, permission was granted (even if user cancelled)
-      return true;
-    } catch (e) {
-      AppLogger.error('PermissionHelper', 'Photo permission error', e);
-
-      if (context.mounted) {
-        _showPermissionDeniedDialog(
-          context,
-          'Foto-Zugriff',
-          'Plantry benötigt Zugriff auf deine Fotos.',
-        );
-      }
-
-      return false;
-    }
+  static Future<bool> checkPhotoPermission(BuildContext context) {
+    return _probeImagePickerPermission(
+      context,
+      source: ImageSource.gallery,
+      dialogTitle: 'Foto-Zugriff',
+      dialogMessage: 'Plantry benötigt Zugriff auf deine Fotos.',
+    );
   }
 
   /// Show permission denied dialog with instructions
