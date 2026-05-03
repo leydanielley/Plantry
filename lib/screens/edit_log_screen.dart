@@ -797,7 +797,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
   );
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     if (_selectedAction == ActionType.phaseChange &&
         _selectedNewPhase == null) {
       AppMessages.showError(context, _t['error_phase_required']);

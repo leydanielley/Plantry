@@ -83,7 +83,7 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
   Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     setState(() => _isLoading = true);
     try {
       final f = widget.fertilizer.copyWith(name: _nameController.text, brand: _brandController.text, npk: _npkController.text, type: _typeController.text);

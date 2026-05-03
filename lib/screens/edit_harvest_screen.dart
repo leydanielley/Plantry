@@ -130,7 +130,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
   }
 
   Future<void> _saveHarvest() async {
-    if (!_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() != true) {
       _showErrorSnackBar('Bitte überprüfe deine Eingaben');
       return;
     }

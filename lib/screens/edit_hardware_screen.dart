@@ -104,7 +104,7 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     setState(() => _isLoading = true);
     try {
       final h = widget.hardware.copyWith(

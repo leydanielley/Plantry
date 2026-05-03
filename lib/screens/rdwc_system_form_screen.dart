@@ -149,7 +149,7 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     setState(() => _isSaving = true);
     try {
       final cap = SafeParsers.parseUserDouble(_capacityController.text) ?? 100;

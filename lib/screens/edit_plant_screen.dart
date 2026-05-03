@@ -424,7 +424,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     setState(() => _isLoading = true);
     try {
       final p = widget.plant.copyWith(

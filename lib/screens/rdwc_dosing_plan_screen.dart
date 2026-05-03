@@ -125,7 +125,7 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
   }
 
   void _generate() {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() == true) {
       setState(() => _showResult = true);
     }
   }

@@ -453,7 +453,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     setState(() => _isLoading = true);
     try {
       final qty = int.tryParse(_quantityController.text) ?? 1;

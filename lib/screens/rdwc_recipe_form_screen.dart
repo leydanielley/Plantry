@@ -136,7 +136,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
 
     if (_addedFertilizers.isEmpty) {
       AppMessages.showError(context, _t['recipe_needs_fertilizers']);

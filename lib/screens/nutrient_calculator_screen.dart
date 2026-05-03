@@ -141,7 +141,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
   }
 
   void _calculate() {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
 
     // ✅ CRITICAL FIX: Use tryParse instead of parse to prevent crashes on invalid input
     // For batch mix and quick mix, start from 0L and 0 PPM

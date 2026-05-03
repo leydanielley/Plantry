@@ -73,7 +73,7 @@ class _RdwcAddbackCompleteScreenState
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
 
     final levelAfter = SafeParsers.parseUserDouble(_levelAfterController.text);
     final phAfter = SafeParsers.parseUserDouble(_phAfterController.text);

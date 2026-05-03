@@ -212,7 +212,7 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
   );
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
 
     // Capture provider references before any await — `context.read` after an
     // async gap is unsafe even with a mounted-check, because the Element may

@@ -183,7 +183,7 @@ class _CustomFertilizerScreenState extends State<CustomFertilizerScreen> {
   }
 
   void _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     try {
       final f = Fertilizer(
         name: _nameController.text,

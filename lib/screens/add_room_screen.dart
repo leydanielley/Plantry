@@ -275,7 +275,7 @@ class _AddRoomScreenState extends State<AddRoomScreen> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     setState(() => _isLoading = true);
     try {
       final r = Room(
