@@ -243,7 +243,7 @@ class _RdwcAddbackCompleteScreenState
                         const TextInputType.numberWithOptions(decimal: true),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
-                      if (double.tryParse(v) == null) return 'Ungültige Zahl';
+                      if (SafeParsers.parseUserDouble(v) == null) return 'Ungültige Zahl';
                       return null;
                     },
                   ),

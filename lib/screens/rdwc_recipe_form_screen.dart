@@ -13,6 +13,7 @@ import 'package:growlog_app/repositories/interfaces/i_fertilizer_repository.dart
 import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/safe_parsers.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
 
@@ -144,7 +145,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
 
     // Validate all fertilizer amounts
     for (final entry in _addedFertilizers) {
-      final amount = double.tryParse(entry.mlPerLiterController.text);
+      final amount = SafeParsers.parseUserDouble(entry.mlPerLiterController.text);
       if (amount == null || amount <= 0) {
         AppMessages.showError(context, _t['invalid_fertilizer_amounts']);
         return;
@@ -155,10 +156,10 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
 
     try {
       final targetEc = _targetEcController.text.isNotEmpty
-          ? double.tryParse(_targetEcController.text)
+          ? SafeParsers.parseUserDouble(_targetEcController.text)
           : null;
       final targetPh = _targetPhController.text.isNotEmpty
-          ? double.tryParse(_targetPhController.text)
+          ? SafeParsers.parseUserDouble(_targetPhController.text)
           : null;
 
       // Create/update recipe
@@ -193,7 +194,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
       // Add new fertilizers
       for (final entry in _addedFertilizers) {
         // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
-        final amount = double.tryParse(entry.mlPerLiterController.text) ?? 0.0;
+        final amount = SafeParsers.parseUserDouble(entry.mlPerLiterController.text) ?? 0.0;
         final recipeFert = RecipeFertilizer(
           recipeId: recipeId,
           fertilizerId: entry.fertilizer.id!,
@@ -344,7 +345,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                     ),
                     validator: (value) {
                       if (value != null && value.isNotEmpty) {
-                        final number = double.tryParse(value);
+                        final number = SafeParsers.parseUserDouble(value);
                         if (number == null || number < 0) {
                           return _t['invalid_number'];
                         }
@@ -368,7 +369,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                     ),
                     validator: (value) {
                       if (value != null && value.isNotEmpty) {
-                        final number = double.tryParse(value);
+                        final number = SafeParsers.parseUserDouble(value);
                         if (number == null || number < 0 || number > 14) {
                           return _t['invalid_ph'];
                         }
@@ -500,7 +501,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                 if (value == null || value.isEmpty) {
                   return _t['amount_required'];
                 }
-                final number = double.tryParse(value);
+                final number = SafeParsers.parseUserDouble(value);
                 if (number == null || number <= 0) {
                   return _t['invalid_amount'];
                 }

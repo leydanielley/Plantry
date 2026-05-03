@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
+import 'package:growlog_app/utils/safe_parsers.dart';
 import 'package:intl/intl.dart';
 import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
@@ -196,7 +197,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
   }
 
   double? _parseDouble(String text) {
-    return text.isNotEmpty ? double.tryParse(text) : null;
+    return text.isNotEmpty ? SafeParsers.parseUserDouble(text) : null;
   }
 
   String? _parseString(String text) {
@@ -456,8 +457,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
   }
 
   Widget _buildWeightLossInfo() {
-    final wet = double.tryParse(_wetWeightController.text);
-    final dry = double.tryParse(_dryWeightController.text);
+    final wet = SafeParsers.parseUserDouble(_wetWeightController.text);
+    final dry = SafeParsers.parseUserDouble(_dryWeightController.text);
 
     if (wet == null || dry == null || wet == 0) return const SizedBox.shrink();
 
@@ -842,8 +843,8 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
   }
 
   Widget _buildCannabinoidPreview() {
-    final thc = double.tryParse(_thcController.text);
-    final cbd = double.tryParse(_cbdController.text);
+    final thc = SafeParsers.parseUserDouble(_thcController.text);
+    final cbd = SafeParsers.parseUserDouble(_cbdController.text);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1320,7 +1321,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
       keyboardType: TextInputType.numberWithOptions(decimal: allowDecimals),
       validator: (value) {
         if (value != null && value.isNotEmpty) {
-          if (double.tryParse(value) == null) {
+          if (SafeParsers.parseUserDouble(value) == null) {
             return _t['error_invalid_number'];
           }
         }

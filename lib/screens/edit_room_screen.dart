@@ -15,6 +15,7 @@ import 'package:growlog_app/widgets/plantry_form_field.dart';
 import 'package:growlog_app/widgets/plantry_button.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
 import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/safe_parsers.dart';
 
 class EditRoomScreen extends StatefulWidget {
   final Room room;
@@ -182,9 +183,9 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
       final r = widget.room.copyWith(
         name: _nameController.text, description: _descController.text,
         growType: _growType, wateringSystem: _wateringSystem, rdwcSystemId: _selectedRdwcId,
-        width: (double.tryParse(_widthController.text) ?? 0) / 100,
-        depth: (double.tryParse(_depthController.text) ?? 0) / 100,
-        height: (double.tryParse(_heightController.text) ?? 0) / 100,
+        width: (SafeParsers.parseUserDouble(_widthController.text) ?? 0) / 100,
+        depth: (SafeParsers.parseUserDouble(_depthController.text) ?? 0) / 100,
+        height: (SafeParsers.parseUserDouble(_heightController.text) ?? 0) / 100,
         lightWatts: _wattsController.text.isEmpty ? null : int.tryParse(_wattsController.text),
       );
       await _roomRepo.save(r);

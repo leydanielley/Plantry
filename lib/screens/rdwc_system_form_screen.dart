@@ -14,6 +14,7 @@ import 'package:growlog_app/models/room.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/utils/translations.dart';
+import 'package:growlog_app/utils/safe_parsers.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
 
 class RdwcSystemFormScreen extends StatefulWidget {
@@ -98,7 +99,7 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                       hint: 'z.B. 1.4',
                       keyboardType: TextInputType.number,
                       validator: (v) {
-                        if (v != null && v.isNotEmpty && double.tryParse(v) == null) return _t['invalid_number'];
+                        if (v != null && v.isNotEmpty && SafeParsers.parseUserDouble(v) == null) return _t['invalid_number'];
                         return null;
                       },
                     )),
@@ -109,7 +110,7 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
                       hint: 'z.B. 2.0',
                       keyboardType: TextInputType.number,
                       validator: (v) {
-                        if (v != null && v.isNotEmpty && double.tryParse(v) == null) return _t['invalid_number'];
+                        if (v != null && v.isNotEmpty && SafeParsers.parseUserDouble(v) == null) return _t['invalid_number'];
                         return null;
                       },
                     )),
@@ -151,10 +152,10 @@ class _RdwcSystemFormScreenState extends State<RdwcSystemFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
     try {
-      final cap = double.tryParse(_capacityController.text) ?? 100;
+      final cap = SafeParsers.parseUserDouble(_capacityController.text) ?? 100;
       final bc = int.tryParse(_bucketsController.text) ?? 4;
-      final ecMin = _ecMinController.text.isNotEmpty ? double.tryParse(_ecMinController.text) : null;
-      final ecMax = _ecMaxController.text.isNotEmpty ? double.tryParse(_ecMaxController.text) : null;
+      final ecMin = _ecMinController.text.isNotEmpty ? SafeParsers.parseUserDouble(_ecMinController.text) : null;
+      final ecMax = _ecMaxController.text.isNotEmpty ? SafeParsers.parseUserDouble(_ecMaxController.text) : null;
 
       if (widget.system == null) {
         await _rdwcRepo.createSystem(RdwcSystem(name: _nameController.text, maxCapacity: cap, currentLevel: cap, bucketCount: bc, roomId: _selectedRoomId, ecWarningMin: ecMin, ecWarningMax: ecMax));

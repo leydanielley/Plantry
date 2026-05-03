@@ -13,6 +13,7 @@ import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/utils/translations.dart';
 import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
+import 'package:growlog_app/utils/safe_parsers.dart';
 import 'package:growlog_app/di/service_locator.dart';
 
 class RdwcQuickMeasurementScreen extends StatefulWidget {
@@ -143,12 +144,12 @@ class _RdwcQuickMeasurementScreenState
     setState(() => _isSaving = true);
 
     try {
-      final level = double.tryParse(_levelController.text) ?? 0.0;
+      final level = SafeParsers.parseUserDouble(_levelController.text) ?? 0.0;
       final ph = _phController.text.isNotEmpty
-          ? double.tryParse(_phController.text)
+          ? SafeParsers.parseUserDouble(_phController.text)
           : null;
       final ec = _ecController.text.isNotEmpty
-          ? double.tryParse(_ecController.text)
+          ? SafeParsers.parseUserDouble(_ecController.text)
           : null;
 
       if (_useAsCompletion && _pendingLog != null) {
@@ -286,7 +287,7 @@ class _RdwcQuickMeasurementScreenState
                 if (value == null || value.isEmpty) {
                   return _t['level_required'];
                 }
-                final number = double.tryParse(value);
+                final number = SafeParsers.parseUserDouble(value);
                 if (number == null || number < 0) {
                   return _t['invalid_number'];
                 }
@@ -309,7 +310,7 @@ class _RdwcQuickMeasurementScreenState
               ),
               validator: (value) {
                 if (value != null && value.isNotEmpty) {
-                  final number = double.tryParse(value);
+                  final number = SafeParsers.parseUserDouble(value);
                   if (number == null || number < 0 || number > 14) {
                     return _t['invalid_ph'];
                   }
@@ -334,7 +335,7 @@ class _RdwcQuickMeasurementScreenState
               ),
               validator: (value) {
                 if (value != null && value.isNotEmpty) {
-                  final number = double.tryParse(value);
+                  final number = SafeParsers.parseUserDouble(value);
                   if (number == null || number < 0) {
                     return _t['invalid_number'];
                   }
