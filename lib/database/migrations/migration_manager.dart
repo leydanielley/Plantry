@@ -75,13 +75,30 @@ class MigrationManager {
     // Mark migration as in progress
     await VersionManager.markMigrationInProgress();
 
-    // Pre-flight check: verify schema definition exists for target version
+    // Pre-flight check: verify schema definition exists for target version.
+    // Ab minRequiredSchemaVersion ist eine SchemaDefinition Pflicht — sonst
+    // läuft die Migration ohne Sicherheitsnetz und ein Bug bleibt unerkannt
+    // bis die App auf der korrupten DB crasht (Bug H2 aus dem Review).
     final hasSchemaDefinition = SchemaRegistry.getSchema(newVersion) != null;
     if (!hasSchemaDefinition) {
+      if (newVersion >= SchemaRegistry.minRequiredSchemaVersion) {
+        AppLogger.error(
+          'MigrationManager',
+          '❌ No schema definition for v$newVersion — refuse to migrate',
+          'Add SchemaRegistry.schemaV$newVersion before shipping.',
+        );
+        throw MigrationException(
+          'Migration aborted: SchemaRegistry has no definition for v$newVersion. '
+          'Add it to lib/database/schema_registry.dart before deploying.',
+          oldVersion: oldVersion,
+          newVersion: newVersion,
+          error: 'Missing schema definition',
+        );
+      }
       AppLogger.warning(
         'MigrationManager',
-        '⚠️ No schema definition found for v$newVersion',
-        'Schema validation will be skipped. Please add schema definition to SchemaRegistry.',
+        '⚠️ No schema definition for v$newVersion (legacy gap v21-v35)',
+        'Validation will be skipped — accepted only for historical migrations.',
       );
     }
 

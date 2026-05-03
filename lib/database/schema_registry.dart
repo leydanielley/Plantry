@@ -655,6 +655,43 @@ class SchemaRegistry {
     requiredIndexes: schemaV40.requiredIndexes,
   );
 
+  /// Schema for v42: RDWC log_status + ec_warning_min/max on rdwc_systems
+  static final schemaV42 = SchemaDefinition(
+    version: 42,
+    requiredTables: {
+      ...schemaV41.requiredTables,
+      'rdwc_logs': {
+        ...schemaV41.requiredTables['rdwc_logs']!,
+        'log_status', // v42: 'complete' | 'pending_measurement'
+      },
+      'rdwc_systems': {
+        ...schemaV41.requiredTables['rdwc_systems']!,
+        'ec_warning_min',
+        'ec_warning_max',
+      },
+    },
+    requiredIndexes: schemaV41.requiredIndexes,
+  );
+
+  /// Schema for v43: Add phase column to rdwc_recipes
+  static final schemaV43 = SchemaDefinition(
+    version: 43,
+    requiredTables: {
+      ...schemaV42.requiredTables,
+      'rdwc_recipes': {
+        ...schemaV42.requiredTables['rdwc_recipes']!,
+        'phase',
+      },
+    },
+    requiredIndexes: schemaV42.requiredIndexes,
+  );
+
+  /// Earliest version for which schema validation is mandatory.
+  /// Migrations targeting >= MIN_REQUIRED_SCHEMA_VERSION MÜSSEN eine
+  /// SchemaDefinition haben — sonst hard-fail im migration_manager.
+  /// (Lücke v21-v35 bleibt aus historischen Gründen ohne Definition.)
+  static const int minRequiredSchemaVersion = 36;
+
   /// Map of all schema definitions
   static final Map<int, SchemaDefinition> schemas = {
     13: schemaV13,
@@ -672,6 +709,8 @@ class SchemaRegistry {
     39: schemaV39,
     40: schemaV40,
     41: schemaV41,
+    42: schemaV42,
+    43: schemaV43,
   };
 
   // ===========================================
