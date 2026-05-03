@@ -49,6 +49,7 @@ class TestDatabaseHelper {
         width REAL DEFAULT 0.0,
         depth REAL DEFAULT 0.0,
         height REAL DEFAULT 0.0,
+        light_watts INTEGER,
         archived INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
@@ -145,6 +146,7 @@ class TestDatabaseHelper {
         npk TEXT,
         type TEXT,
         description TEXT,
+        is_custom INTEGER DEFAULT 0,
         ec_value REAL,
         ppm_value REAL,
         formula TEXT,
@@ -152,6 +154,7 @@ class TestDatabaseHelper {
         purity REAL,
         is_liquid INTEGER DEFAULT 1,
         density REAL,
+        n REAL,
         n_no3 REAL,
         n_nh4 REAL,
         p REAL,
@@ -181,7 +184,7 @@ class TestDatabaseHelper {
         amount REAL NOT NULL,
         unit TEXT DEFAULT 'ml',
         FOREIGN KEY (log_id) REFERENCES plant_logs (id) ON DELETE CASCADE,
-        FOREIGN KEY (fertilizer_id) REFERENCES fertilizers (id) ON DELETE CASCADE
+        FOREIGN KEY (fertilizer_id) REFERENCES fertilizers (id) ON DELETE RESTRICT
       )
     ''');
 
@@ -345,6 +348,8 @@ class TestDatabaseHelper {
         chiller_wattage INTEGER,
         chiller_cooling_power INTEGER,
         accessories TEXT,
+        ec_warning_min REAL,
+        ec_warning_max REAL,
         archived INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE SET NULL,
