@@ -1,7 +1,9 @@
 # Phase 6 — Code-Review Backlog
 
-Stand: 2026-05-03 — KRITISCH + HOCH-Block komplett, MITTEL/NIEDRIG größtenteils
-abgearbeitet oder dokumentiert.
+Stand: 2026-05-05 — KRITISCH + HOCH komplett, MITTEL/NIEDRIG durch (außer
+übergreifende Stil-Themen). Externe Review-Findings (FR-/QA-IDs) sind separat
+in [`FLUTTER_REVIEW_FINDINGS.md`](./FLUTTER_REVIEW_FINDINGS.md) status-getrackt
+und konsolidiert in [`RECONCILIATION_2026-05-05.md`](./RECONCILIATION_2026-05-05.md).
 
 ## ✅ KRITISCH — alle erledigt (außer K9, geparkt)
 
@@ -40,7 +42,7 @@ abgearbeitet oder dokumentiert.
 - **M2** — Plant.fromMap-Fallbacks: Enum/DateTime loggen via SafeParsers,
   trivial-Defaults (name, feminized) bewusst ohne Log (wäre nur Noise)
 - **M3** — `getIt.reset(dispose: true)` für Resource-Cleanup
-- **M4** — RDWC `archived_at` Timestamp: **OFFEN** (würde Schema-Migration v44 brauchen)
+- **M4** — RDWC `archived_at` Timestamp + Schema-Migration v44 (`b9fd0f9`)
 - **M5** — ✅ Schon in K5 erledigt
 - **M6** — Verschachtelte try/catch im migration_manager: bewusst (defensiv,
   vergleichbar mit Try-Each-Reminder Pattern)
@@ -49,7 +51,7 @@ abgearbeitet oder dokumentiert.
 - **M9** — main.dart `.catchError` ohne rethrow: bewusst, ist `unawaited` mit Log
 - **M10** — `.then()` vs `await` Stil-Mix: **OFFEN** (übergreifender Stil-Refactor)
 - **M11** — DT-Tokens Theme-Drift: **OFFEN** (übergreifend)
-- **M12** — `_phase = PlantPhase.seedling` als final: cosmetic, **OFFEN**
+- **M12** — `_phase = PlantPhase.seedling` final → static const (`c3ac470`)
 - **M13** — ✅ Pattern dokumentiert
 
 ## ✅ NIEDRIG — abgearbeitet/dokumentiert
@@ -58,14 +60,21 @@ abgearbeitet oder dokumentiert.
 - **N2** — `.then()` vs `await` Stylings: **OFFEN** (= M10)
 - **N3** — ✅ Dead `??` in add_harvest_screen entfernt
 
-## Noch offen
+## Noch offen (intern)
 - **K9** (iOS storage check, geparkt bis iOS-Build relevant)
-- **M4** (RDWC archived_at Timestamp — braucht Schema v44)
 - **M10/N2** (.then vs await Stil-Mix übergreifend)
 - **M11** (DT-Token Drift übergreifend)
-- **M12** (cosmetic final → const)
 
-## Verifikation Stand 2026-05-03
-- `flutter analyze` clean
-- `flutter test` 643/643 grün
+## Externer Review — Restarbeit (siehe RECONCILIATION_2026-05-05.md)
+Stand 2026-05-05: 46 DONE, 6 TEILWEISE, 15 OFFEN von 75 Findings.
+
+**Kernthemen offen:**
+- Migrations-Pipeline-Refactor (FR-A-001/003/004/005/008/010 + Rest H2)
+- Concurrency / Race-Conditions (FR-B-002/005/007/014, QA-001/004)
+- State-Pattern-Vereinheitlichung (FR-X-003/004)
+- Validation/UX (FR-C-008/011/014/016/017/018, QA-005/007/008/013/015)
+
+## Verifikation Stand 2026-05-05
+- `flutter analyze` clean (laut Vorstand 2026-05-03)
+- `flutter test` 643/643 grün (laut Vorstand 2026-05-03)
 - App nicht auf Pixel 9a getestet — TODO vor jedem Release-Cut

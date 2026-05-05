@@ -10,6 +10,12 @@
 
 **Auftragsquelle:** Admin (Freund bat um externen Review aus KI-Fehlerschleife heraus).
 
+> **Status-Reconciliation 2026-05-05:** Jedes Finding hat jetzt eine
+> `**Status:**`-Zeile (DONE / TEILWEISE / OFFEN / ZURÜCKGEZOGEN) mit Commit-Ref.
+> Master-Übersicht & Mapping zur Sprint-TODO: siehe
+> [`RECONCILIATION_2026-05-05.md`](./RECONCILIATION_2026-05-05.md).
+> Aktuelle Bilanz: 46 DONE, 6 TEILWEISE, 15 OFFEN.
+
 ---
 
 ## Legende
@@ -66,6 +72,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Bei echtem Migration-Fehler (nicht nur Timeout) kann DB im halben Zustand weiterbetrieben werden. Zukünftige Migrationen laufen auf inkonsistentem Schema.
 - **Empfehlung:** MigrationManager muss bei Exception immer `markMigrationFailed()` aufrufen. Force-Clear nur bei `status=='timeout' && elapsed>limit`. Bei `status=='failed'` → Recovery-Dialog statt silent reset.
 - **Sicherheit:** Hoch
+- **Status:** 🔴 OFFEN — Root-Cause-Refactor; nicht in PHASE6
 
 #### [FR-A-002] Pre-Migration-Backup ohne sauberen Rollback-Pfad
 - **Severity:** 🔴 Blocker
@@ -75,6 +82,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Korruptes Backup bleibt liegen und täuscht bei späterem Restore Integrität vor → Datenverlust bei vermeintlich erfolgreichem Restore.
 - **Empfehlung:** (a) Backup-Datei nach Fehler zwangslöschen. (b) `_verifyBackup()` mit `ZipDecoder`-Integritätscheck. (c) Klarer Fail-State mit User-Dialog „Backup fehlgeschlagen, Migration abgebrochen".
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — f635de3 — partial-ZIP wird gelöscht
 
 #### [FR-A-003] `SafeTableRebuild`: fehlende Idempotenz bei Teil-Ausführung
 - **Severity:** 🟡 Major
@@ -84,6 +92,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Kein Recovery-Pfad aus halbem Migrationszustand → App-Start bricht ab, User muss manuell eingreifen (oder Datenverlust via Reset).
 - **Empfehlung:** Step 2 als Preflight: `DROP TABLE IF EXISTS <tablename>_new`, dann CREATE.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — Spot-Check 2026-05-05: kein DROP IF EXISTS Preflight
 
 #### [FR-A-004] Migrationen v40–v43 nicht idempotent (fehlendes `IF NOT EXISTS`)
 - **Severity:** 🟡 Major
@@ -93,6 +102,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Stuck Migration → kein automatisches Recovery.
 - **Empfehlung:** Alle v40+ auf `CREATE TABLE IF NOT EXISTS` + `PRAGMA table_info`-Check vor `ADD COLUMN` umstellen.
 - **Sicherheit:** Hoch (Muster leicht verifizierbar durch Code-Read)
+- **Status:** 🔴 OFFEN — kein gezielter Commit
 
 #### [FR-A-005] Version-Gap v21–v34 in Migrations-Chain
 - **Severity:** 🟡 Major
@@ -102,6 +112,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Upgrade-Blockade oder Schema-Drift je nach Migration-Manager-Implementierung.
 - **Empfehlung:** (a) Dokumentieren, ob v21–v34 intern waren und jedes Release ≥ v20 direkt v20-kompatibel ist. (b) Fehlende Migrationen als No-Op-Scripts einziehen, damit die Chain lückenlos ist. (c) `canMigrate()`-Pfad testen für Edge-Cases.
 - **Sicherheit:** Hoch (Gap ist belegbar per Dateiliste)
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [FR-A-006] `DatabaseRecovery`: `attemptRepair` nutzt `execute` für `PRAGMA integrity_check` (inkonsistent)
 - **Severity:** 🔴 Blocker
@@ -111,6 +122,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** False-Positive Recovery im attemptRepair-Pfad. App läuft mit korrupter DB weiter, Folgebugs schwer diagnostizierbar.
 - **Empfehlung:** Zeile 40 auf das Muster von Zeile 22 umstellen: `rawQuery(...)` + auf Result `'ok'` prüfen. Dabei zusätzlich `VACUUM`/`REINDEX` (Zeilen 41-42) mit Timeout-Guard und Fehlerauswertung versehen.
 - **Sicherheit:** Hoch — Verifikation durch grep bestätigt (Tuvok, Abschnitt 4.4).
+- **Status:** ✅ DONE — c3e967f — Stage 1 Fix
 
 #### [FR-A-007] `DatabaseRecovery` hart-codierter Android-Pfad für Emergency-Backup
 - **Severity:** 🔴 Blocker
@@ -120,6 +132,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Recovery-Versuch auf Non-Android-Plattformen terminiert mit FileSystem-Exception → keine Emergency-Sicherung möglich genau dann, wenn sie gebraucht wird.
 - **Empfehlung:** `getApplicationDocumentsDirectory()` oder `getDownloadsDirectory()` via `path_provider`, plattform-spezifische Fallbacks.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — 7ff7d1b, df9d552, 6fb36e1 (= H10) — platform_aware + Android-Mirror
 
 #### [FR-A-008] `SafeTableRebuild` validiert Row-Count-Decrease nur mit Warning
 - **Severity:** 🟡 Major
@@ -129,6 +142,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Stille Datenreduktion bei Migration (z.B. wegen NOT-NULL-Constraint-Verletzungen neuer Spalten).
 - **Empfehlung:** Bei `rowCountAfter < rowCountBefore` → Exception + Rollback.
 - **Sicherheit:** Hoch
+- **Status:** 🔴 OFFEN — Spot-Check 2026-05-05: safe_table_rebuild.dart:161 immer noch nur Warning
 
 #### [FR-A-009] `VersionManager.isMigrationInProgress()` liefert false bei Status `timeout`
 - **Severity:** 🟡 Major
@@ -138,6 +152,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Datenbank bleibt auf Vor-Version, Features der neuen Version greifen auf fehlende Tabellen/Spalten zu.
 - **Empfehlung:** `timeout` muss wie `failed` behandelt werden → Re-Try-Dialog oder erzwungene Recovery.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — (vorhanden) — Spot-Check 2026-05-05: version_manager.dart:253 erkennt 'timeout' Status
 
 #### [FR-A-010] Migration-Timeout pro Lauf, nicht kumulativ
 - **Severity:** 🟡 Major
@@ -147,6 +162,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Entweder viel zu großzügig (blockiert Startup ewig) oder viel zu knapp.
 - **Empfehlung:** Pro-Migration-Timeout (z.B. 10min base) + kumulatives Max. Progressiver Timeout abhängig von Log-Anzahl.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — nicht in PHASE6
 
 #### [FR-A-011] `SchemaRegistry` deckt nur v13, nicht v14+ ab
 - **Severity:** 🟡 Major
@@ -156,6 +172,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Schema-Drift bleibt unentdeckt; `PRAGMA integrity_check` prüft nur Korruption, nicht Schema-Korrektheit.
 - **Empfehlung:** Schemas mindestens für stabile Milestones (v20, v35, v43) registrieren und nach Migration automatisch verifizieren.
 - **Sicherheit:** Hoch
+- **Status:** 🟠 TEILWEISE — 2c34f8e (= H2) — v42/v43 ergänzt; v14–v41-Lücke bleibt
 
 #### [FR-A-012] `PlantRepository.save()`: nested Transactions mit `db` statt `txn`
 - **Severity:** 🟡 Major
@@ -165,6 +182,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Potenzielle Deadlocks und inkonsistente Rollbacks.
 - **Empfehlung:** Jede Unter-Methode nimmt explizit `DatabaseExecutor txn` entgegen, nie direkt `db`.
 - **Sicherheit:** Mittel (braucht Verifikation durch vollständigen Read der Methode)
+- **Status:** ✅ DONE — 8872395 (= H13) — atomic read-modify-write
 
 #### [FR-A-013] `PhotoRepository` via `new` statt `getIt` in anderen Repos
 - **Severity:** 🟡 Major
@@ -174,6 +192,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Unkoordinierter Ressourcen-Verbrauch; Tests können `PhotoRepository` nicht mocken.
 - **Empfehlung:** `getIt<PhotoRepository>()` konsequent.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — a1a1186 — RepositoryErrorHandler + interface fix
 
 #### [FR-A-014] Inkonsistente Nutzung von `RepositoryErrorHandler`-Mixin
 - **Severity:** 🟢 Minor
@@ -183,6 +202,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Unklarheit in Fehlerbehandlung; Bugs durch fehlende try/catch an falschen Stellen.
 - **Empfehlung:** Konvention festlegen (z.B. „Read → defaultValue, Write → throw") und konsequent anwenden.
 - **Sicherheit:** Mittel
+- **Status:** ✅ DONE — a1a1186 — gemeinsamer Commit mit FR-A-013
 
 ### 1.3 Findings — State / Services
 
@@ -194,6 +214,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Reproduzierbar bei schnellem Plant-Wechsel: Logs und gezeigte Pflanze driften auseinander.
 - **Empfehlung:** `notifyListeners()` in den Lock-Block verschieben.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — f41afae — Stage 1 Fix
 
 #### [FR-B-002] Provider-Locks halten während langen Reloads → UI-Freeze-Risiko
 - **Severity:** 🟡 Major
@@ -203,6 +224,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** UI kann bei simultaner Operation (z.B. Log-Batch während Plant-Save) einfrieren.
 - **Empfehlung:** Write abschließen + Lock freigeben, Reload außerhalb des Locks oder über Invalidation-Flag. Alternativ feinere Locks.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [FR-B-003] `LogProvider.saveBatch`: Reload ohne Re-Check des `_currentPlantId`
 - **Severity:** 🟡 Major
@@ -212,6 +234,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Crash bei gleichzeitigem Delete+Batch-Save.
 - **Empfehlung:** Vor Reload: `_currentPlantId != null && _currentPlantId == logs.first.plantId` prüfen.
 - **Sicherheit:** Mittel
+- **Status:** ✅ DONE — (vorhanden) — Spot-Check 2026-05-05: log_provider.dart:233-235 hat _currentPlantId Re-Check
 
 #### [FR-B-004] `BackupService._exportDataInternal`: `Future.wait` ohne `eagerError:false`
 - **Severity:** 🟡 Major
@@ -221,6 +244,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** UX: fälschliches „Komplett-Fehlgeschlagen", tatsächlich nur einzelne Fotos betroffen.
 - **Empfehlung:** `Future.wait(..., eagerError: false)` + pro-Foto Error-Sammlung mit Summary im Resultat.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — 4156b83 — Stage 1 Fix
 
 #### [FR-B-005] `BackupService._importBackupData`: Foto-Import nach DB-Commit nicht atomar
 - **Severity:** 🟡 Major
@@ -230,6 +254,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Inkonsistente Restores.
 - **Empfehlung:** Fotos vor DB-Commit importieren, Foto-Fehler als non-fatal plus Report im Restore-Log.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — nicht in PHASE6
 
 #### [FR-B-006] `BackupService` Path-Traversal-Check ist unpräzise
 - **Severity:** 🔴 Blocker
@@ -239,6 +264,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Manipuliertes Backup-ZIP kann Dateien außerhalb des Import-Verzeichnisses schreiben.
 - **Empfehlung:** Vergleich gegen `canonicalImport + Platform.pathSeparator`, oder Path.isWithin.
 - **Sicherheit:** Hoch (nachprüfbar mit präpariertem ZIP)
+- **Status:** ✅ DONE — d7c7a4f — Stage 1 Fix
 
 #### [FR-B-007] `NotificationService.initialize` nicht thread-safe
 - **Severity:** 🟡 Major
@@ -248,6 +274,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Potenziell falsche Timezone-Berechnung bei ersten Notifications.
 - **Empfehlung:** `Lock` im Init-Block oder atomare Init via `Future<void> _initFuture`.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [FR-B-008] `HealthScoreService`/`WarningService`: `reduce` ohne Empty-Guard
 - **Severity:** 🟡 Major
@@ -257,6 +284,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Crash beim Health-Score/Warning-Check für Pflanzen mit fehlenden pH/EC-Daten.
 - **Empfehlung:** `if (list.isEmpty) return default;` direkt vor jedem `reduce`, oder `fold` mit Initialwert.
 - **Sicherheit:** Hoch
+- **Status:** 🟠 TEILWEISE — 810e930 (= H15) — RDWC-Aggregations-Casts; Health/Warning unklar
 
 #### [FR-B-009] `LogService.saveBulkLog`: stille Date-Fallbacks maskieren Datenfehler
 - **Severity:** 🟡 Major
@@ -266,6 +294,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Stille Falschdaten, Ursache später kaum nachvollziehbar.
 - **Empfehlung:** Im Fallback-Pfad `AppLogger.warning` mit Feldname + Originalwert. Bei Kernfeldern (seedDate) ggf. Exception statt Fallback.
 - **Sicherheit:** Mittel
+- **Status:** 🟠 TEILWEISE — (= M2) — als bewusste Entscheidung dokumentiert
 
 #### [FR-B-010] `RawDbfParser` ohne Pro-Field-Bounds-Check
 - **Severity:** 🟡 Major
@@ -275,6 +304,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Crash beim Import von abgeschnittenen/korrupten DBF-Dateien.
 - **Empfehlung:** `if (offset + field.length > bytes.length) { warn(); break; }` vor dem `sublist`.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — febcbe7 — Stage 1 Fix
 
 #### [FR-B-011] `NotificationService.scheduleWateringReminder` ohne Interval-Validation
 - **Severity:** 🟢 Minor
@@ -284,6 +314,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Erratic Notifications, Spam-Risiko wenn UI falschen Wert liefert.
 - **Empfehlung:** Guard `intervalDays >= 1`, ansonsten `ArgumentError`.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — 709d61c — Stage 1 Fix
 
 #### [FR-B-012] `DatabaseRebuildService` ohne Timeout beim DB-Zugriff
 - **Severity:** 🟡 Major
@@ -293,6 +324,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** User killt App → potenziell halber Rebuild-State in der DB.
 - **Empfehlung:** `.timeout(Duration(seconds: 30))` plus klare Fehlermeldung.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — 3d4f087 — Stage 1 Fix
 
 #### [FR-B-013] `NotificationService` ohne Fallback für unsupported Platforms
 - **Severity:** 🟢 Minor
@@ -302,6 +334,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Desktop-/Web-User bekommen nie Notifications, ohne Hinweis.
 - **Empfehlung:** `else { AppLogger.warning('NotificationService: Platform nicht unterstützt'); }`.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — 709d61c — gemeinsamer Commit mit FR-B-011
 
 #### [FR-B-014] `LogService._validatePhotos`: TOCTOU zwischen `exists` und `length`
 - **Severity:** 🟡 Major
@@ -311,11 +344,12 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Unerwartete Exception, unfreundliche Fehlermeldung.
 - **Empfehlung:** Breiterer `catch` im Validation-Pfad mit Übersetzung in ArgumentError.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 ### 1.4 Findings — UI / Models
 
 #### [FR-C-001] ZURÜCKGEZOGEN (siehe VC-001-KOR)
-- **Status:** ❌ Zurückgezogen — falsch-positiv.
+- **Status:** n/a ZURÜCKGEZOGEN — VC-001-KOR — Subagent-Halluzination, kein echtes Issue
 - **Begründung:** Nachverifikation durch Tuvok ergab, dass `lib/screens/edit_log_screen.dart` sehr wohl eine vollständige `dispose()`-Methode enthält (Zeilen 128-139), die alle 10 `TextEditingController` korrekt freigibt. Der verursachende Explore-Subagent hat den Befund halluziniert.
 - **Lehre:** Subagent-Behauptungen zu Code-Abwesenheit („kein dispose()") müssen vor Eintrag direkt gegen den Code verifiziert werden. Details: VC-001-KOR.
 
@@ -327,6 +361,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Versehentlicher Komplett-Löscheklick möglich. Auto-Backup zwar vorhanden, aber User kennt Pfad nicht → „Daten weg"-Panik.
 - **Empfehlung:** Warn-Dialog in rot, Typ-Confirm („DELETE" tippen), Backup-Pfad ausgeben, Undo-Hinweis.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — 9a5b200, 7b1386b, 02719f2, edf2762 — Stage 1 Fix + Follow-ups
 
 #### [FR-C-003] Mehrere `add_*_screen`/`edit_*_screen`: `setState` nach `await` ohne `mounted`-Check
 - **Severity:** 🔴 Blocker
@@ -336,6 +371,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Reproduzierbarer Crash „setState called after dispose" bei User-Back während laufender Async-Operation.
 - **Empfehlung:** Einheitliches Muster: `if (!mounted) return;` unmittelbar nach jedem `await`, bevor setState/Navigator.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — d8dca36, 1279ac5, c225567, 67bcdbf, 4ca747a — = K4/K5/H1 + S2-FC-001..006
 
 #### [FR-C-004] `edit_plant_screen.dart` ohne `dispose()` für 3 Controller
 - **Severity:** 🟡 Major
@@ -345,6 +381,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Memory-Leak pro Edit-Zyklus.
 - **Empfehlung:** `dispose()` analog `add_plant_screen.dart` implementieren.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — 1279ac5 — Stage 3
 
 #### [FR-C-005] `hardware.dart::energyConsumption` nutzt `wattage!` auf nullable Feld
 - **Severity:** 🟡 Major
@@ -354,6 +391,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Crash bei Hardware-Datensatz ohne Wattage (aus alten DBs durchaus möglich).
 - **Empfehlung:** `wattage ?? 0` oder Guard `if (wattage == null) return 0`.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — (vorhanden) — Spot-Check 2026-05-05: null-Guards (Z.432/442) vor !-Zugriffen
 
 #### [FR-C-006] `edit_plant_screen.dart::_loadData` unsichere `as`-Casts auf `Future.wait`-Ergebnis
 - **Severity:** 🟡 Major
@@ -363,6 +401,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** `CastError` bei Refactor der `Future.wait`-Parameterliste.
 - **Empfehlung:** Destructuring mit benannten Futures oder `final [rooms, grows, systems] = res;` mit explizit getypten Rückgaben.
 - **Sicherheit:** Mittel
+- **Status:** ✅ DONE — db4d97e — P6 Fix
 
 #### [FR-C-007] `harvest.dart::weightLossPercentage` liefert 0.0 bei ungültigen Daten
 - **Severity:** 🟡 Major
@@ -372,6 +411,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** User glaubt, Gewichtsverlust sei 0 %, dabei ist die Eingabe kaputt.
 - **Empfehlung:** `return null;` und in der UI als „Daten inkonsistent" rendern.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — db4d97e — P6 Fix
 
 #### [FR-C-008] `NutrientCalculationConfig` mit unsicheren Obergrenzen
 - **Severity:** 🟡 Major
@@ -381,6 +421,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** UI warnt nicht vor tatsächlich gefährlicher Konzentration; Warnungen bei unkritischen Vorgängen.
 - **Empfehlung:** Werte gegen Dünger-Datenblätter justieren (`maximumSafe = 6000`, `minimumPractical = 0.5`). Quellenkommentar im Code.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [FR-C-009] `safe_parsers.dart::parseEnum` fällt silent auf Fallback zurück
 - **Severity:** 🟡 Major
@@ -390,6 +431,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Migrations-Typos bleiben unbemerkt, stillschweigende Datenveränderung.
 - **Empfehlung:** `AppLogger.warning` mit Klassenname + Roh-Input im Fallback-Pfad; Debug-Asserts in Dev-Mode.
 - **Sicherheit:** Hoch
+- **Status:** 🟠 TEILWEISE — (= M2) — dokumentiert als bewusst trivial
 
 #### [FR-C-010] `dashboard_screen.dart::_loadData`: Future.wait ohne Per-Future-Error-Handling
 - **Severity:** 🟡 Major
@@ -399,6 +441,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** User sieht stumme leere Startseite bei teilweisem Fehler.
 - **Empfehlung:** `Future.wait(..., eagerError: false)` plus Per-Ergebnis-Null-Check und UI-Teilfehler-Meldung.
 - **Sicherheit:** Mittel
+- **Status:** ✅ DONE — db4d97e, 154246d (= H8) — safeCount + per-future failure isolation
 
 #### [FR-C-011] `splash_screen.dart` 10-min-Timeout ohne Retry-UI
 - **Severity:** 🟡 Major
@@ -408,6 +451,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Stuck-State auf großen DBs, unfreundlich.
 - **Empfehlung:** Retry-Button + Link zu Manual-Recovery-Screen. Timeout konfigurierbar machen.
 - **Sicherheit:** Hoch
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [FR-C-012] `app_logger.dart` loggt rohe `data`-Objekte (PII-Risiko)
 - **Severity:** 🟡 Major
@@ -417,6 +461,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Sensible Daten (Pflanzennamen, Strain-Infos, Notizen) landen in Logs.
 - **Empfehlung:** Opt-in-PII-Masking, oder bei sensitiven Feldern Hash/Placeholder.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — f999140 — PII truncation
 
 #### [FR-C-013] `fertilizer.dart::npkRatio` nutzt `minValue` potenziell als 0
 - **Severity:** 🟡 Major
@@ -426,6 +471,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Division durch 0, Exception bei Ratio-Berechnung.
 - **Empfehlung:** `minValue = max(minValue, 1.0)` nach der Ermittlung, bevor dividiert wird.
 - **Sicherheit:** Mittel
+- **Status:** ✅ DONE — (vorhanden) — Spot-Check 2026-05-05: where(>0) + ?? 1 Fallback + 0:0:0-Guard
 
 #### [FR-C-014] `settings_screen.dart::_importData` ohne ZIP-Preflight-Validation
 - **Severity:** 🟡 Major
@@ -435,6 +481,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Beschädigte/falsche ZIP kann den Service halbwegs durchlaufen und DB in inkonsistenten Zustand bringen.
 - **Empfehlung:** Vor Import: ZIP-Magic-Bytes + Manifest-Datei prüfen, MinGröße, max. Entries.
 - **Sicherheit:** Hoch
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [FR-C-015] Großer Settings-Reset erstellt Backup, aber zeigt Pfad nicht prominent
 - **Severity:** 🟡 Major
@@ -444,6 +491,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Recovery erschwert, unnötiger Support.
 - **Empfehlung:** Nach Export/Reset Dialog mit absolutem Pfad, Copy-Button, „In Datei-Manager öffnen"-Button wenn möglich.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — f999140 — backup path dialog
 
 #### [FR-C-016] `enums.dart`: Enum-Deserialisierung ohne Forward-Compat-Marker
 - **Severity:** 🟢 Minor
@@ -453,6 +501,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Stille Fehlinterpretation nach Downgrade/Mixed-Version-Szenarien.
 - **Empfehlung:** Pro kritisches Enum einen `unknown` hinzufügen; Deserialization mappt unbekannte Strings dorthin und loggt.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [FR-C-017] `plant.dart::containerInfo` — kryptische Fallback-Meldung für fehlende Daten
 - **Severity:** 🟢 Minor
@@ -462,6 +511,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** User weiß nicht, wie er den Zustand reparieren soll.
 - **Empfehlung:** Im zugehörigen Edit-Screen Inline-Migration-Aktion anbieten („Container-Größe ergänzen").
 - **Sicherheit:** Hoch
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [FR-C-018] `app_settings.dart` PPM-Scale-Konstanten mehrfach verstreut
 - **Severity:** 🟢 Minor
@@ -471,6 +521,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Drift zwischen Anzeige und Berechnung möglich.
 - **Empfehlung:** Zentrale `ppm_scale_config.dart`.
 - **Sicherheit:** Hoch
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [FR-C-019] `UnitConverter.ppmToEc` ohne Division-Guard
 - **Severity:** 🟡 Major
@@ -480,6 +531,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Exception in Kernberechnung.
 - **Empfehlung:** Guard am Start der Konvertierung.
 - **Sicherheit:** Mittel
+- **Status:** ✅ DONE — (vorhanden) — Spot-Check 2026-05-05: conversionFactor ist Konstante (500/700/640)
 
 ### 1.5 Findings — Cross-Cutting
 
@@ -491,6 +543,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Settings-Änderungen können beim App-Suspend verlorengehen ohne Hinweis.
 - **Empfehlung:** `await` mit Timeout + Fallback auf einen zweiten Versuch im `inactive`-State; zusätzlich eager-Save bei jeder Setting-Änderung.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — 94d1fa3 — Stage 1 Fix
 
 #### [FR-X-002] `main.dart::_loadSettings` schluckt Exception ohne Log
 - **Severity:** 🟡 Major
@@ -500,6 +553,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Support-Fall „App lädt mit Default-Settings statt meinen Einstellungen" nicht diagnostizierbar.
 - **Empfehlung:** `AppLogger.error('main', 'Settings load failed', e);` ergänzen.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — 94d1fa3 — gemeinsamer Commit mit FR-X-001
 
 #### [FR-X-003] State-Management nicht einheitlich: ChangeNotifier + lokaler `GrowLogApp.of(context)`-Pattern
 - **Severity:** 🟡 Major
@@ -509,6 +563,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Settings-Änderungen reizen keinen Provider-Rebuild; Widgets, die `of(context).settings` lesen, erkennen Änderungen nur, wenn sie selbst rebuild-en. Grund für subtile „Änderung wirkt erst nach Neustart"-Bugs.
 - **Empfehlung:** `AppSettings` in einen eigenen ChangeNotifier-Provider auslagern, analog zu den anderen.
 - **Sicherheit:** Hoch
+- **Status:** 🔴 OFFEN — strukturelles Refactor
 
 #### [FR-X-004] `pubspec.yaml`: `flutter_riverpod` im `dev_dependencies` neben `provider`-Hauptnutzung
 - **Severity:** 🟢 Minor
@@ -518,6 +573,7 @@ _Details zu zurückgezogenen/umpriorisierten Findings in Abschnitt 4 (VC-001 bis
 - **Impact:** Gering — Build-Größe, Verwirrung bei neuen Contributors.
 - **Empfehlung:** Prüfen, ob noch benötigt; andernfalls entfernen.
 - **Sicherheit:** Hoch
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 ### 1.6 Architektur-Einschätzung Harren
 
@@ -604,6 +660,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Zwei parallele, nicht verriegelte Recovery-Pfade.
 - **Umgebung:** Code-Tracing (kein Live-Run). Verweis: Harren FR-A-001.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — siehe FR-A-001
 
 #### [QA-002] `DatabaseRecovery` garantiert Emergency-Backup nicht
 - **Severity:** 🔴 Blocker
@@ -618,6 +675,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Kein Enum/Result-Typ für Recovery-State, nur String-Matches.
 - **Umgebung:** Code-Tracing. Ergänzend zu Harren FR-A-007 (hart-codierter Android-Pfad).
 - **Sicherheit:** Mittel
+- **Status:** 🟠 TEILWEISE — 7ff7d1b, df9d552 — Pfad gefixt; Result-Typ statt String-Match offen
 
 #### [QA-003] Plant-Delete hinterlässt verwaiste Foto-Dateien
 - **Severity:** 🟡 Major
@@ -630,6 +688,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Keine Datei-Entsorgung.
 - **Umgebung:** Code-Tracing.
 - **Sicherheit:** Mittel
+- **Status:** ✅ DONE — 67bcdbf (= K2) — Two-Phase-Delete
 
 #### [QA-004] Log-Speicherung verliert Datei zwischen Auswahl und Commit
 - **Severity:** 🟡 Major
@@ -644,6 +703,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Transaction bricht ab, User-Eingabe (pH/EC/Note) geht verloren. Ergänzend zu Harren FR-B-014 (TOCTOU).
 - **Umgebung:** Code-Tracing.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [QA-005] Dünger-Mengen ohne Unit-Konsistenz zwischen Log- und RDWC-Screens
 - **Severity:** 🟡 Major
@@ -657,6 +717,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Kein Unit-Feld im Log-Dünger-Eintrag sichtbar.
 - **Umgebung:** Code-Tracing. Ggf. widerlegbar durch genauere Prüfung des `log_fertilizer`-Models.
 - **Sicherheit:** Niedrig (braucht Verifikation am Schema)
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [QA-006] Harvest-Phasenübergänge ohne State-Machine, `mounted`-Check fehlt in Curing/Quality
 - **Severity:** 🟡 Major
@@ -670,6 +731,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Inkonsistent.
 - **Umgebung:** Code-Tracing.
 - **Sicherheit:** Mittel
+- **Status:** ✅ DONE — 4ca747a (= H1) — im H1-Sweep enthalten
 
 #### [QA-007] Harvest-Phase wird aus Datumsfeldern abgeleitet, Edit erlaubt inkonsistente Kombinationen
 - **Severity:** 🟡 Major
@@ -683,6 +745,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Kein zentraler Check in Model oder Service.
 - **Umgebung:** Code-Tracing.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [QA-008] RDWC-Addback-Form: Auto-Berechnung `levelAfter` nicht belegbar, keine Validation gegen Input
 - **Severity:** 🟡 Major
@@ -695,6 +758,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Erwartet:** Inkonsistente Eingaben werden UI-seitig abgelehnt oder sichtbar markiert.
 - **Beobachtet (im Code):** Keine Unit-Tests zu RDWC-Addback-Logik.
 - **Umgebung:** Code-Tracing. **Sicherheit: Niedrig** — endgültige Bestätigung erfordert volles Lesen der Addback-Form-State-Klasse.
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [QA-009] `rdwc_analytics_screen` Future.wait ohne Fehler-Isolation
 - **Severity:** 🟡 Major
@@ -707,6 +771,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Keine Isolation.
 - **Umgebung:** Code-Tracing. Ergänzt Harren FR-C-010 für den Analytics-Screen.
 - **Sicherheit:** Mittel
+- **Status:** 🟠 TEILWEISE — 154246d (= H8) — Dashboard adressiert; Analytics-Screen unklar
 
 #### [QA-010] Backup-Storage-Check zu grob (minimale Größe statt realer Foto-Summe)
 - **Severity:** 🟡 Major
@@ -720,6 +785,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Kein Reverse-Rollback der Temp-Dateien bei Abbruch.
 - **Umgebung:** Code-Tracing.
 - **Sicherheit:** Mittel
+- **Status:** ✅ DONE — f999140 — storage check warning
 
 #### [QA-011] Restore: Foto-Pfade werden nicht auf neue App-Basis rebased
 - **Severity:** 🟡 Major *(nach VC-003-KON herabgestuft von Blocker — kein DB-Datenverlust, nur UI-Ladefehler)*
@@ -732,6 +798,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Erwartet:** Importer übersetzt jeden absoluten Pfad auf das neue `getApplicationDocumentsDirectory()`-Root.
 - **Beobachtet (im Code):** Kein Rebase-Schritt im Import-Pfad gefunden.
 - **Umgebung:** Code-Tracing. **Sicherheit: Mittel** — bestätigbar durch gezielten Re-Read von `BackupService.importData` + `PhotoRepository`.
+- **Status:** ✅ DONE — f999140, 275f237 (= K8) — photo path rebase + per-id
 
 #### [QA-012] `DatabaseRebuildService` führt Re-Insert ohne FK-/Constraint-Vorabprüfung aus
 - **Severity:** 🔴 Blocker
@@ -746,6 +813,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Kein Preflight sichtbar.
 - **Umgebung:** Code-Tracing.
 - **Sicherheit:** Mittel
+- **Status:** ✅ DONE — 5907a30 — FK violation preflight scan
 
 #### [QA-013] `NotificationService` ohne User-seitige Timezone-Override
 - **Severity:** 🟢 Minor
@@ -759,6 +827,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Stille Fallback-Nutzung.
 - **Umgebung:** Code-Tracing.
 - **Sicherheit:** Hoch
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 #### [QA-014] Notification-Permission wird nicht bei App-Resume neu erhoben
 - **Severity:** 🟢 Minor
@@ -772,6 +841,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Kein Lifecycle-Hook.
 - **Umgebung:** Code-Tracing.
 - **Sicherheit:** Hoch
+- **Status:** ✅ DONE — 8dd2f44, 810e930 (= H14) — re-check on resume + catchError
 
 #### [QA-015] DBF-Import: Duplicate-Konflikt wird gesammelt, aber nicht explizit aufgelöst
 - **Severity:** 🟡 Major
@@ -785,6 +855,7 @@ Alle QA-Findings in diesem Abschnitt sind **Code-basiertes Tracing**. Sicherheit
 - **Beobachtet (im Code):** Gesammelte Liste, aber keine sichtbare UI-Resolution.
 - **Umgebung:** Code-Tracing.
 - **Sicherheit:** Mittel
+- **Status:** 🔴 OFFEN — nicht adressiert
 
 ### 2.5 QA-Zusammenfassung
 
@@ -909,6 +980,7 @@ Tuvok hat alle Blocker-Findings (8 FR + 3 QA = 11 Blocker) stichprobenartig gege
 - **Befund:** Das Finding ist **faktisch falsch**. Verifikation per `grep -n "dispose|TextEditingController" lib/screens/edit_log_screen.dart` zeigt:
   - 10 `TextEditingController`-Felder (Zeilen 48-57)
   - `void dispose() { … super.dispose(); }` in Zeilen 128-139, die alle 10 Controller korrekt freigeben
+- **Status:** ✅ DONE — (Findings-File) — FR-C-001 als zurückgezogen markiert
 
   Der Subagent hat entweder halluziniert oder eine andere Datei (`add_log_screen.dart`?) verwechselt. Harren hat den Subagent-Output nicht gegen den Code verifiziert.
 - **Korrekturvorschlag:** Finding `FR-C-001` aus Abschnitt 1.4 entfernen. Blocker-Gesamtzahl FR sinkt von 8 → 7. Die Bemerkung zu Memory-Leaks in Abschnitt 1.6 („edit_log_screen.dart … Controller ohne Cleanup") ist entsprechend anzupassen.
@@ -923,6 +995,7 @@ Tuvok hat alle Blocker-Findings (8 FR + 3 QA = 11 Blocker) stichprobenartig gege
 - **Befund:** Der Befund ist im Kern korrekt, aber unvollständig. Verifikation zeigt, dass `database_recovery.dart` **zwei** `PRAGMA integrity_check`-Aufrufe enthält:
   - Zeile 22: `await db.rawQuery('PRAGMA integrity_check');` — korrekt
   - Zeile 40: `await db.execute('PRAGMA integrity_check');` — falsch (Result wird verworfen)
+- **Status:** ✅ DONE — (Findings-File) — FR-A-006 in Abschnitt 4.4 präzisiert
 
   Die Aussage „Repair meldet daher immer Erfolg" gilt nur für den attemptRepair-Pfad (Zeile 40). Die Inkonsistenz zwischen den beiden Stellen ist wichtig für das Fix.
 - **Korrekturvorschlag:** Finding um den Hinweis ergänzen, dass Zeile 22 die korrekte API nutzt und als Referenz dient. Blocker-Status bleibt bestehen.
@@ -936,7 +1009,7 @@ Tuvok hat alle Blocker-Findings (8 FR + 3 QA = 11 Blocker) stichprobenartig gege
 - **Spezialist:** Tal Celes (via Subagent)
 - **Befund:** Als Blocker eingestuft. Der Befund beschreibt kein Datenverlust-Szenario in der Datenbank: Die Fotos existieren weiterhin auf dem ursprünglichen Gerät, und auch in der restorebaren ZIP. Auf dem neuen Gerät zeigt die Galerie Platzhalter statt Bilder. Das ist Major (Feature funktioniert nicht wie versprochen), nicht Blocker (DB-Datenverlust / Crash im Kernflow).
 - **Korrekturvorschlag:** Severity von 🔴 Blocker auf 🟡 Major setzen. QA-Blocker sinken von 3 → 2.
-- **Status:** offen
+- **Status:** ✅ DONE — (Findings-File) — QA-011 von Blocker auf Major herabgestuft
 - **Korrektur-Zyklen:** 0/2
 
 #### VC-004-VOL — Subagent-Nutzung ohne durchgehende Verifikation
@@ -946,7 +1019,7 @@ Tuvok hat alle Blocker-Findings (8 FR + 3 QA = 11 Blocker) stichprobenartig gege
 - **Spezialist:** Beide
 - **Befund:** Harren und Celes haben für die Tiefen-Reviews Explore-Subagents genutzt (jeweils 3 bzw. 1). Das ist eine legitime Methode für große Codebases, aber: Der Subagent-Output wurde nicht systematisch gegen den Code verifiziert, bevor Findings in die Datei geschrieben wurden. VC-001-KOR belegt, dass mindestens ein Subagent-Befund halluziniert wurde. Die Wahrscheinlichkeit weiterer Halluzinationen in den verbleibenden Findings ist nicht null, insbesondere bei Zeilen-spezifischen Behauptungen.
 - **Korrekturvorschlag:** Vor Fix-Sprint: alle verbliebenen Blocker (nach VC-001/003: 7 FR-Blocker + 2 QA-Blocker = 9) direkt gegen den Code verifizieren. Zusätzlich Stichprobe von 5 zufälligen 🟡 Major-Findings. Ergebnisse in diesem QS-Abschnitt ergänzen.
-- **Status:** offen
+- **Status:** ✅ DONE — 3221d53 — Stage-2-Review hat Blocker direkt verifiziert
 - **Korrektur-Zyklen:** 0/2
 
 #### VC-005-VOL — Schema-Version der Test-DB unverifiziert angegeben
@@ -956,7 +1029,7 @@ Tuvok hat alle Blocker-Findings (8 FR + 3 QA = 11 Blocker) stichprobenartig gege
 - **Spezialist:** Celes
 - **Befund:** Tabelle sagt „Laut SUMMARY v10, aktuell v14". Der aktuelle Wert in der Datei wurde nicht direkt zitiert, sondern aus Kontext abgeleitet. Da die Diskrepanz zur Produktion (v43) ein zentrales QA-Argument ist, sollte die Zahl belegbar sein.
 - **Korrekturvorschlag:** Direkte `grep`-Zeile aus `test_database_helper.dart` zitieren (z.B. `currentVersion = <N>`) oder den Punkt als „unverifiziert" kennzeichnen. Die Kernaussage (Tests decken v43 nicht) bleibt unabhängig davon gültig.
-- **Status:** offen
+- **Status:** ✅ DONE — 1a48391 — test DB auf v41 aligned
 - **Korrektur-Zyklen:** 0/2
 
 ### 4.4 Verifizierte Blocker (OK)
@@ -1009,6 +1082,7 @@ Danach Freigabe.
 ---
 
 #### VC-006-KOR — `remaining.every(...)` gibt `true` bei leerem Iterator
+- **Status:** ✅ DONE — ea94706 — D-001 Auto-Archive Guard
 
 - **Schweregrad:** 🟡 Major
 - **Kategorie:** Korrektheit
@@ -1022,6 +1096,7 @@ Danach Freigabe.
 ---
 
 #### VC-007-VOL — Kein Provider-Refresh nach Auto-Archive
+- **Status:** ✅ DONE — c225567 — mounted-Guards + provider refresh (bereits markiert)
 
 - **Schweregrad:** 🟢 Minor
 - **Kategorie:** Vollständigkeit
@@ -1112,6 +1187,7 @@ Der bang-Operator `p.id!` ist unbedenklich — alle aus der DB geladenen Plants 
 ---
 
 #### [S2-FC-001] `manual_recovery_screen.dart` — setState nach await ohne mounted in `_loadAvailableBackups`
+- **Status:** ✅ DONE — d8dca36 — Stage 2
 
 - **Severity:** 🔴 Blocker
 - **Kategorie:** Async / State-Lifecycle
@@ -1144,6 +1220,7 @@ Der bang-Operator `p.id!` ist unbedenklich — alle aus der DB geladenen Plants 
 ---
 
 #### [S2-FC-002] `plant_photo_gallery_screen.dart` — setState nach await ohne mounted in `_loadMorePhotos`
+- **Status:** ✅ DONE — d8dca36 — Stage 2
 
 - **Severity:** 🔴 Blocker
 - **Kategorie:** Async / State-Lifecycle
@@ -1176,6 +1253,7 @@ Der bang-Operator `p.id!` ist unbedenklich — alle aus der DB geladenen Plants 
 ---
 
 #### [S2-FC-003] `harvest_detail_screen.dart` — _loadHarvest ohne mounted als erste Zeile, aufgerufen nach await Navigator.push
+- **Status:** ✅ DONE — 1279ac5 — Stage 3
 
 - **Severity:** 🟡 Major
 - **Kategorie:** Async / State-Lifecycle
@@ -1208,6 +1286,7 @@ Der bang-Operator `p.id!` ist unbedenklich — alle aus der DB geladenen Plants 
 ---
 
 #### [S2-FC-004] `fertilizer_dbf_import_screen.dart` — setState im catch-Handler nach await ohne mounted
+- **Status:** ✅ DONE — 1279ac5 — Stage 3
 
 - **Severity:** 🟡 Major
 - **Kategorie:** Async / State-Lifecycle
@@ -1241,6 +1320,7 @@ Der bang-Operator `p.id!` ist unbedenklich — alle aus der DB geladenen Plants 
 ---
 
 #### [S2-FC-005] `splash_screen.dart` — mehrere setState nach await ohne mounted in `_initApp`
+- **Status:** ✅ DONE — 1279ac5 — Stage 3
 
 - **Severity:** 🟡 Major
 - **Kategorie:** Async / State-Lifecycle
@@ -1253,6 +1333,7 @@ Der bang-Operator `p.id!` ist unbedenklich — alle aus der DB geladenen Plants 
 ---
 
 #### [S2-FC-006] DatePicker-Pattern — 10 Screens (Minor)
+- **Status:** ✅ DONE — c225567 — mounted guards added
 
 - **Severity:** 🟢 Minor
 - **Kategorie:** Async / State-Lifecycle
