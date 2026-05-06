@@ -100,7 +100,10 @@ class PlantChartsView extends StatelessWidget {
         .toList();
 
     if (withEc.isEmpty) {
-      return _emptyCard(t['chart_ec_reservoir_title'], t['chart_no_ec_reservoir']);
+      return _emptyCard(
+        t['chart_ec_reservoir_title'],
+        t['chart_no_ec_reservoir'],
+      );
     }
 
     final beforeSpots = withEc
@@ -120,7 +123,8 @@ class PlantChartsView extends StatelessWidget {
     final maxY = allY.reduce(max) + 0.3;
 
     final bars = <LineChartBarData>[
-      if (afterSpots.isNotEmpty) _lineBar(afterSpots, DT.secondary, dashed: false),
+      if (afterSpots.isNotEmpty)
+        _lineBar(afterSpots, DT.secondary, dashed: false),
       if (beforeSpots.isNotEmpty)
         _lineBar(beforeSpots, DT.warning, dashed: true),
     ];
@@ -147,7 +151,10 @@ class PlantChartsView extends StatelessWidget {
         .toList();
 
     if (withPh.isEmpty) {
-      return _emptyCard(t['chart_ph_reservoir_title'], t['chart_no_ph_reservoir']);
+      return _emptyCard(
+        t['chart_ph_reservoir_title'],
+        t['chart_no_ph_reservoir'],
+      );
     }
 
     final beforeSpots = withPh
@@ -168,8 +175,7 @@ class PlantChartsView extends StatelessWidget {
 
     final bars = <LineChartBarData>[
       if (afterSpots.isNotEmpty) _lineBar(afterSpots, DT.accent, dashed: false),
-      if (beforeSpots.isNotEmpty)
-        _lineBar(beforeSpots, DT.error, dashed: true),
+      if (beforeSpots.isNotEmpty) _lineBar(beforeSpots, DT.error, dashed: true),
     ];
 
     return _chartCard(
@@ -198,9 +204,11 @@ class PlantChartsView extends StatelessWidget {
 
   Widget _buildPlantLogView() {
     final waterFeedLogs = logs
-        .where((l) =>
-            l.actionType == ActionType.water ||
-            l.actionType == ActionType.feed)
+        .where(
+          (l) =>
+              l.actionType == ActionType.water ||
+              l.actionType == ActionType.feed,
+        )
         .toList();
 
     final phaseChangeDays = logs
@@ -246,8 +254,9 @@ class PlantChartsView extends StatelessWidget {
       return _emptyCard(t['chart_ec_title'], t['chart_no_ec_data']);
     }
 
-    final inSpots =
-        ecInLogs.map((l) => FlSpot(l.dayNumber.toDouble(), l.ecIn!)).toList();
+    final inSpots = ecInLogs
+        .map((l) => FlSpot(l.dayNumber.toDouble(), l.ecIn!))
+        .toList();
     final outSpots = ecOutLogs
         .map((l) => FlSpot(l.dayNumber.toDouble(), l.ecOut!))
         .toList();
@@ -288,8 +297,9 @@ class PlantChartsView extends StatelessWidget {
       return _emptyCard(t['chart_ph_title'], t['chart_no_ph_data']);
     }
 
-    final inSpots =
-        phInLogs.map((l) => FlSpot(l.dayNumber.toDouble(), l.phIn!)).toList();
+    final inSpots = phInLogs
+        .map((l) => FlSpot(l.dayNumber.toDouble(), l.phIn!))
+        .toList();
     final outSpots = phOutLogs
         .map((l) => FlSpot(l.dayNumber.toDouble(), l.phOut!))
         .toList();
@@ -323,8 +333,9 @@ class PlantChartsView extends StatelessWidget {
   // ─── EC Delta Chart ─────────────────────────────────────────────────────────
 
   Widget _buildDeltaChart(List<PlantLog> logs) {
-    final deltaLogs =
-        logs.where((l) => l.ecIn != null && l.ecOut != null).toList();
+    final deltaLogs = logs
+        .where((l) => l.ecIn != null && l.ecOut != null)
+        .toList();
 
     if (deltaLogs.isEmpty) {
       return _emptyCard(t['chart_ec_delta_title'], t['chart_no_runoff_delta']);
@@ -391,7 +402,9 @@ class PlantChartsView extends StatelessWidget {
                       child: Text(
                         'T${deltaLogs[index].dayNumber}',
                         style: const TextStyle(
-                            fontSize: 11, color: DT.textSecondary),
+                          fontSize: 11,
+                          color: DT.textSecondary,
+                        ),
                       ),
                     );
                   },
@@ -404,14 +417,18 @@ class PlantChartsView extends StatelessWidget {
                   getTitlesWidget: (value, meta) => Text(
                     value.toStringAsFixed(1),
                     style: const TextStyle(
-                        fontSize: 11, color: DT.textSecondary),
+                      fontSize: 11,
+                      color: DT.textSecondary,
+                    ),
                   ),
                 ),
               ),
-              topTitles:
-                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles:
-                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
             ),
             extraLinesData: ExtraLinesData(
               horizontalLines: [
@@ -460,44 +477,48 @@ class PlantChartsView extends StatelessWidget {
     final xInterval = max(1.0, ((maxX - minX) / 5).floorToDouble());
 
     final vLines = phaseChangeDays
-        .map((day) => VerticalLine(
-              x: day,
-              color: DT.accent.withValues(alpha: 0.5),
-              strokeWidth: 1.5,
-              dashArray: [4, 4],
-              label: VerticalLineLabel(
-                show: true,
-                alignment: Alignment.topLeft,
-                padding: const EdgeInsets.only(left: 4, bottom: 2),
-                labelResolver: (_) => t['chart_phase_marker'],
-                style: const TextStyle(fontSize: 8, color: DT.accent),
-              ),
-            ))
+        .map(
+          (day) => VerticalLine(
+            x: day,
+            color: DT.accent.withValues(alpha: 0.5),
+            strokeWidth: 1.5,
+            dashArray: [4, 4],
+            label: VerticalLineLabel(
+              show: true,
+              alignment: Alignment.topLeft,
+              padding: const EdgeInsets.only(left: 4, bottom: 2),
+              labelResolver: (_) => t['chart_phase_marker'],
+              style: const TextStyle(fontSize: 8, color: DT.accent),
+            ),
+          ),
+        )
         .toList();
 
     return SizedBox(
       height: 200,
-      child: LineChart(LineChartData(
-        minY: minY,
-        maxY: maxY,
-        lineBarsData: bars,
-        gridData: FlGridData(
-          show: true,
-          getDrawingHorizontalLine: (v) => FlLine(
-            color: DT.border.withValues(alpha: 0.3),
-            strokeWidth: 1,
-            dashArray: [4, 4],
+      child: LineChart(
+        LineChartData(
+          minY: minY,
+          maxY: maxY,
+          lineBarsData: bars,
+          gridData: FlGridData(
+            show: true,
+            getDrawingHorizontalLine: (v) => FlLine(
+              color: DT.border.withValues(alpha: 0.3),
+              strokeWidth: 1,
+              dashArray: [4, 4],
+            ),
+            drawVerticalLine: false,
           ),
-          drawVerticalLine: false,
+          borderData: FlBorderData(show: false),
+          extraLinesData: ExtraLinesData(verticalLines: vLines),
+          titlesData: _titlesData(
+            xInterval: xInterval,
+            xLabel: (v) => 'T${v.toInt()}',
+            decimals: decimals,
+          ),
         ),
-        borderData: FlBorderData(show: false),
-        extraLinesData: ExtraLinesData(verticalLines: vLines),
-        titlesData: _titlesData(
-          xInterval: xInterval,
-          xLabel: (v) => 'T${v.toInt()}',
-          decimals: decimals,
-        ),
-      )),
+      ),
     );
   }
 
@@ -516,26 +537,28 @@ class PlantChartsView extends StatelessWidget {
 
     return SizedBox(
       height: 200,
-      child: LineChart(LineChartData(
-        minY: minY,
-        maxY: maxY,
-        lineBarsData: bars,
-        gridData: FlGridData(
-          show: true,
-          getDrawingHorizontalLine: (v) => FlLine(
-            color: DT.border.withValues(alpha: 0.3),
-            strokeWidth: 1,
-            dashArray: [4, 4],
+      child: LineChart(
+        LineChartData(
+          minY: minY,
+          maxY: maxY,
+          lineBarsData: bars,
+          gridData: FlGridData(
+            show: true,
+            getDrawingHorizontalLine: (v) => FlLine(
+              color: DT.border.withValues(alpha: 0.3),
+              strokeWidth: 1,
+              dashArray: [4, 4],
+            ),
+            drawVerticalLine: false,
           ),
-          drawVerticalLine: false,
+          borderData: FlBorderData(show: false),
+          titlesData: _titlesData(
+            xInterval: xInterval,
+            xLabel: (v) => 'T${v.toInt()}',
+            decimals: decimals,
+          ),
         ),
-        borderData: FlBorderData(show: false),
-        titlesData: _titlesData(
-          xInterval: xInterval,
-          xLabel: (v) => 'T${v.toInt()}',
-          decimals: decimals,
-        ),
-      )),
+      ),
     );
   }
 
@@ -552,9 +575,10 @@ class PlantChartsView extends StatelessWidget {
           interval: xInterval,
           getTitlesWidget: (value, meta) => Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text(xLabel(value),
-                style:
-                    const TextStyle(fontSize: 11, color: DT.textSecondary)),
+            child: Text(
+              xLabel(value),
+              style: const TextStyle(fontSize: 11, color: DT.textSecondary),
+            ),
           ),
         ),
       ),
@@ -568,10 +592,8 @@ class PlantChartsView extends StatelessWidget {
           ),
         ),
       ),
-      topTitles:
-          const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      rightTitles:
-          const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
     );
   }
 
@@ -593,20 +615,25 @@ class PlantChartsView extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(title,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: DT.textPrimary)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: DT.textPrimary,
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Wrap(
                   spacing: 10,
                   children: legend
-                      .map((item) => Text(
-                            item.$1,
-                            style: TextStyle(fontSize: 13, color: item.$2),
-                          ))
+                      .map(
+                        (item) => Text(
+                          item.$1,
+                          style: TextStyle(fontSize: 13, color: item.$2),
+                        ),
+                      )
                       .toList(),
                 ),
               ),
@@ -630,15 +657,19 @@ class PlantChartsView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: DT.textPrimary)),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: DT.textPrimary,
+            ),
+          ),
           const SizedBox(height: 12),
-          Text(message,
-              style:
-                  const TextStyle(fontSize: 13, color: DT.textSecondary)),
+          Text(
+            message,
+            style: const TextStyle(fontSize: 13, color: DT.textSecondary),
+          ),
         ],
       ),
     );

@@ -126,10 +126,7 @@ class ConsumptionChart extends StatelessWidget {
             drawVerticalLine: false,
             horizontalInterval: chartMaxY / 5,
             getDrawingHorizontalLine: (value) {
-              return const FlLine(
-                color: DT.elevated,
-                strokeWidth: 1,
-              );
+              return const FlLine(color: DT.elevated, strokeWidth: 1);
             },
           ),
           borderData: FlBorderData(show: false),

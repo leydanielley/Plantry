@@ -33,13 +33,15 @@ class PlantryFilterChips extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isSelected ? DT.accent : DT.surface,
                 borderRadius: BorderRadius.circular(DT.radiusChip),
-                border: Border.all(
-                  color: isSelected
-                      ? DT.accent
-                      : DT.border,
-                ),
-                boxShadow: isSelected 
-                    ? [BoxShadow(color: DT.accent.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))]
+                border: Border.all(color: isSelected ? DT.accent : DT.border),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: DT.accent.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
                     : null,
               ),
               child: Center(

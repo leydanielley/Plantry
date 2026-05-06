@@ -166,7 +166,10 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget> {
                         AppTranslations(
                           Localizations.localeOf(context).languageCode,
                         ).translate('plant_health'),
-                        style: const TextStyle(fontSize: 14, color: DT.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: DT.textSecondary,
+                        ),
                       ),
                     ],
                   ),

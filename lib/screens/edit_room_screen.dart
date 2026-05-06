@@ -29,7 +29,7 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
   final _formKey = GlobalKey<FormState>();
   final IRoomRepository _roomRepo = getIt<IRoomRepository>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
-  
+
   late TextEditingController _nameController;
   late TextEditingController _descController;
   late TextEditingController _widthController;
@@ -48,11 +48,21 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.room.name);
-    _descController = TextEditingController(text: widget.room.description ?? '');
-    _widthController = TextEditingController(text: (widget.room.width * 100).toInt().toString());
-    _depthController = TextEditingController(text: (widget.room.depth * 100).toInt().toString());
-    _heightController = TextEditingController(text: (widget.room.height * 100).toInt().toString());
-    _wattsController = TextEditingController(text: widget.room.lightWatts?.toString() ?? '');
+    _descController = TextEditingController(
+      text: widget.room.description ?? '',
+    );
+    _widthController = TextEditingController(
+      text: (widget.room.width * 100).toInt().toString(),
+    );
+    _depthController = TextEditingController(
+      text: (widget.room.depth * 100).toInt().toString(),
+    );
+    _heightController = TextEditingController(
+      text: (widget.room.height * 100).toInt().toString(),
+    );
+    _wattsController = TextEditingController(
+      text: widget.room.lightWatts?.toString() ?? '',
+    );
     _growType = widget.room.growType;
     _wateringSystem = widget.room.wateringSystem;
     _selectedRdwcId = widget.room.rdwcSystemId;
@@ -92,26 +102,68 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  PlantryFormField(controller: _nameController, label: _t['add_room_name_label'], validator: (v) => v!.isEmpty ? _t['error_field_required'] : null),
+                  PlantryFormField(
+                    controller: _nameController,
+                    label: _t['add_room_name_label'],
+                    validator: (v) =>
+                        v!.isEmpty ? _t['error_field_required'] : null,
+                  ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _descController, label: _t['add_room_description_label'], maxLines: 2),
+                  PlantryFormField(
+                    controller: _descController,
+                    label: _t['add_room_description_label'],
+                    maxLines: 2,
+                  ),
                   const SizedBox(height: 24),
 
                   _section(_t['room_section_setup']),
-                  _dropdown<GrowType>(_t['room_label_environment'], _growType ?? GrowType.indoor, GrowType.values, (v) => setState(() => _growType = v)),
+                  _dropdown<GrowType>(
+                    _t['room_label_environment'],
+                    _growType ?? GrowType.indoor,
+                    GrowType.values,
+                    (v) => setState(() => _growType = v),
+                  ),
                   const SizedBox(height: 16),
-                  _dropdown<WateringSystem>(_t['room_label_watering'], _wateringSystem ?? WateringSystem.manual, WateringSystem.values, (v) => setState(() => _wateringSystem = v)),
+                  _dropdown<WateringSystem>(
+                    _t['room_label_watering'],
+                    _wateringSystem ?? WateringSystem.manual,
+                    WateringSystem.values,
+                    (v) => setState(() => _wateringSystem = v),
+                  ),
                   const SizedBox(height: 16),
-                  if (_wateringSystem == WateringSystem.rdwc) ...[_rdwcDropdown(), const SizedBox(height: 16)],
+                  if (_wateringSystem == WateringSystem.rdwc) ...[
+                    _rdwcDropdown(),
+                    const SizedBox(height: 16),
+                  ],
 
                   _section(_t['room_section_dimensions']),
-                  Row(children: [
-                    Expanded(child: PlantryFormField(controller: _widthController, label: _t['room_label_width'], keyboardType: TextInputType.number)),
-                    const SizedBox(width: 12),
-                    Expanded(child: PlantryFormField(controller: _depthController, label: _t['room_label_depth'], keyboardType: TextInputType.number)),
-                    const SizedBox(width: 12),
-                    Expanded(child: PlantryFormField(controller: _heightController, label: _t['room_label_height'], keyboardType: TextInputType.number)),
-                  ]),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _widthController,
+                          label: _t['room_label_width'],
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _depthController,
+                          label: _t['room_label_depth'],
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _heightController,
+                          label: _t['room_label_height'],
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   PlantryFormField(
                     controller: _wattsController,
@@ -121,7 +173,11 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  PlantryButton(label: _t['save_changes'], onPressed: _save, fullWidth: true),
+                  PlantryButton(
+                    label: _t['save_changes'],
+                    onPressed: _save,
+                    fullWidth: true,
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -129,21 +185,54 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
 
-  Widget _dropdown<T>(String label, T value, List<T> items, ValueChanged<T?> onChanged) {
+  Widget _dropdown<T>(
+    String label,
+    T value,
+    List<T> items,
+    ValueChanged<T?> onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: DT.textSecondary, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: DT.textSecondary, fontSize: 12),
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+          decoration: BoxDecoration(
+            color: DT.elevated,
+            borderRadius: BorderRadius.circular(DT.radiusInput),
+          ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T>(
-              value: value, isExpanded: true, dropdownColor: DT.elevated,
-              items: items.map((i) => DropdownMenuItem(value: i, child: Text(_getLabel(i), style: const TextStyle(color: DT.textPrimary)))).toList(),
+              value: value,
+              isExpanded: true,
+              dropdownColor: DT.elevated,
+              items: items
+                  .map(
+                    (i) => DropdownMenuItem(
+                      value: i,
+                      child: Text(
+                        _getLabel(i),
+                        style: const TextStyle(color: DT.textPrimary),
+                      ),
+                    ),
+                  )
+                  .toList(),
               onChanged: onChanged,
             ),
           ),
@@ -159,16 +248,37 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
   }
 
   Widget _rdwcDropdown() {
-    final validId = _rdwcSystems.any((s) => s.id == _selectedRdwcId) ? _selectedRdwcId : null;
+    final validId = _rdwcSystems.any((s) => s.id == _selectedRdwcId)
+        ? _selectedRdwcId
+        : null;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+      decoration: BoxDecoration(
+        color: DT.elevated,
+        borderRadius: BorderRadius.circular(DT.radiusInput),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int?>(
-          value: validId, isExpanded: true, dropdownColor: DT.elevated,
+          value: validId,
+          isExpanded: true,
+          dropdownColor: DT.elevated,
           items: [
-            DropdownMenuItem(value: null, child: Text(_t['select_system'], style: const TextStyle(color: DT.textPrimary))),
-            ..._rdwcSystems.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, style: const TextStyle(color: DT.textPrimary)))),
+            DropdownMenuItem(
+              value: null,
+              child: Text(
+                _t['select_system'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            ..._rdwcSystems.map(
+              (s) => DropdownMenuItem(
+                value: s.id,
+                child: Text(
+                  s.name,
+                  style: const TextStyle(color: DT.textPrimary),
+                ),
+              ),
+            ),
           ],
           onChanged: (v) => setState(() => _selectedRdwcId = v),
         ),
@@ -181,12 +291,18 @@ class _EditRoomScreenState extends State<EditRoomScreen> {
     setState(() => _isLoading = true);
     try {
       final r = widget.room.copyWith(
-        name: _nameController.text, description: _descController.text,
-        growType: _growType, wateringSystem: _wateringSystem, rdwcSystemId: _selectedRdwcId,
+        name: _nameController.text,
+        description: _descController.text,
+        growType: _growType,
+        wateringSystem: _wateringSystem,
+        rdwcSystemId: _selectedRdwcId,
         width: (SafeParsers.parseUserDouble(_widthController.text) ?? 0) / 100,
         depth: (SafeParsers.parseUserDouble(_depthController.text) ?? 0) / 100,
-        height: (SafeParsers.parseUserDouble(_heightController.text) ?? 0) / 100,
-        lightWatts: _wattsController.text.isEmpty ? null : int.tryParse(_wattsController.text),
+        height:
+            (SafeParsers.parseUserDouble(_heightController.text) ?? 0) / 100,
+        lightWatts: _wattsController.text.isEmpty
+            ? null
+            : int.tryParse(_wattsController.text),
       );
       await _roomRepo.save(r);
       if (!mounted) return;

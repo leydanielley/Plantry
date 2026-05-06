@@ -73,12 +73,14 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
       case 'drying':
         return _harvests.where((h) {
           final harvest = Harvest.fromMap(h);
-          return harvest.dryingStartDate != null && harvest.dryingEndDate == null;
+          return harvest.dryingStartDate != null &&
+              harvest.dryingEndDate == null;
         }).toList();
       case 'curing':
         return _harvests.where((h) {
           final harvest = Harvest.fromMap(h);
-          return harvest.curingStartDate != null && harvest.curingEndDate == null;
+          return harvest.curingStartDate != null &&
+              harvest.curingEndDate == null;
         }).toList();
       case 'completed':
         return _harvests.where((h) {
@@ -93,10 +95,10 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
   @override
   Widget build(BuildContext context) {
     final filterLabels = [
-      _t['all'], 
-      _t['in_drying'], 
-      _t['in_curing'], 
-      _t['completed']
+      _t['all'],
+      _t['in_drying'],
+      _t['in_curing'],
+      _t['completed'],
     ];
 
     return PlantryScaffold(
@@ -114,7 +116,9 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
           const SizedBox(height: 16),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: DT.accent))
+                ? const Center(
+                    child: CircularProgressIndicator(color: DT.accent),
+                  )
                 : _filteredHarvests.isEmpty
                 ? _buildEmptyState()
                 : _buildHarvestList(),
@@ -133,11 +137,17 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
           const SizedBox(height: 24),
           Text(
             _filter == 'all' ? _t['no_harvests_yet'] : _t['no_harvests_found'],
-            style: const TextStyle(fontSize: 20, color: DT.textPrimary, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 20,
+              color: DT.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            _filter == 'all' ? _t['record_first_harvest'] : _t['no_harvests_filter'],
+            _filter == 'all'
+                ? _t['record_first_harvest']
+                : _t['no_harvests_filter'],
             style: const TextStyle(fontSize: 16, color: DT.textSecondary),
           ),
         ],
@@ -161,19 +171,28 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
             padding: const EdgeInsets.only(bottom: 12),
             child: PlantryListTile(
               leading: Container(
-                width: 48, height: 48,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: _getStatusColor(harvest).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.grass_rounded, color: _getStatusColor(harvest), size: 28),
+                child: Icon(
+                  Icons.grass_rounded,
+                  color: _getStatusColor(harvest),
+                  size: 28,
+                ),
               ),
               title: harvestData['plant_name'] as String,
-              subtitle: '${harvestData['plant_strain'] ?? "Unbekannt"}\n${DateFormat('dd.MM.yyyy').format(harvest.harvestDate)}${harvest.dryWeight != null ? ' • ${harvest.dryWeight!.toStringAsFixed(1)}g' : ''}',
+              subtitle:
+                  '${harvestData['plant_strain'] ?? "Unbekannt"}\n${DateFormat('dd.MM.yyyy').format(harvest.harvestDate)}${harvest.dryWeight != null ? ' • ${harvest.dryWeight!.toStringAsFixed(1)}g' : ''}',
               onTap: () async {
                 await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HarvestDetailScreen(harvestId: harvest.id!)),
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        HarvestDetailScreen(harvestId: harvest.id!),
+                  ),
                 );
                 _loadHarvests();
               },

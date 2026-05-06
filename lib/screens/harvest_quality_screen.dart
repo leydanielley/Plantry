@@ -23,7 +23,9 @@ class HarvestQualityScreen extends StatefulWidget {
 
 class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
-  final AppTranslations _t = AppTranslations('de'); // Initialize with default language
+  final AppTranslations _t = AppTranslations(
+    'de',
+  ); // Initialize with default language
   Harvest? _harvest;
   bool _isLoading = true;
 
@@ -167,7 +169,10 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 14, color: DT.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: DT.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -203,11 +208,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
             ],
 
             if (_harvest!.cbdPercentage != null) ...[
-              _buildCannabinoidBar(
-                'CBD',
-                _harvest!.cbdPercentage!,
-                DT.success,
-              ),
+              _buildCannabinoidBar('CBD', _harvest!.cbdPercentage!, DT.success),
               const SizedBox(height: 16),
             ],
 

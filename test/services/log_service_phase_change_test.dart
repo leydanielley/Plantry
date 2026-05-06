@@ -147,13 +147,15 @@ void main() {
   group('Fix #1: Phase Change Date Tracking', () {
     test('SEEDLING → VEG: Sets vegDate when transitioning to veg', () async {
       // Arrange: Create plant in seedling phase
-      final plant = await plantRepo.save(Plant(
-        name: 'Test Plant',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.seedling,
-        seedDate: DateTime(2025, 1, 1),
-      ));
+      final plant = await plantRepo.save(
+        Plant(
+          name: 'Test Plant',
+          seedType: SeedType.photo,
+          medium: Medium.erde,
+          phase: PlantPhase.seedling,
+          seedDate: DateTime(2025, 1, 1),
+        ),
+      );
 
       expect(plant.vegDate, isNull, reason: 'vegDate should initially be null');
 
@@ -177,29 +179,46 @@ void main() {
       // Assert: vegDate should now be set
       final updatedPlant = await plantRepo.findById(plant.id!);
       expect(updatedPlant, isNotNull);
-      expect(updatedPlant!.phase, equals(PlantPhase.veg),
-          reason: 'Phase should be updated to veg');
-      expect(updatedPlant.vegDate, equals(DateTime(2025, 1, 15)),
-          reason: 'vegDate should be set to phase change date');
-      expect(updatedPlant.bloomDate, isNull,
-          reason: 'bloomDate should still be null');
-      expect(updatedPlant.harvestDate, isNull,
-          reason: 'harvestDate should still be null');
+      expect(
+        updatedPlant!.phase,
+        equals(PlantPhase.veg),
+        reason: 'Phase should be updated to veg',
+      );
+      expect(
+        updatedPlant.vegDate,
+        equals(DateTime(2025, 1, 15)),
+        reason: 'vegDate should be set to phase change date',
+      );
+      expect(
+        updatedPlant.bloomDate,
+        isNull,
+        reason: 'bloomDate should still be null',
+      );
+      expect(
+        updatedPlant.harvestDate,
+        isNull,
+        reason: 'harvestDate should still be null',
+      );
     });
 
     test('VEG → BLOOM: Sets bloomDate when transitioning to bloom', () async {
       // Arrange: Create plant in veg phase
-      final plant = await plantRepo.save(Plant(
-        name: 'Test Plant',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.veg,
-        seedDate: DateTime(2025, 1, 1),
-        vegDate: DateTime(2025, 1, 15),
-      ));
+      final plant = await plantRepo.save(
+        Plant(
+          name: 'Test Plant',
+          seedType: SeedType.photo,
+          medium: Medium.erde,
+          phase: PlantPhase.veg,
+          seedDate: DateTime(2025, 1, 1),
+          vegDate: DateTime(2025, 1, 15),
+        ),
+      );
 
-      expect(plant.bloomDate, isNull,
-          reason: 'bloomDate should initially be null');
+      expect(
+        plant.bloomDate,
+        isNull,
+        reason: 'bloomDate should initially be null',
+      );
 
       // Act: Create phase change log to BLOOM on 2025-02-01
       final log = PlantLog(
@@ -221,117 +240,157 @@ void main() {
       // Assert: bloomDate should now be set
       final updatedPlant = await plantRepo.findById(plant.id!);
       expect(updatedPlant, isNotNull);
-      expect(updatedPlant!.phase, equals(PlantPhase.bloom),
-          reason: 'Phase should be updated to bloom');
-      expect(updatedPlant.vegDate, equals(DateTime(2025, 1, 15)),
-          reason: 'vegDate should remain unchanged');
-      expect(updatedPlant.bloomDate, equals(DateTime(2025, 2, 1)),
-          reason: 'bloomDate should be set to phase change date');
-      expect(updatedPlant.harvestDate, isNull,
-          reason: 'harvestDate should still be null');
-    });
-
-    test('BLOOM → HARVEST: Sets harvestDate when transitioning to harvest',
-        () async {
-      // Arrange: Create plant in bloom phase
-      final plant = await plantRepo.save(Plant(
-        name: 'Test Plant',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.bloom,
-        seedDate: DateTime(2025, 1, 1),
-        vegDate: DateTime(2025, 1, 15),
-        bloomDate: DateTime(2025, 2, 1),
-      ));
-
-      expect(plant.harvestDate, isNull,
-          reason: 'harvestDate should initially be null');
-
-      // Act: Create phase change log to HARVEST on 2025-04-01
-      final log = PlantLog(
-        plantId: plant.id!,
-        dayNumber: 91,
-        logDate: DateTime(2025, 4, 1),
-        actionType: ActionType.phaseChange,
-        phase: PlantPhase.harvest,
+      expect(
+        updatedPlant!.phase,
+        equals(PlantPhase.bloom),
+        reason: 'Phase should be updated to bloom',
       );
-
-      await logService.saveSingleLog(
-        plant: plant,
-        log: log,
-        fertilizers: {},
-        photoPaths: [],
-        newPhase: PlantPhase.harvest,
+      expect(
+        updatedPlant.vegDate,
+        equals(DateTime(2025, 1, 15)),
+        reason: 'vegDate should remain unchanged',
       );
-
-      // Assert: harvestDate should now be set
-      final updatedPlant = await plantRepo.findById(plant.id!);
-      expect(updatedPlant, isNotNull);
-      expect(updatedPlant!.phase, equals(PlantPhase.harvest),
-          reason: 'Phase should be updated to harvest');
-      expect(updatedPlant.vegDate, equals(DateTime(2025, 1, 15)),
-          reason: 'vegDate should remain unchanged');
-      expect(updatedPlant.bloomDate, equals(DateTime(2025, 2, 1)),
-          reason: 'bloomDate should remain unchanged');
-      expect(updatedPlant.harvestDate, equals(DateTime(2025, 4, 1)),
-          reason: 'harvestDate should be set to phase change date');
+      expect(
+        updatedPlant.bloomDate,
+        equals(DateTime(2025, 2, 1)),
+        reason: 'bloomDate should be set to phase change date',
+      );
+      expect(
+        updatedPlant.harvestDate,
+        isNull,
+        reason: 'harvestDate should still be null',
+      );
     });
 
     test(
-        'Phase change does NOT overwrite existing dates (idempotent behavior)',
-        () async {
-      // Arrange: Create plant with all dates already set
-      final originalVegDate = DateTime(2025, 1, 10);
-      final originalBloomDate = DateTime(2025, 2, 5);
+      'BLOOM → HARVEST: Sets harvestDate when transitioning to harvest',
+      () async {
+        // Arrange: Create plant in bloom phase
+        final plant = await plantRepo.save(
+          Plant(
+            name: 'Test Plant',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            phase: PlantPhase.bloom,
+            seedDate: DateTime(2025, 1, 1),
+            vegDate: DateTime(2025, 1, 15),
+            bloomDate: DateTime(2025, 2, 1),
+          ),
+        );
 
-      final plant = await plantRepo.save(Plant(
-        name: 'Test Plant',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.bloom,
-        seedDate: DateTime(2025, 1, 1),
-        vegDate: originalVegDate,
-        bloomDate: originalBloomDate,
-      ));
+        expect(
+          plant.harvestDate,
+          isNull,
+          reason: 'harvestDate should initially be null',
+        );
 
-      // Act: Create another phase change log to BLOOM (simulating re-entry)
-      final log = PlantLog(
-        plantId: plant.id!,
-        dayNumber: 45,
-        logDate: DateTime(2025, 2, 15),
-        actionType: ActionType.phaseChange,
-        phase: PlantPhase.bloom,
-      );
+        // Act: Create phase change log to HARVEST on 2025-04-01
+        final log = PlantLog(
+          plantId: plant.id!,
+          dayNumber: 91,
+          logDate: DateTime(2025, 4, 1),
+          actionType: ActionType.phaseChange,
+          phase: PlantPhase.harvest,
+        );
 
-      await logService.saveSingleLog(
-        plant: plant,
-        log: log,
-        fertilizers: {},
-        photoPaths: [],
-        newPhase: PlantPhase.bloom,
-      );
+        await logService.saveSingleLog(
+          plant: plant,
+          log: log,
+          fertilizers: {},
+          photoPaths: [],
+          newPhase: PlantPhase.harvest,
+        );
 
-      // Assert: Dates should NOT be overwritten (keep original)
-      final updatedPlant = await plantRepo.findById(plant.id!);
-      expect(updatedPlant, isNotNull);
-      expect(updatedPlant!.vegDate, equals(originalVegDate),
-          reason:
-              'vegDate should NOT be overwritten when already set');
-      expect(updatedPlant.bloomDate, equals(originalBloomDate),
-          reason:
-              'bloomDate should NOT be overwritten when already set');
-    });
+        // Assert: harvestDate should now be set
+        final updatedPlant = await plantRepo.findById(plant.id!);
+        expect(updatedPlant, isNotNull);
+        expect(
+          updatedPlant!.phase,
+          equals(PlantPhase.harvest),
+          reason: 'Phase should be updated to harvest',
+        );
+        expect(
+          updatedPlant.vegDate,
+          equals(DateTime(2025, 1, 15)),
+          reason: 'vegDate should remain unchanged',
+        );
+        expect(
+          updatedPlant.bloomDate,
+          equals(DateTime(2025, 2, 1)),
+          reason: 'bloomDate should remain unchanged',
+        );
+        expect(
+          updatedPlant.harvestDate,
+          equals(DateTime(2025, 4, 1)),
+          reason: 'harvestDate should be set to phase change date',
+        );
+      },
+    );
+
+    test(
+      'Phase change does NOT overwrite existing dates (idempotent behavior)',
+      () async {
+        // Arrange: Create plant with all dates already set
+        final originalVegDate = DateTime(2025, 1, 10);
+        final originalBloomDate = DateTime(2025, 2, 5);
+
+        final plant = await plantRepo.save(
+          Plant(
+            name: 'Test Plant',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            phase: PlantPhase.bloom,
+            seedDate: DateTime(2025, 1, 1),
+            vegDate: originalVegDate,
+            bloomDate: originalBloomDate,
+          ),
+        );
+
+        // Act: Create another phase change log to BLOOM (simulating re-entry)
+        final log = PlantLog(
+          plantId: plant.id!,
+          dayNumber: 45,
+          logDate: DateTime(2025, 2, 15),
+          actionType: ActionType.phaseChange,
+          phase: PlantPhase.bloom,
+        );
+
+        await logService.saveSingleLog(
+          plant: plant,
+          log: log,
+          fertilizers: {},
+          photoPaths: [],
+          newPhase: PlantPhase.bloom,
+        );
+
+        // Assert: Dates should NOT be overwritten (keep original)
+        final updatedPlant = await plantRepo.findById(plant.id!);
+        expect(updatedPlant, isNotNull);
+        expect(
+          updatedPlant!.vegDate,
+          equals(originalVegDate),
+          reason: 'vegDate should NOT be overwritten when already set',
+        );
+        expect(
+          updatedPlant.bloomDate,
+          equals(originalBloomDate),
+          reason: 'bloomDate should NOT be overwritten when already set',
+        );
+      },
+    );
 
     test('Non-phase-change logs do NOT update phase dates', () async {
       // Arrange: Create plant in veg phase
-      final plant = await plantRepo.save(Plant(
-        name: 'Test Plant',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.veg,
-        seedDate: DateTime(2025, 1, 1),
-        vegDate: DateTime(2025, 1, 15),
-      ));
+      final plant = await plantRepo.save(
+        Plant(
+          name: 'Test Plant',
+          seedType: SeedType.photo,
+          medium: Medium.erde,
+          phase: PlantPhase.veg,
+          seedDate: DateTime(2025, 1, 1),
+          vegDate: DateTime(2025, 1, 15),
+        ),
+      );
 
       // Act: Create regular WATER log (not phase change)
       final log = PlantLog(
@@ -353,31 +412,41 @@ void main() {
       // Assert: Phase dates should remain unchanged
       final updatedPlant = await plantRepo.findById(plant.id!);
       expect(updatedPlant, isNotNull);
-      expect(updatedPlant!.vegDate, equals(DateTime(2025, 1, 15)),
-          reason: 'vegDate should not change on non-phase-change logs');
-      expect(updatedPlant.bloomDate, isNull,
-          reason: 'bloomDate should remain null');
+      expect(
+        updatedPlant!.vegDate,
+        equals(DateTime(2025, 1, 15)),
+        reason: 'vegDate should not change on non-phase-change logs',
+      );
+      expect(
+        updatedPlant.bloomDate,
+        isNull,
+        reason: 'bloomDate should remain null',
+      );
     });
 
     test('Bulk phase change updates multiple plants correctly', () async {
       // Arrange: Create multiple plants in veg phase
-      final plant1 = await plantRepo.save(Plant(
-        name: 'Plant 1',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.veg,
-        seedDate: DateTime(2025, 1, 1),
-        vegDate: DateTime(2025, 1, 15),
-      ));
+      final plant1 = await plantRepo.save(
+        Plant(
+          name: 'Plant 1',
+          seedType: SeedType.photo,
+          medium: Medium.erde,
+          phase: PlantPhase.veg,
+          seedDate: DateTime(2025, 1, 1),
+          vegDate: DateTime(2025, 1, 15),
+        ),
+      );
 
-      final plant2 = await plantRepo.save(Plant(
-        name: 'Plant 2',
-        seedType: SeedType.photo,
-        medium: Medium.erde,
-        phase: PlantPhase.veg,
-        seedDate: DateTime(2025, 1, 1),
-        vegDate: DateTime(2025, 1, 15),
-      ));
+      final plant2 = await plantRepo.save(
+        Plant(
+          name: 'Plant 2',
+          seedType: SeedType.photo,
+          medium: Medium.erde,
+          phase: PlantPhase.veg,
+          seedDate: DateTime(2025, 1, 1),
+          vegDate: DateTime(2025, 1, 15),
+        ),
+      );
 
       // Act: Bulk phase change to BLOOM on 2025-02-01
       await logService.saveBulkLog(
@@ -399,15 +468,27 @@ void main() {
       expect(updated1!.phase, equals(PlantPhase.bloom));
       expect(updated2!.phase, equals(PlantPhase.bloom));
 
-      expect(updated1.bloomDate, equals(DateTime(2025, 2, 1)),
-          reason: 'Plant 1 bloomDate should be set');
-      expect(updated2.bloomDate, equals(DateTime(2025, 2, 1)),
-          reason: 'Plant 2 bloomDate should be set');
+      expect(
+        updated1.bloomDate,
+        equals(DateTime(2025, 2, 1)),
+        reason: 'Plant 1 bloomDate should be set',
+      );
+      expect(
+        updated2.bloomDate,
+        equals(DateTime(2025, 2, 1)),
+        reason: 'Plant 2 bloomDate should be set',
+      );
 
-      expect(updated1.vegDate, equals(DateTime(2025, 1, 15)),
-          reason: 'Plant 1 vegDate should remain unchanged');
-      expect(updated2.vegDate, equals(DateTime(2025, 1, 15)),
-          reason: 'Plant 2 vegDate should remain unchanged');
+      expect(
+        updated1.vegDate,
+        equals(DateTime(2025, 1, 15)),
+        reason: 'Plant 1 vegDate should remain unchanged',
+      );
+      expect(
+        updated2.vegDate,
+        equals(DateTime(2025, 1, 15)),
+        reason: 'Plant 2 vegDate should remain unchanged',
+      );
     });
   });
 }

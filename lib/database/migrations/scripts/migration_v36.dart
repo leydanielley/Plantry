@@ -145,7 +145,7 @@ final Migration migrationV36 = Migration(
           AppLogger.error(
             'Migration_v36',
             'FK constraint validation failed: '
-            'expected RESTRICT, got ${plantIdFk['on_delete']}',
+                'expected RESTRICT, got ${plantIdFk['on_delete']}',
           );
           return false;
         }
@@ -257,7 +257,7 @@ final Migration migrationV36 = Migration(
           AppLogger.error(
             'Migration_v36',
             'FK constraint validation failed: '
-            'expected RESTRICT, got ${roomIdFk['on_delete']}',
+                'expected RESTRICT, got ${roomIdFk['on_delete']}',
           );
           return false;
         }
@@ -289,8 +289,12 @@ final Migration migrationV36 = Migration(
     AppLogger.info('Migration_v36', '  ✅ Database integrity check passed');
 
     // Get data counts to confirm no data loss
-    final harvestsCount = await txn.rawQuery('SELECT COUNT(*) as count FROM harvests');
-    final hardwareCount = await txn.rawQuery('SELECT COUNT(*) as count FROM hardware');
+    final harvestsCount = await txn.rawQuery(
+      'SELECT COUNT(*) as count FROM harvests',
+    );
+    final hardwareCount = await txn.rawQuery(
+      'SELECT COUNT(*) as count FROM hardware',
+    );
 
     AppLogger.info(
       'Migration_v36',
@@ -300,8 +304,12 @@ final Migration migrationV36 = Migration(
     );
 
     // Verify FK constraints on both tables
-    final harvestsFkCheck = await txn.rawQuery('PRAGMA foreign_key_check(harvests)');
-    final hardwareFkCheck = await txn.rawQuery('PRAGMA foreign_key_check(hardware)');
+    final harvestsFkCheck = await txn.rawQuery(
+      'PRAGMA foreign_key_check(harvests)',
+    );
+    final hardwareFkCheck = await txn.rawQuery(
+      'PRAGMA foreign_key_check(hardware)',
+    );
 
     if (harvestsFkCheck.isNotEmpty) {
       throw Exception('Foreign key violations in harvests: $harvestsFkCheck');

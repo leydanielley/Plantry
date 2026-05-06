@@ -65,9 +65,7 @@ final Migration migrationV14 = Migration(
       final hasV14Schema = v14Columns.every((col) => columnNames.contains(col));
 
       // Also check photos table schema
-      final photosColumnsCheck = await db.rawQuery(
-        'PRAGMA table_info(photos)',
-      );
+      final photosColumnsCheck = await db.rawQuery('PRAGMA table_info(photos)');
       final photoColumnNamesCheck = photosColumnsCheck
           .map((col) => col['name'] as String)
           .toSet();
@@ -130,7 +128,10 @@ final Migration migrationV14 = Migration(
 
     // If already v14, only ensure archived columns exist and exit
     if (isAlreadyV14) {
-      AppLogger.info('Migration_v14', '📝 Ensuring archived columns and photos schema exist');
+      AppLogger.info(
+        'Migration_v14',
+        '📝 Ensuring archived columns and photos schema exist',
+      );
 
       // Check and add archived columns if missing
       try {
@@ -169,7 +170,9 @@ final Migration migrationV14 = Migration(
 
       // Check if plant_logs need to be migrated from old schema
       final logsCheck = await db.rawQuery('PRAGMA table_info(plant_logs)');
-      final logsColNames = logsCheck.map((col) => col['name'] as String).toSet();
+      final logsColNames = logsCheck
+          .map((col) => col['name'] as String)
+          .toSet();
       final hasWateringMl = logsColNames.contains('watering_ml');
       final hasWaterAmount = logsColNames.contains('water_amount');
 
@@ -252,19 +255,30 @@ final Migration migrationV14 = Migration(
 
         // Re-create indexes
         await db.execute('CREATE INDEX idx_logs_plant ON plant_logs(plant_id)');
-        await db.execute('CREATE INDEX idx_logs_date ON plant_logs(log_date DESC)');
-        await db.execute('CREATE INDEX idx_plant_logs_plant_archived ON plant_logs(plant_id, archived)');
-        await db.execute('CREATE INDEX idx_plant_logs_archived_date ON plant_logs(archived, log_date DESC)');
+        await db.execute(
+          'CREATE INDEX idx_logs_date ON plant_logs(log_date DESC)',
+        );
+        await db.execute(
+          'CREATE INDEX idx_plant_logs_plant_archived ON plant_logs(plant_id, archived)',
+        );
+        await db.execute(
+          'CREATE INDEX idx_plant_logs_archived_date ON plant_logs(archived, log_date DESC)',
+        );
 
         AppLogger.info('Migration_v14', '  ✅ plant_logs migrated (v13 → v14)');
       } else if (hasWaterAmount) {
-        AppLogger.info('Migration_v14', '  ✅ plant_logs already have v14 schema');
+        AppLogger.info(
+          'Migration_v14',
+          '  ✅ plant_logs already have v14 schema',
+        );
       }
 
       // Check if photos need to be migrated from old schema (file_path → image_path)
       final photosCheck = await db.rawQuery('PRAGMA table_info(photos)');
       final hasFilePath = photosCheck.any((col) => col['name'] == 'file_path');
-      final hasImagePath = photosCheck.any((col) => col['name'] == 'image_path');
+      final hasImagePath = photosCheck.any(
+        (col) => col['name'] == 'image_path',
+      );
 
       if (hasFilePath && !hasImagePath) {
         AppLogger.info(
@@ -296,7 +310,10 @@ final Migration migrationV14 = Migration(
         await db.execute('ALTER TABLE photos_new RENAME TO photos');
         await db.execute('CREATE INDEX idx_photos_log ON photos(log_id)');
 
-        AppLogger.info('Migration_v14', '  ✅ Photos migrated (file_path → image_path)');
+        AppLogger.info(
+          'Migration_v14',
+          '  ✅ Photos migrated (file_path → image_path)',
+        );
       } else if (hasImagePath) {
         AppLogger.info('Migration_v14', '  ✅ Photos already have v14 schema');
       }
@@ -457,7 +474,10 @@ final Migration migrationV14 = Migration(
       await db.execute('DROP TABLE photos');
       await db.execute('ALTER TABLE photos_new RENAME TO photos');
 
-      AppLogger.info('Migration_v14', '  ✅ photos: Verified ON DELETE RESTRICT');
+      AppLogger.info(
+        'Migration_v14',
+        '  ✅ photos: Verified ON DELETE RESTRICT',
+      );
     } else if (hasFilePath) {
       // Photos have old v13 schema, migrate file_path → image_path
       AppLogger.info(
@@ -489,7 +509,10 @@ final Migration migrationV14 = Migration(
       await db.execute('DROP TABLE photos');
       await db.execute('ALTER TABLE photos_new RENAME TO photos');
 
-      AppLogger.info('Migration_v14', '  ✅ photos: file_path → image_path, CASCADE → RESTRICT');
+      AppLogger.info(
+        'Migration_v14',
+        '  ✅ photos: file_path → image_path, CASCADE → RESTRICT',
+      );
     } else {
       AppLogger.warning(
         'Migration_v14',

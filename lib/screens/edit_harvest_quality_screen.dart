@@ -219,7 +219,10 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
                 Expanded(
                   child: Text(
                     _t['harvest_section_cannabinoids'],
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -434,7 +437,10 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
                 Expanded(
                   child: Text(
                     _t['rating_section_title'],
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -451,7 +457,10 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
                 children: [
                   Text(
                     _t['overall_rating_title'],
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -485,7 +494,10 @@ class _EditHarvestQualityScreenState extends State<EditHarvestQualityScreen>
                   if (_rating == null)
                     Text(
                       _t['rating_prompt'],
-                      style: const TextStyle(fontSize: 12, color: DT.textTertiary),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: DT.textTertiary,
+                      ),
                     ),
                 ],
               ),

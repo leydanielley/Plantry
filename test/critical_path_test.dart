@@ -182,66 +182,69 @@ void main() {
   });
 
   group('TC-032: Fertilizer Deletion behavior', () {
-    test('delete() removes historical log_fertilizers but preserves the logs themselves', () async {
-      // Aktuelles Verhalten (siehe FertilizerRepository.delete() Doc):
-      // Historische Log-Verknüpfungen werden mitgelöscht, die Logs selbst
-      // bleiben erhalten. Recipes hard-blocken — separat getestet unten.
-      final fertilizer = await fertilizerRepo.save(
-        Fertilizer(name: 'Test Fertilizer', type: 'Base'),
-      );
+    test(
+      'delete() removes historical log_fertilizers but preserves the logs themselves',
+      () async {
+        // Aktuelles Verhalten (siehe FertilizerRepository.delete() Doc):
+        // Historische Log-Verknüpfungen werden mitgelöscht, die Logs selbst
+        // bleiben erhalten. Recipes hard-blocken — separat getestet unten.
+        final fertilizer = await fertilizerRepo.save(
+          Fertilizer(name: 'Test Fertilizer', type: 'Base'),
+        );
 
-      final plant = await plantRepo.save(
-        Plant(
-          name: 'Test',
-          seedType: SeedType.photo,
-          medium: Medium.erde,
-          seedDate: DateTime.now(),
-        ),
-      );
+        final plant = await plantRepo.save(
+          Plant(
+            name: 'Test',
+            seedType: SeedType.photo,
+            medium: Medium.erde,
+            seedDate: DateTime.now(),
+          ),
+        );
 
-      final log = await logRepo.save(
-        PlantLog(
-          plantId: plant.id!,
-          logDate: DateTime.now(),
-          dayNumber: 1,
-          actionType: ActionType.feed,
-        ),
-      );
+        final log = await logRepo.save(
+          PlantLog(
+            plantId: plant.id!,
+            logDate: DateTime.now(),
+            dayNumber: 1,
+            actionType: ActionType.feed,
+          ),
+        );
 
-      await testDb.insert('log_fertilizers', {
-        'log_id': log.id,
-        'fertilizer_id': fertilizer.id,
-        'amount': 5.0,
-        'unit': 'ml',
-      });
+        await testDb.insert('log_fertilizers', {
+          'log_id': log.id,
+          'fertilizer_id': fertilizer.id,
+          'amount': 5.0,
+          'unit': 'ml',
+        });
 
-      final deleted = await fertilizerRepo.delete(fertilizer.id!);
-      expect(deleted, equals(1));
+        final deleted = await fertilizerRepo.delete(fertilizer.id!);
+        expect(deleted, equals(1));
 
-      // Fertilizer ist weg
-      final remainingFert = await testDb.query(
-        'fertilizers',
-        where: 'id = ?',
-        whereArgs: [fertilizer.id],
-      );
-      expect(remainingFert, isEmpty);
+        // Fertilizer ist weg
+        final remainingFert = await testDb.query(
+          'fertilizers',
+          where: 'id = ?',
+          whereArgs: [fertilizer.id],
+        );
+        expect(remainingFert, isEmpty);
 
-      // Junction-Records sind weg (sonst hätte FK RESTRICT geworfen)
-      final remainingJunction = await testDb.query(
-        'log_fertilizers',
-        where: 'fertilizer_id = ?',
-        whereArgs: [fertilizer.id],
-      );
-      expect(remainingJunction, isEmpty);
+        // Junction-Records sind weg (sonst hätte FK RESTRICT geworfen)
+        final remainingJunction = await testDb.query(
+          'log_fertilizers',
+          where: 'fertilizer_id = ?',
+          whereArgs: [fertilizer.id],
+        );
+        expect(remainingJunction, isEmpty);
 
-      // Aber das Log selbst lebt noch
-      final remainingLog = await testDb.query(
-        'plant_logs',
-        where: 'id = ?',
-        whereArgs: [log.id],
-      );
-      expect(remainingLog, isNotEmpty);
-    });
+        // Aber das Log selbst lebt noch
+        final remainingLog = await testDb.query(
+          'plant_logs',
+          where: 'id = ?',
+          whereArgs: [log.id],
+        );
+        expect(remainingLog, isNotEmpty);
+      },
+    );
   });
 
   group('TC-036: Race Condition Protection', () {

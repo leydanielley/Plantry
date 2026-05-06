@@ -126,12 +126,10 @@ class RdwcRecipe {
       description: map['description'] as String?,
       targetEc: (map['target_ec'] as num?)?.toDouble(),
       targetPh: (map['target_ph'] as num?)?.toDouble(),
-      phase: PlantPhase.values
-          .cast<PlantPhase?>()
-          .firstWhere(
-            (p) => p?.name == map['phase'],
-            orElse: () => null,
-          ),
+      phase: PlantPhase.values.cast<PlantPhase?>().firstWhere(
+        (p) => p?.name == map['phase'],
+        orElse: () => null,
+      ),
       createdAt: SafeParsers.parseDateTime(
         map['created_at'] as String?,
         fallback: DateTime.now(),

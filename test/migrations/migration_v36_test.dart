@@ -45,47 +45,65 @@ void main() {
       expect(result.first['integrity_check'], 'ok');
     });
 
-    test('Migration v36 should change harvests FK from CASCADE to RESTRICT', () async {
-      // Verify initial FK constraint is CASCADE
-      final fkBefore = await db.rawQuery('PRAGMA foreign_key_list(harvests)');
-      final plantIdFkBefore = fkBefore.firstWhere(
-        (fk) => fk['from'] == 'plant_id',
-      );
-      expect(plantIdFkBefore['on_delete'], 'CASCADE',
-          reason: 'Initial FK should be CASCADE (testing v35 schema)');
+    test(
+      'Migration v36 should change harvests FK from CASCADE to RESTRICT',
+      () async {
+        // Verify initial FK constraint is CASCADE
+        final fkBefore = await db.rawQuery('PRAGMA foreign_key_list(harvests)');
+        final plantIdFkBefore = fkBefore.firstWhere(
+          (fk) => fk['from'] == 'plant_id',
+        );
+        expect(
+          plantIdFkBefore['on_delete'],
+          'CASCADE',
+          reason: 'Initial FK should be CASCADE (testing v35 schema)',
+        );
 
-      // Run the migration
-      await migrationV36.up(db);
+        // Run the migration
+        await migrationV36.up(db);
 
-      // Verify FK constraint changed to RESTRICT
-      final fkAfter = await db.rawQuery('PRAGMA foreign_key_list(harvests)');
-      final plantIdFkAfter = fkAfter.firstWhere(
-        (fk) => fk['from'] == 'plant_id',
-      );
-      expect(plantIdFkAfter['on_delete'], 'RESTRICT',
-          reason: 'FK should be RESTRICT after migration');
-    });
+        // Verify FK constraint changed to RESTRICT
+        final fkAfter = await db.rawQuery('PRAGMA foreign_key_list(harvests)');
+        final plantIdFkAfter = fkAfter.firstWhere(
+          (fk) => fk['from'] == 'plant_id',
+        );
+        expect(
+          plantIdFkAfter['on_delete'],
+          'RESTRICT',
+          reason: 'FK should be RESTRICT after migration',
+        );
+      },
+    );
 
-    test('Migration v36 should change hardware FK from CASCADE to RESTRICT', () async {
-      // Verify initial FK constraint is CASCADE
-      final fkBefore = await db.rawQuery('PRAGMA foreign_key_list(hardware)');
-      final roomIdFkBefore = fkBefore.firstWhere(
-        (fk) => fk['from'] == 'room_id',
-      );
-      expect(roomIdFkBefore['on_delete'], 'CASCADE',
-          reason: 'Initial FK should be CASCADE (testing v35 schema)');
+    test(
+      'Migration v36 should change hardware FK from CASCADE to RESTRICT',
+      () async {
+        // Verify initial FK constraint is CASCADE
+        final fkBefore = await db.rawQuery('PRAGMA foreign_key_list(hardware)');
+        final roomIdFkBefore = fkBefore.firstWhere(
+          (fk) => fk['from'] == 'room_id',
+        );
+        expect(
+          roomIdFkBefore['on_delete'],
+          'CASCADE',
+          reason: 'Initial FK should be CASCADE (testing v35 schema)',
+        );
 
-      // Run the migration
-      await migrationV36.up(db);
+        // Run the migration
+        await migrationV36.up(db);
 
-      // Verify FK constraint changed to RESTRICT
-      final fkAfter = await db.rawQuery('PRAGMA foreign_key_list(hardware)');
-      final roomIdFkAfter = fkAfter.firstWhere(
-        (fk) => fk['from'] == 'room_id',
-      );
-      expect(roomIdFkAfter['on_delete'], 'RESTRICT',
-          reason: 'FK should be RESTRICT after migration');
-    });
+        // Verify FK constraint changed to RESTRICT
+        final fkAfter = await db.rawQuery('PRAGMA foreign_key_list(hardware)');
+        final roomIdFkAfter = fkAfter.firstWhere(
+          (fk) => fk['from'] == 'room_id',
+        );
+        expect(
+          roomIdFkAfter['on_delete'],
+          'RESTRICT',
+          reason: 'FK should be RESTRICT after migration',
+        );
+      },
+    );
 
     test('Migration v36 should preserve all harvest data', () async {
       // Insert test data before migration
@@ -113,35 +131,47 @@ void main() {
       });
 
       // Get row count before migration
-      final countBefore = await db.rawQuery('SELECT COUNT(*) as count FROM harvests');
+      final countBefore = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM harvests',
+      );
       expect(countBefore.first['count'], 2);
 
       // Run the migration
       await migrationV36.up(db);
 
       // Verify all data preserved
-      final countAfter = await db.rawQuery('SELECT COUNT(*) as count FROM harvests');
-      expect(countAfter.first['count'], 2,
-          reason: 'All harvest records should be preserved');
+      final countAfter = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM harvests',
+      );
+      expect(
+        countAfter.first['count'],
+        2,
+        reason: 'All harvest records should be preserved',
+      );
 
       // Verify specific data integrity
-      final harvest1 = await db.query('harvests', where: 'id = ?', whereArgs: [harvestId1]);
+      final harvest1 = await db.query(
+        'harvests',
+        where: 'id = ?',
+        whereArgs: [harvestId1],
+      );
       expect(harvest1.first['wet_weight'], 100.5);
       expect(harvest1.first['dry_weight'], 20.3);
       expect(harvest1.first['rating'], 4);
       expect(harvest1.first['taste_notes'], 'Fruity');
 
-      final harvest2 = await db.query('harvests', where: 'id = ?', whereArgs: [harvestId2]);
+      final harvest2 = await db.query(
+        'harvests',
+        where: 'id = ?',
+        whereArgs: [harvestId2],
+      );
       expect(harvest2.first['wet_weight'], 85.2);
       expect(harvest2.first['thc_percentage'], 22.5);
     });
 
     test('Migration v36 should preserve all hardware data', () async {
       // Insert test data before migration
-      await db.insert('rooms', {
-        'name': 'Test Room',
-        'grow_type': 'INDOOR',
-      });
+      await db.insert('rooms', {'name': 'Test Room', 'grow_type': 'INDOOR'});
 
       final hardwareId1 = await db.insert('hardware', {
         'room_id': 1,
@@ -160,25 +190,40 @@ void main() {
       });
 
       // Get row count before migration
-      final countBefore = await db.rawQuery('SELECT COUNT(*) as count FROM hardware');
+      final countBefore = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM hardware',
+      );
       expect(countBefore.first['count'], 2);
 
       // Run the migration
       await migrationV36.up(db);
 
       // Verify all data preserved
-      final countAfter = await db.rawQuery('SELECT COUNT(*) as count FROM hardware');
-      expect(countAfter.first['count'], 2,
-          reason: 'All hardware records should be preserved');
+      final countAfter = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM hardware',
+      );
+      expect(
+        countAfter.first['count'],
+        2,
+        reason: 'All hardware records should be preserved',
+      );
 
       // Verify specific data integrity
-      final hardware1 = await db.query('hardware', where: 'id = ?', whereArgs: [hardwareId1]);
+      final hardware1 = await db.query(
+        'hardware',
+        where: 'id = ?',
+        whereArgs: [hardwareId1],
+      );
       expect(hardware1.first['name'], 'LED Panel 600W');
       expect(hardware1.first['brand'], 'Mars Hydro');
       expect(hardware1.first['wattage'], 600);
       expect(hardware1.first['quantity'], 2);
 
-      final hardware2 = await db.query('hardware', where: 'id = ?', whereArgs: [hardwareId2]);
+      final hardware2 = await db.query(
+        'hardware',
+        where: 'id = ?',
+        whereArgs: [hardwareId2],
+      );
       expect(hardware2.first['name'], 'Inline Fan');
       expect(hardware2.first['type'], 'VENTILATION');
       expect(hardware2.first['airflow'], 400);
@@ -194,10 +239,16 @@ void main() {
       );
 
       final indexNames = indexes.map((idx) => idx['name'] as String).toList();
-      expect(indexNames.contains('idx_harvests_plant'), true,
-          reason: 'idx_harvests_plant should exist');
-      expect(indexNames.contains('idx_harvests_date'), true,
-          reason: 'idx_harvests_date should exist');
+      expect(
+        indexNames.contains('idx_harvests_plant'),
+        true,
+        reason: 'idx_harvests_plant should exist',
+      );
+      expect(
+        indexNames.contains('idx_harvests_date'),
+        true,
+        reason: 'idx_harvests_date should exist',
+      );
     });
 
     test('Migration v36 should preserve indexes on hardware table', () async {
@@ -210,12 +261,21 @@ void main() {
       );
 
       final indexNames = indexes.map((idx) => idx['name'] as String).toList();
-      expect(indexNames.contains('idx_hardware_room'), true,
-          reason: 'idx_hardware_room should exist');
-      expect(indexNames.contains('idx_hardware_type'), true,
-          reason: 'idx_hardware_type should exist');
-      expect(indexNames.contains('idx_hardware_active'), true,
-          reason: 'idx_hardware_active should exist');
+      expect(
+        indexNames.contains('idx_hardware_room'),
+        true,
+        reason: 'idx_hardware_room should exist',
+      );
+      expect(
+        indexNames.contains('idx_hardware_type'),
+        true,
+        reason: 'idx_hardware_type should exist',
+      );
+      expect(
+        indexNames.contains('idx_hardware_active'),
+        true,
+        reason: 'idx_hardware_active should exist',
+      );
     });
 
     test('Migration v36 should pass foreign key integrity check', () async {
@@ -226,10 +286,7 @@ void main() {
         'medium': 'ERDE',
       });
 
-      await db.insert('rooms', {
-        'name': 'Test Room',
-        'grow_type': 'INDOOR',
-      });
+      await db.insert('rooms', {'name': 'Test Room', 'grow_type': 'INDOOR'});
 
       await db.insert('harvests', {
         'plant_id': 1,
@@ -246,13 +303,23 @@ void main() {
       await migrationV36.up(db);
 
       // Verify no foreign key violations
-      final harvestsFkCheck = await db.rawQuery('PRAGMA foreign_key_check(harvests)');
-      expect(harvestsFkCheck, isEmpty,
-          reason: 'harvests should have no FK violations');
+      final harvestsFkCheck = await db.rawQuery(
+        'PRAGMA foreign_key_check(harvests)',
+      );
+      expect(
+        harvestsFkCheck,
+        isEmpty,
+        reason: 'harvests should have no FK violations',
+      );
 
-      final hardwareFkCheck = await db.rawQuery('PRAGMA foreign_key_check(hardware)');
-      expect(hardwareFkCheck, isEmpty,
-          reason: 'hardware should have no FK violations');
+      final hardwareFkCheck = await db.rawQuery(
+        'PRAGMA foreign_key_check(hardware)',
+      );
+      expect(
+        hardwareFkCheck,
+        isEmpty,
+        reason: 'hardware should have no FK violations',
+      );
     });
 
     test('Migration v36 should pass database integrity check', () async {
@@ -261,38 +328,54 @@ void main() {
 
       // Run integrity check
       final result = await db.rawQuery('PRAGMA integrity_check');
-      expect(result.first['integrity_check'], 'ok',
-          reason: 'Database should pass integrity check');
+      expect(
+        result.first['integrity_check'],
+        'ok',
+        reason: 'Database should pass integrity check',
+      );
     });
 
-    test('Migration v36 should be idempotent (can run multiple times)', () async {
-      // Run the migration twice
-      await migrationV36.up(db);
-      await migrationV36.up(db);
+    test(
+      'Migration v36 should be idempotent (can run multiple times)',
+      () async {
+        // Run the migration twice
+        await migrationV36.up(db);
+        await migrationV36.up(db);
 
-      // Should not throw errors and database should still be valid
-      final result = await db.rawQuery('PRAGMA integrity_check');
-      expect(result.first['integrity_check'], 'ok');
+        // Should not throw errors and database should still be valid
+        final result = await db.rawQuery('PRAGMA integrity_check');
+        expect(result.first['integrity_check'], 'ok');
 
-      // Verify FK constraints are still RESTRICT
-      final harvestsFk = await db.rawQuery('PRAGMA foreign_key_list(harvests)');
-      final plantIdFk = harvestsFk.firstWhere((fk) => fk['from'] == 'plant_id');
-      expect(plantIdFk['on_delete'], 'RESTRICT');
+        // Verify FK constraints are still RESTRICT
+        final harvestsFk = await db.rawQuery(
+          'PRAGMA foreign_key_list(harvests)',
+        );
+        final plantIdFk = harvestsFk.firstWhere(
+          (fk) => fk['from'] == 'plant_id',
+        );
+        expect(plantIdFk['on_delete'], 'RESTRICT');
 
-      final hardwareFk = await db.rawQuery('PRAGMA foreign_key_list(hardware)');
-      final roomIdFk = hardwareFk.firstWhere((fk) => fk['from'] == 'room_id');
-      expect(roomIdFk['on_delete'], 'RESTRICT');
-    });
+        final hardwareFk = await db.rawQuery(
+          'PRAGMA foreign_key_list(hardware)',
+        );
+        final roomIdFk = hardwareFk.firstWhere((fk) => fk['from'] == 'room_id');
+        expect(roomIdFk['on_delete'], 'RESTRICT');
+      },
+    );
 
     test('Migration v36 should work with empty tables', () async {
       // Run migration on empty database (no data)
       await migrationV36.up(db);
 
       // Verify tables exist and are empty
-      final harvestsCount = await db.rawQuery('SELECT COUNT(*) as count FROM harvests');
+      final harvestsCount = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM harvests',
+      );
       expect(harvestsCount.first['count'], 0);
 
-      final hardwareCount = await db.rawQuery('SELECT COUNT(*) as count FROM hardware');
+      final hardwareCount = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM hardware',
+      );
       expect(hardwareCount.first['count'], 0);
 
       // Verify FK constraints are RESTRICT
@@ -316,16 +399,38 @@ void main() {
           .toSet();
 
       final expectedHarvestsCols = {
-        'id', 'plant_id', 'harvest_date', 'wet_weight', 'dry_weight',
-        'drying_start_date', 'drying_end_date', 'drying_days', 'drying_method',
-        'drying_temperature', 'drying_humidity', 'curing_start_date',
-        'curing_end_date', 'curing_days', 'curing_method', 'curing_notes',
-        'thc_percentage', 'cbd_percentage', 'terpene_profile', 'rating',
-        'taste_notes', 'effect_notes', 'overall_notes', 'created_at', 'updated_at',
+        'id',
+        'plant_id',
+        'harvest_date',
+        'wet_weight',
+        'dry_weight',
+        'drying_start_date',
+        'drying_end_date',
+        'drying_days',
+        'drying_method',
+        'drying_temperature',
+        'drying_humidity',
+        'curing_start_date',
+        'curing_end_date',
+        'curing_days',
+        'curing_method',
+        'curing_notes',
+        'thc_percentage',
+        'cbd_percentage',
+        'terpene_profile',
+        'rating',
+        'taste_notes',
+        'effect_notes',
+        'overall_notes',
+        'created_at',
+        'updated_at',
       };
 
-      expect(harvestsColNames.containsAll(expectedHarvestsCols), true,
-          reason: 'harvests should have all expected columns');
+      expect(
+        harvestsColNames.containsAll(expectedHarvestsCols),
+        true,
+        reason: 'harvests should have all expected columns',
+      );
 
       // Verify hardware table has all expected columns
       final hardwareColumns = await db.rawQuery('PRAGMA table_info(hardware)');
@@ -334,12 +439,23 @@ void main() {
           .toSet();
 
       final expectedHardwareCols = {
-        'id', 'room_id', 'name', 'type', 'brand', 'model', 'wattage',
-        'quantity', 'active', 'created_at',
+        'id',
+        'room_id',
+        'name',
+        'type',
+        'brand',
+        'model',
+        'wattage',
+        'quantity',
+        'active',
+        'created_at',
       };
 
-      expect(hardwareColNames.containsAll(expectedHardwareCols), true,
-          reason: 'hardware should have all expected columns');
+      expect(
+        hardwareColNames.containsAll(expectedHardwareCols),
+        true,
+        reason: 'hardware should have all expected columns',
+      );
     });
   });
 }
@@ -427,12 +543,8 @@ Future<void> _createV35Schema(Database db) async {
     )
   ''');
 
-  await db.execute(
-    'CREATE INDEX idx_harvests_plant ON harvests(plant_id)',
-  );
-  await db.execute(
-    'CREATE INDEX idx_harvests_date ON harvests(harvest_date)',
-  );
+  await db.execute('CREATE INDEX idx_harvests_plant ON harvests(plant_id)');
+  await db.execute('CREATE INDEX idx_harvests_date ON harvests(harvest_date)');
 
   // Hardware Table (v35 schema with CASCADE)
   await db.execute('''
@@ -481,13 +593,7 @@ Future<void> _createV35Schema(Database db) async {
     )
   ''');
 
-  await db.execute(
-    'CREATE INDEX idx_hardware_room ON hardware(room_id)',
-  );
-  await db.execute(
-    'CREATE INDEX idx_hardware_type ON hardware(type)',
-  );
-  await db.execute(
-    'CREATE INDEX idx_hardware_active ON hardware(active)',
-  );
+  await db.execute('CREATE INDEX idx_hardware_room ON hardware(room_id)');
+  await db.execute('CREATE INDEX idx_hardware_type ON hardware(type)');
+  await db.execute('CREATE INDEX idx_hardware_active ON hardware(active)');
 }

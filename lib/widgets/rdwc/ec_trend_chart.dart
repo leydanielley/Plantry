@@ -10,16 +10,12 @@ import 'package:growlog_app/models/rdwc_log.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
 
 class EcTrendChart extends StatelessWidget {
-  final List<RdwcLog> logs; // pre-filtered: complete + ecAfter != null, sorted ascending
+  final List<RdwcLog>
+  logs; // pre-filtered: complete + ecAfter != null, sorted ascending
   final double? ecMin;
   final double? ecMax;
 
-  const EcTrendChart({
-    super.key,
-    required this.logs,
-    this.ecMin,
-    this.ecMax,
-  });
+  const EcTrendChart({super.key, required this.logs, this.ecMin, this.ecMax});
 
   @override
   Widget build(BuildContext context) {
@@ -27,11 +23,16 @@ class EcTrendChart extends StatelessWidget {
       return Container(
         height: 200,
         alignment: Alignment.center,
-        child: const Text('Noch keine EC-Daten', style: TextStyle(color: DT.textSecondary, fontSize: 13)),
+        child: const Text(
+          'Noch keine EC-Daten',
+          style: TextStyle(color: DT.textSecondary, fontSize: 13),
+        ),
       );
     }
 
-    final spots = logs.asMap().entries
+    final spots = logs
+        .asMap()
+        .entries
         .map((e) => FlSpot(e.key.toDouble(), e.value.ecAfter!))
         .toList();
 
@@ -45,45 +46,53 @@ class EcTrendChart extends StatelessWidget {
     // Horizontal target lines
     final hLines = <HorizontalLine>[];
     if (ecMin != null) {
-      hLines.add(HorizontalLine(
-        y: ecMin!,
-        color: DT.success,
-        strokeWidth: 1.5,
-        dashArray: [6, 3],
-        label: HorizontalLineLabel(
-          show: true,
-          alignment: Alignment.topRight,
-          padding: const EdgeInsets.only(right: 4, bottom: 2),
-          labelResolver: (_) => 'Min ${ecMin!.toStringAsFixed(1)}',
-          style: const TextStyle(color: DT.success, fontSize: 9),
+      hLines.add(
+        HorizontalLine(
+          y: ecMin!,
+          color: DT.success,
+          strokeWidth: 1.5,
+          dashArray: [6, 3],
+          label: HorizontalLineLabel(
+            show: true,
+            alignment: Alignment.topRight,
+            padding: const EdgeInsets.only(right: 4, bottom: 2),
+            labelResolver: (_) => 'Min ${ecMin!.toStringAsFixed(1)}',
+            style: const TextStyle(color: DT.success, fontSize: 9),
+          ),
         ),
-      ));
+      );
     }
     if (ecMax != null) {
-      hLines.add(HorizontalLine(
-        y: ecMax!,
-        color: DT.warning,
-        strokeWidth: 1.5,
-        dashArray: [6, 3],
-        label: HorizontalLineLabel(
-          show: true,
-          alignment: Alignment.topRight,
-          padding: const EdgeInsets.only(right: 4, bottom: 2),
-          labelResolver: (_) => 'Max ${ecMax!.toStringAsFixed(1)}',
-          style: const TextStyle(color: DT.warning, fontSize: 9),
+      hLines.add(
+        HorizontalLine(
+          y: ecMax!,
+          color: DT.warning,
+          strokeWidth: 1.5,
+          dashArray: [6, 3],
+          label: HorizontalLineLabel(
+            show: true,
+            alignment: Alignment.topRight,
+            padding: const EdgeInsets.only(right: 4, bottom: 2),
+            labelResolver: (_) => 'Max ${ecMax!.toStringAsFixed(1)}',
+            style: const TextStyle(color: DT.warning, fontSize: 9),
+          ),
         ),
-      ));
+      );
     }
 
     // Vertical lines for full-change events
-    final vLines = logs.asMap().entries
+    final vLines = logs
+        .asMap()
+        .entries
         .where((e) => e.value.logType == RdwcLogType.fullChange)
-        .map((e) => VerticalLine(
-              x: e.key.toDouble(),
-              color: DT.secondary.withValues(alpha: 0.6),
-              strokeWidth: 1.5,
-              dashArray: [4, 4],
-            ))
+        .map(
+          (e) => VerticalLine(
+            x: e.key.toDouble(),
+            color: DT.secondary.withValues(alpha: 0.6),
+            strokeWidth: 1.5,
+            dashArray: [4, 4],
+          ),
+        )
         .toList();
 
     // X-axis interval — show ~5 labels max
@@ -128,7 +137,10 @@ class EcTrendChart extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       DateFormat('d.M').format(date),
-                      style: const TextStyle(fontSize: 9, color: DT.textSecondary),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: DT.textSecondary,
+                      ),
                     ),
                   );
                 },
@@ -144,13 +156,18 @@ class EcTrendChart extends StatelessWidget {
                 ),
               ),
             ),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (_) => const FlLine(color: DT.elevated, strokeWidth: 1),
+            getDrawingHorizontalLine: (_) =>
+                const FlLine(color: DT.elevated, strokeWidth: 1),
           ),
           borderData: FlBorderData(show: false),
           lineTouchData: LineTouchData(
@@ -161,7 +178,11 @@ class EcTrendChart extends StatelessWidget {
                 final log = logs[index];
                 return LineTooltipItem(
                   'EC: ${log.ecAfter!.toStringAsFixed(2)}\n${DateFormat('dd.MM HH:mm').format(log.logDate)}',
-                  const TextStyle(color: DT.textPrimary, fontSize: 12, fontWeight: FontWeight.bold),
+                  const TextStyle(
+                    color: DT.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 );
               }).toList(),
             ),

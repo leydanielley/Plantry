@@ -25,7 +25,8 @@ class PlantryButton extends StatefulWidget {
   State<PlantryButton> createState() => _PlantryButtonState();
 }
 
-class _PlantryButtonState extends State<PlantryButton> with SingleTickerProviderStateMixin {
+class _PlantryButtonState extends State<PlantryButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
 
@@ -36,9 +37,10 @@ class _PlantryButtonState extends State<PlantryButton> with SingleTickerProvider
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -65,12 +67,10 @@ class _PlantryButtonState extends State<PlantryButton> with SingleTickerProvider
                   color: DT.accent.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
-                )
+                ),
               ]
             : null,
-        border: !widget.isPrimary
-            ? Border.all(color: DT.border)
-            : null,
+        border: !widget.isPrimary ? Border.all(color: DT.border) : null,
       ),
       child: Center(
         child: widget.isLoading
@@ -118,10 +118,8 @@ class _PlantryButtonState extends State<PlantryButton> with SingleTickerProvider
       onTapCancel: () => _controller.reverse(),
       child: AnimatedBuilder(
         animation: _scale,
-        builder: (context, child) => Transform.scale(
-          scale: _scale.value,
-          child: child,
-        ),
+        builder: (context, child) =>
+            Transform.scale(scale: _scale.value, child: child),
         child: content,
       ),
     );

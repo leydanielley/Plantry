@@ -23,7 +23,7 @@ class EditHardwareScreen extends StatefulWidget {
 class _EditHardwareScreenState extends State<EditHardwareScreen> {
   final _formKey = GlobalKey<FormState>();
   final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
-  
+
   late TextEditingController _brandController;
   late TextEditingController _modelController;
   late TextEditingController _wattageController;
@@ -36,8 +36,12 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> {
     super.initState();
     _brandController = TextEditingController(text: widget.hardware.brand ?? '');
     _modelController = TextEditingController(text: widget.hardware.model ?? '');
-    _wattageController = TextEditingController(text: widget.hardware.wattage?.toString() ?? '');
-    _qtyController = TextEditingController(text: widget.hardware.quantity.toString());
+    _wattageController = TextEditingController(
+      text: widget.hardware.wattage?.toString() ?? '',
+    );
+    _qtyController = TextEditingController(
+      text: widget.hardware.quantity.toString(),
+    );
     _selectedType = widget.hardware.type;
   }
 
@@ -66,20 +70,44 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> {
                   const SizedBox(height: 24),
 
                   _section('Basis Info'),
-                  PlantryFormField(controller: _brandController, label: 'Marke'),
+                  PlantryFormField(
+                    controller: _brandController,
+                    label: 'Marke',
+                  ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _modelController, label: 'Modell'),
+                  PlantryFormField(
+                    controller: _modelController,
+                    label: 'Modell',
+                  ),
                   const SizedBox(height: 24),
 
                   _section('Technische Daten'),
-                  Row(children: [
-                    Expanded(child: PlantryFormField(controller: _wattageController, label: 'Watt', keyboardType: TextInputType.number)),
-                    const SizedBox(width: 12),
-                    Expanded(child: PlantryFormField(controller: _qtyController, label: 'Anzahl', keyboardType: TextInputType.number)),
-                  ]),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _wattageController,
+                          label: 'Watt',
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _qtyController,
+                          label: 'Anzahl',
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 32),
 
-                  PlantryButton(label: 'Speichern', onPressed: _save, fullWidth: true),
+                  PlantryButton(
+                    label: 'Speichern',
+                    onPressed: _save,
+                    fullWidth: true,
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -87,16 +115,41 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> {
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
 
   Widget _typeSelector() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+      decoration: BoxDecoration(
+        color: DT.elevated,
+        borderRadius: BorderRadius.circular(DT.radiusInput),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<HardwareType>(
-          value: _selectedType, isExpanded: true, dropdownColor: DT.elevated,
-          items: HardwareType.values.map((t) => DropdownMenuItem(value: t, child: Text(t.displayName, style: const TextStyle(color: DT.textPrimary)))).toList(),
+          value: _selectedType,
+          isExpanded: true,
+          dropdownColor: DT.elevated,
+          items: HardwareType.values
+              .map(
+                (t) => DropdownMenuItem(
+                  value: t,
+                  child: Text(
+                    t.displayName,
+                    style: const TextStyle(color: DT.textPrimary),
+                  ),
+                ),
+              )
+              .toList(),
           onChanged: (v) => setState(() => _selectedType = v!),
         ),
       ),
@@ -108,10 +161,17 @@ class _EditHardwareScreenState extends State<EditHardwareScreen> {
     setState(() => _isLoading = true);
     try {
       final h = widget.hardware.copyWith(
-        brand: _brandController.text, model: _modelController.text,
-        type: _selectedType, wattage: int.tryParse(_wattageController.text),
+        brand: _brandController.text,
+        model: _modelController.text,
+        type: _selectedType,
+        wattage: int.tryParse(_wattageController.text),
         quantity: int.tryParse(_qtyController.text) ?? 1,
-        name: '${_brandController.text} ${_modelController.text}'.trim().isNotEmpty ? '${_brandController.text} ${_modelController.text}'.trim() : _selectedType.displayName,
+        name:
+            '${_brandController.text} ${_modelController.text}'
+                .trim()
+                .isNotEmpty
+            ? '${_brandController.text} ${_modelController.text}'.trim()
+            : _selectedType.displayName,
       );
       await _hardwareRepo.save(h);
       if (!mounted) return;

@@ -437,7 +437,11 @@ void main() {
       // Wechsel auf B
       await repository.save(saved.copyWith(rdwcSystemId: sysB));
       expect(await readRoomId(sysA), isNull, reason: 'A muss detached sein');
-      expect(await readRoomId(sysB), equals(saved.id), reason: 'B muss attached sein');
+      expect(
+        await readRoomId(sysB),
+        equals(saved.id),
+        reason: 'B muss attached sein',
+      );
     });
 
     test('Entfernen (rdwcSystemId=null) detacht das alte System', () async {
@@ -462,27 +466,30 @@ void main() {
       expect(await readRoomId(sys), equals(saved.id));
     });
 
-    test('Detach-Schutz: nullt nicht room_id eines Systems das auf einen ANDEREN Raum zeigt', () async {
-      final sys = await insertRdwcSystem('Shared System');
-      final roomA = await repository.save(
-        Room(name: 'Room A', growType: GrowType.indoor, rdwcSystemId: sys),
-      );
-      // sys.room_id zeigt auf roomA. Jetzt drittes System für roomB:
-      final sys2 = await insertRdwcSystem('System for B');
-      final roomB = await repository.save(
-        Room(name: 'Room B', growType: GrowType.indoor, rdwcSystemId: sys2),
-      );
-      // roomA wechselt von sys auf sys2 — sys2 zeigt aber jetzt auf roomB.
-      // RoomRepo darf sys2 NICHT detachen, das wäre ein Datenverlust.
-      // (Dies ist ein logisches Problem von duplikaten FK-Zuweisungen,
-      // aber der Detach darf nur kappen wenn ID UND room_id matchen.)
-      await repository.save(roomA.copyWith(rdwcSystemId: sys2));
-      // sys2 zeigt jetzt auf roomA (überschrieben — by design, letzter gewinnt)
-      expect(await readRoomId(sys2), equals(roomA.id));
-      // sys (alter Link von roomA) muss aber detached sein
-      expect(await readRoomId(sys), isNull);
-      // roomB.id sollte nicht kaputt sein
-      expect(roomB.id, isNotNull);
-    });
+    test(
+      'Detach-Schutz: nullt nicht room_id eines Systems das auf einen ANDEREN Raum zeigt',
+      () async {
+        final sys = await insertRdwcSystem('Shared System');
+        final roomA = await repository.save(
+          Room(name: 'Room A', growType: GrowType.indoor, rdwcSystemId: sys),
+        );
+        // sys.room_id zeigt auf roomA. Jetzt drittes System für roomB:
+        final sys2 = await insertRdwcSystem('System for B');
+        final roomB = await repository.save(
+          Room(name: 'Room B', growType: GrowType.indoor, rdwcSystemId: sys2),
+        );
+        // roomA wechselt von sys auf sys2 — sys2 zeigt aber jetzt auf roomB.
+        // RoomRepo darf sys2 NICHT detachen, das wäre ein Datenverlust.
+        // (Dies ist ein logisches Problem von duplikaten FK-Zuweisungen,
+        // aber der Detach darf nur kappen wenn ID UND room_id matchen.)
+        await repository.save(roomA.copyWith(rdwcSystemId: sys2));
+        // sys2 zeigt jetzt auf roomA (überschrieben — by design, letzter gewinnt)
+        expect(await readRoomId(sys2), equals(roomA.id));
+        // sys (alter Link von roomA) muss aber detached sein
+        expect(await readRoomId(sys), isNull);
+        // roomB.id sollte nicht kaputt sein
+        expect(roomB.id, isNotNull);
+      },
+    );
   });
 }

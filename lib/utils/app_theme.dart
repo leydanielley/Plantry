@@ -18,25 +18,119 @@ class AppTheme {
   /// ==========================================
   /// CUSTOM TEXT THEME
   /// ==========================================
-  static TextTheme _buildTextTheme(Color primaryColor, Color secondaryColor, Color tertiaryColor) {
+  static TextTheme _buildTextTheme(
+    Color primaryColor,
+    Color secondaryColor,
+    Color tertiaryColor,
+  ) {
     const String fontFamily = 'Roboto';
 
     return TextTheme(
-      displayLarge: TextStyle(fontFamily: fontFamily, fontSize: 57, fontWeight: FontWeight.w700, color: primaryColor, height: 1.12),
-      displayMedium: TextStyle(fontFamily: fontFamily, fontSize: 45, fontWeight: FontWeight.w700, color: primaryColor, height: 1.16),
-      displaySmall: TextStyle(fontFamily: fontFamily, fontSize: 36, fontWeight: FontWeight.w600, color: primaryColor, height: 1.22),
-      headlineLarge: TextStyle(fontFamily: fontFamily, fontSize: 32, fontWeight: FontWeight.w700, color: primaryColor, height: 1.25),
-      headlineMedium: TextStyle(fontFamily: fontFamily, fontSize: 28, fontWeight: FontWeight.w600, color: primaryColor, height: 1.29),
-      headlineSmall: TextStyle(fontFamily: fontFamily, fontSize: 24, fontWeight: FontWeight.w600, color: primaryColor, height: 1.33),
-      titleLarge: TextStyle(fontFamily: fontFamily, fontSize: 22, fontWeight: FontWeight.w600, color: primaryColor, height: 1.2),
-      titleMedium: TextStyle(fontFamily: fontFamily, fontSize: 16, fontWeight: FontWeight.w600, color: primaryColor, height: 1.2),
-      titleSmall: TextStyle(fontFamily: fontFamily, fontSize: 14, fontWeight: FontWeight.w600, color: primaryColor, height: 1.2),
-      bodyLarge: TextStyle(fontFamily: fontFamily, fontSize: 16, fontWeight: FontWeight.w400, color: primaryColor, height: 1.2),
-      bodyMedium: TextStyle(fontFamily: fontFamily, fontSize: 14, fontWeight: FontWeight.w400, color: secondaryColor, height: 1.2),
-      bodySmall: TextStyle(fontFamily: fontFamily, fontSize: 12, fontWeight: FontWeight.w400, color: tertiaryColor, height: 1.2),
-      labelLarge: TextStyle(fontFamily: fontFamily, fontSize: 14, fontWeight: FontWeight.w500, color: primaryColor, height: 1.2),
-      labelMedium: TextStyle(fontFamily: fontFamily, fontSize: 12, fontWeight: FontWeight.w500, color: secondaryColor, height: 1.2),
-      labelSmall: TextStyle(fontFamily: fontFamily, fontSize: 11, fontWeight: FontWeight.w500, color: tertiaryColor, height: 1.2),
+      displayLarge: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 57,
+        fontWeight: FontWeight.w700,
+        color: primaryColor,
+        height: 1.12,
+      ),
+      displayMedium: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 45,
+        fontWeight: FontWeight.w700,
+        color: primaryColor,
+        height: 1.16,
+      ),
+      displaySmall: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 36,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        height: 1.22,
+      ),
+      headlineLarge: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 32,
+        fontWeight: FontWeight.w700,
+        color: primaryColor,
+        height: 1.25,
+      ),
+      headlineMedium: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 28,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        height: 1.29,
+      ),
+      headlineSmall: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        height: 1.33,
+      ),
+      titleLarge: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        height: 1.2,
+      ),
+      titleMedium: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        height: 1.2,
+      ),
+      titleSmall: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: primaryColor,
+        height: 1.2,
+      ),
+      bodyLarge: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: primaryColor,
+        height: 1.2,
+      ),
+      bodyMedium: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: secondaryColor,
+        height: 1.2,
+      ),
+      bodySmall: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: tertiaryColor,
+        height: 1.2,
+      ),
+      labelLarge: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: primaryColor,
+        height: 1.2,
+      ),
+      labelMedium: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: secondaryColor,
+        height: 1.2,
+      ),
+      labelSmall: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: tertiaryColor,
+        height: 1.2,
+      ),
     );
   }
 
@@ -76,7 +170,10 @@ class AppTheme {
         foregroundColor: isDarkMode ? textPrimary : onPrimaryAccent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: textTheme.titleLarge?.copyWith(color: isDarkMode ? textPrimary : onPrimaryAccent, fontWeight: FontWeight.bold),
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          color: isDarkMode ? textPrimary : onPrimaryAccent,
+          fontWeight: FontWeight.bold,
+        ),
       ),
 
       cardTheme: CardThemeData(
@@ -88,8 +185,14 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: isDarkMode ? surfaceVariant : surfaceColor,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: glassBorder)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: glassBorder),
+        ),
       ),
 
       floatingActionButtonTheme: FloatingActionButtonThemeData(

@@ -180,9 +180,8 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
                   oldPlant.harvestDate != plant.harvestDate;
               final anyPhaseDateChanged =
                   vegDateChanged || bloomDateChanged || harvestDateChanged;
-              final anyDateChanged = seedDateChanged ||
-                  anyPhaseDateChanged ||
-                  phaseStartChanged;
+              final anyDateChanged =
+                  seedDateChanged || anyPhaseDateChanged || phaseStartChanged;
 
               // 2. Warn-on-data-loss check inside TX
               if (seedDateChanged && plant.seedDate != null) {
@@ -466,10 +465,7 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
                   'photos=$deletedPhotos, fertilizers=$deletedLogFertilizers',
             );
 
-            return (
-              deletedPlant: deletedPlant,
-              photoFilePaths: photoFilePaths,
-            );
+            return (deletedPlant: deletedPlant, photoFilePaths: photoFilePaths);
           })
           .timeout(
             DatabaseConfig.heavyOperationTimeout,
@@ -895,7 +891,8 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
       final db = await _dbHelper.database;
 
       // Build WHERE clause
-      String whereClause = 'rdwc_system_id = ? AND bucket_number = ? AND archived = 0';
+      String whereClause =
+          'rdwc_system_id = ? AND bucket_number = ? AND archived = 0';
       final List<dynamic> whereArgs = [systemId, bucketNumber];
 
       // Exclude specific plant ID if provided (for UPDATE validation)
@@ -936,10 +933,7 @@ class PlantRepository with RepositoryErrorHandler implements IPlantRepository {
         orderBy: 'created_at DESC',
       );
 
-      AppLogger.info(
-        'PlantRepository',
-        'Found ${maps.length} orphaned plants',
-      );
+      AppLogger.info('PlantRepository', 'Found ${maps.length} orphaned plants');
 
       return maps.map((map) => Plant.fromMap(map)).toList();
     } catch (e, stackTrace) {

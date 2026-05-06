@@ -90,10 +90,18 @@ void main() {
 
       // Verify data exists
       final plantsBefore = await db.query('plants');
-      expect(plantsBefore.length, 1, reason: 'Should have 1 plant before migration');
+      expect(
+        plantsBefore.length,
+        1,
+        reason: 'Should have 1 plant before migration',
+      );
 
       final logsBefore = await db.query('plant_logs');
-      expect(logsBefore.length, 1, reason: 'Should have 1 log before migration');
+      expect(
+        logsBefore.length,
+        1,
+        reason: 'Should have 1 log before migration',
+      );
 
       print('✅ v17 database created with test data');
 
@@ -148,36 +156,58 @@ void main() {
       }
 
       // Verify migration failed
-      expect(migrationFailed, isTrue,
-          reason: 'Migration should have failed due to schema validation');
+      expect(
+        migrationFailed,
+        isTrue,
+        reason: 'Migration should have failed due to schema validation',
+      );
 
       print('\n🔍 Verifying database state after rollback...');
 
       // Verify database is still at v17
       final dbVersion = await db.rawQuery('PRAGMA user_version');
       final version = dbVersion.first['user_version'] as int;
-      expect(version, equals(17),
-          reason: 'Database should still be at v17 after rollback');
+      expect(
+        version,
+        equals(17),
+        reason: 'Database should still be at v17 after rollback',
+      );
 
       print('  ✅ Database version: v$version (rollback successful)');
 
       // Verify original data is intact
       final plantsAfter = await db.query('plants');
-      expect(plantsAfter.length, 1, reason: 'Should still have 1 plant after rollback');
-      expect(plantsAfter.first['name'], equals('Test Plant'),
-          reason: 'Plant data should be intact');
+      expect(
+        plantsAfter.length,
+        1,
+        reason: 'Should still have 1 plant after rollback',
+      );
+      expect(
+        plantsAfter.first['name'],
+        equals('Test Plant'),
+        reason: 'Plant data should be intact',
+      );
 
       final logsAfter = await db.query('plant_logs');
-      expect(logsAfter.length, 1, reason: 'Should still have 1 log after rollback');
+      expect(
+        logsAfter.length,
+        1,
+        reason: 'Should still have 1 log after rollback',
+      );
 
       print('  ✅ Data integrity: All data preserved');
 
       // Verify broken_field column does NOT exist (rollback worked)
       final plantsSchema = await db.rawQuery('PRAGMA table_info(plants)');
-      final columnNames = plantsSchema.map((col) => col['name'] as String).toList();
+      final columnNames = plantsSchema
+          .map((col) => col['name'] as String)
+          .toList();
 
-      expect(columnNames.contains('broken_field'), isFalse,
-          reason: 'Broken column should not exist (transaction rolled back)');
+      expect(
+        columnNames.contains('broken_field'),
+        isFalse,
+        reason: 'Broken column should not exist (transaction rolled back)',
+      );
 
       print('  ✅ Schema rollback: broken_field column not present');
 
@@ -251,12 +281,19 @@ void main() {
 
       // Verify changes persisted
       final version = await db.rawQuery('PRAGMA user_version');
-      expect((version.first['user_version'] as int), equals(18),
-          reason: 'Database should be at v18 after successful migration');
+      expect(
+        (version.first['user_version'] as int),
+        equals(18),
+        reason: 'Database should be at v18 after successful migration',
+      );
 
       final schema = await db.rawQuery('PRAGMA table_info(plants)');
       final hasStrain = schema.any((col) => col['name'] == 'strain');
-      expect(hasStrain, isTrue, reason: 'strain column should exist after commit');
+      expect(
+        hasStrain,
+        isTrue,
+        reason: 'strain column should exist after commit',
+      );
 
       final plants = await db.query('plants');
       expect(plants.length, 1, reason: 'Data should be preserved');

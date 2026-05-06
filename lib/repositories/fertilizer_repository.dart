@@ -172,8 +172,16 @@ class FertilizerRepository
         }
 
         // Clean up historical log references (logs themselves remain intact)
-        await db.delete('rdwc_log_fertilizers', where: 'fertilizer_id = ?', whereArgs: [id]);
-        await db.delete('log_fertilizers', where: 'fertilizer_id = ?', whereArgs: [id]);
+        await db.delete(
+          'rdwc_log_fertilizers',
+          where: 'fertilizer_id = ?',
+          whereArgs: [id],
+        );
+        await db.delete(
+          'log_fertilizers',
+          where: 'fertilizer_id = ?',
+          whereArgs: [id],
+        );
 
         return await db.delete('fertilizers', where: 'id = ?', whereArgs: [id]);
       },

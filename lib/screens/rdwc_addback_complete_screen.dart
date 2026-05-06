@@ -32,8 +32,7 @@ class RdwcAddbackCompleteScreen extends StatefulWidget {
       _RdwcAddbackCompleteScreenState();
 }
 
-class _RdwcAddbackCompleteScreenState
-    extends State<RdwcAddbackCompleteScreen> {
+class _RdwcAddbackCompleteScreenState extends State<RdwcAddbackCompleteScreen> {
   final _formKey = GlobalKey<FormState>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
   final ISettingsRepository _settingsRepo = getIt<ISettingsRepository>();
@@ -149,7 +148,9 @@ class _RdwcAddbackCompleteScreenState
                         Icons.water_drop,
                         _t['water_added'],
                         UnitConverter.formatVolume(
-                            log.waterAdded!, _settings.volumeUnit),
+                          log.waterAdded!,
+                          _settings.volumeUnit,
+                        ),
                       ),
                     if (log.phBefore != null)
                       _summaryRow(
@@ -178,10 +179,9 @@ class _RdwcAddbackCompleteScreenState
             // Step 2 fields
             Text(
               _t['addback_step2_title'],
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -192,11 +192,13 @@ class _RdwcAddbackCompleteScreenState
                 labelText: _t['level_after'],
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.water_drop),
-                suffixText:
-                    UnitConverter.getVolumeUnitSuffix(_settings.volumeUnit),
+                suffixText: UnitConverter.getVolumeUnitSuffix(
+                  _settings.volumeUnit,
+                ),
               ),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
                 final parsed = SafeParsers.parseUserDouble(v);
@@ -220,11 +222,13 @@ class _RdwcAddbackCompleteScreenState
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.science),
                     ),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
-                      if (SafeParsers.parseUserDouble(v) == null) return 'Ungültige Zahl';
+                      if (SafeParsers.parseUserDouble(v) == null)
+                        return 'Ungültige Zahl';
                       return null;
                     },
                   ),
@@ -239,11 +243,13 @@ class _RdwcAddbackCompleteScreenState
                       prefixIcon: const Icon(Icons.science),
                       suffixText: ecUnit,
                     ),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
-                      if (SafeParsers.parseUserDouble(v) == null) return 'Ungültige Zahl';
+                      if (SafeParsers.parseUserDouble(v) == null)
+                        return 'Ungültige Zahl';
                       return null;
                     },
                   ),
@@ -264,8 +270,7 @@ class _RdwcAddbackCompleteScreenState
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.check_circle),
-                label: Text(
-                    _isSaving ? '...' : _t['complete_addback_btn']),
+                label: Text(_isSaving ? '...' : _t['complete_addback_btn']),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: DT.accent,
                   foregroundColor: DT.canvas,
@@ -289,11 +294,15 @@ class _RdwcAddbackCompleteScreenState
         children: [
           Icon(icon, size: 16, color: DT.textSecondary),
           const SizedBox(width: 8),
-          Text(label,
-              style: const TextStyle(color: DT.textSecondary, fontSize: 13)),
+          Text(
+            label,
+            style: const TextStyle(color: DT.textSecondary, fontSize: 13),
+          ),
           const Spacer(),
-          Text(value,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          ),
         ],
       ),
     );

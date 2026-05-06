@@ -39,7 +39,8 @@ import 'package:growlog_app/utils/app_logger.dart';
 /// CRITICAL: NO DATA LOSS UNDER ANY CIRCUMSTANCES!
 final Migration migrationV35 = Migration(
   version: 35,
-  description: 'CRITICAL: Recovery from v34 downgrade error (healing migration)',
+  description:
+      'CRITICAL: Recovery from v34 downgrade error (healing migration)',
   up: (txn) async {
     AppLogger.info(
       'Migration_v35',
@@ -53,7 +54,10 @@ final Migration migrationV35 = Migration(
     // ===========================================
     // STEP 1: Validate Schema State
     // ===========================================
-    AppLogger.info('Migration_v35', '🔍 Step 1/6: Validating current schema state');
+    AppLogger.info(
+      'Migration_v35',
+      '🔍 Step 1/6: Validating current schema state',
+    );
 
     // Get list of all tables
     final existingTables = await txn.rawQuery(
@@ -71,7 +75,10 @@ final Migration migrationV35 = Migration(
     // ===========================================
     // STEP 2: Ensure All Critical Tables Exist
     // ===========================================
-    AppLogger.info('Migration_v35', '📝 Step 2/6: Validating critical tables exist');
+    AppLogger.info(
+      'Migration_v35',
+      '📝 Step 2/6: Validating critical tables exist',
+    );
 
     final criticalTables = {
       'rooms',
@@ -123,21 +130,46 @@ final Migration migrationV35 = Migration(
     int addedColumnsCount = 0;
 
     // Check plant_logs for all v20 columns
-    final plantLogsColumns = await txn.rawQuery('PRAGMA table_info(plant_logs)');
+    final plantLogsColumns = await txn.rawQuery(
+      'PRAGMA table_info(plant_logs)',
+    );
     final plantLogsColNames = plantLogsColumns
         .map((col) => col['name'] as String)
         .toSet();
 
     final requiredPlantLogsCols = {
-      'id', 'plant_id', 'day_number', 'log_date', 'logged_by',
-      'action_type', 'phase', 'phase_day_number', 'water_amount',
-      'ph_in', 'ec_in', 'ph_out', 'ec_out', 'temperature', 'humidity',
-      'runoff', 'cleanse', 'note', 'container_size', 'container_medium_amount',
-      'container_drainage', 'container_drainage_material', 'system_reservoir_size',
-      'system_bucket_count', 'system_bucket_size', 'archived', 'created_at',
+      'id',
+      'plant_id',
+      'day_number',
+      'log_date',
+      'logged_by',
+      'action_type',
+      'phase',
+      'phase_day_number',
+      'water_amount',
+      'ph_in',
+      'ec_in',
+      'ph_out',
+      'ec_out',
+      'temperature',
+      'humidity',
+      'runoff',
+      'cleanse',
+      'note',
+      'container_size',
+      'container_medium_amount',
+      'container_drainage',
+      'container_drainage_material',
+      'system_reservoir_size',
+      'system_bucket_count',
+      'system_bucket_size',
+      'archived',
+      'created_at',
     };
 
-    final missingPlantLogsCols = requiredPlantLogsCols.difference(plantLogsColNames);
+    final missingPlantLogsCols = requiredPlantLogsCols.difference(
+      plantLogsColNames,
+    );
     if (missingPlantLogsCols.isNotEmpty) {
       AppLogger.warning(
         'Migration_v35',
@@ -154,11 +186,29 @@ final Migration migrationV35 = Migration(
         .toSet();
 
     final requiredPlantsCols = {
-      'id', 'name', 'breeder', 'strain', 'feminized', 'seed_type', 'medium',
-      'phase', 'room_id', 'grow_id', 'rdwc_system_id', 'bucket_number',
-      'seed_date', 'phase_start_date', 'veg_date', 'bloom_date', 'harvest_date',
-      'created_at', 'created_by', 'log_profile_name', 'archived',
-      'current_container_size', 'current_system_size',
+      'id',
+      'name',
+      'breeder',
+      'strain',
+      'feminized',
+      'seed_type',
+      'medium',
+      'phase',
+      'room_id',
+      'grow_id',
+      'rdwc_system_id',
+      'bucket_number',
+      'seed_date',
+      'phase_start_date',
+      'veg_date',
+      'bloom_date',
+      'harvest_date',
+      'created_at',
+      'created_by',
+      'log_profile_name',
+      'archived',
+      'current_container_size',
+      'current_system_size',
     };
 
     final missingPlantsCols = requiredPlantsCols.difference(plantsColNames);
@@ -187,15 +237,36 @@ final Migration migrationV35 = Migration(
         .toSet();
 
     final requiredHarvestsCols = {
-      'id', 'plant_id', 'harvest_date', 'wet_weight', 'dry_weight',
-      'drying_start_date', 'drying_end_date', 'drying_days', 'drying_method',
-      'drying_temperature', 'drying_humidity', 'curing_start_date',
-      'curing_end_date', 'curing_days', 'curing_method', 'curing_notes',
-      'thc_percentage', 'cbd_percentage', 'terpene_profile', 'rating',
-      'taste_notes', 'effect_notes', 'overall_notes', 'created_at', 'updated_at',
+      'id',
+      'plant_id',
+      'harvest_date',
+      'wet_weight',
+      'dry_weight',
+      'drying_start_date',
+      'drying_end_date',
+      'drying_days',
+      'drying_method',
+      'drying_temperature',
+      'drying_humidity',
+      'curing_start_date',
+      'curing_end_date',
+      'curing_days',
+      'curing_method',
+      'curing_notes',
+      'thc_percentage',
+      'cbd_percentage',
+      'terpene_profile',
+      'rating',
+      'taste_notes',
+      'effect_notes',
+      'overall_notes',
+      'created_at',
+      'updated_at',
     };
 
-    final missingHarvestsCols = requiredHarvestsCols.difference(harvestsColNames);
+    final missingHarvestsCols = requiredHarvestsCols.difference(
+      harvestsColNames,
+    );
     if (missingHarvestsCols.isNotEmpty) {
       AppLogger.info(
         'Migration_v35',
@@ -284,7 +355,8 @@ final Migration migrationV35 = Migration(
       FROM log_fertilizers
       WHERE log_id NOT IN (SELECT id FROM plant_logs)
     ''');
-    final orphanedLogFertilizersCount = orphanedLogFertilizers.first['count'] as int;
+    final orphanedLogFertilizersCount =
+        orphanedLogFertilizers.first['count'] as int;
 
     if (orphanedLogFertilizersCount > 0) {
       AppLogger.warning(
@@ -312,12 +384,24 @@ final Migration migrationV35 = Migration(
     }
 
     // Get data counts
-    final plantsCount = await txn.rawQuery('SELECT COUNT(*) as count FROM plants');
-    final logsCount = await txn.rawQuery('SELECT COUNT(*) as count FROM plant_logs');
-    final photosCount = await txn.rawQuery('SELECT COUNT(*) as count FROM photos');
-    final harvestsCount = await txn.rawQuery('SELECT COUNT(*) as count FROM harvests');
-    final roomsCount = await txn.rawQuery('SELECT COUNT(*) as count FROM rooms');
-    final growsCount = await txn.rawQuery('SELECT COUNT(*) as count FROM grows');
+    final plantsCount = await txn.rawQuery(
+      'SELECT COUNT(*) as count FROM plants',
+    );
+    final logsCount = await txn.rawQuery(
+      'SELECT COUNT(*) as count FROM plant_logs',
+    );
+    final photosCount = await txn.rawQuery(
+      'SELECT COUNT(*) as count FROM photos',
+    );
+    final harvestsCount = await txn.rawQuery(
+      'SELECT COUNT(*) as count FROM harvests',
+    );
+    final roomsCount = await txn.rawQuery(
+      'SELECT COUNT(*) as count FROM rooms',
+    );
+    final growsCount = await txn.rawQuery(
+      'SELECT COUNT(*) as count FROM grows',
+    );
 
     AppLogger.info(
       'Migration_v35',
@@ -362,7 +446,9 @@ final Migration migrationV35 = Migration(
 /// Helper function to get column definition for ALTER TABLE
 String _getColumnDefinition(String columnName) {
   // Dates
-  if (columnName.endsWith('_date') || columnName == 'created_at' || columnName == 'updated_at') {
+  if (columnName.endsWith('_date') ||
+      columnName == 'created_at' ||
+      columnName == 'updated_at') {
     return '$columnName TEXT';
   }
 

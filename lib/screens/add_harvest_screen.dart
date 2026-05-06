@@ -97,7 +97,8 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
                           lastDate: DateTime.now(),
                         );
                         if (!mounted) return;
-                        if (picked != null) setState(() => _harvestDate = picked);
+                        if (picked != null)
+                          setState(() => _harvestDate = picked);
                       },
                       child: InputDecorator(
                         decoration: InputDecoration(

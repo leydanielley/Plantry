@@ -91,10 +91,7 @@ void main() {
         'phase': 'VEG',
       });
 
-      await db.insert('rooms', {
-        'name': 'Test Room',
-        'grow_type': 'INDOOR',
-      });
+      await db.insert('rooms', {'name': 'Test Room', 'grow_type': 'INDOOR'});
 
       // Run the migration
       await migrationV35.up(db);
@@ -171,15 +168,18 @@ void main() {
       expect(result.first['integrity_check'], 'ok');
     });
 
-    test('Migration v35 should be idempotent (can run multiple times)', () async {
-      // Run the migration twice
-      await migrationV35.up(db);
-      await migrationV35.up(db);
+    test(
+      'Migration v35 should be idempotent (can run multiple times)',
+      () async {
+        // Run the migration twice
+        await migrationV35.up(db);
+        await migrationV35.up(db);
 
-      // Should not throw errors and database should still be valid
-      final result = await db.rawQuery('PRAGMA integrity_check');
-      expect(result.first['integrity_check'], 'ok');
-    });
+        // Should not throw errors and database should still be valid
+        final result = await db.rawQuery('PRAGMA integrity_check');
+        expect(result.first['integrity_check'], 'ok');
+      },
+    );
 
     test('Migration v35 should work with empty database', () async {
       // Close and recreate empty database

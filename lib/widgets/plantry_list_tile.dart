@@ -26,13 +26,11 @@ class PlantryListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return PlantryCard(
       onTap: onTap,
-      padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding:
+          padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          if (leading != null) ...[
-            leading!,
-            const SizedBox(width: 16),
-          ],
+          if (leading != null) ...[leading!, const SizedBox(width: 16)],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,11 +62,7 @@ class PlantryListTile extends StatelessWidget {
             trailing!,
           ] else if (onTap != null) ...[
             const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right,
-              color: DT.textTertiary,
-              size: 20,
-            ),
+            const Icon(Icons.chevron_right, color: DT.textTertiary, size: 20),
           ],
         ],
       ),

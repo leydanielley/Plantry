@@ -39,6 +39,7 @@ class RdwcSystem {
   final double? ecWarningMax;
   final DateTime createdAt;
   final bool archived;
+
   /// Wann das System archiviert wurde. Null wenn aktiv. Wird von
   /// archiveSystem/deleteSystem gesetzt und von restoreSystem genullt.
   /// Verhindert Race-Limbo: ein System mit `archived=1` aber ohne Timestamp

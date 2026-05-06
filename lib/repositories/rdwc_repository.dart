@@ -105,7 +105,10 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
   /// screens that explicitly need archived systems (e.g. archive list, the
   /// system's own detail screen which can toggle archive state).
   @override
-  Future<RdwcSystem?> getSystemById(int id, {bool includeArchived = false}) async {
+  Future<RdwcSystem?> getSystemById(
+    int id, {
+    bool includeArchived = false,
+  }) async {
     try {
       final db = await _dbHelper.database;
       final where = includeArchived ? 'id = ?' : 'id = ? AND archived = ?';
@@ -533,7 +536,8 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
       final db = await _dbHelper.database;
       final maps = await db.query(
         'rdwc_logs',
-        where: "system_id = ? AND log_status = 'pending_measurement' AND archived = 0",
+        where:
+            "system_id = ? AND log_status = 'pending_measurement' AND archived = 0",
         whereArgs: [systemId],
         orderBy: 'log_date DESC',
         limit: 1,
@@ -754,7 +758,8 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         );
 
         if (mostRecentLog.isNotEmpty) {
-          final newLevel = (mostRecentLog.first['level_after'] as num?)?.toDouble() ?? 0.0;
+          final newLevel =
+              (mostRecentLog.first['level_after'] as num?)?.toDouble() ?? 0.0;
           // Inline update within transaction instead of calling method
           await txn.update(
             'rdwc_systems',
@@ -843,7 +848,8 @@ class RdwcRepository with RepositoryErrorHandler implements IRdwcRepository {
         );
 
         if (mostRecentLog.isNotEmpty) {
-          final newLevel = (mostRecentLog.first['level_after'] as num?)?.toDouble() ?? 0.0;
+          final newLevel =
+              (mostRecentLog.first['level_after'] as num?)?.toDouble() ?? 0.0;
           await txn.update(
             'rdwc_systems',
             {'current_level': newLevel},
