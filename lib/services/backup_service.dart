@@ -291,7 +291,11 @@ class BackupService implements IBackupService {
       // ✅ NEW: Cleanup old backups in app documents folder
       await _cleanupOldBackups(appDir.path, maxBackups: 5);
 
-      AppLogger.info('BackupService', '✅ Export complete', path.basename(zipPath));
+      AppLogger.info(
+        'BackupService',
+        '✅ Export complete',
+        path.basename(zipPath),
+      );
       return zipPath;
     } catch (e, stackTrace) {
       AppLogger.error('BackupService', 'Export failed', e, stackTrace);
@@ -323,15 +327,49 @@ class BackupService implements IBackupService {
     Directory? importDir;
 
     try {
-      AppLogger.info('BackupService', 'Starting import from', path.basename(zipFilePath));
+      AppLogger.info(
+        'BackupService',
+        'Starting import from',
+        path.basename(zipFilePath),
+      );
 
       final zipFile = File(zipFilePath);
       if (!await zipFile.exists()) {
         throw Exception('Backup file not found');
       }
 
+      // ZIP preflight: check magic bytes (PK signature = 0x50 0x4B 0x03 0x04)
+      // and verify the archive contains a manifest before extracting anything.
+      // This prevents partial/corrupt archives from being unpacked and potentially
+      // overwriting good data or leaving the DB in an inconsistent state.
+      final bytes = await zipFile.readAsBytes();
+      if (bytes.length < 4 ||
+          bytes[0] != 0x50 ||
+          bytes[1] != 0x4B ||
+          bytes[2] != 0x03 ||
+          bytes[3] != 0x04) {
+        throw Exception(
+          'Backup file is not a valid ZIP archive (invalid magic bytes). '
+          'The file may be corrupt or is not a Plantry backup.',
+        );
+      }
+
+      Archive archive;
+      try {
+        archive = ZipDecoder().decodeBytes(bytes);
+      } catch (e) {
+        throw Exception('Backup ZIP is corrupt and cannot be opened: $e');
+      }
+
+      final hasDataJson = archive.any((f) => f.name.endsWith('data.json'));
+      if (!hasDataJson) {
+        throw Exception(
+          'Backup ZIP does not contain data.json — '
+          'this does not appear to be a valid Plantry backup.',
+        );
+      }
+
       final tempDir = await getTemporaryDirectory();
-      // ✅ P1 FIX: Use path.join instead of string concatenation
       importDir = Directory(
         path.join(
           tempDir.path,
@@ -339,10 +377,8 @@ class BackupService implements IBackupService {
         ),
       );
 
-      // Extract ZIP
+      // Extract ZIP (archive already decoded above)
       AppLogger.info('BackupService', 'Extracting ZIP...');
-      final bytes = await zipFile.readAsBytes();
-      final archive = ZipDecoder().decodeBytes(bytes);
 
       await importDir.create(recursive: true);
 

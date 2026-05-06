@@ -31,6 +31,11 @@ class AppSettings {
   final LengthUnit lengthUnit;
   final VolumeUnit volumeUnit;
 
+  /// Optional user-override for the timezone used when scheduling notifications.
+  /// When null the device's local timezone is used (default behaviour).
+  /// Format: IANA timezone string, e.g. 'Europe/Berlin' or 'America/New_York'.
+  final String? notificationTimezone;
+
   AppSettings({
     this.language = 'de',
     this.isDarkMode = true,
@@ -40,6 +45,7 @@ class AppSettings {
     this.temperatureUnit = TemperatureUnit.celsius,
     this.lengthUnit = LengthUnit.cm,
     this.volumeUnit = VolumeUnit.liter,
+    this.notificationTimezone,
   });
 
   /// ✅ FIX: All enum parsing now uses SafeParsers
@@ -78,6 +84,7 @@ class AppSettings {
         fallback: VolumeUnit.liter,
         context: 'AppSettings.fromMap.volumeUnit',
       ),
+      notificationTimezone: map['notification_timezone'] as String?,
     );
   }
 
@@ -91,6 +98,7 @@ class AppSettings {
       'temperature_unit': temperatureUnit.name,
       'length_unit': lengthUnit.name,
       'volume_unit': volumeUnit.name,
+      'notification_timezone': notificationTimezone,
     };
   }
 
@@ -103,6 +111,7 @@ class AppSettings {
     TemperatureUnit? temperatureUnit,
     LengthUnit? lengthUnit,
     VolumeUnit? volumeUnit,
+    Object? notificationTimezone = _kUndefined,
   }) {
     return AppSettings(
       language: language ?? this.language,
@@ -113,9 +122,14 @@ class AppSettings {
       temperatureUnit: temperatureUnit ?? this.temperatureUnit,
       lengthUnit: lengthUnit ?? this.lengthUnit,
       volumeUnit: volumeUnit ?? this.volumeUnit,
+      notificationTimezone: notificationTimezone == _kUndefined
+          ? this.notificationTimezone
+          : notificationTimezone as String?,
     );
   }
 }
+
+const Object _kUndefined = Object();
 
 /// Extension for PPM Scale display names
 extension PpmScaleExtension on PpmScale {

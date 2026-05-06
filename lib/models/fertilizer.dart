@@ -324,6 +324,10 @@ class Fertilizer {
     return 'Custom';
   }
 
+  /// Unit label for amount entry, derived from liquid/solid state.
+  /// Liquid fertilisers are measured in ml; solid/granular ones in g.
+  String get unitLabel => (isLiquid ?? true) ? 'ml' : 'g';
+
   /// Display name with brand and NPK
   String get displayName {
     final parts = <String>[];

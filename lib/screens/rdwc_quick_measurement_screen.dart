@@ -15,6 +15,7 @@ import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/safe_parsers.dart';
 import 'package:growlog_app/di/service_locator.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 
 class RdwcQuickMeasurementScreen extends StatefulWidget {
   final RdwcSystem system;
@@ -84,20 +85,20 @@ class _RdwcQuickMeasurementScreenState
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF2C2C2C),
+        backgroundColor: DT.elevated,
         title: Row(
           children: [
-            const Icon(Icons.schedule, color: Color(0xFFFF9800), size: 20),
+            const Icon(Icons.schedule, color: DT.warning, size: 20),
             const SizedBox(width: 8),
             Text(
               _t['pending_addback_found'],
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: const TextStyle(color: DT.textPrimary, fontSize: 16),
             ),
           ],
         ),
         content: Text(
           '${_t['addback_step1_summary']} ${DateFormat('dd.MM.yyyy HH:mm').format(pending.logDate)}.\n\n${_t['use_as_completion']}?',
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          style: const TextStyle(color: DT.textSecondary, fontSize: 14),
         ),
         actions: [
           TextButton(
@@ -107,7 +108,7 @@ class _RdwcQuickMeasurementScreenState
             },
             child: Text(
               _t['only_snapshot'],
-              style: const TextStyle(color: Colors.white54),
+              style: const TextStyle(color: DT.textTertiary),
             ),
           ),
           ElevatedButton(
@@ -116,8 +117,8 @@ class _RdwcQuickMeasurementScreenState
               Navigator.pop(ctx, true);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF9800),
-              foregroundColor: Colors.black,
+              backgroundColor: DT.warning,
+              foregroundColor: DT.onAccent,
             ),
             child: Text(
               _t['use_as_completion'],
@@ -199,7 +200,7 @@ class _RdwcQuickMeasurementScreenState
     return PlantryScaffold(
       titleWidget: Row(
         children: [
-          const Icon(Icons.science, color: Colors.purple),
+          const Icon(Icons.science, color: DT.info),
           const SizedBox(width: 8),
           Text(_t['quick_measurement']),
         ],
@@ -213,25 +214,18 @@ class _RdwcQuickMeasurementScreenState
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.purple.withValues(alpha: 0.1),
+                color: DT.info.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
+                border: Border.all(color: DT.info.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: Colors.purple,
-                  ),
+                  const Icon(Icons.info_outline, size: 16, color: DT.info),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _t['quick_measurement_hint'],
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.purple,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: DT.info),
                     ),
                   ),
                 ],
@@ -254,10 +248,7 @@ class _RdwcQuickMeasurementScreenState
               child: InputDecorator(
                 decoration: InputDecoration(
                   labelText: _t['date'],
-                  prefixIcon: const Icon(
-                    Icons.calendar_today,
-                    color: Colors.purple,
-                  ),
+                  prefixIcon: const Icon(Icons.calendar_today, color: DT.info),
                   border: const OutlineInputBorder(),
                 ),
                 child: Text(
@@ -370,7 +361,7 @@ class _RdwcQuickMeasurementScreenState
                   : const Icon(Icons.save),
               label: Text(_isSaving ? _t['saving'] : _t['save']),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple[700],
+                backgroundColor: DT.info,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),

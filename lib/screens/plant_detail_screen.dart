@@ -48,11 +48,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   final IPlantRepository _plantRepo = getIt<IPlantRepository>();
   final IGrowRepository _growRepo = getIt<IGrowRepository>();
   final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
-  final ILogFertilizerRepository _logFertilizerRepo = getIt<ILogFertilizerRepository>();
+  final ILogFertilizerRepository _logFertilizerRepo =
+      getIt<ILogFertilizerRepository>();
   final IPhotoRepository _photoRepo = getIt<IPhotoRepository>();
   final IHarvestService _harvestService = getIt<IHarvestService>();
   final IRdwcRepository _rdwcRepo = getIt<IRdwcRepository>();
-  
+
   late AppTranslations _t;
   final ScrollController _scrollController = ScrollController();
 
@@ -98,15 +99,21 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       final all = await _logRepo.findByPlant(widget.plant.id!);
       List<RdwcLog>? rdwcLogs;
       if (_currentPlant.rdwcSystemId != null) {
-        final raw =
-            await _rdwcRepo.getLogsBySystem(_currentPlant.rdwcSystemId!);
-        rdwcLogs = raw
-            .where((l) =>
-                l.logStatus == 'complete' &&
-                (l.ecAfter != null || l.phAfter != null ||
-                    l.ecBefore != null || l.phBefore != null))
-            .toList()
-          ..sort((a, b) => a.logDate.compareTo(b.logDate));
+        final raw = await _rdwcRepo.getLogsBySystem(
+          _currentPlant.rdwcSystemId!,
+        );
+        rdwcLogs =
+            raw
+                .where(
+                  (l) =>
+                      l.logStatus == 'complete' &&
+                      (l.ecAfter != null ||
+                          l.phAfter != null ||
+                          l.ecBefore != null ||
+                          l.phBefore != null),
+                )
+                .toList()
+              ..sort((a, b) => a.logDate.compareTo(b.logDate));
       }
       if (mounted) {
         setState(() {
@@ -121,7 +128,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.8) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.8) {
       if (!_isLoadingMore && _hasMoreLogs) _loadMoreLogs();
     }
   }
@@ -182,7 +190,11 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     if (_isLoadingMore || !_hasMoreLogs) return;
     setState(() => _isLoadingMore = true);
     try {
-      final newLogs = await _logRepo.findByPlant(_currentPlant.id!, limit: _pageSize, offset: _currentPage * _pageSize);
+      final newLogs = await _logRepo.findByPlant(
+        _currentPlant.id!,
+        limit: _pageSize,
+        offset: _currentPage * _pageSize,
+      );
       final newLogIds = newLogs.map((l) => l.id!).whereType<int>().toList();
       final newFerts = await _logFertilizerRepo.findByLogs(newLogIds);
       final newPhotos = await _photoRepo.getPhotosByLogIds(newLogIds);
@@ -204,7 +216,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
   Future<void> _showLogOptions() async {
     if (_currentPlant.growId == null) {
-      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => AddLogScreen(plant: _currentPlant)));
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => AddLogScreen(plant: _currentPlant)),
+      );
       if (result == true && mounted) _loadData();
       return;
     }
@@ -213,7 +228,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     if (!mounted) return;
 
     if (plantCount <= 1) {
-      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => AddLogScreen(plant: _currentPlant)));
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => AddLogScreen(plant: _currentPlant)),
+      );
       if (result == true && mounted) _loadData();
       return;
     }
@@ -222,23 +240,53 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: DT.elevated,
-        title: Text(_t['create_entry'], style: const TextStyle(color: DT.textPrimary)),
-        content: Text(_t['log_scope_question'], style: const TextStyle(color: DT.textSecondary)),
+        title: Text(
+          _t['create_entry'],
+          style: const TextStyle(color: DT.textPrimary),
+        ),
+        content: Text(
+          _t['log_scope_question'],
+          style: const TextStyle(color: DT.textSecondary),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, 'single'), child: Text(_t['only_this'])),
-          TextButton(onPressed: () => Navigator.pop(context, 'bulk'), child: Text(_t['all_plants'], style: const TextStyle(color: DT.accent))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'single'),
+            child: Text(_t['only_this']),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'bulk'),
+            child: Text(
+              _t['all_plants'],
+              style: const TextStyle(color: DT.accent),
+            ),
+          ),
         ],
       ),
     );
 
     if (choice == 'single' && mounted) {
-      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => AddLogScreen(plant: _currentPlant)));
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => AddLogScreen(plant: _currentPlant)),
+      );
       if (result == true && mounted) _loadData();
     } else if (choice == 'bulk' && mounted) {
       final allPlants = await _plantRepo.findAll();
       if (!mounted) return;
-      final growPlantIds = allPlants.where((p) => p.growId == _currentPlant.growId).map((p) => p.id!).toList();
-      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => AddLogScreen(plant: _currentPlant, bulkMode: true, bulkPlantIds: growPlantIds)));
+      final growPlantIds = allPlants
+          .where((p) => p.growId == _currentPlant.growId)
+          .map((p) => p.id!)
+          .toList();
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AddLogScreen(
+            plant: _currentPlant,
+            bulkMode: true,
+            bulkPlantIds: growPlantIds,
+          ),
+        ),
+      );
       if (result == true && mounted) _loadData();
     }
   }
@@ -252,7 +300,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         IconButton(
           icon: const Icon(Icons.photo_library, color: DT.textPrimary),
           onPressed: () async {
-            await Navigator.push(context, MaterialPageRoute(builder: (_) => PlantPhotoGalleryScreen(plant: _currentPlant)));
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PlantPhotoGalleryScreen(plant: _currentPlant),
+              ),
+            );
             if (mounted) _loadData();
           },
         ),
@@ -260,7 +313,11 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           icon: const Icon(Icons.edit, color: DT.textPrimary),
           onPressed: () async {
             final nav = Navigator.of(context);
-            final res = await nav.push(MaterialPageRoute(builder: (_) => EditPlantScreen(plant: _currentPlant)));
+            final res = await nav.push(
+              MaterialPageRoute(
+                builder: (_) => EditPlantScreen(plant: _currentPlant),
+              ),
+            );
             if (res == true) nav.pop(true);
           },
         ),
@@ -291,20 +348,29 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                           )
                         : const Padding(
                             padding: EdgeInsets.all(32),
-                            child: Center(child: CircularProgressIndicator(color: DT.accent)),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: DT.accent,
+                              ),
+                            ),
                           ),
                   )
                 else
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (ctx, i) {
-                          if (i == _logs.length) return const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(color: DT.accent)));
-                          return _buildLogCard(_logs[i]);
-                        },
-                        childCount: _logs.length + (_hasMoreLogs ? 1 : 0),
-                      ),
+                      delegate: SliverChildBuilderDelegate((ctx, i) {
+                        if (i == _logs.length)
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16),
+                              child: CircularProgressIndicator(
+                                color: DT.accent,
+                              ),
+                            ),
+                          );
+                        return _buildLogCard(_logs[i]);
+                      }, childCount: _logs.length + (_hasMoreLogs ? 1 : 0)),
                     ),
                   ),
               ],
@@ -321,17 +387,47 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             child: Row(
               children: [
                 Container(
-                  width: 60, height: 60,
-                  decoration: BoxDecoration(color: _getPhaseColor(_currentPlant.phase).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(15)),
-                  child: Center(child: Text(_currentPlant.phase.prefix, style: TextStyle(color: _getPhaseColor(_currentPlant.phase), fontSize: 24, fontWeight: FontWeight.bold))),
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: _getPhaseColor(
+                      _currentPlant.phase,
+                    ).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Center(
+                    child: Text(
+                      _currentPlant.phase.prefix,
+                      style: TextStyle(
+                        color: _getPhaseColor(_currentPlant.phase),
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_currentPlant.strain ?? _t['plant_detail_unknown_strain'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: DT.textPrimary)),
-                      Text(_currentPlant.breeder ?? _t['plant_detail_unknown_breeder'], style: const TextStyle(fontSize: 14, color: DT.textSecondary)),
+                      Text(
+                        _currentPlant.strain ??
+                            _t['plant_detail_unknown_strain'],
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: DT.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        _currentPlant.breeder ??
+                            _t['plant_detail_unknown_breeder'],
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: DT.textSecondary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -341,22 +437,53 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _infoBox(Icons.calendar_today, '${_currentPlant.totalDays} Tage', 'Alter')),
+              Expanded(
+                child: _infoBox(
+                  Icons.calendar_today,
+                  '${_currentPlant.totalDays} Tage',
+                  'Alter',
+                ),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: _infoBox(Icons.eco, _currentPlant.medium.displayName, 'Medium')),
+              Expanded(
+                child: _infoBox(
+                  Icons.eco,
+                  _currentPlant.medium.displayName,
+                  'Medium',
+                ),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: _infoBox(Icons.psychology, _currentPlant.seedType.displayName, 'Typ')),
+              Expanded(
+                child: _infoBox(
+                  Icons.psychology,
+                  _currentPlant.seedType.displayName,
+                  'Typ',
+                ),
+              ),
             ],
           ),
           if (_harvest != null) ...[
             const SizedBox(height: 12),
             PlantryCard(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HarvestDetailScreen(harvestId: _harvest!.id!))),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => HarvestDetailScreen(harvestId: _harvest!.id!),
+                ),
+              ),
               child: Row(
                 children: [
                   const Icon(Icons.check_circle, color: DT.success),
                   const SizedBox(width: 12),
-                  Expanded(child: Text('${_t['harvested_weight']} ${_harvest!.dryWeight?.toStringAsFixed(1) ?? "0"}g', style: const TextStyle(fontWeight: FontWeight.bold, color: DT.textPrimary))),
+                  Expanded(
+                    child: Text(
+                      '${_t['harvested_weight']} ${_harvest!.dryWeight?.toStringAsFixed(1) ?? "0"}g',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: DT.textPrimary,
+                      ),
+                    ),
+                  ),
                   const Icon(Icons.chevron_right, color: DT.textTertiary),
                 ],
               ),
@@ -374,15 +501,27 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         children: [
           Icon(icon, color: DT.accent, size: 20),
           const SizedBox(height: 4),
-          Text(val, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: DT.textPrimary), textAlign: TextAlign.center),
-          Text(label, style: const TextStyle(fontSize: 10, color: DT.textSecondary)),
+          Text(
+            val,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: DT.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, color: DT.textSecondary),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildActionRow() {
-    final showHarvest = _harvest == null &&
+    final showHarvest =
+        _harvest == null &&
         (_currentPlant.phase == PlantPhase.bloom ||
             _currentPlant.phase == PlantPhase.harvest);
     return Padding(
@@ -393,8 +532,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () async {
-                  final res = await Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => AddHarvestScreen(plant: _currentPlant)));
+                  final res = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AddHarvestScreen(plant: _currentPlant),
+                    ),
+                  );
                   if (res == true && mounted) _loadData();
                 },
                 icon: const Icon(Icons.grass, size: 16),
@@ -440,23 +583,72 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: _getPhaseColor(log.phase ?? _currentPlant.phase), borderRadius: BorderRadius.circular(8)),
-                  child: Text('${log.phase?.prefix ?? ""}${log.phaseDayNumber ?? ""}', style: const TextStyle(color: DT.canvas, fontWeight: FontWeight.bold, fontSize: 12)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getPhaseColor(log.phase ?? _currentPlant.phase),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${log.phase?.prefix ?? ""}${log.phaseDayNumber ?? ""}',
+                    style: const TextStyle(
+                      color: DT.canvas,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(log.actionType.displayName, style: const TextStyle(fontWeight: FontWeight.bold, color: DT.textPrimary))),
-                Text(DateFormat('dd.MM.yy').format(log.logDate), style: const TextStyle(fontSize: 11, color: DT.textTertiary)),
+                Expanded(
+                  child: Text(
+                    log.actionType.displayName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: DT.textPrimary,
+                    ),
+                  ),
+                ),
+                Text(
+                  DateFormat('dd.MM.yy').format(log.logDate),
+                  style: const TextStyle(fontSize: 11, color: DT.textTertiary),
+                ),
                 PopupMenuButton(
                   color: DT.elevated,
-                  icon: const Icon(Icons.more_vert, size: 18, color: DT.textTertiary),
-                  onSelected: (v) {
-                    if (v == 'edit') Navigator.push(context, MaterialPageRoute(builder: (_) => EditLogScreen(plant: _currentPlant, log: log))).then((_) { if (mounted) _loadData(); });
+                  icon: const Icon(
+                    Icons.more_vert,
+                    size: 18,
+                    color: DT.textTertiary,
+                  ),
+                  onSelected: (v) async {
+                    if (v == 'edit') {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              EditLogScreen(plant: _currentPlant, log: log),
+                        ),
+                      );
+                      if (mounted) _loadData();
+                    }
                     if (v == 'delete') _deleteLog(log);
                   },
                   itemBuilder: (ctx) => [
-                    PopupMenuItem(value: 'edit', child: Text(_t['edit'], style: const TextStyle(color: DT.textPrimary))),
-                    PopupMenuItem(value: 'delete', child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Text(
+                        _t['edit'],
+                        style: const TextStyle(color: DT.textPrimary),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text(
+                        _t['delete'],
+                        style: const TextStyle(color: DT.error),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -476,11 +668,22 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                         builder: (_) => Dialog(
                           backgroundColor: Colors.transparent,
                           child: InteractiveViewer(
-                            child: Image.file(File(photos[i].filePath), fit: BoxFit.contain),
+                            child: Image.file(
+                              File(photos[i].filePath),
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                       ),
-                      child: ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.file(File(photos[i].filePath), width: 80, height: 80, fit: BoxFit.cover)),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(photos[i].filePath),
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -488,33 +691,66 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             ],
             if (log.note != null && log.note!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(log.note!, style: const TextStyle(fontSize: 14, color: DT.textSecondary)),
+              Text(
+                log.note!,
+                style: const TextStyle(fontSize: 14, color: DT.textSecondary),
+              ),
             ],
             if (ferts.isNotEmpty) ...[
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
-                children: ferts.map((f) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: DT.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-                  child: Text('${_fertilizers[f.fertilizerId]?.name ?? "Dünger"}: ${f.amount}${f.unit}', style: const TextStyle(fontSize: 11, color: DT.accent)),
-                )).toList(),
+                children: ferts
+                    .map(
+                      (f) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: DT.accent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${_fertilizers[f.fertilizerId]?.name ?? "Dünger"}: ${f.amount}${f.unit}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: DT.accent,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ],
-            if (log.waterAmount != null || log.phIn != null || log.ecIn != null) ...[
+            if (log.waterAmount != null ||
+                log.phIn != null ||
+                log.ecIn != null) ...[
               const SizedBox(height: 8),
-              Text('${log.waterAmount != null ? "${log.waterAmount}L " : ""}${log.phIn != null ? "pH↑: ${log.phIn} " : ""}${log.ecIn != null ? "EC↑: ${log.ecIn}" : ""}',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: DT.textPrimary)),
+              Text(
+                '${log.waterAmount != null ? "${log.waterAmount}L " : ""}${log.phIn != null ? "pH↑: ${log.phIn} " : ""}${log.ecIn != null ? "EC↑: ${log.ecIn}" : ""}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: DT.textPrimary,
+                ),
+              ),
             ],
             if (log.runoff || log.phOut != null || log.ecOut != null) ...[
               const SizedBox(height: 4),
-              Text('${log.phOut != null ? "pH↓: ${log.phOut} " : ""}${log.ecOut != null ? "EC↓: ${log.ecOut} " : ""}${log.cleanse ? "🧹 Gespült" : ""}',
-                style: const TextStyle(fontSize: 12, color: DT.textSecondary)),
+              Text(
+                '${log.phOut != null ? "pH↓: ${log.phOut} " : ""}${log.ecOut != null ? "EC↓: ${log.ecOut} " : ""}${log.cleanse ? "🧹 Gespült" : ""}',
+                style: const TextStyle(fontSize: 12, color: DT.textSecondary),
+              ),
             ],
-            if (log.actionType == ActionType.transplant && (log.containerSize != null || log.systemReservoirSize != null)) ...[
+            if (log.actionType == ActionType.transplant &&
+                (log.containerSize != null ||
+                    log.systemReservoirSize != null)) ...[
               const SizedBox(height: 4),
-              Text('${log.containerSize != null ? "Topf: ${log.containerSize}L " : ""}${log.systemReservoirSize != null ? "Reservoir: ${log.systemReservoirSize}L" : ""}',
-                style: const TextStyle(fontSize: 12, color: DT.textSecondary)),
+              Text(
+                '${log.containerSize != null ? "Topf: ${log.containerSize}L " : ""}${log.systemReservoirSize != null ? "Reservoir: ${log.systemReservoirSize}L" : ""}',
+                style: const TextStyle(fontSize: 12, color: DT.textSecondary),
+              ),
             ],
           ],
         ),
@@ -533,12 +769,26 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         ),
         child: Row(
           children: [
-            Expanded(child: _toggleBtn(_t['view_list'], _viewIndex == 0, () => setState(() => _viewIndex = 0))),
-            Expanded(child: _toggleBtn(_t['view_timeline'], _viewIndex == 1, () => setState(() => _viewIndex = 1))),
-            Expanded(child: _toggleBtn('Charts', _viewIndex == 2, () {
-              setState(() => _viewIndex = 2);
-              _loadChartLogs();
-            })),
+            Expanded(
+              child: _toggleBtn(
+                _t['view_list'],
+                _viewIndex == 0,
+                () => setState(() => _viewIndex = 0),
+              ),
+            ),
+            Expanded(
+              child: _toggleBtn(
+                _t['view_timeline'],
+                _viewIndex == 1,
+                () => setState(() => _viewIndex = 1),
+              ),
+            ),
+            Expanded(
+              child: _toggleBtn('Charts', _viewIndex == 2, () {
+                setState(() => _viewIndex = 2);
+                _loadChartLogs();
+              }),
+            ),
           ],
         ),
       ),
@@ -552,7 +802,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? DT.accent.withValues(alpha: 0.15) : Colors.transparent,
+          color: selected
+              ? DT.accent.withValues(alpha: 0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(DT.radiusButton),
         ),
         child: Text(
@@ -570,15 +822,24 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
   IconData _actionIcon(ActionType t) {
     switch (t) {
-      case ActionType.water: return Icons.water_drop;
-      case ActionType.feed: return Icons.science;
-      case ActionType.trim: return Icons.content_cut;
-      case ActionType.transplant: return Icons.swap_vert;
-      case ActionType.training: return Icons.architecture;
-      case ActionType.note: return Icons.notes;
-      case ActionType.phaseChange: return Icons.flag;
-      case ActionType.harvest: return Icons.agriculture;
-      case ActionType.other: return Icons.more_horiz;
+      case ActionType.water:
+        return Icons.water_drop;
+      case ActionType.feed:
+        return Icons.science;
+      case ActionType.trim:
+        return Icons.content_cut;
+      case ActionType.transplant:
+        return Icons.swap_vert;
+      case ActionType.training:
+        return Icons.architecture;
+      case ActionType.note:
+        return Icons.notes;
+      case ActionType.phaseChange:
+        return Icons.flag;
+      case ActionType.harvest:
+        return Icons.agriculture;
+      case ActionType.other:
+        return Icons.more_horiz;
     }
   }
 
@@ -624,7 +885,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       Expanded(
                         flex: 1,
                         child: Center(
-                          child: Container(width: 2, color: isPhaseChange ? DT.accent.withValues(alpha: 0.5) : lineColor),
+                          child: Container(
+                            width: 2,
+                            color: isPhaseChange
+                                ? DT.accent.withValues(alpha: 0.5)
+                                : lineColor,
+                          ),
                         ),
                       )
                     else
@@ -636,13 +902,17 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: dot,
-                        boxShadow: isPhaseChange || isHarvest ? DT.glowShadow(dot) : null,
+                        boxShadow: isPhaseChange || isHarvest
+                            ? DT.glowShadow(dot)
+                            : null,
                       ),
                       child: Center(
                         child: Icon(
                           _actionIcon(log.actionType),
                           size: dotSize * 0.65,
-                          color: isPhaseChange || isHarvest ? DT.onAccent : DT.canvas,
+                          color: isPhaseChange || isHarvest
+                              ? DT.onAccent
+                              : DT.canvas,
                         ),
                       ),
                     ),
@@ -671,12 +941,18 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                         ? BoxDecoration(
                             color: DT.accent.withValues(alpha: 0.07),
                             borderRadius: BorderRadius.circular(DT.radiusCard),
-                            border: Border.all(color: DT.accent.withValues(alpha: 0.3), width: 0.8),
+                            border: Border.all(
+                              color: DT.accent.withValues(alpha: 0.3),
+                              width: 0.8,
+                            ),
                           )
                         : BoxDecoration(
                             color: DT.glassBackground,
                             borderRadius: BorderRadius.circular(DT.radiusCard),
-                            border: Border.all(color: DT.glassBorder, width: 0.5),
+                            border: Border.all(
+                              color: DT.glassBorder,
+                              width: 0.5,
+                            ),
                           ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -689,13 +965,18 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: isPhaseChange ? 14 : 13,
-                                  color: isPhaseChange ? DT.accent : DT.textPrimary,
+                                  color: isPhaseChange
+                                      ? DT.accent
+                                      : DT.textPrimary,
                                 ),
                               ),
                             ),
                             Text(
                               DateFormat('dd.MM.yyyy').format(log.logDate),
-                              style: const TextStyle(fontSize: 11, color: DT.textTertiary),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: DT.textTertiary,
+                              ),
                             ),
                           ],
                         ),
@@ -703,16 +984,26 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                           const SizedBox(height: 2),
                           Text(
                             '${_t['timeline_day']} ${log.phaseDayNumber}',
-                            style: const TextStyle(fontSize: 11, color: DT.textTertiary),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: DT.textTertiary,
+                            ),
                           ),
                         ],
                         if (isPhaseChange && log.phase != null) ...[
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
-                              color: _getPhaseColor(log.phase!).withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(DT.radiusChip),
+                              color: _getPhaseColor(
+                                log.phase!,
+                              ).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(
+                                DT.radiusChip,
+                              ),
                             ),
                             child: Text(
                               log.phase!.prefix,
@@ -728,7 +1019,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                           const SizedBox(height: 6),
                           Text(
                             log.note!,
-                            style: const TextStyle(fontSize: 13, color: DT.textSecondary),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: DT.textSecondary,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -746,14 +1040,29 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   }
 
   Future<void> _deleteLog(PlantLog log) async {
-    final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
-      backgroundColor: DT.elevated,
-      title: Text(_t['confirm_delete'], style: const TextStyle(color: DT.textPrimary)),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
-        TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
-      ],
-    ));
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: DT.elevated,
+        title: Text(
+          _t['confirm_delete'],
+          style: const TextStyle(color: DT.textPrimary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              _t['cancel'],
+              style: const TextStyle(color: DT.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(_t['delete'], style: const TextStyle(color: DT.error)),
+          ),
+        ],
+      ),
+    );
     if (ok == true) {
       await _logRepo.delete(log.id!);
       _loadData();
@@ -762,11 +1071,18 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
   Color _getPhaseColor(PlantPhase p) {
     switch (p) {
-      case PlantPhase.seedling: return DT.success;
-      case PlantPhase.veg: return DT.accent;
-      case PlantPhase.bloom: return Colors.purple;
-      case PlantPhase.harvest: return Colors.orange;
-      case PlantPhase.archived: return DT.textTertiary;
+      case PlantPhase.seedling:
+        return DT.success;
+      case PlantPhase.veg:
+        return DT.accent;
+      case PlantPhase.bloom:
+        return DT.info;
+      case PlantPhase.harvest:
+        return DT.warning;
+      case PlantPhase.archived:
+        return DT.textTertiary;
+      case PlantPhase.unknown:
+        return DT.textTertiary;
     }
   }
 }

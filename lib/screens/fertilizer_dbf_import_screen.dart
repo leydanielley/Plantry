@@ -209,7 +209,56 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
     return _selectedItems.length;
   }
 
-  Future<void> _performImport({required bool skipDuplicates}) async {
+  /// Show a dialog asking the user how to handle duplicate fertilizer names,
+  /// then proceed with the import using their chosen strategy.
+  Future<void> _askDuplicateResolutionThenImport() async {
+    // Find duplicates among currently selected items only.
+    final selectedDuplicates = _duplicateNames
+        .where((name) => _selectedItems.contains(name))
+        .toList();
+
+    if (selectedDuplicates.isEmpty) {
+      // No selected items are duplicates — import directly without dialog.
+      await _performImport(skipDuplicates: false);
+      return;
+    }
+
+    if (!mounted) return;
+
+    final choice = await showDialog<_DuplicateAction>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_t['dbf_duplicate_title']),
+        content: Text(_t['dbf_duplicate_body']),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(_DuplicateAction.skip),
+            child: Text(_t['dbf_duplicate_skip']),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(_DuplicateAction.replace),
+            child: Text(_t['dbf_duplicate_replace']),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: Text(_t['cancel']),
+          ),
+        ],
+      ),
+    );
+
+    if (choice == null || !mounted) return;
+
+    await _performImport(
+      skipDuplicates: choice == _DuplicateAction.skip,
+      replaceDuplicates: choice == _DuplicateAction.replace,
+    );
+  }
+
+  Future<void> _performImport({
+    required bool skipDuplicates,
+    bool replaceDuplicates = false,
+  }) async {
     setState(() {
       _isImporting = true;
     });
@@ -217,6 +266,17 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
     try {
       int imported = 0;
       int skipped = 0;
+      int replaced = 0;
+
+      // Build a name→id lookup for existing fertilizers when replacing.
+      Map<String, int> existingIdByName = {};
+      if (replaceDuplicates) {
+        final existing = await _fertilizerRepo.findAll();
+        existingIdByName = {
+          for (final f in existing)
+            if (f.id != null) f.name.toLowerCase(): f.id!,
+        };
+      }
 
       for (final fertilizer in _parsedFertilizers) {
         // Skip if not selected
@@ -225,24 +285,39 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
           continue;
         }
 
+        final isDuplicate = _duplicateNames.contains(fertilizer.name);
+
         // Check if duplicate
-        if (skipDuplicates && _duplicateNames.contains(fertilizer.name)) {
+        if (skipDuplicates && isDuplicate) {
           skipped++;
           continue;
         }
 
-        // Save fertilizer
+        if (replaceDuplicates && isDuplicate) {
+          // Overwrite existing entry by re-saving with the existing id.
+          final existingId = existingIdByName[fertilizer.name.toLowerCase()];
+          if (existingId != null) {
+            await _fertilizerRepo.save(fertilizer.copyWith(id: existingId));
+          } else {
+            await _fertilizerRepo.save(fertilizer);
+          }
+          replaced++;
+          continue;
+        }
+
+        // Save fertilizer (new or force-add as separate entry)
         await _fertilizerRepo.save(fertilizer);
         imported++;
       }
 
       if (mounted) {
-        final skippedText = skipped > 0
-            ? ' ($skipped ${_t['dbf_import_skipped']})'
-            : '';
+        final parts = <String>[];
+        if (imported > 0) parts.add('$imported ${_t['dbf_import_success']}');
+        if (replaced > 0) parts.add('$replaced ersetzt');
+        if (skipped > 0) parts.add('$skipped ${_t['dbf_import_skipped']}');
         AppMessages.showSuccess(
           context,
-          '$imported ${_t['dbf_import_success']}$skippedText',
+          parts.isNotEmpty ? parts.join(', ') : _t['dbf_import_success'],
         );
         Navigator.of(
           context,
@@ -896,7 +971,7 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _isImporting
                       ? null
-                      : () => _performImport(skipDuplicates: true),
+                      : () => _askDuplicateResolutionThenImport(),
                   icon: _isImporting
                       ? const SizedBox(
                           width: 20,
@@ -926,3 +1001,6 @@ class _FertilizerDbfImportScreenState extends State<FertilizerDbfImportScreen> {
     );
   }
 }
+
+/// Choices for resolving duplicate fertilizer names during DBF import.
+enum _DuplicateAction { skip, replace }

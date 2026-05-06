@@ -51,6 +51,14 @@ class MigrationManager {
   /// [oldVersion] Current database version
   /// [newVersion] Target database version
   /// [timeout] Maximum time to wait for migration (default: 10 minutes, to handle large databases)
+  /// Per-migration timeout — each individual migration script gets this budget.
+  /// Large DBs (100k+ logs) may need the full 10 min for a single ALTER TABLE.
+  static const Duration _perMigrationTimeout = Duration(minutes: 10);
+
+  /// Hard cap on the total migration run regardless of migration count.
+  /// Prevents an absurdly long wait when upgrading across many versions.
+  static const Duration _maxTotalTimeout = Duration(minutes: 60);
+
   Future<void> migrate(
     Database db,
     int oldVersion,
@@ -208,19 +216,21 @@ class MigrationManager {
               );
 
               try {
-                // Run migration with timeout
+                // Run migration with per-migration timeout.
+                // Using the class-level constant rather than the caller-supplied
+                // timeout so every migration gets a predictable, uniform budget.
                 await migration
                     .up(txn)
                     .timeout(
-                      timeout,
+                      _perMigrationTimeout,
                       onTimeout: () {
                         AppLogger.error(
                           'MigrationManager',
-                          '⏱️ Migration v${migration.version} timeout after ${timeout.inMinutes}min',
+                          '⏱️ Migration v${migration.version} timeout after ${_perMigrationTimeout.inMinutes}min',
                         );
                         throw TimeoutException(
                           'Migration v${migration.version} took too long',
-                          timeout,
+                          _perMigrationTimeout,
                         );
                       },
                     );
@@ -296,9 +306,16 @@ class MigrationManager {
             // Transaction commits here
           })
           .timeout(
-            timeout *
-                migrationsToRun
-                    .length, // Total timeout = per-migration timeout * count
+            // Total budget = per-migration budget × count, capped at the hard max.
+            // This ensures that upgrading across many placeholder versions
+            // (e.g. v20 → v44) does not consume an unreasonable amount of time
+            // while still giving each real migration its full per-step budget.
+            () {
+              final computed = _perMigrationTimeout * migrationsToRun.length;
+              return computed.inMilliseconds < _maxTotalTimeout.inMilliseconds
+                  ? computed
+                  : _maxTotalTimeout;
+            }(),
             onTimeout: () {
               AppLogger.error('MigrationManager', '⏱️ Total migration timeout');
               throw TimeoutException('Overall migration timeout');

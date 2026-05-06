@@ -226,6 +226,7 @@ class HealthScoreConfig {
         };
       case PlantPhase.harvest:
       case PlantPhase.archived:
+      case PlantPhase.unknown:
         return {
           'warning': harvestWateringWarningDays,
           'critical': harvestWateringCriticalDays,
@@ -244,6 +245,7 @@ class HealthScoreConfig {
         return {'min': bloomEcMin, 'max': bloomEcMax};
       case PlantPhase.harvest:
       case PlantPhase.archived:
+      case PlantPhase.unknown:
         return {'min': harvestEcMin, 'max': harvestEcMax};
     }
   }

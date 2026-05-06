@@ -143,7 +143,9 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                   _dropdown<PlantPhase>(
                     'Phase',
                     _phase,
-                    PlantPhase.values,
+                    PlantPhase.values
+                        .where((p) => p != PlantPhase.unknown)
+                        .toList(),
                     (v) => setState(() => _phase = v!),
                   ),
                   const SizedBox(height: 16),
@@ -171,12 +173,17 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                   const SizedBox(height: 24),
 
                   _section('Setup'),
-                  _dropdown<Medium>('Medium', _medium, Medium.values, (v) {
-                    setState(() {
-                      _medium = v!;
-                      if (v != Medium.rdwc) _selectedRdwcId = null;
-                    });
-                  }),
+                  _dropdown<Medium>(
+                    'Medium',
+                    _medium,
+                    Medium.values.where((m) => m != Medium.unknown).toList(),
+                    (v) {
+                      setState(() {
+                        _medium = v!;
+                        if (v != Medium.rdwc) _selectedRdwcId = null;
+                      });
+                    },
+                  ),
                   const SizedBox(height: 16),
                   if (_medium == Medium.rdwc) ...[
                     _rdwcDropdown(),

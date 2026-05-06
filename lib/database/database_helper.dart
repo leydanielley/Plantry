@@ -14,7 +14,8 @@ import 'package:growlog_app/database/database_recovery.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static final _lock = Lock(); // Mutex prevents race condition on concurrent initialization
+  static final _lock =
+      Lock(); // Mutex prevents race condition on concurrent initialization
 
   DatabaseHelper._init();
 
@@ -66,8 +67,7 @@ class DatabaseHelper {
     try {
       return await openDatabase(
         path,
-        version:
-            43, // v43: Recipes: Add phase column to rdwc_recipes
+        version: 43, // v43: Recipes: Add phase column to rdwc_recipes
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
@@ -111,15 +111,12 @@ class DatabaseHelper {
           'Recovery message: ${recoveryResult.message}',
         );
 
-        // Check if emergency backup exists
-        if (recoveryResult.message.contains('Emergency backup saved to:')) {
-          final backupPath = recoveryResult.message
-              .split('Emergency backup saved to:')[1]
-              .split('\n')[0]
-              .trim();
+        // Check if emergency backup exists using the typed field
+        // (previously used string-match on the message, which was fragile).
+        if (recoveryResult.hasEmergencyBackup) {
           AppLogger.warning(
             'DatabaseHelper',
-            '💾 Emergency backup available at:\n$backupPath',
+            '💾 Emergency backup available at:\n${recoveryResult.emergencyBackupPath}',
           );
           AppLogger.warning(
             'DatabaseHelper',

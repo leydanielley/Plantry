@@ -145,7 +145,9 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
 
     // Validate all fertilizer amounts
     for (final entry in _addedFertilizers) {
-      final amount = SafeParsers.parseUserDouble(entry.mlPerLiterController.text);
+      final amount = SafeParsers.parseUserDouble(
+        entry.mlPerLiterController.text,
+      );
       if (amount == null || amount <= 0) {
         AppMessages.showError(context, _t['invalid_fertilizer_amounts']);
         return;
@@ -194,7 +196,8 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
       // Add new fertilizers
       for (final entry in _addedFertilizers) {
         // ✅ CRITICAL FIX: Use tryParse to prevent crash on invalid input
-        final amount = SafeParsers.parseUserDouble(entry.mlPerLiterController.text) ?? 0.0;
+        final amount =
+            SafeParsers.parseUserDouble(entry.mlPerLiterController.text) ?? 0.0;
         final recipeFert = RecipeFertilizer(
           recipeId: recipeId,
           fertilizerId: entry.fertilizer.id!,
@@ -250,7 +253,10 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                   Expanded(
                     child: Text(
                       _t['recipe_info_hint'],
-                      style: const TextStyle(fontSize: 12, color: DT.textPrimary),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: DT.textPrimary,
+                      ),
                     ),
                   ),
                 ],
@@ -306,7 +312,10 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
                   child: Text(_t['recipe_phase_any']),
                 ),
                 ...PlantPhase.values
-                    .where((p) => p != PlantPhase.archived)
+                    .where(
+                      (p) =>
+                          p != PlantPhase.archived && p != PlantPhase.unknown,
+                    )
                     .map(
                       (p) => DropdownMenuItem<PlantPhase?>(
                         value: p,
@@ -453,10 +462,7 @@ class _RdwcRecipeFormScreenState extends State<RdwcRecipeFormScreen> {
     );
   }
 
-  Widget _buildFertilizerCard(
-    _RecipeFertilizerEntry entry,
-    int index,
-  ) {
+  Widget _buildFertilizerCard(_RecipeFertilizerEntry entry, int index) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(

@@ -276,6 +276,37 @@ class Harvest {
     );
   }
 
+  /// Validates that harvest phase-transition dates are in the correct order.
+  ///
+  /// Returns `null` if the order is valid (or cannot be checked due to missing
+  /// dates). Returns a human-readable error string if the order is violated.
+  ///
+  /// Enforced order: harvest → drying → curing
+  String? validatePhaseOrder() {
+    if (dryingStartDate != null && dryingStartDate!.isBefore(harvestDate)) {
+      return 'Trocknungsbeginn darf nicht vor dem Erntedatum liegen.';
+    }
+    if (dryingEndDate != null &&
+        dryingStartDate != null &&
+        dryingEndDate!.isBefore(dryingStartDate!)) {
+      return 'Trocknungsende darf nicht vor dem Trocknungsbeginn liegen.';
+    }
+    if (curingStartDate != null &&
+        dryingEndDate != null &&
+        curingStartDate!.isBefore(dryingEndDate!)) {
+      return 'Curing-Beginn darf nicht vor dem Trocknungsende liegen.';
+    }
+    if (curingStartDate != null && dryingStartDate == null) {
+      return 'Curing kann erst nach abgeschlossener Trocknung beginnen.';
+    }
+    if (curingEndDate != null &&
+        curingStartDate != null &&
+        curingEndDate!.isBefore(curingStartDate!)) {
+      return 'Curing-Ende darf nicht vor dem Curing-Beginn liegen.';
+    }
+    return null;
+  }
+
   /// Berechne Trocknungs-Tage automatisch
   /// ✅ FIX: Add +1 to include both start and end dates (was off-by-one)
   int? get calculatedDryingDays {

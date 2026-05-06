@@ -154,20 +154,49 @@ class _SplashScreenState extends State<SplashScreen> {
         });
       }
 
-      // Timeout of 10 minutes — migrations can take longer with large databases
-      final db = await DatabaseHelper.instance.database.timeout(
-        const Duration(minutes: 10),
-        onTimeout: () {
-          AppLogger.error(
+      // Bounded retry: try up to 3 times with a 30-second per-attempt timeout
+      // before giving up. This replaces the single 10-minute wait that could
+      // leave the user staring at a spinner for the full duration on a stuck DB.
+      const maxRetries = 3;
+      const perAttemptTimeout = Duration(seconds: 30);
+      Database? db;
+      for (int attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          db = await DatabaseHelper.instance.database.timeout(
+            perAttemptTimeout,
+            onTimeout: () {
+              AppLogger.warning(
+                'SplashScreen',
+                '⏱️ DB init attempt $attempt/$maxRetries timed out after ${perAttemptTimeout.inSeconds}s',
+              );
+              throw TimeoutException(
+                'Database initialization attempt $attempt took too long',
+              );
+            },
+          );
+          break; // success
+        } on TimeoutException {
+          if (attempt == maxRetries) {
+            AppLogger.error(
+              'SplashScreen',
+              '⏱️ DB init failed after $maxRetries attempts — giving up',
+            );
+            rethrow;
+          }
+          AppLogger.info(
             'SplashScreen',
-            '⏱️ Database initialization timeout after 10 minutes!',
+            'Retrying DB init (attempt ${attempt + 1}/$maxRetries)...',
           );
-          throw TimeoutException(
-            'Database initialization took too long (>10 min)',
-          );
-        },
-      );
-      final dbPath = db.path;
+          if (mounted) {
+            setState(() {
+              _status =
+                  'Datenbank wird initialisiert... (Versuch ${attempt + 1}/$maxRetries)';
+            });
+          }
+        }
+      }
+      // db is non-null here because we rethrow on the last failed attempt.
+      final dbPath = db!.path;
 
       if (kDebugMode) {
         AppLogger.info('SplashScreen', '✅ Database initialized: $dbPath');
@@ -186,7 +215,7 @@ class _SplashScreenState extends State<SplashScreen> {
         });
       }
 
-      final recoveryNeeded = await _checkAutoRecovery(db);
+      final recoveryNeeded = await _checkAutoRecovery(db!);
       if (recoveryNeeded) {
         // Recovery was performed, data should be restored
         if (kDebugMode) {
@@ -260,7 +289,7 @@ class _SplashScreenState extends State<SplashScreen> {
             children: [
               Icon(
                 tooManyRetries ? Icons.error : Icons.error_outline,
-                color: tooManyRetries ? Colors.red : Colors.orange,
+                color: tooManyRetries ? DT.error : DT.warning,
                 size: 32,
               ),
               const SizedBox(width: 12),
@@ -295,14 +324,14 @@ class _SplashScreenState extends State<SplashScreen> {
                             const Icon(
                               Icons.warning,
                               size: 18,
-                              color: Colors.red,
+                              color: DT.error,
                             ),
                             const SizedBox(width: 8),
                             Text(
                               t['splash_error_critical'],
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.red,
+                                color: DT.error,
                               ),
                             ),
                           ],
@@ -439,7 +468,7 @@ class _SplashScreenState extends State<SplashScreen> {
         builder: (context) => AlertDialog(
           title: const Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.orange),
+              Icon(Icons.warning_amber_rounded, color: DT.warning),
               SizedBox(width: 12),
               Text('Datenwiederherstellung'),
             ],

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import für den Fix
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:growlog_app/models/app_settings.dart';
 import 'package:growlog_app/repositories/interfaces/i_settings_repository.dart';
 import 'package:growlog_app/screens/splash_screen.dart';
@@ -23,19 +23,41 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ===================== RECOVERY CODE =====================
-  // Dieser Block löscht den fehlerhaften Migrations-Status.
+  // ===================== MIGRATION STATUS CHECK =====================
+  // Only clear 'in_progress' if the migration has genuinely timed out.
+  // A 'failed' status must NOT be silently cleared — it indicates a real
+  // problem that requires recovery dialog, not a silent reset.
   try {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getString('migration_status') == 'in_progress') {
-      await prefs.remove('migration_status');
-      await prefs.remove('migration_start_time');
-      AppLogger.warning('main.dart', 'FORCE-CLEARED stuck migration flag.');
+    final migrationStatus = prefs.getString('migration_status');
+    if (migrationStatus == 'in_progress') {
+      final startTimeMs = prefs.getInt('migration_start_time');
+      final elapsed = startTimeMs != null
+          ? DateTime.now().millisecondsSinceEpoch - startTimeMs
+          : null;
+      // Only clear if elapsed > 30 minutes (genuine timeout scenario).
+      // If start time is unknown, treat conservatively as timed-out.
+      final timedOut =
+          elapsed == null ||
+          elapsed > const Duration(minutes: 30).inMilliseconds;
+      if (timedOut) {
+        await prefs.setString('migration_status', 'timeout');
+        await prefs.remove('migration_start_time');
+        AppLogger.warning(
+          'main.dart',
+          'Migration stuck in progress for >30min — marked as timeout.',
+        );
+      } else {
+        AppLogger.info(
+          'main.dart',
+          'Migration in_progress but within time limit — leaving status intact.',
+        );
+      }
     }
   } catch (e) {
-    AppLogger.error('main.dart', 'Failed to clear migration flag', e);
+    AppLogger.error('main.dart', 'Failed to check migration flag', e);
   }
-  // ================= END RECOVERY CODE =================
+  // ================= END MIGRATION STATUS CHECK =================
 
   if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
     sqfliteFfiInit();

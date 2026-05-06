@@ -84,6 +84,11 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
         dryingStartDate: date,
         updatedAt: DateTime.now(),
       );
+      final orderError = updated.validatePhaseOrder();
+      if (orderError != null) {
+        if (mounted) AppMessages.showError(context, orderError);
+        return;
+      }
       await _harvestRepo.updateHarvest(updated);
       _loadHarvest();
 
@@ -125,16 +130,23 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                       final picked = await showDatePicker(
                         context: context,
                         initialDate: selectedDate,
-                        firstDate: _harvest!.dryingStartDate ?? _harvest!.harvestDate,
+                        firstDate:
+                            _harvest!.dryingStartDate ?? _harvest!.harvestDate,
                         lastDate: DateTime.now(),
                       );
-                      if (picked != null) setDialogState(() => selectedDate = picked);
+                      if (picked != null)
+                        setDialogState(() => selectedDate = picked);
                     },
                     child: InputDecorator(
                       decoration: InputDecoration(
                         labelText: _t['drying_end_date_label'],
-                        prefixIcon: const Icon(Icons.calendar_today, color: DT.success),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: const Icon(
+                          Icons.calendar_today,
+                          color: DT.success,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: Text(
                         DateFormat('dd.MM.yyyy').format(selectedDate),
@@ -150,11 +162,17 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                       decoration: BoxDecoration(
                         color: DT.secondary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: DT.secondary.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: DT.secondary.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.water_drop, color: DT.secondary, size: 20),
+                          const Icon(
+                            Icons.water_drop,
+                            color: DT.secondary,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             '${_t['wet_weight_display']}: ${_harvest!.wetWeight!.toStringAsFixed(1)}g',
@@ -179,7 +197,9 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     autofocus: true,
                   ),
                 ],
@@ -194,9 +214,15 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                 onPressed: () {
                   final w = double.tryParse(_dryWeightController.text);
                   if (w != null && w > 0) {
-                    Navigator.pop(dialogContext, {'weight': w, 'date': selectedDate});
+                    Navigator.pop(dialogContext, {
+                      'weight': w,
+                      'date': selectedDate,
+                    });
                   } else {
-                    AppMessages.showError(dialogContext, _t['harvest_error_invalid_weight']);
+                    AppMessages.showError(
+                      dialogContext,
+                      _t['harvest_error_invalid_weight'],
+                    );
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -217,6 +243,11 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
         dryWeight: result['weight'] as double,
         updatedAt: DateTime.now(),
       );
+      final orderError = updated.validatePhaseOrder();
+      if (orderError != null) {
+        if (mounted) AppMessages.showError(context, orderError);
+        return;
+      }
       await _harvestRepo.updateHarvest(updated);
       _loadHarvest();
 
@@ -347,7 +378,10 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 14, color: DT.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: DT.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -371,7 +405,10 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
                 const SizedBox(width: 8),
                 Text(
                   _t['drying_data'],
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),

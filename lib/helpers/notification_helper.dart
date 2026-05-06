@@ -56,31 +56,39 @@ class NotificationHelper {
         }
       }
 
-      await tryScheduleReminder('watering', settings.wateringReminders, () async {
-        final lastWatering = await _getLastWateringDate(plant.id!);
-        if (lastWatering != null) {
-          await _notificationService.scheduleWateringReminder(
-            plantId: plant.id!,
-            plantName: plant.name,
-            lastWatering: lastWatering,
-            intervalDays: settings.wateringIntervalDays,
-            notificationTime: settings.notificationTime,
-          );
-        }
-      });
+      await tryScheduleReminder(
+        'watering',
+        settings.wateringReminders,
+        () async {
+          final lastWatering = await _getLastWateringDate(plant.id!);
+          if (lastWatering != null) {
+            await _notificationService.scheduleWateringReminder(
+              plantId: plant.id!,
+              plantName: plant.name,
+              lastWatering: lastWatering,
+              intervalDays: settings.wateringIntervalDays,
+              notificationTime: settings.notificationTime,
+            );
+          }
+        },
+      );
 
-      await tryScheduleReminder('fertilizing', settings.fertilizingReminders, () async {
-        final lastFertilizing = await _getLastFertilizingDate(plant.id!);
-        if (lastFertilizing != null) {
-          await _notificationService.scheduleFertilizingReminder(
-            plantId: plant.id!,
-            plantName: plant.name,
-            lastFertilizing: lastFertilizing,
-            intervalDays: settings.fertilizingIntervalDays,
-            notificationTime: settings.notificationTime,
-          );
-        }
-      });
+      await tryScheduleReminder(
+        'fertilizing',
+        settings.fertilizingReminders,
+        () async {
+          final lastFertilizing = await _getLastFertilizingDate(plant.id!);
+          if (lastFertilizing != null) {
+            await _notificationService.scheduleFertilizingReminder(
+              plantId: plant.id!,
+              plantName: plant.name,
+              lastFertilizing: lastFertilizing,
+              intervalDays: settings.fertilizingIntervalDays,
+              notificationTime: settings.notificationTime,
+            );
+          }
+        },
+      );
 
       await tryScheduleReminder('photo', settings.photoReminders, () async {
         final lastPhoto = await _getLastPhotoDate(plant.id!);
@@ -280,6 +288,7 @@ class NotificationHelper {
         // Already in harvest phase
         return DateTime.now().add(const Duration(days: 7));
       case PlantPhase.archived:
+      case PlantPhase.unknown:
         return null;
     }
   }

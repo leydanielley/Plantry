@@ -14,5 +14,6 @@ abstract class ISettingsRepository {
   Future<void> setTemperatureUnit(TemperatureUnit unit);
   Future<void> setLengthUnit(LengthUnit unit);
   Future<void> setVolumeUnit(VolumeUnit unit);
+  Future<void> setNotificationTimezone(String? ianaTimezone);
   Future<void> saveSettings(AppSettings settings);
 }

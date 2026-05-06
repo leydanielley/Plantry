@@ -269,7 +269,10 @@ class _PlantsScreenState extends State<PlantsScreen> {
                   ),
                   Text(
                     '$plantCount ${plantCount == 1 ? _t['plant'] : _t['plants_count']}',
-                    style: const TextStyle(fontSize: 13, color: DT.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: DT.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -277,7 +280,10 @@ class _PlantsScreenState extends State<PlantsScreen> {
             AnimatedRotation(
               turns: isExpanded ? 0 : -0.5,
               duration: const Duration(milliseconds: 200),
-              child: const Icon(Icons.keyboard_arrow_down, color: DT.textTertiary),
+              child: const Icon(
+                Icons.keyboard_arrow_down,
+                color: DT.textTertiary,
+              ),
             ),
           ],
         ),
@@ -302,10 +308,13 @@ class _PlantsScreenState extends State<PlantsScreen> {
         ),
       ),
       title: plant.name,
-      subtitle: '${plant.strain ?? _t['unknown_strain']} • ${_t['day']} ${plant.totalDays} • ${_getPhaseName(plant.phase)}',
+      subtitle:
+          '${plant.strain ?? _t['unknown_strain']} • ${_t['day']} ${plant.totalDays} • ${_getPhaseName(plant.phase)}',
       onTap: () async {
         final result = await Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => PlantDetailScreen(plant: plant)),
+          MaterialPageRoute(
+            builder: (context) => PlantDetailScreen(plant: plant),
+          ),
         );
         if (result == true && mounted) _loadData();
       },
@@ -352,7 +361,9 @@ class _PlantsScreenState extends State<PlantsScreen> {
           const Icon(Icons.spa_outlined, size: 80, color: DT.textTertiary),
           const SizedBox(height: 24),
           Text(
-            _showOrphansOnly ? 'Keine verwaisten Pflanzen!' : _t['no_plants_available'],
+            _showOrphansOnly
+                ? 'Keine verwaisten Pflanzen!'
+                : _t['no_plants_available'],
             style: const TextStyle(
               fontSize: 20,
               color: DT.textPrimary,
@@ -361,7 +372,9 @@ class _PlantsScreenState extends State<PlantsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _showOrphansOnly ? 'Alles ist korrekt zugewiesen.' : _t['create_first_plant'],
+            _showOrphansOnly
+                ? 'Alles ist korrekt zugewiesen.'
+                : _t['create_first_plant'],
             style: const TextStyle(fontSize: 16, color: DT.textSecondary),
           ),
         ],
@@ -371,21 +384,35 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
   String _getPhaseName(PlantPhase phase) {
     switch (phase) {
-      case PlantPhase.seedling: return _t['seedling'];
-      case PlantPhase.veg: return _t['veg'];
-      case PlantPhase.bloom: return _t['bloom'];
-      case PlantPhase.harvest: return _t['harvest'];
-      case PlantPhase.archived: return _t['phase_archived'];
+      case PlantPhase.seedling:
+        return _t['seedling'];
+      case PlantPhase.veg:
+        return _t['veg'];
+      case PlantPhase.bloom:
+        return _t['bloom'];
+      case PlantPhase.harvest:
+        return _t['harvest'];
+      case PlantPhase.archived:
+        return _t['phase_archived'];
+      case PlantPhase.unknown:
+        return '';
     }
   }
 
   String _getPhaseEmoji(PlantPhase phase) {
     switch (phase) {
-      case PlantPhase.seedling: return '🌱';
-      case PlantPhase.veg: return '🌿';
-      case PlantPhase.bloom: return '🌸';
-      case PlantPhase.harvest: return '✂️';
-      case PlantPhase.archived: return '📦';
+      case PlantPhase.seedling:
+        return '🌱';
+      case PlantPhase.veg:
+        return '🌿';
+      case PlantPhase.bloom:
+        return '🌸';
+      case PlantPhase.harvest:
+        return '✂️';
+      case PlantPhase.archived:
+        return '📦';
+      case PlantPhase.unknown:
+        return '';
     }
   }
 }
