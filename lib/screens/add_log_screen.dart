@@ -248,8 +248,25 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
         maxHeight: 1920,
         imageQuality: 85,
       );
-      if (photo != null && mounted) {
-        setState(() => _selectedPhotos.add(photo));
+      if (photo == null || !mounted) return;
+
+      // Copy the picker temp file into our own staging directory immediately.
+      // The system may clear the image_picker cache before the user taps Save,
+      // causing a stale-file race. Staging makes the path stable for the entire
+      // form session and is cleaned up in dispose() if the user cancels.
+      final tempDir = await getTemporaryDirectory();
+      final stagingDir = Directory(
+        path.join(tempDir.path, 'plantry_photo_staging'),
+      );
+      if (!await stagingDir.exists()) await stagingDir.create(recursive: true);
+      final stagedName =
+          '${DateTime.now().millisecondsSinceEpoch}_${path.basename(photo.path)}';
+      final stagedFile = await File(
+        photo.path,
+      ).copy(path.join(stagingDir.path, stagedName));
+
+      if (mounted) {
+        setState(() => _selectedPhotos.add(XFile(stagedFile.path)));
       }
     } catch (e) {
       if (mounted) AppMessages.showError(context, 'Fehler: $e');
@@ -1059,7 +1076,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
           content: TextField(
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              labelText: _t['fertilizer_amount_label'],
+              labelText: '${_t['fertilizer_amount_label']} (${sel.unitLabel})',
               floatingLabelBehavior: FloatingLabelBehavior.always,
             ),
             autofocus: true,
@@ -1075,7 +1092,7 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
 
   Widget _buildPhaseSelector() {
     final phases = PlantPhase.values
-        .where((p) => p != PlantPhase.archived)
+        .where((p) => p != PlantPhase.archived && p != PlantPhase.unknown)
         .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1217,8 +1234,9 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       return;
     }
     setState(() => _isLoading = true);
+    List<String> photoPaths = [];
     try {
-      final photoPaths = await _savePhotos();
+      photoPaths = await _savePhotos();
       if (widget.bulkMode) {
         await _logService.saveBulkLog(
           plantIds: widget.bulkPlantIds!,
@@ -1272,6 +1290,20 @@ class _AddLogScreenState extends State<AddLogScreen> with ErrorHandlingMixin {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
+      // Roll back any photos that were already copied to the documents dir
+      // but could not be committed to the DB — avoids orphaned files.
+      for (final p in photoPaths) {
+        try {
+          final f = File(p);
+          if (await f.exists()) await f.delete();
+        } catch (_) {
+          // Best-effort cleanup; log but continue.
+          AppLogger.warning(
+            'AddLogScreen',
+            'Could not clean up orphaned photo: $p',
+          );
+        }
+      }
       if (mounted) AppMessages.showError(context, _t['error_saving_log']);
       setState(() => _isLoading = false);
     }

@@ -126,11 +126,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       // Pro Count ein eigener catchError → ein einzelner Repo-Fail zerstört
       // nicht das ganze Dashboard. Vorher wurde der Throw von Future.wait
       // rebroadcastet → outer catch → Dashboard zeigt leeren State (H8).
-      Future<int> safeCount(Future<int> f, String label) =>
-          f.catchError((e) {
-            AppLogger.warning('DashboardScreen', '$label count failed', e);
-            return 0;
-          });
+      Future<int> safeCount(Future<int> f, String label) => f.catchError((e) {
+        AppLogger.warning('DashboardScreen', '$label count failed', e);
+        return 0;
+      });
       final res = await Future.wait([
         safeCount(_plantRepo.count(), 'plants'),
         safeCount(_growRepo.getAll().then((l) => l.length), 'grows'),
@@ -159,6 +158,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           case PlantPhase.seedling:
           case PlantPhase.harvest:
           case PlantPhase.archived:
+          case PlantPhase.unknown:
             ref = p.phaseStartDate;
             break;
         }
@@ -317,7 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       children: [
                         QuickActionBubble(
                           icon: Icons.water_drop_outlined,
-                          color: Colors.blue,
+                          color: DT.secondary,
                           onTap: _quickWater,
                         ),
                         const SizedBox(width: 12),
@@ -411,10 +411,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                 _anim(
                   3,
                   PlantryPremiumCard(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const PlantsScreen()),
-                    ).then((_) { if (mounted) _loadData(); }),
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PlantsScreen()),
+                      );
+                      if (mounted) _loadData();
+                    },
                     padding: EdgeInsets.zero,
                     child: Column(
                       children: [
@@ -484,12 +487,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                           icon: 'assets/icons/grows_icon.png',
                           label: _t['grows'],
                           stat: _growCount,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const GrowListScreen(),
-                            ),
-                          ).then((_) { if (mounted) _loadData(); }),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const GrowListScreen(),
+                              ),
+                            );
+                            if (mounted) _loadData();
+                          },
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -498,12 +504,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                           icon: 'assets/icons/room_icon.png',
                           label: _t['rooms'],
                           stat: _roomCount,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const RoomListScreen(),
-                            ),
-                          ).then((_) { if (mounted) _loadData(); }),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RoomListScreen(),
+                              ),
+                            );
+                            if (mounted) _loadData();
+                          },
                         ),
                       ),
                     ],
@@ -520,12 +529,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                           icon: 'assets/icons/fertilizer_icon.png',
                           label: _t['fertilizers'],
                           stat: _fertilizerCount,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const FertilizerListScreen(),
-                            ),
-                          ).then((_) { if (mounted) _loadData(); }),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const FertilizerListScreen(),
+                              ),
+                            );
+                            if (mounted) _loadData();
+                          },
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -534,12 +546,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                           icon: 'assets/icons/harvest_icon.png',
                           label: _t['harvests'],
                           stat: _harvestCount,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const HarvestListScreen(),
-                            ),
-                          ).then((_) { if (mounted) _loadData(); }),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HarvestListScreen(),
+                              ),
+                            );
+                            if (mounted) _loadData();
+                          },
                         ),
                       ),
                     ],
@@ -570,12 +585,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                             icon: 'assets/icons/rdwc_icon.png',
                             label: 'RDWC',
                             stat: _rdwcCount,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const RdwcSystemsScreen(),
-                              ),
-                            ).then((_) { if (mounted) _loadData(); }),
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RdwcSystemsScreen(),
+                                ),
+                              );
+                              if (mounted) _loadData();
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -609,13 +627,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                               size: 40,
                             ),
                             label: _t['calculator_action'],
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const NutrientCalculatorScreen(),
-                              ),
-                            ).then((_) { if (mounted) _loadData(); }),
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const NutrientCalculatorScreen(),
+                                ),
+                              );
+                              if (mounted) _loadData();
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -629,14 +650,17 @@ class _DashboardScreenState extends State<DashboardScreen>
                 _anim(
                   8,
                   PlantryPremiumCard(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => SettingsScreen(
-                          onSettingsChanged: _onSettingsChanged,
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SettingsScreen(
+                            onSettingsChanged: _onSettingsChanged,
+                          ),
                         ),
-                      ),
-                    ).then((_) { if (mounted) _loadData(); }),
+                      );
+                      if (mounted) _loadData();
+                    },
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 16,
@@ -782,20 +806,22 @@ class _DashboardScreenState extends State<DashboardScreen>
 
       if (sel != null && mounted) {
         final p = plants.firstWhere((p) => p.id == sel);
-        Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => AddLogScreen(plant: p)),
-        ).then((_) { if (mounted) _loadData(); });
+        );
+        if (mounted) _loadData();
       }
     }
   }
 
   Future<void> _startQuickLogForPlant(Plant plant) async {
     if (!mounted) return;
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AddLogScreen(plant: plant)),
-    ).then((_) { if (mounted) _loadData(); });
+    );
+    if (mounted) _loadData();
   }
 
   Future<void> _showInactivePlantsSheet() async {

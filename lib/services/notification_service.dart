@@ -22,12 +22,24 @@ class NotificationService implements INotificationService {
   bool _initialized = false;
   bool _platformSupported = false;
 
+  /// Cached initialization Future — subsequent calls await the same Future
+  /// instead of racing through the `_initialized` flag check.
+  Future<void>? _initFuture;
+
   static bool get _isSupportedPlatform =>
       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-  /// Initialize notification service
+  /// Initialize notification service.
+  ///
+  /// Thread-safe: concurrent callers all await the same underlying Future,
+  /// so the initialization body runs exactly once even under parallel calls.
   @override
-  Future<void> initialize() async {
+  Future<void> initialize() {
+    _initFuture ??= _initializeInternal();
+    return _initFuture!;
+  }
+
+  Future<void> _initializeInternal() async {
     if (_initialized) return;
 
     if (!_isSupportedPlatform) {
@@ -85,6 +97,46 @@ class NotificationService implements INotificationService {
       AppLogger.info('NotificationService', 'Initialized successfully');
     } catch (e) {
       AppLogger.error('NotificationService', 'Initialization failed', e);
+    }
+  }
+
+  /// Apply a user-supplied timezone override for notification scheduling.
+  ///
+  /// Call this whenever the user saves settings with a non-null
+  /// [notificationTimezone]. Pass null to revert to the device timezone.
+  /// Safe to call before [initialize] completes — will be a no-op on
+  /// unsupported platforms or if timezone data is not yet loaded.
+  void applyTimezoneOverride(String? ianaTimezone) {
+    if (!_platformSupported) return;
+    try {
+      if (ianaTimezone != null && ianaTimezone.isNotEmpty) {
+        tz.setLocalLocation(tz.getLocation(ianaTimezone));
+        AppLogger.info(
+          'NotificationService',
+          'Timezone override applied: $ianaTimezone',
+        );
+      } else {
+        // Revert to device timezone
+        FlutterTimezone.getLocalTimezone().then((deviceTz) {
+          try {
+            tz.setLocalLocation(tz.getLocation(deviceTz));
+            AppLogger.info(
+              'NotificationService',
+              'Timezone reverted to device timezone: $deviceTz',
+            );
+          } catch (e) {
+            AppLogger.warning(
+              'NotificationService',
+              'Could not revert to device timezone: $e',
+            );
+          }
+        });
+      }
+    } catch (e) {
+      AppLogger.warning(
+        'NotificationService',
+        'Invalid timezone override "$ianaTimezone": $e',
+      );
     }
   }
 

@@ -110,7 +110,11 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
         });
       }
     } catch (e) {
-      AppLogger.error('RdwcDosingPlanScreen', 'Error loading recipe fertilizers', e);
+      AppLogger.error(
+        'RdwcDosingPlanScreen',
+        'Error loading recipe fertilizers',
+        e,
+      );
     }
   }
 
@@ -185,10 +189,7 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
               dropdownColor: DT.elevated,
               style: const TextStyle(color: DT.textPrimary),
               items: _recipes.map((r) {
-                return DropdownMenuItem(
-                  value: r,
-                  child: Text(r.name),
-                );
+                return DropdownMenuItem(value: r, child: Text(r.name));
               }).toList(),
               onChanged: _onRecipeSelected,
             ),
@@ -221,7 +222,9 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
                 ..._systems.map((s) {
                   return DropdownMenuItem<RdwcSystem?>(
                     value: s,
-                    child: Text('${s.name} (${s.maxCapacity.toStringAsFixed(0)} ${_t['unit_liters']})'),
+                    child: Text(
+                      '${s.name} (${s.maxCapacity.toStringAsFixed(0)} ${_t['unit_liters']})',
+                    ),
                   );
                 }),
               ],
@@ -242,7 +245,9 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
             TextFormField(
               controller: _volumeController,
               decoration: _inputDeco(_t['dosing_plan_volume_hint']),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               style: const TextStyle(color: DT.textPrimary),
               onChanged: (_) => setState(() => _showResult = false),
               validator: (value) {
@@ -271,7 +276,10 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: DT.accent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(DT.radiusChip),
@@ -318,7 +326,10 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
               icon: const Icon(Icons.table_chart),
               label: Text(
                 _t['dosing_plan_generate'],
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
             ),
           ],
@@ -337,10 +348,7 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
           const SizedBox(height: 12),
           Text(
             _t['dosing_plan_no_recipe_selected'],
-            style: const TextStyle(
-              color: DT.textSecondary,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: DT.textSecondary, fontSize: 14),
             textAlign: TextAlign.center,
           ),
         ],
@@ -417,16 +425,18 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
                     ),
                   ),
                 ),
-                ...cols.map((fert) => DataColumn(
-                  label: Text(
-                    fert?.name ?? '?',
-                    style: const TextStyle(
-                      color: DT.accent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                ...cols.map(
+                  (fert) => DataColumn(
+                    label: Text(
+                      fert?.name ?? '?',
+                      style: const TextStyle(
+                        color: DT.accent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                )),
+                ),
                 DataColumn(
                   label: Text(
                     _t['dosing_plan_col_total'],
@@ -450,29 +460,35 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
                 return DataRow(
                   color: WidgetStateProperty.all(rowColor),
                   cells: [
-                    DataCell(Text(
-                      '${_t['dosing_plan_week_prefix']} ${weekIdx + 1}',
-                      style: const TextStyle(
-                        color: DT.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    DataCell(
+                      Text(
+                        '${_t['dosing_plan_week_prefix']} ${weekIdx + 1}',
+                        style: const TextStyle(
+                          color: DT.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    )),
+                    ),
                     ..._recipeFertilizers.map((rf) {
                       final ml = rf.mlPerLiter * volume;
-                      return DataCell(Text(
-                        '${ml.toStringAsFixed(1)} ml',
-                        style: DT.mono(size: 12, color: DT.textPrimary),
-                      ));
+                      return DataCell(
+                        Text(
+                          '${ml.toStringAsFixed(1)} ml',
+                          style: DT.mono(size: 12, color: DT.textPrimary),
+                        ),
+                      );
                     }),
-                    DataCell(Text(
-                      '${totalMl.toStringAsFixed(1)} ml',
-                      style: DT.mono(
-                        size: 12,
-                        color: DT.accent,
-                        weight: FontWeight.bold,
+                    DataCell(
+                      Text(
+                        '${totalMl.toStringAsFixed(1)} ml',
+                        style: DT.mono(
+                          size: 12,
+                          color: DT.accent,
+                          weight: FontWeight.bold,
+                        ),
                       ),
-                    )),
+                    ),
                   ],
                 );
               }),
@@ -499,7 +515,8 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
           if (recipe.targetEc != null) ...[
             _buildTargetChip(
               icon: Icons.analytics,
-              label: '${_t['dosing_plan_target_ec']}: ${recipe.targetEc!.toStringAsFixed(2)}',
+              label:
+                  '${_t['dosing_plan_target_ec']}: ${recipe.targetEc!.toStringAsFixed(2)}',
               color: DT.success,
             ),
           ],
@@ -508,7 +525,8 @@ class _RdwcDosingPlanScreenState extends State<RdwcDosingPlanScreen> {
           if (recipe.targetPh != null) ...[
             _buildTargetChip(
               icon: Icons.water_drop,
-              label: '${_t['dosing_plan_target_ph']}: ${recipe.targetPh!.toStringAsFixed(2)}',
+              label:
+                  '${_t['dosing_plan_target_ph']}: ${recipe.targetPh!.toStringAsFixed(2)}',
               color: DT.warning,
             ),
           ],

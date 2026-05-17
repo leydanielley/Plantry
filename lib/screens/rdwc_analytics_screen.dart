@@ -61,41 +61,66 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
   }
 
   Future<void> _loadData() async {
-    if (!mounted) return; // ✅ FIX: Add mounted check before setState
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
+    // Per-future failure isolation: one failing query does not blank the whole
+    // screen. Each future falls back to null/empty so the other tabs still render.
     try {
-      final settings = await _settingsRepo.getSettings();
-      final consumptionStats = await _rdwcRepo.getConsumptionStats(
-        widget.system.id!,
-        days: _selectedDays,
-      );
-      final dailyConsumption = await _rdwcRepo.getDailyConsumption(
-        widget.system.id!,
-        days: _selectedDays,
-      );
-      final ecDrift = await _rdwcRepo.getEcDriftAnalysis(
-        widget.system.id!,
-        days: _selectedDays,
-      );
-      final phDrift = await _rdwcRepo.getPhDriftAnalysis(
-        widget.system.id!,
-        days: _selectedDays,
-      );
-      final logs = await _rdwcRepo.getRecentLogs(
-        widget.system.id!,
-        limit: _selectedDays * 3,
-      );
+      final systemId = widget.system.id!;
+
+      final results = await Future.wait<dynamic>([
+        _settingsRepo.getSettings(),
+        _rdwcRepo.getConsumptionStats(systemId, days: _selectedDays).catchError(
+          (e) {
+            AppLogger.warning(
+              'RdwcAnalyticsScreen',
+              'consumptionStats failed',
+              e,
+            );
+            return <String, dynamic>{};
+          },
+        ),
+        _rdwcRepo.getDailyConsumption(systemId, days: _selectedDays).catchError(
+          (e) {
+            AppLogger.warning(
+              'RdwcAnalyticsScreen',
+              'dailyConsumption failed',
+              e,
+            );
+            return <String, double>{};
+          },
+        ),
+        _rdwcRepo.getEcDriftAnalysis(systemId, days: _selectedDays).catchError((
+          e,
+        ) {
+          AppLogger.warning('RdwcAnalyticsScreen', 'ecDrift failed', e);
+          return <String, dynamic>{};
+        }),
+        _rdwcRepo.getPhDriftAnalysis(systemId, days: _selectedDays).catchError((
+          e,
+        ) {
+          AppLogger.warning('RdwcAnalyticsScreen', 'phDrift failed', e);
+          return <String, dynamic>{};
+        }),
+        _rdwcRepo.getRecentLogs(systemId, limit: _selectedDays * 3).catchError((
+          e,
+        ) {
+          AppLogger.warning('RdwcAnalyticsScreen', 'recentLogs failed', e);
+          return <RdwcLog>[];
+        }),
+      ], eagerError: false);
 
       if (mounted) {
+        final settings = results[0] as AppSettings;
         setState(() {
           _settings = settings;
           _t = AppTranslations(settings.language);
-          _consumptionStats = consumptionStats;
-          _dailyConsumption = dailyConsumption;
-          _ecDrift = ecDrift;
-          _phDrift = phDrift;
-          _logs = logs;
+          _consumptionStats = (results[1] as Map).cast<String, dynamic>();
+          _dailyConsumption = (results[2] as Map).cast<String, dynamic>();
+          _ecDrift = (results[3] as Map).cast<String, dynamic>();
+          _phDrift = (results[4] as Map).cast<String, dynamic>();
+          _logs = (results[5] as List).cast<RdwcLog>();
           _isLoading = false;
         });
       }
@@ -110,7 +135,8 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
   @override
   Widget build(BuildContext context) {
     return PlantryScaffold(
-      title: '${widget.system.name} - ${_isLoading ? 'Loading...' : _t['analytics']}',
+      title:
+          '${widget.system.name} - ${_isLoading ? 'Loading...' : _t['analytics']}',
       actions: [
         // Day selector
         PopupMenuButton<int>(
@@ -290,14 +316,14 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
         .toList();
 
     // EC trend data — only complete logs with ecAfter, sorted ascending
-    final ecTrendLogs = _logs
-        .where((l) => !l.isPending && l.ecAfter != null)
-        .toList()
-      ..sort((a, b) => a.logDate.compareTo(b.logDate));
+    final ecTrendLogs =
+        _logs.where((l) => !l.isPending && l.ecAfter != null).toList()
+          ..sort((a, b) => a.logDate.compareTo(b.logDate));
 
     // Warning: EC > ecWarningMax
     final latestEc = ecTrendLogs.isNotEmpty ? ecTrendLogs.last.ecAfter! : null;
-    final ecOverMax = latestEc != null &&
+    final ecOverMax =
+        latestEc != null &&
         widget.system.ecWarningMax != null &&
         latestEc > widget.system.ecWarningMax!;
 
@@ -305,7 +331,9 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
     bool ecRising = false;
     if (ecTrendLogs.length >= 2) {
       final cutoff = DateTime.now().subtract(const Duration(days: 3));
-      final recent = ecTrendLogs.where((l) => l.logDate.isAfter(cutoff)).toList();
+      final recent = ecTrendLogs
+          .where((l) => l.logDate.isAfter(cutoff))
+          .toList();
       if (recent.length >= 2) {
         final delta = recent.last.ecAfter! - recent.first.ecAfter!;
         ecRising = delta > 0.3;
@@ -313,7 +341,9 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
     }
 
     // Fullchange events in trend logs
-    final hasFullchange = ecTrendLogs.any((l) => l.logType == RdwcLogType.fullChange);
+    final hasFullchange = ecTrendLogs.any(
+      (l) => l.logType == RdwcLogType.fullChange,
+    );
 
     return RefreshIndicator(
       onRefresh: _loadData,
@@ -322,15 +352,27 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
         children: [
           // Warning banners
           if (ecOverMax) ...[
-            _warningBanner(Icons.warning_amber_rounded, _t['ec_over_max_warning'], DT.error),
+            _warningBanner(
+              Icons.warning_amber_rounded,
+              _t['ec_over_max_warning'],
+              DT.error,
+            ),
             const SizedBox(height: 8),
           ],
           if (ecRising) ...[
-            _warningBanner(Icons.trending_up, _t['ec_rising_warning'], DT.warning),
+            _warningBanner(
+              Icons.trending_up,
+              _t['ec_rising_warning'],
+              DT.warning,
+            ),
             const SizedBox(height: 8),
           ],
           if (hasFullchange) ...[
-            _warningBanner(Icons.sync, _t['new_phase_after_fullchange'], DT.secondary),
+            _warningBanner(
+              Icons.sync,
+              _t['new_phase_after_fullchange'],
+              DT.secondary,
+            ),
             const SizedBox(height: 8),
           ],
           if (ecOverMax || ecRising || hasFullchange) const SizedBox(height: 8),
@@ -531,7 +573,16 @@ class _RdwcAnalyticsScreenState extends State<RdwcAnalyticsScreen>
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500))),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
         ],
       ),
     );

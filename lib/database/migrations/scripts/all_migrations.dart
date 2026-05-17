@@ -16,6 +16,7 @@ import 'package:growlog_app/database/migrations/scripts/migration_v17.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v18.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v19.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v20.dart';
+import 'package:growlog_app/database/migrations/scripts/migration_v21_v34_placeholders.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v35.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v36.dart';
 import 'package:growlog_app/database/migrations/scripts/migration_v37.dart';
@@ -81,6 +82,22 @@ final List<Migration> allMigrations = [
 
   // v20: FIX harvests FK constraint - CASCADE on plant deletion (prevent deletion errors)
   migrationV20,
+
+  // v21–v34: Internal/unreleased builds — no-op placeholders for chain continuity
+  migrationV21,
+  migrationV22,
+  migrationV23,
+  migrationV24,
+  migrationV25,
+  migrationV26,
+  migrationV27,
+  migrationV28,
+  migrationV29,
+  migrationV30,
+  migrationV31,
+  migrationV32,
+  migrationV33,
+  migrationV34,
 
   // v35: CRITICAL HEALING - Recovery from v34 downgrade error
   migrationV35,

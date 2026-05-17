@@ -57,8 +57,11 @@ void main() {
       final indexNames = indexes.map((row) => row['name'] as String).toList();
 
       // Assert
-      expect(indexNames, contains('idx_fertilizers_name'),
-          reason: 'idx_fertilizers_name should exist');
+      expect(
+        indexNames,
+        contains('idx_fertilizers_name'),
+        reason: 'idx_fertilizers_name should exist',
+      );
     });
 
     test('fertilizers.name index has correct definition', () async {
@@ -74,7 +77,11 @@ void main() {
       // Assert
       expect(indexDef, isNotEmpty, reason: 'Index should exist');
       final sql = (indexDef.first['sql'] as String).toLowerCase();
-      expect(sql, contains('fertilizers'), reason: 'Index should be on fertilizers table');
+      expect(
+        sql,
+        contains('fertilizers'),
+        reason: 'Index should be on fertilizers table',
+      );
       expect(sql, contains('name'), reason: 'Index should be on name column');
     });
 
@@ -111,8 +118,16 @@ void main() {
       await migrationV37.up(db);
 
       // Assert: Data still exists
-      final fertilizers = await db.query('fertilizers', where: 'name = ?', whereArgs: ['Test Fertilizer']);
-      expect(fertilizers, isNotEmpty, reason: 'Fertilizer data should be preserved');
+      final fertilizers = await db.query(
+        'fertilizers',
+        where: 'name = ?',
+        whereArgs: ['Test Fertilizer'],
+      );
+      expect(
+        fertilizers,
+        isNotEmpty,
+        reason: 'Fertilizer data should be preserved',
+      );
       expect(fertilizers.first['brand'], 'Test Brand');
     });
 
@@ -133,7 +148,11 @@ void main() {
 
       // Assert: Results are sorted by name
       expect(fertilizers.length, 3);
-      expect(fertilizers[0].name, 'Calcium', reason: 'Should be sorted alphabetically');
+      expect(
+        fertilizers[0].name,
+        'Calcium',
+        reason: 'Should be sorted alphabetically',
+      );
       expect(fertilizers[1].name, 'Nitrogen');
       expect(fertilizers[2].name, 'Zinc');
 
@@ -149,8 +168,11 @@ void main() {
 
       // Assert
       expect(result, isNotEmpty);
-      expect(result.first['integrity_check'], 'ok',
-          reason: 'Database integrity should be ok');
+      expect(
+        result.first['integrity_check'],
+        'ok',
+        reason: 'Database integrity should be ok',
+      );
     });
 
     test('Migration works with empty fertilizers table', () async {

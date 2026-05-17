@@ -99,21 +99,35 @@ class _GrowListScreenState extends State<GrowListScreen> {
             children: [
               const Icon(Icons.info_outline, color: DT.warning),
               const SizedBox(width: 12),
-              Expanded(child: Text(_t['attention'], style: const TextStyle(color: DT.textPrimary))),
+              Expanded(
+                child: Text(
+                  _t['attention'],
+                  style: const TextStyle(color: DT.textPrimary),
+                ),
+              ),
             ],
           ),
           content: Text(
-            _t['delete_grow_with_plants'].replaceAll('{count}', plantCount.toString()),
+            _t['delete_grow_with_plants'].replaceAll(
+              '{count}',
+              plantCount.toString(),
+            ),
             style: const TextStyle(color: DT.textSecondary),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary)),
+              child: Text(
+                _t['cancel'],
+                style: const TextStyle(color: DT.textSecondary),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(_t['yes_delete'], style: const TextStyle(color: DT.warning)),
+              child: Text(
+                _t['yes_delete'],
+                style: const TextStyle(color: DT.warning),
+              ),
             ),
           ],
         ),
@@ -128,7 +142,10 @@ class _GrowListScreenState extends State<GrowListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: DT.elevated,
-        title: Text(_t['delete_grow_title'], style: const TextStyle(color: DT.textPrimary)),
+        title: Text(
+          _t['delete_grow_title'],
+          style: const TextStyle(color: DT.textPrimary),
+        ),
         content: Text(
           '${_t['delete_confirm'].replaceAll('?', '')} "${grow.name}"?',
           style: const TextStyle(color: DT.textSecondary),
@@ -136,7 +153,10 @@ class _GrowListScreenState extends State<GrowListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary)),
+            child: Text(
+              _t['cancel'],
+              style: const TextStyle(color: DT.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -223,7 +243,11 @@ class _GrowListScreenState extends State<GrowListScreen> {
           const SizedBox(height: 24),
           Text(
             _showArchived ? _t['no_archived_grows'] : _t['no_grows'],
-            style: const TextStyle(fontSize: 20, color: DT.textPrimary, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 20,
+              color: DT.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -250,24 +274,28 @@ class _GrowListScreenState extends State<GrowListScreen> {
 
   Widget _buildGrowCard(Grow grow) {
     final plantCount = _plantCounts[grow.id] ?? 0;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: PlantryListTile(
         leading: Container(
-          width: 48, height: 48,
+          width: 48,
+          height: 48,
           decoration: BoxDecoration(
-            color: grow.archived ? DT.elevated : DT.accent.withValues(alpha: 0.1),
+            color: grow.archived
+                ? DT.elevated
+                : DT.accent.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
-            Icons.eco_rounded, 
+            Icons.eco_rounded,
             color: grow.archived ? DT.textTertiary : DT.accent,
             size: 28,
           ),
         ),
         title: grow.name,
-        subtitle: '${_t['day_short']} ${grow.totalDays} • $plantCount ${_t['plants_short']}${grow.archived ? ' • ${_t['archived_badge']}' : ''}',
+        subtitle:
+            '${_t['day_short']} ${grow.totalDays} • $plantCount ${_t['plants_short']}${grow.archived ? ' • ${_t['archived_badge']}' : ''}',
         trailing: PopupMenuButton<String>(
           color: DT.elevated,
           icon: const Icon(Icons.more_vert, color: DT.textTertiary),
@@ -277,14 +305,34 @@ class _GrowListScreenState extends State<GrowListScreen> {
             if (val == 'delete') _deleteGrow(grow);
           },
           itemBuilder: (ctx) => [
-            PopupMenuItem(value: 'edit', child: Text(_t['edit'], style: const TextStyle(color: DT.textPrimary))),
-            PopupMenuItem(value: 'archive', child: Text(grow.archived ? 'Dearchivieren' : 'Archivieren', style: const TextStyle(color: DT.textPrimary))),
-            PopupMenuItem(value: 'delete', child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+            PopupMenuItem(
+              value: 'edit',
+              child: Text(
+                _t['edit'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            PopupMenuItem(
+              value: 'archive',
+              child: Text(
+                grow.archived ? 'Dearchivieren' : 'Archivieren',
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text(
+                _t['delete'],
+                style: const TextStyle(color: DT.error),
+              ),
+            ),
           ],
         ),
         onTap: () async {
           final result = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => GrowDetailScreen(grow: grow)),
+            MaterialPageRoute(
+              builder: (context) => GrowDetailScreen(grow: grow),
+            ),
           );
           if (result == true && mounted) _loadGrows();
         },

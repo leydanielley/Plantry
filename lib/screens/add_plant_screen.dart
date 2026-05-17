@@ -120,7 +120,8 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                       controller: _nameController,
                       label: _t['add_plant_name_label'],
                       hint: _t['add_plant_name_hint'],
-                      validator: (v) => v!.isEmpty ? _t['add_plant_name_required'] : null,
+                      validator: (v) =>
+                          v!.isEmpty ? _t['add_plant_name_required'] : null,
                     ),
                     const SizedBox(height: 16),
                     PlantryFormField(
@@ -157,7 +158,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     _dropdown<Medium>(
                       _t['add_plant_medium'],
                       _medium,
-                      Medium.values,
+                      Medium.values.where((m) => m != Medium.unknown).toList(),
                       (v) {
                         setState(() {
                           _medium = v!;
@@ -400,14 +401,19 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 setState(() {
                   _selectedRdwcSystemId = v;
                   if (v != null) {
-                    final sys = _rdwcSystems.where((s) => s.id == v).firstOrNull;
+                    final sys = _rdwcSystems
+                        .where((s) => s.id == v)
+                        .firstOrNull;
                     if (sys?.roomId != null) {
                       // RDWC is physical hardware in a specific room — room is authoritative.
                       // If the selected grow belongs to a different room, clear the grow
                       // to prevent plant.roomId ≠ grow.roomId inconsistency.
                       if (_selectedGrowId != null) {
-                        final grow = _grows.where((g) => g.id == _selectedGrowId).firstOrNull;
-                        if (grow?.roomId != null && grow!.roomId != sys!.roomId) {
+                        final grow = _grows
+                            .where((g) => g.id == _selectedGrowId)
+                            .firstOrNull;
+                        if (grow?.roomId != null &&
+                            grow!.roomId != sys!.roomId) {
                           _selectedGrowId = null;
                         }
                       }

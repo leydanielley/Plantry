@@ -159,10 +159,9 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
       // Check grows (direkt zugewiesene Grows)
       final growCount =
           Sqflite.firstIntValue(
-            await db.rawQuery(
-              'SELECT COUNT(*) FROM grows WHERE room_id = ?',
-              [id],
-            ),
+            await db.rawQuery('SELECT COUNT(*) FROM grows WHERE room_id = ?', [
+              id,
+            ]),
           ) ??
           0;
 
@@ -263,16 +262,22 @@ class RoomRepository with RepositoryErrorHandler implements IRoomRepository {
         // Build detailed German error message
         final parts = <String>[];
         if (usage['plants']! > 0) {
-          parts.add('${usage['plants']} Pflanze${usage['plants']! > 1 ? 'n' : ''}');
+          parts.add(
+            '${usage['plants']} Pflanze${usage['plants']! > 1 ? 'n' : ''}',
+          );
         }
         if (usage['grows']! > 0) {
           parts.add('${usage['grows']} Grow${usage['grows']! > 1 ? 's' : ''}');
         }
         if (usage['hardware']! > 0) {
-          parts.add('${usage['hardware']} Hardware-Gerät${usage['hardware']! > 1 ? 'e' : ''}');
+          parts.add(
+            '${usage['hardware']} Hardware-Gerät${usage['hardware']! > 1 ? 'e' : ''}',
+          );
         }
         if (usage['rdwc_systems']! > 0) {
-          parts.add('${usage['rdwc_systems']} RDWC-System${usage['rdwc_systems']! > 1 ? 'e' : ''}');
+          parts.add(
+            '${usage['rdwc_systems']} RDWC-System${usage['rdwc_systems']! > 1 ? 'e' : ''}',
+          );
         }
 
         throw RepositoryException.conflict(

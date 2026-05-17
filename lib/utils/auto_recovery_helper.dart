@@ -29,7 +29,8 @@ class AutoRecoveryHelper {
         await db.rawQuery('SELECT COUNT(*) FROM grows WHERE archived = 0'),
       );
 
-      final isEmpty = (plantsCount ?? 0) == 0 &&
+      final isEmpty =
+          (plantsCount ?? 0) == 0 &&
           (logsCount ?? 0) == 0 &&
           (growsCount ?? 0) == 0;
 
@@ -125,9 +126,12 @@ class AutoRecoveryHelper {
       if (await emergencyDir.exists()) {
         final files = await emergencyDir
             .list()
-            .where((entity) =>
-                entity is File &&
-                (entity.path.endsWith('.zip') || entity.path.endsWith('.json')))
+            .where(
+              (entity) =>
+                  entity is File &&
+                  (entity.path.endsWith('.zip') ||
+                      entity.path.endsWith('.json')),
+            )
             .cast<File>()
             .toList();
         allBackupFiles.addAll(files);
@@ -139,14 +143,18 @@ class AutoRecoveryHelper {
 
       // Location 3: Download folder (user might have manual backups there)
       try {
-        final downloadDir = Directory('/storage/emulated/0/Download/Plantry Backups');
+        final downloadDir = Directory(
+          '/storage/emulated/0/Download/Plantry Backups',
+        );
         if (await downloadDir.exists()) {
           final files = await downloadDir
               .list()
-              .where((entity) =>
-                  entity is File &&
-                  (entity.path.endsWith('.zip') ||
-                      entity.path.endsWith('.json')))
+              .where(
+                (entity) =>
+                    entity is File &&
+                    (entity.path.endsWith('.zip') ||
+                        entity.path.endsWith('.json')),
+              )
               .cast<File>()
               .toList();
           allBackupFiles.addAll(files);
@@ -222,7 +230,8 @@ class AutoRecoveryHelper {
       // 1. Current migration failed (not historical), OR
       // 2. DB is empty AND it's NOT a fresh install AND backup exists, OR
       // 3. Missing columns AND backup exists
-      final shouldRecover = migrationFailed ||
+      final shouldRecover =
+          migrationFailed ||
           (dbEmpty && !isFirstLaunch && backupPath != null) ||
           (missingCols && backupPath != null);
 

@@ -477,9 +477,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
                       const SizedBox(height: 4),
                       Text(
                         '${_t['system_capacity']}: ${UnitConverter.formatVolume(widget.system!.maxCapacity, _settings.volumeUnit)}',
-                        style: const TextStyle(
-                          color: DT.textSecondary,
-                        ),
+                        style: const TextStyle(color: DT.textSecondary),
                       ),
                     ],
                   ),
@@ -745,9 +743,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
         color: DT.elevated,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: recipe.targetEc == null
-              ? DT.warning
-              : DT.border,
+          color: recipe.targetEc == null ? DT.warning : DT.border,
         ),
       ),
       child: Column(
@@ -858,9 +854,7 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
         Container(
           constraints: const BoxConstraints(maxHeight: 300),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: DT.border,
-            ),
+            border: Border.all(color: DT.border),
             borderRadius: BorderRadius.circular(8),
           ),
           child: ListView.builder(
@@ -1105,7 +1099,10 @@ class _NutrientCalculatorScreenState extends State<NutrientCalculatorScreen> {
       children: [
         Icon(icon, color: color, size: 28),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 12, color: DT.textSecondary)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: DT.textSecondary),
+        ),
         const SizedBox(height: 4),
         Text(
           value,

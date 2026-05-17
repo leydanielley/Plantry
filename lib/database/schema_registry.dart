@@ -277,10 +277,87 @@ class SchemaRegistry {
     requiredIndexes: schemaV19.requiredIndexes, // Same as v19
   );
 
-  // NOTE: Schemas v21-v35 are not defined in this registry
-  // These migrations were implemented without schema registry updates
-  // v35: CRITICAL HEALING - Recovery from v34 downgrade error
-  // If validation is needed for these versions, schemas should be added retroactively
+  // Schemas v21–v34 correspond to internal/unreleased builds (no-op migrations).
+  // They all share the same schema as v20 — no structural changes were made.
+  static final schemaV21 = SchemaDefinition(
+    version: 21,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV22 = SchemaDefinition(
+    version: 22,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV23 = SchemaDefinition(
+    version: 23,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV24 = SchemaDefinition(
+    version: 24,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV25 = SchemaDefinition(
+    version: 25,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV26 = SchemaDefinition(
+    version: 26,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV27 = SchemaDefinition(
+    version: 27,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV28 = SchemaDefinition(
+    version: 28,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV29 = SchemaDefinition(
+    version: 29,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV30 = SchemaDefinition(
+    version: 30,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV31 = SchemaDefinition(
+    version: 31,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV32 = SchemaDefinition(
+    version: 32,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV33 = SchemaDefinition(
+    version: 33,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+  static final schemaV34 = SchemaDefinition(
+    version: 34,
+    requiredTables: schemaV20.requiredTables,
+    requiredIndexes: schemaV20.requiredIndexes,
+  );
+
+  // Schema v35 matches v36 minus any FK-only changes (same columns/indexes as v36
+  // because the v35 healing migration restored the full production schema that v36 refines).
+  // Using schemaV36 as the baseline here is safe — same tables, same columns.
+  static final schemaV35 = SchemaDefinition(
+    version: 35,
+    requiredTables: schemaV36.requiredTables,
+    requiredIndexes: schemaV36.requiredIndexes,
+  );
 
   /// Schema for v36: FK CASCADE Standardization
   /// Migration v36 changed FK constraints on harvests and hardware tables
@@ -542,21 +619,10 @@ class SchemaRegistry {
         'idx_plant_logs_plant_archived',
         'idx_plant_logs_archived_date',
       },
-      'photos': {
-        'idx_photos_log',
-        'idx_photos_log_lookup',
-      },
-      'harvests': {
-        'idx_harvests_plant',
-        'idx_harvests_date',
-      },
-      'rooms': {
-        'idx_rooms_rdwc_system',
-      },
-      'grows': {
-        'idx_grows_archived',
-        'idx_grows_room',
-      },
+      'photos': {'idx_photos_log', 'idx_photos_log_lookup'},
+      'harvests': {'idx_harvests_plant', 'idx_harvests_date'},
+      'rooms': {'idx_rooms_rdwc_system'},
+      'grows': {'idx_grows_archived', 'idx_grows_room'},
       'hardware': {
         'idx_hardware_room',
         'idx_hardware_type',
@@ -616,7 +682,7 @@ class SchemaRegistry {
       'fertilizers': {
         ...schemaV38.requiredTables['fertilizers']!,
         'is_custom', // v39 adds is_custom flag
-        'n',         // v39 adds total nitrogen field
+        'n', // v39 adds total nitrogen field
       },
     },
     requiredIndexes: schemaV38.requiredIndexes,
@@ -627,17 +693,8 @@ class SchemaRegistry {
     version: 40,
     requiredTables: {
       ...schemaV39.requiredTables,
-      'fertilizer_sets': {
-        'id',
-        'name',
-        'created_at',
-      },
-      'fertilizer_set_items': {
-        'id',
-        'set_id',
-        'fertilizer_id',
-        'amount',
-      },
+      'fertilizer_sets': {'id', 'name', 'created_at'},
+      'fertilizer_set_items': {'id', 'set_id', 'fertilizer_id', 'amount'},
     },
     requiredIndexes: schemaV39.requiredIndexes,
   );
@@ -678,10 +735,7 @@ class SchemaRegistry {
     version: 43,
     requiredTables: {
       ...schemaV42.requiredTables,
-      'rdwc_recipes': {
-        ...schemaV42.requiredTables['rdwc_recipes']!,
-        'phase',
-      },
+      'rdwc_recipes': {...schemaV42.requiredTables['rdwc_recipes']!, 'phase'},
     },
     requiredIndexes: schemaV42.requiredIndexes,
   );
@@ -715,7 +769,21 @@ class SchemaRegistry {
     18: schemaV18,
     19: schemaV19,
     20: schemaV20,
-    // 21-35: Not defined (migrations exist without schema registry)
+    21: schemaV21,
+    22: schemaV22,
+    23: schemaV23,
+    24: schemaV24,
+    25: schemaV25,
+    26: schemaV26,
+    27: schemaV27,
+    28: schemaV28,
+    29: schemaV29,
+    30: schemaV30,
+    31: schemaV31,
+    32: schemaV32,
+    33: schemaV33,
+    34: schemaV34,
+    35: schemaV35,
     36: schemaV36,
     37: schemaV37,
     38: schemaV38,
@@ -780,7 +848,9 @@ class SchemaRegistry {
         }
 
         // Check columns
-        final columns = await executor.rawQuery('PRAGMA table_info($tableName)');
+        final columns = await executor.rawQuery(
+          'PRAGMA table_info($tableName)',
+        );
         final actualColumns = columns
             .map((col) => col['name'] as String)
             .toSet();

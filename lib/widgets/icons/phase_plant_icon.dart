@@ -71,6 +71,7 @@ class _PhaseColors {
           'soil': harvestSoil,
         };
       case PlantPhase.archived:
+      case PlantPhase.unknown:
         return {
           'leaves': archivedLeaves,
           'stem': archivedStem,

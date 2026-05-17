@@ -294,7 +294,7 @@ class DatabaseRecovery {
       // We know emergencyBackupPath is not null due to safety check above
       final message =
           'Corrupted database removed. A fresh database will be created.'
-          '\n\n✅ Emergency backup saved to:\n$emergencyBackupPath\n\n'
+          '\n\nEmergency backup saved to:\n$emergencyBackupPath\n\n'
           'You can manually recover data from this JSON file if needed.';
 
       AppLogger.info(
@@ -302,7 +302,10 @@ class DatabaseRecovery {
         '✅ Emergency backup available at: $emergencyBackupPath',
       );
       AppLogger.info('DatabaseRecovery', '✅ Fresh database will be created');
-      return DatabaseRecoveryResult.recreated(message);
+      return DatabaseRecoveryResult.recreated(
+        message,
+        emergencyBackupPath: emergencyBackupPath,
+      );
     } else {
       AppLogger.error('DatabaseRecovery', '❌ Recovery failed completely');
       return DatabaseRecoveryResult.failed('Could not recover database');
@@ -402,13 +405,28 @@ class DatabaseRecoveryResult {
   final DatabaseRecoveryStatus status;
   final String message;
 
-  const DatabaseRecoveryResult._(this.status, this.message);
+  /// Path to the emergency backup file, when one was created.
+  /// Non-null only when [status] == [DatabaseRecoveryStatus.recreated] and
+  /// a JSON backup was successfully written before the database was deleted.
+  final String? emergencyBackupPath;
+
+  const DatabaseRecoveryResult._(
+    this.status,
+    this.message, {
+    this.emergencyBackupPath,
+  });
 
   factory DatabaseRecoveryResult.success(String message) =>
       DatabaseRecoveryResult._(DatabaseRecoveryStatus.success, message);
 
-  factory DatabaseRecoveryResult.recreated(String message) =>
-      DatabaseRecoveryResult._(DatabaseRecoveryStatus.recreated, message);
+  factory DatabaseRecoveryResult.recreated(
+    String message, {
+    String? emergencyBackupPath,
+  }) => DatabaseRecoveryResult._(
+    DatabaseRecoveryStatus.recreated,
+    message,
+    emergencyBackupPath: emergencyBackupPath,
+  );
 
   factory DatabaseRecoveryResult.failed(String message) =>
       DatabaseRecoveryResult._(DatabaseRecoveryStatus.failed, message);
@@ -416,6 +434,9 @@ class DatabaseRecoveryResult {
   bool get isSuccess => status == DatabaseRecoveryStatus.success;
   bool get wasRecreated => status == DatabaseRecoveryStatus.recreated;
   bool get hasFailed => status == DatabaseRecoveryStatus.failed;
+
+  /// Whether an emergency backup is available for manual data recovery.
+  bool get hasEmergencyBackup => emergencyBackupPath != null;
 }
 
 enum DatabaseRecoveryStatus { success, recreated, failed }

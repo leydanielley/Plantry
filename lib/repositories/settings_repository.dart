@@ -22,6 +22,7 @@ class SettingsRepository
   static const String _keyTemperatureUnit = 'temperature_unit';
   static const String _keyLengthUnit = 'length_unit';
   static const String _keyVolumeUnit = 'volume_unit';
+  static const String _keyNotificationTimezone = 'notification_timezone';
 
   /// Einstellungen laden (mit Fehlerbehandlung für korrupte Daten)
   @override
@@ -103,6 +104,7 @@ class SettingsRepository
       temperatureUnit: temperatureUnit,
       lengthUnit: lengthUnit,
       volumeUnit: volumeUnit,
+      notificationTimezone: prefs.getString(_keyNotificationTimezone),
     );
   }
 
@@ -162,6 +164,17 @@ class SettingsRepository
     await prefs.setString(_keyVolumeUnit, unit.name);
   }
 
+  /// Notification Timezone speichern
+  @override
+  Future<void> setNotificationTimezone(String? ianaTimezone) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (ianaTimezone != null) {
+      await prefs.setString(_keyNotificationTimezone, ianaTimezone);
+    } else {
+      await prefs.remove(_keyNotificationTimezone);
+    }
+  }
+
   /// Alle Einstellungen speichern
   @override
   Future<void> saveSettings(AppSettings settings) async {
@@ -173,5 +186,6 @@ class SettingsRepository
     await setTemperatureUnit(settings.temperatureUnit);
     await setLengthUnit(settings.lengthUnit);
     await setVolumeUnit(settings.volumeUnit);
+    await setNotificationTimezone(settings.notificationTimezone);
   }
 }

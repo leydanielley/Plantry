@@ -168,8 +168,9 @@ class DatabaseRebuildService {
       warnings.addAll(preFlightResult.warnings);
 
       // Get current database
-      final currentDb = await DatabaseHelper.instance.database
-          .timeout(const Duration(seconds: 30));
+      final currentDb = await DatabaseHelper.instance.database.timeout(
+        const Duration(seconds: 30),
+      );
 
       // Count records in old database
       oldCounts = await MigrationValidator.countAllRecords(currentDb);

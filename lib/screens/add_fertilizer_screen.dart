@@ -37,9 +37,16 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
       if (mounted) {
         setState(() {
           _filteredFertilizers = PrefilledFertilizers.all
-              .where((f) =>
-                  f.name.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-                  (f.brand?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false))
+              .where(
+                (f) =>
+                    f.name.toLowerCase().contains(
+                      _searchController.text.toLowerCase(),
+                    ) ||
+                    (f.brand?.toLowerCase().contains(
+                          _searchController.text.toLowerCase(),
+                        ) ??
+                        false),
+              )
               .toList();
         });
       }
@@ -58,9 +65,9 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler beim Speichern: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Fehler beim Speichern: $e')));
       }
     }
   }
@@ -135,7 +142,10 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
                         if (fertilizer.npk != null)
                           Text(
                             fertilizer.npk!,
-                            style: DT.mono(color: DT.accent, weight: FontWeight.bold),
+                            style: DT.mono(
+                              color: DT.accent,
+                              weight: FontWeight.bold,
+                            ),
                           ),
                       ],
                     ),
@@ -166,6 +176,7 @@ class _CustomFertilizerScreenState extends State<CustomFertilizerScreen> {
   final _brandController = TextEditingController();
   final _npkController = TextEditingController();
   final _typeController = TextEditingController();
+  bool _isLiquid = true;
 
   @override
   void didChangeDependencies() {
@@ -191,14 +202,15 @@ class _CustomFertilizerScreenState extends State<CustomFertilizerScreen> {
         npk: _npkController.text,
         type: _typeController.text,
         isCustom: true,
+        isLiquid: _isLiquid,
       );
       await _fertilizerRepo.save(f);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler beim Speichern: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Fehler beim Speichern: $e')));
       }
     }
   }
@@ -215,24 +227,47 @@ class _CustomFertilizerScreenState extends State<CustomFertilizerScreen> {
             PlantryFormField(
               controller: _nameController,
               label: _t['add_fertilizer_name_label'],
-              validator: (v) => v!.isEmpty ? _t['add_fertilizer_name_required'] : null,
+              validator: (v) =>
+                  v!.isEmpty ? _t['add_fertilizer_name_required'] : null,
             ),
             const SizedBox(height: 16),
-            PlantryFormField(controller: _brandController, label: _t['add_fertilizer_brand_label']),
+            PlantryFormField(
+              controller: _brandController,
+              label: _t['add_fertilizer_brand_label'],
+            ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: PlantryFormField(controller: _npkController, label: _t['add_fertilizer_npk_label'])),
+                Expanded(
+                  child: PlantryFormField(
+                    controller: _npkController,
+                    label: _t['add_fertilizer_npk_label'],
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: PlantryFormField(controller: _typeController, label: _t['add_fertilizer_type_label'])),
+                Expanded(
+                  child: PlantryFormField(
+                    controller: _typeController,
+                    label: _t['add_fertilizer_type_label'],
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 32),
-            PlantryButton(
-              label: _t['save'],
-              onPressed: _save,
-              fullWidth: true,
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text(
+                'Flüssigdünger (ml)',
+                style: TextStyle(color: DT.textPrimary),
+              ),
+              subtitle: Text(
+                _isLiquid ? 'Menge in ml' : 'Menge in g',
+                style: const TextStyle(color: DT.textSecondary),
+              ),
+              value: _isLiquid,
+              onChanged: (v) => setState(() => _isLiquid = v),
             ),
+            const SizedBox(height: 32),
+            PlantryButton(label: _t['save'], onPressed: _save, fullWidth: true),
           ],
         ),
       ),

@@ -621,10 +621,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                           if (_loadedRecipe!.targetPh != null)
                             'pH: ${_loadedRecipe!.targetPh!.toStringAsFixed(1)}',
                         ].join(' | '),
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: DT.success,
-                        ),
+                        style: const TextStyle(fontSize: 11, color: DT.success),
                       ),
                   ],
                 ),
@@ -1167,6 +1164,15 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         ),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         onChanged: (_) => _calculateLevelAfter(),
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) return null; // optional
+          final number = double.tryParse(value);
+          if (number == null) return _t['invalid_number'];
+          if (number < 0) return _t['rdwc_error_negative_level'];
+          if (number > widget.system.maxCapacity)
+            return _t['rdwc_error_max_capacity'];
+          return null;
+        },
       ),
       const SizedBox(height: 12),
       TextFormField(
@@ -1179,6 +1185,17 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
         ),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         onChanged: (_) => _calculateLevelAfter(),
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return _t['rdwc_error_water_added_req'];
+          }
+          final number = double.tryParse(value);
+          if (number == null) return _t['invalid_number'];
+          if (number <= 0) return _t['rdwc_error_water_positive'];
+          if (number > widget.system.maxCapacity)
+            return _t['rdwc_error_max_capacity'];
+          return null;
+        },
       ),
       // Level after: only needed when editing a complete log
       if (_isEditingCompleteLog) ...[
@@ -1416,11 +1433,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                       value: RdwcLogType.maintenance,
                       child: Row(
                         children: [
-                          const Icon(
-                            Icons.build,
-                            color: DT.warning,
-                            size: 20,
-                          ),
+                          const Icon(Icons.build, color: DT.warning, size: 20),
                           const SizedBox(width: 8),
                           Text(_t['maintenance']),
                         ],
@@ -1430,11 +1443,7 @@ class _RdwcAddbackFormScreenState extends State<RdwcAddbackFormScreen> {
                       value: RdwcLogType.measurement,
                       child: Row(
                         children: [
-                          const Icon(
-                            Icons.science,
-                            color: DT.info,
-                            size: 20,
-                          ),
+                          const Icon(Icons.science, color: DT.info, size: 20),
                           const SizedBox(width: 8),
                           Text(_t['measurement']),
                         ],

@@ -831,7 +831,10 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 Expanded(
                   child: Text(
                     _t['edit_harvest_quality_info'], // ✅ i18n
-                    style: const TextStyle(fontSize: 13, color: DT.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: DT.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -983,7 +986,10 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                   if (_rating == null)
                     Text(
                       _t['edit_harvest_not_set'], // ✅ i18n
-                      style: const TextStyle(fontSize: 12, color: DT.textTertiary),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: DT.textTertiary,
+                      ),
                     ),
                 ],
               ),
@@ -1134,7 +1140,10 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(fontSize: 12, color: DT.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: DT.textSecondary,
+                    ),
                   ),
                   Text(
                     DateFormat('dd.MM.yyyy').format(currentDate),
@@ -1262,13 +1271,20 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                 Expanded(
                   child: Text(
                     label,
-                    style: const TextStyle(fontSize: 12, color: DT.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: DT.textSecondary,
+                    ),
                   ),
                 ),
                 if (onClear != null)
                   InkWell(
                     onTap: onClear,
-                    child: const Icon(Icons.clear, size: 18, color: DT.textTertiary),
+                    child: const Icon(
+                      Icons.clear,
+                      size: 18,
+                      color: DT.textTertiary,
+                    ),
                   ),
               ],
             ),
@@ -1481,7 +1497,10 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
                   Expanded(
                     child: Text(
                       tip,
-                      style: const TextStyle(fontSize: 13, color: DT.textSecondary),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: DT.textSecondary,
+                      ),
                     ),
                   ),
                 ],

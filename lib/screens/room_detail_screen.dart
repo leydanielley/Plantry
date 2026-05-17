@@ -64,7 +64,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
         if (widget.room.rdwcSystemId != null)
           _rdwcRepo.getSystemById(widget.room.rdwcSystemId!)
         else
-          _rdwcRepo.getSystemsByRoom(widget.room.id!).then((list) => list.isNotEmpty ? list.first : null),
+          _rdwcRepo
+              .getSystemsByRoom(widget.room.id!)
+              .then((list) => list.isNotEmpty ? list.first : null),
       ]);
       if (mounted) {
         setState(() {
@@ -89,7 +91,11 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
           icon: const Icon(Icons.edit, color: DT.textPrimary),
           onPressed: () async {
             final nav = Navigator.of(context);
-            final res = await nav.push(MaterialPageRoute(builder: (_) => EditRoomScreen(room: widget.room)));
+            final res = await nav.push(
+              MaterialPageRoute(
+                builder: (_) => EditRoomScreen(room: widget.room),
+              ),
+            );
             if (res == true) nav.pop(true);
           },
         ),
@@ -104,9 +110,23 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                 children: [
                   _buildHeader(),
-                  if (_rdwcSystem != null) ...[const SizedBox(height: 12), _buildRdwc()],
+                  if (_rdwcSystem != null) ...[
+                    const SizedBox(height: 12),
+                    _buildRdwc(),
+                  ],
                   const SizedBox(height: 24),
-                  _buildSectionHeader('Hardware', Icons.devices, () => Navigator.push(context, MaterialPageRoute(builder: (_) => HardwareListScreen(roomId: widget.room.id!, roomName: widget.room.name))).then((_) { if (mounted) _loadData(); })),
+                  _buildSectionHeader('Hardware', Icons.devices, () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => HardwareListScreen(
+                          roomId: widget.room.id!,
+                          roomName: widget.room.name,
+                        ),
+                      ),
+                    );
+                    if (mounted) _loadData();
+                  }),
                   ..._hardware.take(3).map((hw) => _buildHwTile(hw)),
                   if (_hardware.isEmpty) _empty('Keine Hardware'),
                   const SizedBox(height: 24),
@@ -126,17 +146,38 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
           Row(
             children: [
               Container(
-                width: 48, height: 48,
-                decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(12)),
-                child: Icon(_getIcon(widget.room.growType), color: DT.accent, size: 24),
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: DT.elevated,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  _getIcon(widget.room.growType),
+                  color: DT.accent,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.room.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: DT.textPrimary)),
-                    Text(widget.room.growType?.displayName ?? "Unbekannt", style: const TextStyle(fontSize: 13, color: DT.textSecondary)),
+                    Text(
+                      widget.room.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: DT.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      widget.room.growType?.displayName ?? "Unbekannt",
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: DT.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -146,7 +187,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _stat('${(widget.room.width * 100).toInt()}x${(widget.room.depth * 100).toInt()}cm', 'Fläche'),
+              _stat(
+                '${(widget.room.width * 100).toInt()}x${(widget.room.depth * 100).toInt()}cm',
+                'Fläche',
+              ),
               _stat('${_totalWattage}W', 'Leistung'),
               _stat('${_plants.length}', 'Pflanzen'),
             ],
@@ -159,7 +203,13 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   Widget _buildRdwc() {
     final s = _rdwcSystem!;
     return PlantryCard(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcSystemDetailScreen(system: s))).then((_) { if (mounted) _loadData(); }),
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => RdwcSystemDetailScreen(system: s)),
+        );
+        if (mounted) _loadData();
+      },
       child: Row(
         children: [
           Image.asset('assets/icons/rdwc_icon.png', width: 32, height: 32),
@@ -168,28 +218,62 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('RDWC System', style: TextStyle(fontSize: 12, color: DT.textSecondary)),
-                Text(s.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DT.textPrimary)),
+                const Text(
+                  'RDWC System',
+                  style: TextStyle(fontSize: 12, color: DT.textSecondary),
+                ),
+                Text(
+                  s.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: DT.textPrimary,
+                  ),
+                ),
               ],
             ),
           ),
-          Text('${s.fillPercentage.toInt()}%', style: TextStyle(color: s.fillPercentage < 20 ? DT.error : DT.info, fontWeight: FontWeight.bold)),
+          Text(
+            '${s.fillPercentage.toInt()}%',
+            style: TextStyle(
+              color: s.fillPercentage < 20 ? DT.error : DT.info,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const Icon(Icons.chevron_right, color: DT.textTertiary),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon, VoidCallback? onMore) {
+  Widget _buildSectionHeader(
+    String title,
+    IconData icon,
+    VoidCallback? onMore,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Icon(icon, size: 18, color: DT.textSecondary),
           const SizedBox(width: 8),
-          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: DT.textSecondary,
+            ),
+          ),
           const Spacer(),
-          if (onMore != null) TextButton(onPressed: onMore, child: Text(_t['show_all'], style: const TextStyle(color: DT.accent, fontSize: 12))),
+          if (onMore != null)
+            TextButton(
+              onPressed: onMore,
+              child: Text(
+                _t['show_all'],
+                style: const TextStyle(color: DT.accent, fontSize: 12),
+              ),
+            ),
         ],
       ),
     );
@@ -202,7 +286,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         leading: Icon(hw.type.icon, color: DT.warning, size: 20),
         title: hw.displayName,
-        subtitle: '${hw.type.displayName}${hw.wattage != null ? " • ${hw.wattage}W" : ""}',
+        subtitle:
+            '${hw.type.displayName}${hw.wattage != null ? " • ${hw.wattage}W" : ""}',
       ),
     );
   }
@@ -215,13 +300,47 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
         leading: Text(_getEmoji(p.phase), style: const TextStyle(fontSize: 20)),
         title: p.name,
         subtitle: 'Tag ${p.totalDays} • ${p.strain ?? "Unbekannt"}',
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PlantDetailScreen(plant: p))).then((_) { if (mounted) _loadData(); }),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => PlantDetailScreen(plant: p)),
+          );
+          if (mounted) _loadData();
+        },
       ),
     );
   }
 
-  Widget _stat(String v, String l) => Column(children: [Text(v, style: const TextStyle(fontWeight: FontWeight.bold, color: DT.textPrimary)), Text(l, style: const TextStyle(fontSize: 10, color: DT.textSecondary))]);
-  Widget _empty(String t) => Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(t, style: const TextStyle(color: DT.textTertiary))));
-  IconData _getIcon(GrowType? t) => t == GrowType.indoor ? Icons.home : t == GrowType.outdoor ? Icons.park : Icons.home_work;
-  String _getEmoji(PlantPhase p) => p == PlantPhase.seedling ? '🌱' : p == PlantPhase.veg ? '🌿' : p == PlantPhase.bloom ? '🌸' : p == PlantPhase.harvest ? '✂️' : '📦';
+  Widget _stat(String v, String l) => Column(
+    children: [
+      Text(
+        v,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: DT.textPrimary,
+        ),
+      ),
+      Text(l, style: const TextStyle(fontSize: 10, color: DT.textSecondary)),
+    ],
+  );
+  Widget _empty(String t) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Text(t, style: const TextStyle(color: DT.textTertiary)),
+    ),
+  );
+  IconData _getIcon(GrowType? t) => t == GrowType.indoor
+      ? Icons.home
+      : t == GrowType.outdoor
+      ? Icons.park
+      : Icons.home_work;
+  String _getEmoji(PlantPhase p) => p == PlantPhase.seedling
+      ? '🌱'
+      : p == PlantPhase.veg
+      ? '🌿'
+      : p == PlantPhase.bloom
+      ? '🌸'
+      : p == PlantPhase.harvest
+      ? '✂️'
+      : '📦';
 }

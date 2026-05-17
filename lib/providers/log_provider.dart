@@ -80,7 +80,7 @@ class LogProvider with ChangeNotifier {
   // ═══════════════════════════════════════════
 
   /// Load logs for a specific plant
-  /// ✅ CRITICAL FIX: Wrapped in Lock to prevent _currentPlantId race conditions
+  /// Acquires the save lock to prevent _currentPlantId race conditions.
   Future<void> loadLogsForPlant(int plantId, {int? limit, int? offset}) async {
     AppLogger.debug(
       'LogProvider',
@@ -88,28 +88,40 @@ class LogProvider with ChangeNotifier {
       'plantId=$plantId, limit=$limit, offset=$offset',
     );
 
-    await _saveLock.synchronized(() async {
-      _currentPlantId = plantId;
-      _logsForPlant = const Loading();
-      _safeNotifyListeners();
+    await _saveLock.synchronized(
+      () => _loadLogsForPlantUnlocked(plantId, limit: limit, offset: offset),
+    );
+  }
 
-      try {
-        final logs = await _repository.findByPlant(
-          plantId,
-          limit: limit,
-          offset: offset,
-        );
-        _logsForPlant = Success(logs);
-        AppLogger.info(
-          'LogProvider',
-          'Loaded ${logs.length} logs for plant $plantId',
-        );
-      } catch (e, stack) {
-        _logsForPlant = Error('Failed to load logs', e, stack);
-        AppLogger.error('LogProvider', 'Failed to load logs', e, stack);
-      }
-      _safeNotifyListeners();
-    });
+  /// Internal load implementation — must only be called while already holding
+  /// [_saveLock], or during the initial unconstrained load path.
+  /// Extracted to avoid deadlock when save/delete operations trigger a reload
+  /// while they already hold the lock.
+  Future<void> _loadLogsForPlantUnlocked(
+    int plantId, {
+    int? limit,
+    int? offset,
+  }) async {
+    _currentPlantId = plantId;
+    _logsForPlant = const Loading();
+    _safeNotifyListeners();
+
+    try {
+      final logs = await _repository.findByPlant(
+        plantId,
+        limit: limit,
+        offset: offset,
+      );
+      _logsForPlant = Success(logs);
+      AppLogger.info(
+        'LogProvider',
+        'Loaded ${logs.length} logs for plant $plantId',
+      );
+    } catch (e, stack) {
+      _logsForPlant = Error('Failed to load logs', e, stack);
+      AppLogger.error('LogProvider', 'Failed to load logs', e, stack);
+    }
+    _safeNotifyListeners();
   }
 
   /// Load logs with full details (includes fertilizers/photos)
@@ -202,9 +214,10 @@ class LogProvider with ChangeNotifier {
           }
         }
 
-        // Reload logs list if we're viewing the same plant
+        // Reload logs list if we're viewing the same plant.
+        // Use unlocked variant — we already hold _saveLock here.
         if (_currentPlantId == log.plantId) {
-          await loadLogsForPlant(_currentPlantId!);
+          await _loadLogsForPlantUnlocked(_currentPlantId!);
         }
 
         AppLogger.info('LogProvider', '✅ Log saved', 'id=${savedLog.id}');
@@ -229,10 +242,11 @@ class LogProvider with ChangeNotifier {
       try {
         final ids = await _repository.saveBatch(logs);
 
-        // Reload if any log belongs to current plant
+        // Reload if any log belongs to current plant.
+        // Use unlocked variant — we already hold _saveLock here.
         if (_currentPlantId != null &&
             logs.any((log) => log.plantId == _currentPlantId)) {
-          await loadLogsForPlant(_currentPlantId!);
+          await _loadLogsForPlantUnlocked(_currentPlantId!);
         }
 
         AppLogger.info('LogProvider', '✅ Batch saved', '${ids.length} logs');
@@ -260,9 +274,10 @@ class LogProvider with ChangeNotifier {
           }
         }
 
-        // Reload logs list if we know the plant ID
+        // Reload logs list if we know the plant ID.
+        // Use unlocked variant — we already hold _saveLock here.
         if (plantId != null && _currentPlantId == plantId) {
-          await loadLogsForPlant(plantId);
+          await _loadLogsForPlantUnlocked(plantId);
         }
 
         AppLogger.info('LogProvider', '✅ Log deleted', id);
@@ -287,9 +302,10 @@ class LogProvider with ChangeNotifier {
       try {
         await _repository.deleteBatch(logIds);
 
-        // Reload if we know the plant ID
+        // Reload if we know the plant ID.
+        // Use unlocked variant — we already hold _saveLock here.
         if (plantId != null && _currentPlantId == plantId) {
-          await loadLogsForPlant(plantId);
+          await _loadLogsForPlantUnlocked(plantId);
         }
 
         AppLogger.info(

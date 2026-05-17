@@ -89,7 +89,11 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(backgroundColor: DT.canvas, body: Center(child: CircularProgressIndicator(color: DT.accent)));
+    if (_isLoading)
+      return const Scaffold(
+        backgroundColor: DT.canvas,
+        body: Center(child: CircularProgressIndicator(color: DT.accent)),
+      );
 
     return PlantryScaffold(
       title: _system.name,
@@ -97,7 +101,12 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
         IconButton(
           icon: const Icon(Icons.edit, color: DT.textPrimary),
           onPressed: () async {
-            final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcSystemFormScreen(system: _system)));
+            final res = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => RdwcSystemFormScreen(system: _system),
+              ),
+            );
             if (res == true && mounted) _loadData();
           },
         ),
@@ -109,8 +118,20 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
             if (val == 'delete') _delete();
           },
           itemBuilder: (ctx) => [
-            PopupMenuItem(value: 'archive', child: Text(_system.archived ? _t['unarchive'] : _t['archive'], style: const TextStyle(color: DT.textPrimary))),
-            PopupMenuItem(value: 'delete', child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+            PopupMenuItem(
+              value: 'archive',
+              child: Text(
+                _system.archived ? _t['unarchive'] : _t['archive'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text(
+                _t['delete'],
+                style: const TextStyle(color: DT.error),
+              ),
+            ),
           ],
         ),
       ],
@@ -166,7 +187,11 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
               children: [
                 Text(
                   _t['pending_hint_title'],
-                  style: const TextStyle(color: DT.warning, fontWeight: FontWeight.bold, fontSize: 13),
+                  style: const TextStyle(
+                    color: DT.warning,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -182,7 +207,10 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
               final res = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => RdwcAddbackCompleteScreen(system: _system, pendingLog: log),
+                  builder: (_) => RdwcAddbackCompleteScreen(
+                    system: _system,
+                    pendingLog: log,
+                  ),
                 ),
               );
               if (res == true && mounted) _loadData();
@@ -191,9 +219,14 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
               backgroundColor: DT.warning,
               foregroundColor: DT.canvas,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: Text(_t['complete_now_btn'], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            child: Text(
+              _t['complete_now_btn'],
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -201,7 +234,9 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
   }
 
   Widget _buildLevelCard() {
-    final statusColor = _system.isCriticallyLow ? DT.error : (_system.isLowWater ? DT.warning : DT.info);
+    final statusColor = _system.isCriticallyLow
+        ? DT.error
+        : (_system.isLowWater ? DT.warning : DT.info);
 
     return PlantryCard(
       child: Column(
@@ -212,15 +247,29 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_t['fill_percentage'], style: const TextStyle(color: DT.textSecondary, fontSize: 13)),
-                  Text('${_system.fillPercentage.toInt()}%', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: statusColor)),
+                  Text(
+                    _t['fill_percentage'],
+                    style: const TextStyle(
+                      color: DT.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    '${_system.fillPercentage.toInt()}%',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                    ),
+                  ),
                 ],
               ),
               Stack(
                 alignment: Alignment.center,
                 children: [
                   SizedBox(
-                    width: 80, height: 80,
+                    width: 80,
+                    height: 80,
                     child: CircularProgressIndicator(
                       value: _system.fillPercentage / 100,
                       strokeWidth: 8,
@@ -237,9 +286,27 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _subStat(_t['room_detail_current'], UnitConverter.formatVolume(_system.currentLevel, _settings.volumeUnit)),
-              _subStat(_t['max'], UnitConverter.formatVolume(_system.maxCapacity, _settings.volumeUnit)),
-              _subStat(_t['rest'], UnitConverter.formatVolume(_system.remainingCapacity, _settings.volumeUnit)),
+              _subStat(
+                _t['room_detail_current'],
+                UnitConverter.formatVolume(
+                  _system.currentLevel,
+                  _settings.volumeUnit,
+                ),
+              ),
+              _subStat(
+                _t['max'],
+                UnitConverter.formatVolume(
+                  _system.maxCapacity,
+                  _settings.volumeUnit,
+                ),
+              ),
+              _subStat(
+                _t['rest'],
+                UnitConverter.formatVolume(
+                  _system.remainingCapacity,
+                  _settings.volumeUnit,
+                ),
+              ),
             ],
           ),
         ],
@@ -256,8 +323,23 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
               children: [
                 const Icon(Icons.trending_down, color: DT.info, size: 20),
                 const SizedBox(height: 4),
-                Text(_avgConsumption != null ? UnitConverter.formatVolume(_avgConsumption!, _settings.volumeUnit, decimals: 1) : '—', style: const TextStyle(fontWeight: FontWeight.bold, color: DT.textPrimary)),
-                Text(_t['avg_per_day'], style: const TextStyle(fontSize: 10, color: DT.textSecondary)),
+                Text(
+                  _avgConsumption != null
+                      ? UnitConverter.formatVolume(
+                          _avgConsumption!,
+                          _settings.volumeUnit,
+                          decimals: 1,
+                        )
+                      : '—',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: DT.textPrimary,
+                  ),
+                ),
+                Text(
+                  _t['avg_per_day'],
+                  style: const TextStyle(fontSize: 10, color: DT.textSecondary),
+                ),
               ],
             ),
           ),
@@ -267,10 +349,23 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
           child: PlantryCard(
             child: Column(
               children: [
-                const Icon(Icons.shopping_basket_outlined, color: DT.warning, size: 20),
+                const Icon(
+                  Icons.shopping_basket_outlined,
+                  color: DT.warning,
+                  size: 20,
+                ),
                 const SizedBox(height: 4),
-                Text('${_system.bucketCount}', style: const TextStyle(fontWeight: FontWeight.bold, color: DT.textPrimary)),
-                Text(_t['buckets'], style: const TextStyle(fontSize: 10, color: DT.textSecondary)),
+                Text(
+                  '${_system.bucketCount}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: DT.textPrimary,
+                  ),
+                ),
+                Text(
+                  _t['buckets'],
+                  style: const TextStyle(fontSize: 10, color: DT.textSecondary),
+                ),
               ],
             ),
           ),
@@ -285,16 +380,79 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_t['quick_actions'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
+          Text(
+            _t['quick_actions'],
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: DT.textSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
           Wrap(
-            spacing: 8, runSpacing: 8,
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              _actionBtn(_t['addback_action'], Icons.add_circle_outline, DT.success, () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcAddbackFormScreen(system: _system))).then((_) { if (mounted) _loadData(); })),
-              _actionBtn(_t['measurement_action'], Icons.science_outlined, DT.info, () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcQuickMeasurementScreen(system: _system))).then((_) { if (mounted) _loadData(); })),
-              _actionBtn(_t['recipes'], Icons.menu_book, DT.accent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RdwcRecipesScreen()))),
-              _actionBtn(_t['analytics'], Icons.analytics_outlined, DT.info, () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcAnalyticsScreen(system: _system)))),
-              _actionBtn('Rechner', Icons.calculate_outlined, DT.warning, () => Navigator.push(context, MaterialPageRoute(builder: (_) => NutrientCalculatorScreen(system: _system)))),
+              _actionBtn(
+                _t['addback_action'],
+                Icons.add_circle_outline,
+                DT.success,
+                () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RdwcAddbackFormScreen(system: _system),
+                    ),
+                  );
+                  if (mounted) _loadData();
+                },
+              ),
+              _actionBtn(
+                _t['measurement_action'],
+                Icons.science_outlined,
+                DT.info,
+                () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          RdwcQuickMeasurementScreen(system: _system),
+                    ),
+                  );
+                  if (mounted) _loadData();
+                },
+              ),
+              _actionBtn(
+                _t['recipes'],
+                Icons.menu_book,
+                DT.accent,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RdwcRecipesScreen()),
+                ),
+              ),
+              _actionBtn(
+                _t['analytics'],
+                Icons.analytics_outlined,
+                DT.info,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RdwcAnalyticsScreen(system: _system),
+                  ),
+                ),
+              ),
+              _actionBtn(
+                'Rechner',
+                Icons.calculate_outlined,
+                DT.warning,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => NutrientCalculatorScreen(system: _system),
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -307,13 +465,24 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(color: c.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: c.withValues(alpha: 0.2))),
+        decoration: BoxDecoration(
+          color: c.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: c.withValues(alpha: 0.2)),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(i, color: c, size: 16),
             const SizedBox(width: 6),
-            Text(l, style: TextStyle(color: c, fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(
+              l,
+              style: TextStyle(
+                color: c,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
@@ -325,7 +494,14 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: PlantryListTile(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        leading: Text(p.bucketNumber != null ? '#${p.bucketNumber}' : '🌱', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DT.accent)),
+        leading: Text(
+          p.bucketNumber != null ? '#${p.bucketNumber}' : '🌱',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: DT.accent,
+          ),
+        ),
         title: p.name,
         subtitle: 'Tag ${p.totalDays} • ${p.phase.displayName}',
       ),
@@ -337,22 +513,95 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: PlantryListTile(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        leading: Icon(_logIcon(l.logType), color: _logColor(l.logType), size: 20),
+        leading: Icon(
+          _logIcon(l.logType),
+          color: _logColor(l.logType),
+          size: 20,
+        ),
         title: _logLabel(l.logType),
-        subtitle: '${DateFormat('dd.MM HH:mm').format(l.logDate)}${l.waterAdded != null ? " • +${l.waterAdded}L" : ""}',
-        trailing: l.ecAfter != null ? Text(UnitConverter.formatNutrient(l.ecAfter!, _settings.nutrientUnit, _settings.ppmScale), style: const TextStyle(fontWeight: FontWeight.bold, color: DT.textPrimary)) : null,
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcAddbackFormScreen(system: _system, existingLog: l))).then((_) { if (mounted) _loadData(); }),
+        subtitle:
+            '${DateFormat('dd.MM HH:mm').format(l.logDate)}${l.waterAdded != null ? " • +${l.waterAdded}L" : ""}',
+        trailing: l.ecAfter != null
+            ? Text(
+                UnitConverter.formatNutrient(
+                  l.ecAfter!,
+                  _settings.nutrientUnit,
+                  _settings.ppmScale,
+                ),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: DT.textPrimary,
+                ),
+              )
+            : null,
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  RdwcAddbackFormScreen(system: _system, existingLog: l),
+            ),
+          );
+          if (mounted) _loadData();
+        },
       ),
     );
   }
 
-  Widget _sectionTitle(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
-  Widget _subStat(String l, String v) => Column(children: [Text(v, style: const TextStyle(fontWeight: FontWeight.bold, color: DT.textPrimary)), Text(l, style: const TextStyle(fontSize: 10, color: DT.textSecondary))]);
-  Widget _empty(String t) => Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(t, style: const TextStyle(color: DT.textTertiary, fontSize: 13))));
+  Widget _sectionTitle(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
+  Widget _subStat(String l, String v) => Column(
+    children: [
+      Text(
+        v,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: DT.textPrimary,
+        ),
+      ),
+      Text(l, style: const TextStyle(fontSize: 10, color: DT.textSecondary)),
+    ],
+  );
+  Widget _empty(String t) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Text(
+        t,
+        style: const TextStyle(color: DT.textTertiary, fontSize: 13),
+      ),
+    ),
+  );
 
-  IconData _logIcon(RdwcLogType t) => t == RdwcLogType.addback ? Icons.add_circle : t == RdwcLogType.fullChange ? Icons.sync : t == RdwcLogType.measurement ? Icons.science : Icons.build;
-  Color _logColor(RdwcLogType t) => t == RdwcLogType.addback ? DT.success : t == RdwcLogType.fullChange ? DT.secondary : t == RdwcLogType.measurement ? DT.info : DT.warning;
-  String _logLabel(RdwcLogType t) => t == RdwcLogType.addback ? 'Addback' : t == RdwcLogType.fullChange ? 'Wechsel' : t == RdwcLogType.measurement ? 'Messung' : 'Wartung';
+  IconData _logIcon(RdwcLogType t) => t == RdwcLogType.addback
+      ? Icons.add_circle
+      : t == RdwcLogType.fullChange
+      ? Icons.sync
+      : t == RdwcLogType.measurement
+      ? Icons.science
+      : Icons.build;
+  Color _logColor(RdwcLogType t) => t == RdwcLogType.addback
+      ? DT.success
+      : t == RdwcLogType.fullChange
+      ? DT.secondary
+      : t == RdwcLogType.measurement
+      ? DT.info
+      : DT.warning;
+  String _logLabel(RdwcLogType t) => t == RdwcLogType.addback
+      ? 'Addback'
+      : t == RdwcLogType.fullChange
+      ? 'Wechsel'
+      : t == RdwcLogType.measurement
+      ? 'Messung'
+      : 'Wartung';
 
   Future<void> _archive() async {
     await _rdwcRepo.archiveSystem(_system.id!, !_system.archived);
@@ -361,15 +610,37 @@ class _RdwcSystemDetailScreenState extends State<RdwcSystemDetailScreen> {
   }
 
   Future<void> _delete() async {
-    final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
-      backgroundColor: DT.elevated,
-      title: Text(_t['delete_confirm'], style: const TextStyle(color: DT.textPrimary)),
-      content: Text(_t['delete_system_confirm'], style: const TextStyle(color: DT.textSecondary)),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
-        TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
-      ],
-    ));
-    if (ok == true) { await _rdwcRepo.deleteSystem(_system.id!); if (!mounted) return; Navigator.pop(context, true); }
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: DT.elevated,
+        title: Text(
+          _t['delete_confirm'],
+          style: const TextStyle(color: DT.textPrimary),
+        ),
+        content: Text(
+          _t['delete_system_confirm'],
+          style: const TextStyle(color: DT.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              _t['cancel'],
+              style: const TextStyle(color: DT.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(_t['delete'], style: const TextStyle(color: DT.error)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await _rdwcRepo.deleteSystem(_system.id!);
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    }
   }
 }

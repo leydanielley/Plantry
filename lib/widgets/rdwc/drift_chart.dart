@@ -115,10 +115,7 @@ class DriftChart extends StatelessWidget {
             drawVerticalLine: false,
             horizontalInterval: (maxY - minY) / 5,
             getDrawingHorizontalLine: (value) {
-              return const FlLine(
-                color: DT.elevated,
-                strokeWidth: 1,
-              );
+              return const FlLine(color: DT.elevated, strokeWidth: 1);
             },
           ),
           borderData: FlBorderData(show: false),

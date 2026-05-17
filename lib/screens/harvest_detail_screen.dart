@@ -253,12 +253,16 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
         PlantryButton(
           label: 'Trocknung bearbeiten',
           icon: Icons.dry_cleaning,
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => HarvestDryingScreen(harvestId: widget.harvestId),
-            ),
-          ).then((_) { if (mounted) _loadHarvest(); }),
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    HarvestDryingScreen(harvestId: widget.harvestId),
+              ),
+            );
+            if (mounted) _loadHarvest();
+          },
           fullWidth: true,
           isPrimary: false,
         ),
@@ -267,13 +271,16 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
           PlantryButton(
             label: 'Curing bearbeiten',
             icon: Icons.inventory_2,
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    HarvestCuringScreen(harvestId: widget.harvestId),
-              ),
-            ).then((_) { if (mounted) _loadHarvest(); }),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      HarvestCuringScreen(harvestId: widget.harvestId),
+                ),
+              );
+              if (mounted) _loadHarvest();
+            },
             fullWidth: true,
             isPrimary: false,
           ),

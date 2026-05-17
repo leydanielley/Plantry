@@ -86,11 +86,26 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: DT.elevated,
-        title: Text(_t['delete_hardware_title'], style: const TextStyle(color: DT.textPrimary)),
-        content: Text('${_t['delete_confirm'].replaceAll('?', '')} "${hardware.name}"?', style: const TextStyle(color: DT.textSecondary)),
+        title: Text(
+          _t['delete_hardware_title'],
+          style: const TextStyle(color: DT.textPrimary),
+        ),
+        content: Text(
+          '${_t['delete_confirm'].replaceAll('?', '')} "${hardware.name}"?',
+          style: const TextStyle(color: DT.textSecondary),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              _t['cancel'],
+              style: const TextStyle(color: DT.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(_t['delete'], style: const TextStyle(color: DT.error)),
+          ),
         ],
       ),
     );
@@ -112,7 +127,10 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
       title: '${_t['hardware']} - ${widget.roomName}',
       actions: [
         IconButton(
-          icon: Icon(_showInactive ? Icons.visibility : Icons.visibility_off, color: DT.textPrimary),
+          icon: Icon(
+            _showInactive ? Icons.visibility : Icons.visibility_off,
+            color: DT.textPrimary,
+          ),
           onPressed: () {
             setState(() => _showInactive = !_showInactive);
             _loadHardware();
@@ -134,7 +152,9 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
       fab: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => AddHardwareScreen(roomId: widget.roomId)),
+            MaterialPageRoute(
+              builder: (context) => AddHardwareScreen(roomId: widget.roomId),
+            ),
           );
           if (result == true && mounted) _loadHardware();
         },
@@ -152,7 +172,11 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildStatItem(Icons.devices, '${_hardware.length}', _t['hardware_items']),
+            _buildStatItem(
+              Icons.devices,
+              '${_hardware.length}',
+              _t['hardware_items'],
+            ),
             _buildStatItem(Icons.bolt, '$_totalWattage W', _t['total_wattage']),
           ],
         ),
@@ -165,8 +189,18 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
       children: [
         Icon(icon, color: DT.warning, size: 24),
         const SizedBox(height: 8),
-        Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: DT.textPrimary)),
-        Text(label, style: const TextStyle(fontSize: 12, color: DT.textSecondary)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: DT.textPrimary,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: DT.textSecondary),
+        ),
       ],
     );
   }
@@ -178,9 +212,19 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
         children: [
           const Icon(Icons.devices_outlined, size: 80, color: DT.textTertiary),
           const SizedBox(height: 24),
-          Text(_t['no_hardware'], style: const TextStyle(fontSize: 20, color: DT.textPrimary, fontWeight: FontWeight.bold)),
+          Text(
+            _t['no_hardware'],
+            style: const TextStyle(
+              fontSize: 20,
+              color: DT.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(_t['add_first_hardware'], style: const TextStyle(fontSize: 16, color: DT.textSecondary)),
+          Text(
+            _t['add_first_hardware'],
+            style: const TextStyle(fontSize: 16, color: DT.textSecondary),
+          ),
         ],
       ),
     );
@@ -204,7 +248,14 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(category.displayName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)),
+              child: Text(
+                category.displayName,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: DT.textSecondary,
+                ),
+              ),
             ),
             ...items.map((hw) => _buildHardwareCard(hw)),
           ],
@@ -218,33 +269,59 @@ class _HardwareListScreenState extends State<HardwareListScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: PlantryListTile(
         leading: Container(
-          width: 48, height: 48,
+          width: 48,
+          height: 48,
           decoration: BoxDecoration(
             color: hw.active ? DT.warning.withValues(alpha: 0.1) : DT.elevated,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(hw.type.icon, color: hw.active ? DT.warning : DT.textTertiary, size: 28),
+          child: Icon(
+            hw.type.icon,
+            color: hw.active ? DT.warning : DT.textTertiary,
+            size: 28,
+          ),
         ),
         title: hw.displayName,
-        subtitle: '${hw.type.displayName}${hw.wattage != null ? " • ${hw.wattage}W" : ""}\n${hw.brand ?? ""} ${hw.model ?? ""}',
+        subtitle:
+            '${hw.type.displayName}${hw.wattage != null ? " • ${hw.wattage}W" : ""}\n${hw.brand ?? ""} ${hw.model ?? ""}',
         trailing: PopupMenuButton<String>(
           color: DT.elevated,
           icon: const Icon(Icons.more_vert, color: DT.textTertiary),
           onSelected: (val) async {
             if (val == 'edit') {
-              final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditHardwareScreen(hardware: hw)));
+              final res = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditHardwareScreen(hardware: hw),
+                ),
+              );
               if (res == true && mounted) _loadHardware();
             } else if (val == 'delete') {
               _deleteHardware(hw);
             }
           },
           itemBuilder: (ctx) => [
-            PopupMenuItem(value: 'edit', child: Text(_t['edit'], style: const TextStyle(color: DT.textPrimary))),
-            PopupMenuItem(value: 'delete', child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+            PopupMenuItem(
+              value: 'edit',
+              child: Text(
+                _t['edit'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text(
+                _t['delete'],
+                style: const TextStyle(color: DT.error),
+              ),
+            ),
           ],
         ),
         onTap: () async {
-          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditHardwareScreen(hardware: hw)));
+          final res = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => EditHardwareScreen(hardware: hw)),
+          );
           if (res == true && mounted) _loadHardware();
         },
       ),

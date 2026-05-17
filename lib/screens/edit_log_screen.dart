@@ -662,7 +662,7 @@ class _EditLogScreenState extends State<EditLogScreen> {
 
   Widget _buildPhaseSelector() {
     final phases = PlantPhase.values
-        .where((p) => p != PlantPhase.archived)
+        .where((p) => p != PlantPhase.archived && p != PlantPhase.unknown)
         .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

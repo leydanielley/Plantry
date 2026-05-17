@@ -6,7 +6,11 @@ enum PlantPhase {
   veg,
   bloom,
   harvest,
-  archived;
+  archived,
+  // Sentinel for unrecognised values from DB / backup / import.
+  // Never shown in creation forms; only appears when stored data cannot be
+  // mapped to a known variant.
+  unknown;
 
   String get prefix {
     switch (this) {
@@ -20,6 +24,8 @@ enum PlantPhase {
         return 'H';
       case PlantPhase.archived:
         return 'A';
+      case PlantPhase.unknown:
+        return '?';
     }
   }
 
@@ -35,6 +41,8 @@ enum PlantPhase {
         return 'Harvest';
       case PlantPhase.archived:
         return 'Archived';
+      case PlantPhase.unknown:
+        return 'Unknown';
     }
   }
 }
@@ -329,14 +337,18 @@ enum ActionType {
   }
 }
 
-// Medium Enum (Original 6 Werte)
+// Medium Enum
 enum Medium {
   erde,
   coco,
   hydro,
   aero,
   dwc,
-  rdwc;
+  rdwc,
+  // Sentinel for unrecognised values from DB / backup / DBF import.
+  // Never shown in creation forms; only appears when stored data cannot be
+  // mapped to a known variant.
+  unknown;
 
   bool get needsRunoffMeasurement {
     switch (this) {
@@ -347,6 +359,7 @@ enum Medium {
       case Medium.aero:
       case Medium.dwc:
       case Medium.rdwc:
+      case Medium.unknown:
         return false;
     }
   }
@@ -360,6 +373,7 @@ enum Medium {
       case Medium.aero:
       case Medium.dwc:
       case Medium.rdwc:
+      case Medium.unknown:
         return false;
     }
   }
@@ -378,6 +392,8 @@ enum Medium {
         return 'DWC';
       case Medium.rdwc:
         return 'RDWC';
+      case Medium.unknown:
+        return 'Unknown';
     }
   }
 }

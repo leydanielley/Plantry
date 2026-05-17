@@ -130,11 +130,13 @@ class MockPlantRepository implements IPlantRepository {
     int? excludePlantId,
   }) async {
     // Mock implementation - check if bucket is occupied
-    return _plants.values.any((p) =>
-        p.rdwcSystemId == systemId &&
-        p.bucketNumber == bucketNumber &&
-        p.id != excludePlantId &&
-        !p.archived);
+    return _plants.values.any(
+      (p) =>
+          p.rdwcSystemId == systemId &&
+          p.bucketNumber == bucketNumber &&
+          p.id != excludePlantId &&
+          !p.archived,
+    );
   }
 
   // Helper methods for testing

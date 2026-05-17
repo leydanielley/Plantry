@@ -301,44 +301,48 @@ void main() {
       expect(found, isNull, reason: 'Grow should no longer exist');
     });
 
-    test(
-      'Deleting grow with plants - should be blocked (Fix #3)',
-      () async {
-        // ✅ FIX #3: Updated to test new validation behavior
-        // OLD behavior: Grow deletion detached plants (set grow_id to null)
-        // NEW behavior: Grow deletion is BLOCKED when plants exist
+    test('Deleting grow with plants - should be blocked (Fix #3)', () async {
+      // ✅ FIX #3: Updated to test new validation behavior
+      // OLD behavior: Grow deletion detached plants (set grow_id to null)
+      // NEW behavior: Grow deletion is BLOCKED when plants exist
 
-        // Arrange - Create grow with plants
-        final grow = Grow(
-          name: 'Grow With Plants',
-          startDate: DateTime(2025, 1, 1),
-        );
-        final growId = await growRepository.create(grow);
+      // Arrange - Create grow with plants
+      final grow = Grow(
+        name: 'Grow With Plants',
+        startDate: DateTime(2025, 1, 1),
+      );
+      final growId = await growRepository.create(grow);
 
-        final plant = Plant(
-          name: 'Plant in Grow',
-          seedType: SeedType.photo,
-          medium: Medium.erde,
-          growId: growId,
-        );
-        await plantRepository.save(plant);
+      final plant = Plant(
+        name: 'Plant in Grow',
+        seedType: SeedType.photo,
+        medium: Medium.erde,
+        growId: growId,
+      );
+      await plantRepository.save(plant);
 
-        // Act & Assert - Deletion should be blocked
-        expect(
-          () => growRepository.delete(growId),
-          throwsA(isA<RepositoryException>().having(
+      // Act & Assert - Deletion should be blocked
+      expect(
+        () => growRepository.delete(growId),
+        throwsA(
+          isA<RepositoryException>().having(
             (e) => e.type,
             'type',
             RepositoryErrorType.conflict,
-          )),
-          reason: 'Should throw conflict exception when deleting grow with plants',
-        );
+          ),
+        ),
+        reason:
+            'Should throw conflict exception when deleting grow with plants',
+      );
 
-        // Verify grow still exists
-        final foundGrow = await growRepository.getById(growId);
-        expect(foundGrow, isNotNull, reason: 'Grow should still exist after blocked delete');
-      },
-    );
+      // Verify grow still exists
+      final foundGrow = await growRepository.getById(growId);
+      expect(
+        foundGrow,
+        isNotNull,
+        reason: 'Grow should still exist after blocked delete',
+      );
+    });
 
     test('Deleting non-existent grow - should return 0', () async {
       // Act

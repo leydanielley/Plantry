@@ -150,8 +150,10 @@ class AppTranslations {
       'bucket_number': 'Bucket Nummer',
       'plants_in_system': 'Pflanzen im System',
       'water_addback': 'Wasser Addback',
-      'addback_saved_pending': 'Addback gespeichert! Nachmessung in ~1h eintragen.',
-      'addback_pending_hint': 'EC & pH stabilisieren sich erst ~1h nach dem Nachfüllen. Jetzt Step 1 speichern, Messung später nachtragen.',
+      'addback_saved_pending':
+          'Addback gespeichert! Nachmessung in ~1h eintragen.',
+      'addback_pending_hint':
+          'EC & pH stabilisieren sich erst ~1h nach dem Nachfüllen. Jetzt Step 1 speichern, Messung später nachtragen.',
       'addback_step2_title': 'Nachmessung',
       'complete_addback_btn': 'Nachmessung speichern',
       'addback_step1_summary': 'Addback vom',
@@ -205,6 +207,9 @@ class AppTranslations {
       'rdwc_label_water': 'Wasser',
       'rdwc_error_new_water_req': 'Neues Wasserstand erforderlich',
       'rdwc_error_max_capacity': 'Max. Kapazität überschritten',
+      'rdwc_error_water_added_req': 'Menge Wasser hinzugefügt ist erforderlich',
+      'rdwc_error_water_positive': 'Menge muss größer als 0 sein',
+      'rdwc_error_negative_level': 'Wasserstand darf nicht negativ sein',
       'rdwc_hint_note': 'z.B. Woche 3 Blüte',
       'rdwc_measurement_logged': 'Messung protokolliert!',
       'rdwc_measurement_updated': 'Messung aktualisiert!',
@@ -617,9 +622,11 @@ class AppTranslations {
       'chart_no_ph_data': 'Noch keine pH-Daten vorhanden.',
       'chart_no_ec_reservoir': 'Noch keine EC-Daten.',
       'chart_no_ph_reservoir': 'Noch keine pH-Daten.',
-      'chart_no_runoff_delta': 'Kein Runoff gemessen — Delta nicht berechenbar.',
+      'chart_no_runoff_delta':
+          'Kein Runoff gemessen — Delta nicht berechenbar.',
       'chart_no_water_feed': 'Noch keine Wasser- oder Feed-Logs vorhanden.',
-      'chart_no_rdwc_data': 'Noch keine RDWC-Messungen vorhanden.\nNach dem ersten Addback erscheinen hier die Kurven.',
+      'chart_no_rdwc_data':
+          'Noch keine RDWC-Messungen vorhanden.\nNach dem ersten Addback erscheinen hier die Kurven.',
       'chart_rdwc_banner': 'RDWC-Pflanze — Reservoir-Werte des Systems',
       'chart_phase_marker': 'Phase',
 
@@ -941,7 +948,8 @@ class AppTranslations {
       'plant_detail_add_first_log': 'Füge den ersten Log-Eintrag hinzu!',
       'plant_detail_total_day': 'Gesamt: Tag {day}',
       'create_entry': 'Eintrag erstellen',
-      'log_scope_question': 'Möchtest du nur für diese Pflanze oder für alle Pflanzen im Grow loggen?',
+      'log_scope_question':
+          'Möchtest du nur für diese Pflanze oder für alle Pflanzen im Grow loggen?',
       'only_this': 'Nur diese',
       'all_plants': 'Alle Pflanzen',
       'harvested_weight': 'Geerntet:',
@@ -1299,7 +1307,8 @@ class AppTranslations {
       'restore_confirm': 'Wiederherstellen?',
       'still_used_by': 'Wird noch verwendet von:',
       'processing': 'Wird bearbeitet...',
-      'new_db_warning': 'Dies wird eine neue, leere Datenbank erstellen.\n\nALLE AKTUELLEN DATEN GEHEN VERLOREN!\n\nSind Sie sicher?',
+      'new_db_warning':
+          'Dies wird eine neue, leere Datenbank erstellen.\n\nALLE AKTUELLEN DATEN GEHEN VERLOREN!\n\nSind Sie sicher?',
       'importing_backup': 'Importiere Backup',
       'new_db_created': 'Neue Datenbank erstellt! ✅',
       'creating_fresh_db': 'Erstelle neue Datenbank...',
@@ -1421,7 +1430,8 @@ class AppTranslations {
       'information_section': 'Informationen',
       'choose_ppm_scale': 'PPM Skala wählen',
       'delete_all_title': 'ALLES LÖSCHEN?',
-      'delete_all_message': 'Dies löscht permanent alle Daten. Ein Backup wird automatisch erstellt.',
+      'delete_all_message':
+          'Dies löscht permanent alle Daten. Ein Backup wird automatisch erstellt.',
       'delete_all_btn': 'LÖSCHEN',
       'archive_section': 'Archiv',
       'support_donate': 'Support / Spende',
@@ -1444,7 +1454,8 @@ class AppTranslations {
       'change_btn': 'Ändern',
 
       // Harvest Detail Screen
-      'delete_harvest_confirm': 'Die Ernte wird gelöscht und die Pflanze zurückgesetzt.',
+      'delete_harvest_confirm':
+          'Die Ernte wird gelöscht und die Pflanze zurückgesetzt.',
 
       // RDWC Systems Screen
       'no_systems_yet': 'Noch keine Systeme angelegt.',
@@ -1501,7 +1512,8 @@ class AppTranslations {
       'dosing_plan_weeks_label': 'Anzahl Wochen',
       'dosing_plan_weeks_unit': 'Wochen',
       'dosing_plan_generate': 'Dosierungsplan generieren',
-      'dosing_plan_no_recipe_selected': 'Kein Rezept ausgewählt.\nBitte oben ein Rezept wählen.',
+      'dosing_plan_no_recipe_selected':
+          'Kein Rezept ausgewählt.\nBitte oben ein Rezept wählen.',
       'dosing_plan_no_fertilizers': 'Dieses Rezept enthält keine Dünger.',
       'dosing_plan_table_title': 'Dosierungsplan',
       'dosing_plan_col_week': 'Woche',
@@ -1540,7 +1552,8 @@ class AppTranslations {
       'dbf_badge_incomplete': 'UNVOLLSTÄNDIG',
       'dbf_badge_recipe': 'REZEPT',
       'dbf_import_invalid_entry': 'Ungültiger Eintrag (URL/Link)',
-      'dbf_import_missing_nutrients': 'Fehlende Nährstoffdaten – nicht im Rechner nutzbar',
+      'dbf_import_missing_nutrients':
+          'Fehlende Nährstoffdaten – nicht im Rechner nutzbar',
       'dbf_import_already_exists': 'Bereits vorhanden',
       'dbf_import_hide_invalid': 'Ungültige ausblenden',
       'dbf_import_show_more_invalid': 'weitere ungültige Einträge anzeigen',
@@ -1550,6 +1563,11 @@ class AppTranslations {
       'dbf_import_skipped': 'übersprungen',
       'dbf_import_error_loading': 'Fehler beim Laden der Datei',
       'dbf_import_error_importing': 'Fehler beim Importieren',
+      'dbf_duplicate_title': 'Duplikate gefunden',
+      'dbf_duplicate_body':
+          'Einige ausgewählte Dünger existieren bereits in der Datenbank.',
+      'dbf_duplicate_skip': 'Überspringen',
+      'dbf_duplicate_replace': 'Ersetzen',
     },
 
     // ENGLISH
@@ -1694,8 +1712,10 @@ class AppTranslations {
       'bucket_number': 'Bucket Number',
       'plants_in_system': 'Plants in System',
       'water_addback': 'Water Addback',
-      'addback_saved_pending': 'Addback saved! Enter follow-up measurement in ~1h.',
-      'addback_pending_hint': 'EC & pH stabilize ~1h after refilling. Save Step 1 now, add the measurement later.',
+      'addback_saved_pending':
+          'Addback saved! Enter follow-up measurement in ~1h.',
+      'addback_pending_hint':
+          'EC & pH stabilize ~1h after refilling. Save Step 1 now, add the measurement later.',
       'addback_step2_title': 'Follow-up Measurement',
       'complete_addback_btn': 'Save Measurement',
       'addback_step1_summary': 'Addback from',
@@ -1749,6 +1769,9 @@ class AppTranslations {
       'rdwc_label_water': 'Water',
       'rdwc_error_new_water_req': 'New water level is required',
       'rdwc_error_max_capacity': 'Cannot exceed max capacity',
+      'rdwc_error_water_added_req': 'Amount of water added is required',
+      'rdwc_error_water_positive': 'Amount must be greater than 0',
+      'rdwc_error_negative_level': 'Water level cannot be negative',
       'rdwc_hint_note': 'e.g. Week 3 of bloom',
       'rdwc_measurement_logged': 'Measurement logged!',
       'rdwc_measurement_updated': 'Measurement updated!',
@@ -2156,9 +2179,11 @@ class AppTranslations {
       'chart_no_ph_data': 'No pH data available yet.',
       'chart_no_ec_reservoir': 'No EC data yet.',
       'chart_no_ph_reservoir': 'No pH data yet.',
-      'chart_no_runoff_delta': 'No runoff measured — delta cannot be calculated.',
+      'chart_no_runoff_delta':
+          'No runoff measured — delta cannot be calculated.',
       'chart_no_water_feed': 'No water or feed logs available yet.',
-      'chart_no_rdwc_data': 'No RDWC measurements yet.\nCurves will appear after the first addback.',
+      'chart_no_rdwc_data':
+          'No RDWC measurements yet.\nCurves will appear after the first addback.',
       'chart_rdwc_banner': 'RDWC plant — reservoir values of the system',
       'chart_phase_marker': 'Phase',
 
@@ -2476,7 +2501,8 @@ class AppTranslations {
       'plant_detail_add_first_log': 'Add your first log entry!',
       'plant_detail_total_day': 'Total: Day {day}',
       'create_entry': 'Create entry',
-      'log_scope_question': 'Do you want to log only for this plant or for all plants in the grow?',
+      'log_scope_question':
+          'Do you want to log only for this plant or for all plants in the grow?',
       'only_this': 'Only this',
       'all_plants': 'All plants',
       'harvested_weight': 'Harvested:',
@@ -2829,7 +2855,8 @@ class AppTranslations {
       'restore_confirm': 'Restore?',
       'still_used_by': 'Still used by:',
       'processing': 'Processing...',
-      'new_db_warning': 'This will create a new, empty database.\n\nALL CURRENT DATA WILL BE LOST!\n\nAre you sure?',
+      'new_db_warning':
+          'This will create a new, empty database.\n\nALL CURRENT DATA WILL BE LOST!\n\nAre you sure?',
       'importing_backup': 'Importing backup',
       'new_db_created': 'New database created! ✅',
       'creating_fresh_db': 'Creating new database...',
@@ -2951,7 +2978,8 @@ class AppTranslations {
       'information_section': 'Information',
       'choose_ppm_scale': 'Choose PPM Scale',
       'delete_all_title': 'DELETE ALL?',
-      'delete_all_message': 'This permanently deletes all data. A backup will be created automatically.',
+      'delete_all_message':
+          'This permanently deletes all data. A backup will be created automatically.',
       'delete_all_btn': 'DELETE',
       'archive_section': 'Archive',
       'support_donate': 'Support / Donate',
@@ -2974,7 +3002,8 @@ class AppTranslations {
       'change_btn': 'Change',
 
       // Harvest Detail Screen
-      'delete_harvest_confirm': 'The harvest will be deleted and the plant reset.',
+      'delete_harvest_confirm':
+          'The harvest will be deleted and the plant reset.',
 
       // RDWC Systems Screen
       'no_systems_yet': 'No systems created yet.',
@@ -3031,7 +3060,8 @@ class AppTranslations {
       'dosing_plan_weeks_label': 'Number of Weeks',
       'dosing_plan_weeks_unit': 'Weeks',
       'dosing_plan_generate': 'Generate Dosing Plan',
-      'dosing_plan_no_recipe_selected': 'No recipe selected.\nPlease select a recipe above.',
+      'dosing_plan_no_recipe_selected':
+          'No recipe selected.\nPlease select a recipe above.',
       'dosing_plan_no_fertilizers': 'This recipe has no fertilizers.',
       'dosing_plan_table_title': 'Dosing Plan',
       'dosing_plan_col_week': 'Week',
@@ -3070,7 +3100,8 @@ class AppTranslations {
       'dbf_badge_incomplete': 'INCOMPLETE',
       'dbf_badge_recipe': 'RECIPE',
       'dbf_import_invalid_entry': 'Invalid entry (URL/Link)',
-      'dbf_import_missing_nutrients': 'Missing nutrient data - not usable in calculator',
+      'dbf_import_missing_nutrients':
+          'Missing nutrient data - not usable in calculator',
       'dbf_import_already_exists': 'Already exists',
       'dbf_import_hide_invalid': 'Hide invalid entries',
       'dbf_import_show_more_invalid': 'more invalid entries',
@@ -3078,6 +3109,11 @@ class AppTranslations {
       'dbf_importing': 'Importing...',
       'dbf_import_success': 'fertilizers imported',
       'dbf_import_skipped': 'skipped',
+      'dbf_duplicate_title': 'Duplicates found',
+      'dbf_duplicate_body':
+          'Some selected fertilizers already exist in the database.',
+      'dbf_duplicate_skip': 'Skip duplicates',
+      'dbf_duplicate_replace': 'Replace existing',
       'dbf_import_error_loading': 'Error loading file',
       'dbf_import_error_importing': 'Error importing',
     },

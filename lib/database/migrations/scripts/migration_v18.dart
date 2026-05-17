@@ -127,7 +127,10 @@ final Migration migrationV18 = Migration(
         // Verify plants table exists and has data
         final count = await db.rawQuery('SELECT COUNT(*) as count FROM plants');
         final rowCount = count.first['count'] as int;
-        AppLogger.info('Migration_v18', 'Validated: $rowCount plants preserved');
+        AppLogger.info(
+          'Migration_v18',
+          'Validated: $rowCount plants preserved',
+        );
         return true;
       },
     );

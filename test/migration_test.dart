@@ -192,16 +192,24 @@ void main() {
             // Run migrations manually (bypassing MigrationManager to avoid DI setup)
             await db.transaction((txn) async {
               // Get migrations that need to run
-              final migrationsToRun = allMigrations
-                  .where((m) => m.version > oldVersion && m.version <= newVersion)
-                  .toList()
-                ..sort((a, b) => a.version.compareTo(b.version));
+              final migrationsToRun =
+                  allMigrations
+                      .where(
+                        (m) =>
+                            m.version > oldVersion && m.version <= newVersion,
+                      )
+                      .toList()
+                    ..sort((a, b) => a.version.compareTo(b.version));
 
-              print('Running ${migrationsToRun.length} migrations: ${migrationsToRun.map((m) => 'v${m.version}').join(', ')}');
+              print(
+                'Running ${migrationsToRun.length} migrations: ${migrationsToRun.map((m) => 'v${m.version}').join(', ')}',
+              );
 
               // Execute each migration
               for (final migration in migrationsToRun) {
-                print('  ⏳ Running migration v${migration.version}: ${migration.description}');
+                print(
+                  '  ⏳ Running migration v${migration.version}: ${migration.description}',
+                );
                 await migration.up(txn);
                 print('  ✅ Migration v${migration.version} complete');
               }
@@ -215,14 +223,25 @@ void main() {
 
       // Check plants columns
       final plantsColumns = await db.rawQuery('PRAGMA table_info(plants)');
-      final plantsColumnNames = plantsColumns.map((col) => col['name'] as String).toList();
+      final plantsColumnNames = plantsColumns
+          .map((col) => col['name'] as String)
+          .toList();
 
-      expect(plantsColumnNames, contains('breeder'),
-          reason: 'breeder column should be preserved');
-      expect(plantsColumnNames, contains('feminized'),
-          reason: 'feminized column should be preserved');
-      expect(plantsColumnNames, contains('veg_date'),
-          reason: 'veg_date column should be preserved');
+      expect(
+        plantsColumnNames,
+        contains('breeder'),
+        reason: 'breeder column should be preserved',
+      );
+      expect(
+        plantsColumnNames,
+        contains('feminized'),
+        reason: 'feminized column should be preserved',
+      );
+      expect(
+        plantsColumnNames,
+        contains('veg_date'),
+        reason: 'veg_date column should be preserved',
+      );
 
       print('  ✅ plants: All critical columns present');
 
@@ -231,10 +250,16 @@ void main() {
       final roomFk = plantsFks.firstWhere((fk) => fk['from'] == 'room_id');
       final growFk = plantsFks.firstWhere((fk) => fk['from'] == 'grow_id');
 
-      expect(roomFk['on_delete'], 'RESTRICT',
-          reason: 'room_id should be RESTRICT to prevent plants disappearing');
-      expect(growFk['on_delete'], 'RESTRICT',
-          reason: 'grow_id should be RESTRICT to prevent plants disappearing');
+      expect(
+        roomFk['on_delete'],
+        'RESTRICT',
+        reason: 'room_id should be RESTRICT to prevent plants disappearing',
+      );
+      expect(
+        growFk['on_delete'],
+        'RESTRICT',
+        reason: 'grow_id should be RESTRICT to prevent plants disappearing',
+      );
 
       print('  ✅ plants: FK constraints correct (RESTRICT)');
 
@@ -242,19 +267,31 @@ void main() {
       final photosFks = await db.rawQuery('PRAGMA foreign_key_list(photos)');
       final photoFk = photosFks.firstWhere((fk) => fk['from'] == 'log_id');
 
-      expect(photoFk['on_delete'], 'CASCADE',
-          reason: 'photos.log_id should be CASCADE');
+      expect(
+        photoFk['on_delete'],
+        'CASCADE',
+        reason: 'photos.log_id should be CASCADE',
+      );
 
       print('  ✅ photos: FK constraint correct (CASCADE)');
 
       // Check data integrity
       final plantsAfterMigration = await db.query('plants');
-      expect(plantsAfterMigration.length, 1,
-          reason: 'Test plant should still exist');
-      expect(plantsAfterMigration.first['breeder'], 'Test Breeder',
-          reason: 'breeder data should be preserved');
-      expect(plantsAfterMigration.first['feminized'], 1,
-          reason: 'feminized data should be preserved');
+      expect(
+        plantsAfterMigration.length,
+        1,
+        reason: 'Test plant should still exist',
+      );
+      expect(
+        plantsAfterMigration.first['breeder'],
+        'Test Breeder',
+        reason: 'breeder data should be preserved',
+      );
+      expect(
+        plantsAfterMigration.first['feminized'],
+        1,
+        reason: 'feminized data should be preserved',
+      );
 
       print('  ✅ Data integrity: All test data preserved');
 
@@ -343,8 +380,11 @@ void main() {
       final plantsFks = await db.rawQuery('PRAGMA foreign_key_list(plants)');
       for (final fk in plantsFks) {
         if (fk['from'] == 'room_id' || fk['from'] == 'grow_id') {
-          expect(fk['on_delete'], 'RESTRICT',
-              reason: '${fk['from']} should be RESTRICT');
+          expect(
+            fk['on_delete'],
+            'RESTRICT',
+            reason: '${fk['from']} should be RESTRICT',
+          );
         }
       }
       print('  ✅ plants FKs: RESTRICT correct');
@@ -352,21 +392,34 @@ void main() {
       // Validate photos FK
       final photosFks = await db.rawQuery('PRAGMA foreign_key_list(photos)');
       final photoFk = photosFks.firstWhere((fk) => fk['from'] == 'log_id');
-      expect(photoFk['on_delete'], 'CASCADE',
-          reason: 'photos.log_id should be CASCADE');
+      expect(
+        photoFk['on_delete'],
+        'CASCADE',
+        reason: 'photos.log_id should be CASCADE',
+      );
       print('  ✅ photos.log_id: CASCADE correct');
 
       // Validate plant_logs CHECK constraints
       final createSql = await db.rawQuery(
-          "SELECT sql FROM sqlite_master WHERE type='table' AND name='plant_logs'");
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='plant_logs'",
+      );
       final sql = createSql.first['sql'] as String;
 
-      expect(sql, contains('CHECK(action_type IN'),
-          reason: 'plant_logs should have action_type CHECK constraint');
-      expect(sql, contains('CHECK(phase IN'),
-          reason: 'plant_logs should have phase CHECK constraint');
-      expect(sql, contains('DEFAULT (datetime('),
-          reason: 'plant_logs.log_date should have DEFAULT constraint');
+      expect(
+        sql,
+        contains('CHECK(action_type IN'),
+        reason: 'plant_logs should have action_type CHECK constraint',
+      );
+      expect(
+        sql,
+        contains('CHECK(phase IN'),
+        reason: 'plant_logs should have phase CHECK constraint',
+      );
+      expect(
+        sql,
+        contains('DEFAULT (datetime('),
+        reason: 'plant_logs.log_date should have DEFAULT constraint',
+      );
 
       print('  ✅ plant_logs: CHECK and DEFAULT constraints present');
 
@@ -375,23 +428,25 @@ void main() {
       print('\n🎉 onCreate validation PASSED!');
     });
 
-    test('Test v13 → v20 migration (planted_date fix + harvests CASCADE)', () async {
-      final testDbPath = '/tmp/test_migration_v13_to_v20.db';
+    test(
+      'Test v13 → v20 migration (planted_date fix + harvests CASCADE)',
+      () async {
+        final testDbPath = '/tmp/test_migration_v13_to_v20.db';
 
-      // Delete old test DB
-      final file = File(testDbPath);
-      if (await file.exists()) {
-        await file.delete();
-      }
+        // Delete old test DB
+        final file = File(testDbPath);
+        if (await file.exists()) {
+          await file.delete();
+        }
 
-      // Create v13 database (before v14 soft-delete)
-      var db = await databaseFactory.openDatabase(
-        testDbPath,
-        options: OpenDatabaseOptions(
-          version: 13,
-          onCreate: (db, version) async {
-            // Create v13 schema
-            await db.execute('''
+        // Create v13 database (before v14 soft-delete)
+        var db = await databaseFactory.openDatabase(
+          testDbPath,
+          options: OpenDatabaseOptions(
+            version: 13,
+            onCreate: (db, version) async {
+              // Create v13 schema
+              await db.execute('''
               CREATE TABLE plants (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -411,7 +466,7 @@ void main() {
               )
             ''');
 
-            await db.execute('''
+              await db.execute('''
               CREATE TABLE harvests (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 plant_id INTEGER NOT NULL,
@@ -423,89 +478,107 @@ void main() {
               )
             ''');
 
-            // Insert test data
-            await db.insert('plants', {
-              'name': 'v13 Test Plant',
-              'strain': 'v13 Strain',
-              'breeder': 'v13 Breeder',
-              'feminized': 1,
-              'seed_type': 'PHOTO',
-              'medium': 'ERDE',
-              'phase': 'BLOOM',
-              'seed_date': '2024-01-01',
-              'veg_date': '2024-01-15',
-              'bloom_date': '2024-02-01',
-            });
+              // Insert test data
+              await db.insert('plants', {
+                'name': 'v13 Test Plant',
+                'strain': 'v13 Strain',
+                'breeder': 'v13 Breeder',
+                'feminized': 1,
+                'seed_type': 'PHOTO',
+                'medium': 'ERDE',
+                'phase': 'BLOOM',
+                'seed_date': '2024-01-01',
+                'veg_date': '2024-01-15',
+                'bloom_date': '2024-02-01',
+              });
 
-            await db.insert('harvests', {
-              'plant_id': 1,
-              'harvest_date': '2024-04-01',
-              'wet_weight': 500.0,
-              'dry_weight': 100.0,
-            });
+              await db.insert('harvests', {
+                'plant_id': 1,
+                'harvest_date': '2024-04-01',
+                'wet_weight': 500.0,
+                'dry_weight': 100.0,
+              });
 
-            print('✅ v13 test database created with data');
-          },
-        ),
-      );
+              print('✅ v13 test database created with data');
+            },
+          ),
+        );
 
-      // Verify test data
-      final plantsV13 = await db.query('plants');
-      expect(plantsV13.length, 1);
-      expect(plantsV13.first['breeder'], 'v13 Breeder');
-      expect(plantsV13.first['seed_date'], '2024-01-01');
-      print('✅ v13 test data verified (planted_date does NOT exist)');
+        // Verify test data
+        final plantsV13 = await db.query('plants');
+        expect(plantsV13.length, 1);
+        expect(plantsV13.first['breeder'], 'v13 Breeder');
+        expect(plantsV13.first['seed_date'], '2024-01-01');
+        print('✅ v13 test data verified (planted_date does NOT exist)');
 
-      await db.close();
+        await db.close();
 
-      // Reopen with v20 (should trigger migrations)
-      print('\n🔄 Simulating migrations v13 → v20...');
+        // Reopen with v20 (should trigger migrations)
+        print('\n🔄 Simulating migrations v13 → v20...');
 
-      db = await databaseFactory.openDatabase(
-        testDbPath,
-        options: OpenDatabaseOptions(
-          version: 20,
-          onUpgrade: (db, oldVersion, newVersion) async {
-            print('Note: Migrations would run here (not implemented in test)');
-            // TODO: Call actual migration manager
-          },
-        ),
-      );
+        db = await databaseFactory.openDatabase(
+          testDbPath,
+          options: OpenDatabaseOptions(
+            version: 20,
+            onUpgrade: (db, oldVersion, newVersion) async {
+              print(
+                'Note: Migrations would run here (not implemented in test)',
+              );
+              // TODO: Call actual migration manager
+            },
+          ),
+        );
 
-      // Validate schema
-      print('\n🔍 Validating v20 schema...');
+        // Validate schema
+        print('\n🔍 Validating v20 schema...');
 
-      // Check that seed_date column exists (no planted_date reference)
-      final plantsColumns = await db.rawQuery('PRAGMA table_info(plants)');
-      final columnNames = plantsColumns.map((col) => col['name'] as String).toList();
+        // Check that seed_date column exists (no planted_date reference)
+        final plantsColumns = await db.rawQuery('PRAGMA table_info(plants)');
+        final columnNames = plantsColumns
+            .map((col) => col['name'] as String)
+            .toList();
 
-      expect(columnNames, contains('seed_date'),
-          reason: 'seed_date should exist in v20');
-      expect(columnNames, isNot(contains('planted_date')),
-          reason: 'planted_date should NOT exist (was never in v13)');
+        expect(
+          columnNames,
+          contains('seed_date'),
+          reason: 'seed_date should exist in v20',
+        );
+        expect(
+          columnNames,
+          isNot(contains('planted_date')),
+          reason: 'planted_date should NOT exist (was never in v13)',
+        );
 
-      print('  ✅ plants: seed_date column exists (no planted_date)');
+        print('  ✅ plants: seed_date column exists (no planted_date)');
 
-      // Check harvests FK constraint is CASCADE
-      final harvestsFks = await db.rawQuery('PRAGMA foreign_key_list(harvests)');
-      if (harvestsFks.isNotEmpty) {
-        final plantFk = harvestsFks.firstWhere((fk) => fk['from'] == 'plant_id');
-        expect(plantFk['on_delete'], 'CASCADE',
-            reason: 'harvests.plant_id should be CASCADE in v20 (fixed by v20)');
-        print('  ✅ harvests: FK constraint is CASCADE');
-      }
+        // Check harvests FK constraint is CASCADE
+        final harvestsFks = await db.rawQuery(
+          'PRAGMA foreign_key_list(harvests)',
+        );
+        if (harvestsFks.isNotEmpty) {
+          final plantFk = harvestsFks.firstWhere(
+            (fk) => fk['from'] == 'plant_id',
+          );
+          expect(
+            plantFk['on_delete'],
+            'CASCADE',
+            reason: 'harvests.plant_id should be CASCADE in v20 (fixed by v20)',
+          );
+          print('  ✅ harvests: FK constraint is CASCADE');
+        }
 
-      // Check data preservation
-      final plantsV34 = await db.query('plants');
-      expect(plantsV34.length, 1, reason: 'Plant should be preserved');
+        // Check data preservation
+        final plantsV34 = await db.query('plants');
+        expect(plantsV34.length, 1, reason: 'Plant should be preserved');
 
-      final harvestsV34 = await db.query('harvests');
-      expect(harvestsV34.length, 1, reason: 'Harvest should be preserved');
+        final harvestsV34 = await db.query('harvests');
+        expect(harvestsV34.length, 1, reason: 'Harvest should be preserved');
 
-      print('  ✅ Data integrity: All data preserved through migration');
+        print('  ✅ Data integrity: All data preserved through migration');
 
-      await db.close();
-      print('\n🎉 v13 → v20 migration test PASSED!');
-    });
+        await db.close();
+        print('\n🎉 v13 → v20 migration test PASSED!');
+      },
+    );
   });
 }

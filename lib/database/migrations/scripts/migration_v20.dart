@@ -111,9 +111,14 @@ final Migration migrationV20 = Migration(
       ],
       validateAfter: (db) async {
         // Verify harvests table exists and has data
-        final count = await db.rawQuery('SELECT COUNT(*) as count FROM harvests');
+        final count = await db.rawQuery(
+          'SELECT COUNT(*) as count FROM harvests',
+        );
         final rowCount = count.first['count'] as int;
-        AppLogger.info('Migration_v20', 'Validated: $rowCount harvests preserved');
+        AppLogger.info(
+          'Migration_v20',
+          'Validated: $rowCount harvests preserved',
+        );
         return true;
       },
     );

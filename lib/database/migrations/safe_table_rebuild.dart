@@ -124,6 +124,11 @@ class SafeTableRebuild {
         '  Step 3/6: Creating new table schema',
       );
 
+      // Preflight: drop any leftover _new table from a previous partial run.
+      // Without this, a second attempt after an interrupted rebuild would fail
+      // with "table already exists" on the CREATE statement below.
+      await txn.execute('DROP TABLE IF EXISTS $tempTableName');
+
       await txn.execute(newTableDdl);
 
       // Verify new table was created
@@ -157,11 +162,18 @@ class SafeTableRebuild {
         '  ✅ Migrated $rowCountAfter rows (source had $rowCountBefore)',
       );
 
-      // Sanity check: Row count shouldn't decrease (unless intentional filtering)
+      // Row count must not decrease — a decrease indicates data loss during copy
+      // (e.g. NOT NULL constraint violations on new columns).
+      // Throw here so the enclosing transaction rolls back automatically.
       if (rowCountAfter < rowCountBefore) {
-        AppLogger.warning(
+        AppLogger.error(
           'SafeTableRebuild',
-          '  ⚠️ Row count decreased: $rowCountBefore → $rowCountAfter',
+          '  Row count decreased: $rowCountBefore → $rowCountAfter — aborting',
+        );
+        throw Exception(
+          'SafeTableRebuild: data loss detected for table $tableName — '
+          'row count decreased from $rowCountBefore to $rowCountAfter. '
+          'Transaction will roll back.',
         );
       }
 

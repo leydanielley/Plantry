@@ -83,12 +83,23 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
             children: [
               const Icon(Icons.warning_amber_rounded, color: DT.warning),
               const SizedBox(width: 12),
-              Expanded(child: Text(_t['cannot_delete'], style: const TextStyle(color: DT.textPrimary))),
+              Expanded(
+                child: Text(
+                  _t['cannot_delete'],
+                  style: const TextStyle(color: DT.textPrimary),
+                ),
+              ),
             ],
           ),
-          content: Text(_t['fertilizer_in_use_message'], style: const TextStyle(color: DT.textSecondary)),
+          content: Text(
+            _t['fertilizer_in_use_message'],
+            style: const TextStyle(color: DT.textSecondary),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text(_t['ok'], style: const TextStyle(color: DT.accent))),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(_t['ok'], style: const TextStyle(color: DT.accent)),
+            ),
           ],
         ),
       );
@@ -101,11 +112,26 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: DT.elevated,
-        title: Text(_t['delete_fertilizer_title'], style: const TextStyle(color: DT.textPrimary)),
-        content: Text('${_t['delete_confirm'].replaceAll('?', '')} "${fertilizer.name}"?', style: const TextStyle(color: DT.textSecondary)),
+        title: Text(
+          _t['delete_fertilizer_title'],
+          style: const TextStyle(color: DT.textPrimary),
+        ),
+        content: Text(
+          '${_t['delete_confirm'].replaceAll('?', '')} "${fertilizer.name}"?',
+          style: const TextStyle(color: DT.textSecondary),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              _t['cancel'],
+              style: const TextStyle(color: DT.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(_t['delete'], style: const TextStyle(color: DT.error)),
+          ),
         ],
       ),
     );
@@ -114,7 +140,8 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
       try {
         await _fertilizerRepo.delete(fertilizer.id!);
         _loadFertilizers();
-        if (mounted) AppMessages.deletedSuccessfully(context, _t['fertilizers']);
+        if (mounted)
+          AppMessages.deletedSuccessfully(context, _t['fertilizers']);
       } catch (e) {
         AppLogger.error('FertilizerListScreen', 'Error: $e');
       }
@@ -131,7 +158,12 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
 
       final file = File(filePath);
       if (mounted) {
-        final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => FertilizerDbfImportScreen(dbfFile: file)));
+        final res = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FertilizerDbfImportScreen(dbfFile: file),
+          ),
+        );
         if (res == true && mounted) _loadFertilizers();
       }
     } catch (e) {
@@ -145,7 +177,10 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
       title: _t['fertilizers'],
       actions: [
         IconButton(
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RdwcRecipesScreen())),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const RdwcRecipesScreen()),
+          ),
           icon: const Icon(Icons.menu_book, color: DT.textPrimary),
           tooltip: _t['recipes'],
         ),
@@ -163,7 +198,9 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
       fab: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const AddFertilizerScreen()),
+            MaterialPageRoute(
+              builder: (context) => const AddFertilizerScreen(),
+            ),
           );
           if (result == true && mounted) _loadFertilizers();
         },
@@ -181,9 +218,19 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
         children: [
           const Icon(Icons.science_outlined, size: 80, color: DT.textTertiary),
           const SizedBox(height: 24),
-          Text(_t['no_fertilizers'], style: const TextStyle(fontSize: 20, color: DT.textPrimary, fontWeight: FontWeight.bold)),
+          Text(
+            _t['no_fertilizers'],
+            style: const TextStyle(
+              fontSize: 20,
+              color: DT.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(_t['add_first_fertilizer'], style: const TextStyle(fontSize: 16, color: DT.textSecondary)),
+          Text(
+            _t['add_first_fertilizer'],
+            style: const TextStyle(fontSize: 16, color: DT.textSecondary),
+          ),
         ],
       ),
     );
@@ -197,7 +244,8 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
       child: ListView.builder(
         itemCount: _fertilizers.length,
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-        itemBuilder: (context, index) => _buildFertilizerCard(_fertilizers[index]),
+        itemBuilder: (context, index) =>
+            _buildFertilizerCard(_fertilizers[index]),
       ),
     );
   }
@@ -207,33 +255,61 @@ class _FertilizerListScreenState extends State<FertilizerListScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: PlantryListTile(
         leading: Container(
-          width: 48, height: 48,
+          width: 48,
+          height: 48,
           decoration: BoxDecoration(
             color: _getTypeColor(f.type).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(Icons.science_rounded, color: _getTypeColor(f.type), size: 28),
+          child: Icon(
+            Icons.science_rounded,
+            color: _getTypeColor(f.type),
+            size: 28,
+          ),
         ),
         title: f.name,
-        subtitle: '${f.brand ?? "Keine Marke"} • NPK: ${f.npk ?? "n/a"}\n${f.type ?? "Allzweck"}',
+        subtitle:
+            '${f.brand ?? "Keine Marke"} • NPK: ${f.npk ?? "n/a"}\n${f.type ?? "Allzweck"}',
         trailing: PopupMenuButton<String>(
           color: DT.elevated,
           icon: const Icon(Icons.more_vert, color: DT.textTertiary),
           onSelected: (val) async {
             if (val == 'edit') {
-              final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditFertilizerScreen(fertilizer: f)));
+              final res = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditFertilizerScreen(fertilizer: f),
+                ),
+              );
               if (res == true && mounted) _loadFertilizers();
             } else if (val == 'delete') {
               _deleteFertilizer(f);
             }
           },
           itemBuilder: (ctx) => [
-            PopupMenuItem(value: 'edit', child: Text(_t['edit'], style: const TextStyle(color: DT.textPrimary))),
-            PopupMenuItem(value: 'delete', child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+            PopupMenuItem(
+              value: 'edit',
+              child: Text(
+                _t['edit'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text(
+                _t['delete'],
+                style: const TextStyle(color: DT.error),
+              ),
+            ),
           ],
         ),
         onTap: () async {
-          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditFertilizerScreen(fertilizer: f)));
+          final res = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EditFertilizerScreen(fertilizer: f),
+            ),
+          );
           if (res == true && mounted) _loadFertilizers();
         },
       ),

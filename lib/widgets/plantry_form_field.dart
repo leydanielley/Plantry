@@ -65,7 +65,10 @@ class PlantryFormField extends StatelessWidget {
             hintStyle: const TextStyle(color: DT.textTertiary, fontSize: 14),
             filled: true,
             fillColor: DT.elevated,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(DT.radiusInput),
               borderSide: BorderSide.none,

@@ -160,8 +160,13 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                 itemBuilder: (context, index) {
                   final recipe = _recipes[index];
                   final fertilizers = _recipeFertilizers[recipe.id] ?? [];
-                  final recipeFertilizerData = _recipeFertilizerData[recipe.id] ?? [];
-                  return _buildRecipeCard(recipe, fertilizers, recipeFertilizerData);
+                  final recipeFertilizerData =
+                      _recipeFertilizerData[recipe.id] ?? [];
+                  return _buildRecipeCard(
+                    recipe,
+                    fertilizers,
+                    recipeFertilizerData,
+                  );
                 },
               ),
             ),
@@ -204,6 +209,8 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
         return _t['harvest'];
       case PlantPhase.archived:
         return _t['phase_archived'];
+      case PlantPhase.unknown:
+        return '';
     }
   }
 
@@ -218,6 +225,7 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
       case PlantPhase.harvest:
         return DT.warning;
       case PlantPhase.archived:
+      case PlantPhase.unknown:
         return DT.textSecondary;
     }
   }
@@ -271,9 +279,9 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                 const SizedBox(height: 8),
                 Text(
                   recipe.description!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: DT.textSecondary,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: DT.textSecondary),
                 ),
               ],
               const SizedBox(height: 12),
@@ -289,7 +297,8 @@ class _RdwcRecipesScreenState extends State<RdwcRecipesScreen> {
                   if (recipe.phase != null)
                     _buildInfoChip(
                       icon: Icons.eco,
-                      label: '${_t['recipe_phase']}: ${_getPhaseName(recipe.phase!)}',
+                      label:
+                          '${_t['recipe_phase']}: ${_getPhaseName(recipe.phase!)}',
                       color: _getPhaseColor(recipe.phase!),
                     ),
                   if (recipe.targetEc != null)

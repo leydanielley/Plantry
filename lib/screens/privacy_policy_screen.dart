@@ -273,7 +273,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
               '12. Contact Us',
               'If you have any questions about this Privacy Policy or the app, please contact us at:',
             ),
-            _buildBulletPoint('GitHub Issues: github.com/leydanielley/Plantry/issues'),
+            _buildBulletPoint(
+              'GitHub Issues: github.com/leydanielley/Plantry/issues',
+            ),
             const SizedBox(height: 24),
 
             // Open Source Notice
@@ -281,7 +283,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
               context,
               'Open Source',
               'This app is open source under the MIT License. '
-              'The source code is available at: github.com/leydanielley/Plantry',
+                  'The source code is available at: github.com/leydanielley/Plantry',
             ),
             const SizedBox(height: 32),
 

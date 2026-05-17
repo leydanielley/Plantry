@@ -23,20 +23,24 @@ class EditFertilizerScreen extends StatefulWidget {
 class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
   final _formKey = GlobalKey<FormState>();
   final IFertilizerRepository _fertilizerRepo = getIt<IFertilizerRepository>();
-  
+
   late TextEditingController _nameController;
   late TextEditingController _brandController;
   late TextEditingController _npkController;
   late TextEditingController _typeController;
   bool _isLoading = false;
+  late bool _isLiquid;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.fertilizer.name);
-    _brandController = TextEditingController(text: widget.fertilizer.brand ?? '');
+    _brandController = TextEditingController(
+      text: widget.fertilizer.brand ?? '',
+    );
     _npkController = TextEditingController(text: widget.fertilizer.npk ?? '');
     _typeController = TextEditingController(text: widget.fertilizer.type ?? '');
+    _isLiquid = widget.fertilizer.isLiquid ?? true;
   }
 
   @override
@@ -59,20 +63,56 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  PlantryFormField(controller: _nameController, label: 'Name', validator: (v) => v!.isEmpty ? 'Pflichtfeld' : null),
+                  PlantryFormField(
+                    controller: _nameController,
+                    label: 'Name',
+                    validator: (v) => v!.isEmpty ? 'Pflichtfeld' : null,
+                  ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _brandController, label: 'Marke'),
+                  PlantryFormField(
+                    controller: _brandController,
+                    label: 'Marke',
+                  ),
                   const SizedBox(height: 24),
 
                   _section('Details'),
-                  Row(children: [
-                    Expanded(child: PlantryFormField(controller: _npkController, label: 'NPK')),
-                    const SizedBox(width: 12),
-                    Expanded(child: PlantryFormField(controller: _typeController, label: 'Typ')),
-                  ]),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _npkController,
+                          label: 'NPK',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _typeController,
+                          label: 'Typ',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    title: const Text(
+                      'Flüssigdünger (ml)',
+                      style: TextStyle(color: DT.textPrimary),
+                    ),
+                    subtitle: Text(
+                      _isLiquid ? 'Menge in ml' : 'Menge in g',
+                      style: const TextStyle(color: DT.textSecondary),
+                    ),
+                    value: _isLiquid,
+                    onChanged: (v) => setState(() => _isLiquid = v),
+                  ),
                   const SizedBox(height: 32),
 
-                  PlantryButton(label: 'Änderungen speichern', onPressed: _save, fullWidth: true),
+                  PlantryButton(
+                    label: 'Änderungen speichern',
+                    onPressed: _save,
+                    fullWidth: true,
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -80,13 +120,29 @@ class _EditFertilizerScreenState extends State<EditFertilizerScreen> {
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
 
   Future<void> _save() async {
     if (_formKey.currentState?.validate() != true) return;
     setState(() => _isLoading = true);
     try {
-      final f = widget.fertilizer.copyWith(name: _nameController.text, brand: _brandController.text, npk: _npkController.text, type: _typeController.text);
+      final f = widget.fertilizer.copyWith(
+        name: _nameController.text,
+        brand: _brandController.text,
+        npk: _npkController.text,
+        type: _typeController.text,
+        isLiquid: _isLiquid,
+      );
       await _fertilizerRepo.save(f);
       if (!mounted) return;
       Navigator.pop(context, true);

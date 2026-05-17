@@ -122,7 +122,13 @@ class LogService implements ILogService {
   }
 
   /// Validiert Photo-Pfade
-  /// ✅ HIGH FIX: Added try-catch to handle TOCTOU race (file deleted between checks)
+  ///
+  /// TOCTOU contract: The check is a best-effort guard. A file can be removed
+  /// between the exists() call and the length() call (or between this validation
+  /// and the subsequent DB write). This is accepted behaviour — the catch block
+  /// below surfaces a clear user-facing error in that case, and the DB write
+  /// will also fail safely because the path will be invalid. A hard re-check
+  /// under a shared filesystem lock is not practical in Flutter.
   Future<void> _validatePhotos(List<String> photoPaths) async {
     for (final path in photoPaths) {
       final file = File(path);
@@ -208,7 +214,8 @@ class LogService implements ILogService {
         break;
       case PlantPhase.seedling:
       case PlantPhase.archived:
-        // No phase-specific date for seedling/archived
+      case PlantPhase.unknown:
+        // No phase-specific date for seedling/archived/unknown
         break;
     }
 
@@ -262,6 +269,7 @@ class LogService implements ILogService {
         break;
       case PlantPhase.seedling:
       case PlantPhase.archived:
+      case PlantPhase.unknown:
         phaseStartDate = plant.seedDate ?? plant.phaseStartDate;
         break;
     }
@@ -535,20 +543,25 @@ class LogService implements ILogService {
 
           switch (plantPhase) {
             case PlantPhase.veg:
-              phaseStartDateStr = plantMap['veg_date'] as String? ??
+              phaseStartDateStr =
+                  plantMap['veg_date'] as String? ??
                   plantMap['phase_start_date'] as String?;
               break;
             case PlantPhase.bloom:
-              phaseStartDateStr = plantMap['bloom_date'] as String? ??
+              phaseStartDateStr =
+                  plantMap['bloom_date'] as String? ??
                   plantMap['phase_start_date'] as String?;
               break;
             case PlantPhase.harvest:
-              phaseStartDateStr = plantMap['harvest_date'] as String? ??
+              phaseStartDateStr =
+                  plantMap['harvest_date'] as String? ??
                   plantMap['phase_start_date'] as String?;
               break;
             case PlantPhase.seedling:
             case PlantPhase.archived:
-              phaseStartDateStr = plantMap['seed_date'] as String? ??
+            case PlantPhase.unknown:
+              phaseStartDateStr =
+                  plantMap['seed_date'] as String? ??
                   plantMap['phase_start_date'] as String?;
               break;
           }
@@ -641,12 +654,7 @@ class LogService implements ILogService {
 
             // ✅ FIX #1: Update phase-specific dates (vegDate, bloomDate, harvestDate)
             // Must be done individually (not in batch) to check existing dates
-            await _updatePlantPhaseDate(
-              txn,
-              plantId,
-              newPhase,
-              logDate,
-            );
+            await _updatePlantPhaseDate(txn, plantId, newPhase, logDate);
           }
 
           await plantBatch.commit(noResult: true);

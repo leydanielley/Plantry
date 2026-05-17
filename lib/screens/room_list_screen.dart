@@ -93,22 +93,45 @@ class _RoomListScreenState extends State<RoomListScreen> {
             children: [
               const Icon(Icons.warning_amber_rounded, color: DT.warning),
               const SizedBox(width: 12),
-              Expanded(child: Text(_t['room_cannot_be_deleted'], style: const TextStyle(color: DT.textPrimary))),
+              Expanded(
+                child: Text(
+                  _t['room_cannot_be_deleted'],
+                  style: const TextStyle(color: DT.textPrimary),
+                ),
+              ),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_t['still_used_by'], style: const TextStyle(color: DT.textSecondary)),
+              Text(
+                _t['still_used_by'],
+                style: const TextStyle(color: DT.textSecondary),
+              ),
               const SizedBox(height: 8),
-              if (usage['plants']! > 0) Text('• ${usage['plants']} Pflanzen', style: const TextStyle(color: DT.textSecondary)),
-              if (usage['grows']! > 0) Text('• ${usage['grows']} Grows', style: const TextStyle(color: DT.textSecondary)),
-              if (usage['hardware']! > 0) Text('• ${usage['hardware']} Hardware', style: const TextStyle(color: DT.textSecondary)),
+              if (usage['plants']! > 0)
+                Text(
+                  '• ${usage['plants']} Pflanzen',
+                  style: const TextStyle(color: DT.textSecondary),
+                ),
+              if (usage['grows']! > 0)
+                Text(
+                  '• ${usage['grows']} Grows',
+                  style: const TextStyle(color: DT.textSecondary),
+                ),
+              if (usage['hardware']! > 0)
+                Text(
+                  '• ${usage['hardware']} Hardware',
+                  style: const TextStyle(color: DT.textSecondary),
+                ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text(_t['ok'], style: const TextStyle(color: DT.accent))),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(_t['ok'], style: const TextStyle(color: DT.accent)),
+            ),
           ],
         ),
       );
@@ -121,11 +144,26 @@ class _RoomListScreenState extends State<RoomListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: DT.elevated,
-        title: Text(_t['delete_room_title'], style: const TextStyle(color: DT.textPrimary)),
-        content: Text('${_t['delete_confirm'].replaceAll('?', '')} "${room.name}"?', style: const TextStyle(color: DT.textSecondary)),
+        title: Text(
+          _t['delete_room_title'],
+          style: const TextStyle(color: DT.textPrimary),
+        ),
+        content: Text(
+          '${_t['delete_confirm'].replaceAll('?', '')} "${room.name}"?',
+          style: const TextStyle(color: DT.textSecondary),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(_t['cancel'], style: const TextStyle(color: DT.textSecondary))),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              _t['cancel'],
+              style: const TextStyle(color: DT.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(_t['delete'], style: const TextStyle(color: DT.error)),
+          ),
         ],
       ),
     );
@@ -169,11 +207,25 @@ class _RoomListScreenState extends State<RoomListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.home_work_outlined, size: 80, color: DT.textTertiary),
+          const Icon(
+            Icons.home_work_outlined,
+            size: 80,
+            color: DT.textTertiary,
+          ),
           const SizedBox(height: 24),
-          Text(_t['no_rooms'], style: const TextStyle(fontSize: 20, color: DT.textPrimary, fontWeight: FontWeight.bold)),
+          Text(
+            _t['no_rooms'],
+            style: const TextStyle(
+              fontSize: 20,
+              color: DT.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(_t['add_first_room'], style: const TextStyle(fontSize: 16, color: DT.textSecondary)),
+          Text(
+            _t['add_first_room'],
+            style: const TextStyle(fontSize: 16, color: DT.textSecondary),
+          ),
         ],
       ),
     );
@@ -194,12 +246,13 @@ class _RoomListScreenState extends State<RoomListScreen> {
 
   Widget _buildRoomCard(Room room) {
     final plantCount = _plantCounts[room.id] ?? 0;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: PlantryListTile(
         leading: Container(
-          width: 48, height: 48,
+          width: 48,
+          height: 48,
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: DT.elevated,
@@ -208,25 +261,44 @@ class _RoomListScreenState extends State<RoomListScreen> {
           child: Image.asset(_getIcon(room.growType), fit: BoxFit.contain),
         ),
         title: room.name,
-        subtitle: '$plantCount ${_t['plants_short']} • ${room.growType?.displayName ?? "Unbekannt"}\n${(room.width * 100).toInt()}x${(room.depth * 100).toInt()}x${(room.height * 100).toInt()}cm',
+        subtitle:
+            '$plantCount ${_t['plants_short']} • ${room.growType?.displayName ?? "Unbekannt"}\n${(room.width * 100).toInt()}x${(room.depth * 100).toInt()}x${(room.height * 100).toInt()}cm',
         trailing: PopupMenuButton<String>(
           color: DT.elevated,
           icon: const Icon(Icons.more_vert, color: DT.textTertiary),
           onSelected: (val) async {
             if (val == 'edit') {
-              final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => EditRoomScreen(room: room)));
+              final res = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => EditRoomScreen(room: room)),
+              );
               if (res == true && mounted) _loadRooms();
             } else if (val == 'delete') {
               _deleteRoom(room);
             }
           },
           itemBuilder: (ctx) => [
-            PopupMenuItem(value: 'edit', child: Text(_t['edit'], style: const TextStyle(color: DT.textPrimary))),
-            PopupMenuItem(value: 'delete', child: Text(_t['delete'], style: const TextStyle(color: DT.error))),
+            PopupMenuItem(
+              value: 'edit',
+              child: Text(
+                _t['edit'],
+                style: const TextStyle(color: DT.textPrimary),
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text(
+                _t['delete'],
+                style: const TextStyle(color: DT.error),
+              ),
+            ),
           ],
         ),
         onTap: () async {
-          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => RoomDetailScreen(room: room)));
+          final res = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => RoomDetailScreen(room: room)),
+          );
           if (res == true && mounted) _loadRooms();
         },
       ),

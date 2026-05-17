@@ -49,7 +49,9 @@ class FertilizerSet {
     return FertilizerSet(
       id: map['id'] as int?,
       name: map['name'] as String,
-      createdAt: DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(map['created_at'] as String? ?? '') ??
+          DateTime.now(),
       itemCount: itemCount,
     );
   }

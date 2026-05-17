@@ -93,13 +93,13 @@ class Plant {
       medium: SafeParsers.parseEnum<Medium>(
         Medium.values,
         map['medium']?.toString(),
-        fallback: Medium.erde,
+        fallback: Medium.unknown,
         context: 'Plant.fromMap.medium',
       ),
       phase: SafeParsers.parseEnum<PlantPhase>(
         PlantPhase.values,
         map['phase']?.toString(),
-        fallback: PlantPhase.veg,
+        fallback: PlantPhase.unknown,
         context: 'Plant.fromMap.phase',
       ),
       growId: map['grow_id'] as int?,
@@ -269,6 +269,7 @@ class Plant {
         break;
       case PlantPhase.seedling:
       case PlantPhase.archived:
+      case PlantPhase.unknown:
         effectivePhaseStart = seedDate ?? phaseStartDate;
         break;
     }

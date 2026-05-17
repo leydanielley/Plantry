@@ -23,7 +23,8 @@ class PlantryCard extends StatefulWidget {
   State<PlantryCard> createState() => _PlantryCardState();
 }
 
-class _PlantryCardState extends State<PlantryCard> with SingleTickerProviderStateMixin {
+class _PlantryCardState extends State<PlantryCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
 
@@ -34,9 +35,10 @@ class _PlantryCardState extends State<PlantryCard> with SingleTickerProviderStat
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.98).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.98,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -66,10 +68,8 @@ class _PlantryCardState extends State<PlantryCard> with SingleTickerProviderStat
         onTapCancel: () => _controller.reverse(),
         child: AnimatedBuilder(
           animation: _scale,
-          builder: (context, child) => Transform.scale(
-            scale: _scale.value,
-            child: child,
-          ),
+          builder: (context, child) =>
+              Transform.scale(scale: _scale.value, child: child),
           child: content,
         ),
       );

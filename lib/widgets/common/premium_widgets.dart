@@ -28,8 +28,8 @@ class PlantryPremiumCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(radius),
-          boxShadow: hasGlow && accentColor != null 
-              ? DT.glowShadow(accentColor!) 
+          boxShadow: hasGlow && accentColor != null
+              ? DT.glowShadow(accentColor!)
               : null,
         ),
         child: ClipRRect(
@@ -41,10 +41,7 @@ class PlantryPremiumCard extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(radius),
                 color: DT.glassBackground,
-                border: Border.all(
-                  color: DT.glassBorder,
-                  width: 0.5,
-                ),
+                border: Border.all(color: DT.glassBorder, width: 0.5),
               ),
               child: child,
             ),
@@ -136,14 +133,18 @@ class PlantryGlowButton extends StatefulWidget {
   State<PlantryGlowButton> createState() => _PlantryGlowButtonState();
 }
 
-class _PlantryGlowButtonState extends State<PlantryGlowButton> with SingleTickerProviderStateMixin {
+class _PlantryGlowButtonState extends State<PlantryGlowButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 100));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
     _scale = Tween<double>(begin: 1.0, end: 0.96).animate(_controller);
   }
 
@@ -160,7 +161,10 @@ class _PlantryGlowButtonState extends State<PlantryGlowButton> with SingleTicker
 
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) { _controller.reverse(); widget.onPressed(); },
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onPressed();
+      },
       onTapCancel: () => _controller.reverse(),
       child: ScaleTransition(
         scale: _scale,
@@ -223,18 +227,32 @@ class PlantryHudItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 4, height: 4,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: DT.glowShadow(color)),
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: DT.glowShadow(color),
+            ),
           ),
           const SizedBox(width: 8),
           Text(
             label.toUpperCase(),
-            style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: DT.textSecondary, letterSpacing: 0.5),
+            style: const TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.w800,
+              color: DT.textSecondary,
+              letterSpacing: 0.5,
+            ),
           ),
           const SizedBox(width: 6),
           Text(
             value,
-            style: DT.mono(size: 11, color: DT.textPrimary, weight: FontWeight.bold),
+            style: DT.mono(
+              size: 11,
+              color: DT.textPrimary,
+              weight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -260,7 +278,8 @@ class QuickActionBubble extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 44, height: 44,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
           color: DT.glassBackground,
           shape: BoxShape.circle,

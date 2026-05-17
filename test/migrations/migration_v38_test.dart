@@ -58,8 +58,11 @@ void main() {
       final indexNames = indexes.map((row) => row['name'] as String).toList();
 
       // Assert: Old index should NOT exist
-      expect(indexNames, isNot(contains('idx_plant_logs_plant_day_unique')),
-          reason: 'Old unique constraint should be removed');
+      expect(
+        indexNames,
+        isNot(contains('idx_plant_logs_plant_day_unique')),
+        reason: 'Old unique constraint should be removed',
+      );
     });
 
     test('New unique constraint with action_type is created', () async {
@@ -75,8 +78,11 @@ void main() {
       final indexNames = indexes.map((row) => row['name'] as String).toList();
 
       // Assert: New index should exist
-      expect(indexNames, contains('idx_plant_logs_unique_per_action'),
-          reason: 'New unique constraint should exist');
+      expect(
+        indexNames,
+        contains('idx_plant_logs_unique_per_action'),
+        reason: 'New unique constraint should exist',
+      );
     });
 
     test('New unique constraint has correct definition', () async {
@@ -92,16 +98,31 @@ void main() {
       // Assert
       expect(indexDef, isNotEmpty, reason: 'Index should exist');
       final sql = (indexDef.first['sql'] as String).toLowerCase();
-      expect(sql, contains('plant_logs'),
-          reason: 'Index should be on plant_logs table');
-      expect(sql, contains('plant_id'),
-          reason: 'Index should include plant_id');
-      expect(sql, contains('day_number'),
-          reason: 'Index should include day_number');
-      expect(sql, contains('action_type'),
-          reason: 'Index should include action_type');
-      expect(sql, contains('archived'),
-          reason: 'Index should have WHERE archived = 0');
+      expect(
+        sql,
+        contains('plant_logs'),
+        reason: 'Index should be on plant_logs table',
+      );
+      expect(
+        sql,
+        contains('plant_id'),
+        reason: 'Index should include plant_id',
+      );
+      expect(
+        sql,
+        contains('day_number'),
+        reason: 'Index should include day_number',
+      );
+      expect(
+        sql,
+        contains('action_type'),
+        reason: 'Index should include action_type',
+      );
+      expect(
+        sql,
+        contains('archived'),
+        reason: 'Index should have WHERE archived = 0',
+      );
     });
 
     test('Migration is idempotent (can run multiple times)', () async {
@@ -157,144 +178,168 @@ void main() {
       expect(logs.first['action_type'], 'WATER');
     });
 
-    test('Can insert multiple logs with different actions on same day after migration',
-        () async {
-      // Arrange: Set up database and run migration
-      DatabaseHelper.setTestDatabase(db);
-      await migrationV38.up(db);
+    test(
+      'Can insert multiple logs with different actions on same day after migration',
+      () async {
+        // Arrange: Set up database and run migration
+        DatabaseHelper.setTestDatabase(db);
+        await migrationV38.up(db);
 
-      final repo = PlantLogRepository();
+        final repo = PlantLogRepository();
 
-      // Insert test plant
-      final plantId = await db.insert('plants', {
-        'name': 'Test Plant',
-        'seed_date': DateTime.now().toIso8601String(),
-        'phase': 'VEG',
-      });
+        // Insert test plant
+        final plantId = await db.insert('plants', {
+          'name': 'Test Plant',
+          'seed_date': DateTime.now().toIso8601String(),
+          'phase': 'VEG',
+        });
 
-      final now = DateTime.now();
+        final now = DateTime.now();
 
-      // Act: Insert multiple logs with different actions on same day
-      final waterLog = await repo.save(PlantLog(
-        plantId: plantId,
-        dayNumber: 26,
-        logDate: now,
-        actionType: ActionType.water,
-      ));
+        // Act: Insert multiple logs with different actions on same day
+        final waterLog = await repo.save(
+          PlantLog(
+            plantId: plantId,
+            dayNumber: 26,
+            logDate: now,
+            actionType: ActionType.water,
+          ),
+        );
 
-      final trainingLog = await repo.save(PlantLog(
-        plantId: plantId,
-        dayNumber: 26,
-        logDate: now,
-        actionType: ActionType.training,
-      ));
+        final trainingLog = await repo.save(
+          PlantLog(
+            plantId: plantId,
+            dayNumber: 26,
+            logDate: now,
+            actionType: ActionType.training,
+          ),
+        );
 
-      final noteLog = await repo.save(PlantLog(
-        plantId: plantId,
-        dayNumber: 26,
-        logDate: now,
-        actionType: ActionType.note,
-      ));
+        final noteLog = await repo.save(
+          PlantLog(
+            plantId: plantId,
+            dayNumber: 26,
+            logDate: now,
+            actionType: ActionType.note,
+          ),
+        );
 
-      // Assert: All logs should be saved successfully
-      expect(waterLog.id, isNotNull);
-      expect(trainingLog.id, isNotNull);
-      expect(noteLog.id, isNotNull);
+        // Assert: All logs should be saved successfully
+        expect(waterLog.id, isNotNull);
+        expect(trainingLog.id, isNotNull);
+        expect(noteLog.id, isNotNull);
 
-      // Verify all logs exist in database
-      final logs = await repo.findByPlant(plantId);
-      expect(logs.length, 3, reason: 'Should have 3 logs for same day');
-      expect(logs.map((l) => l.actionType).toSet(), {
-        ActionType.water,
-        ActionType.training,
-        ActionType.note,
-      });
+        // Verify all logs exist in database
+        final logs = await repo.findByPlant(plantId);
+        expect(logs.length, 3, reason: 'Should have 3 logs for same day');
+        expect(logs.map((l) => l.actionType).toSet(), {
+          ActionType.water,
+          ActionType.training,
+          ActionType.note,
+        });
 
-      DatabaseHelper.setTestDatabase(null);
-    });
+        DatabaseHelper.setTestDatabase(null);
+      },
+    );
 
-    test('Cannot insert duplicate logs with same action on same day after migration',
-        () async {
-      // Arrange: Set up database and run migration
-      DatabaseHelper.setTestDatabase(db);
-      await migrationV38.up(db);
+    test(
+      'Cannot insert duplicate logs with same action on same day after migration',
+      () async {
+        // Arrange: Set up database and run migration
+        DatabaseHelper.setTestDatabase(db);
+        await migrationV38.up(db);
 
-      final repo = PlantLogRepository();
+        final repo = PlantLogRepository();
 
-      // Insert test plant
-      final plantId = await db.insert('plants', {
-        'name': 'Test Plant',
-        'seed_date': DateTime.now().toIso8601String(),
-        'phase': 'VEG',
-      });
+        // Insert test plant
+        final plantId = await db.insert('plants', {
+          'name': 'Test Plant',
+          'seed_date': DateTime.now().toIso8601String(),
+          'phase': 'VEG',
+        });
 
-      final now = DateTime.now();
+        final now = DateTime.now();
 
-      // Act: Insert first WATER log
-      await repo.save(PlantLog(
-        plantId: plantId,
-        dayNumber: 26,
-        logDate: now,
-        actionType: ActionType.water,
-      ));
+        // Act: Insert first WATER log
+        await repo.save(
+          PlantLog(
+            plantId: plantId,
+            dayNumber: 26,
+            logDate: now,
+            actionType: ActionType.water,
+          ),
+        );
 
-      // Assert: Second WATER log on same day should fail
-      expect(
-        () => repo.save(PlantLog(
-          plantId: plantId,
-          dayNumber: 26,
-          logDate: now,
-          actionType: ActionType.water,
-        )),
-        throwsA(isA<Exception>()),
-        reason: 'Duplicate WATER log on same day should be prevented',
-      );
+        // Assert: Second WATER log on same day should fail
+        expect(
+          () => repo.save(
+            PlantLog(
+              plantId: plantId,
+              dayNumber: 26,
+              logDate: now,
+              actionType: ActionType.water,
+            ),
+          ),
+          throwsA(isA<Exception>()),
+          reason: 'Duplicate WATER log on same day should be prevented',
+        );
 
-      DatabaseHelper.setTestDatabase(null);
-    });
+        DatabaseHelper.setTestDatabase(null);
+      },
+    );
 
-    test('Can insert same action type on different days after migration',
-        () async {
-      // Arrange: Set up database and run migration
-      DatabaseHelper.setTestDatabase(db);
-      await migrationV38.up(db);
+    test(
+      'Can insert same action type on different days after migration',
+      () async {
+        // Arrange: Set up database and run migration
+        DatabaseHelper.setTestDatabase(db);
+        await migrationV38.up(db);
 
-      final repo = PlantLogRepository();
+        final repo = PlantLogRepository();
 
-      // Insert test plant
-      final plantId = await db.insert('plants', {
-        'name': 'Test Plant',
-        'seed_date': DateTime.now().toIso8601String(),
-        'phase': 'VEG',
-      });
+        // Insert test plant
+        final plantId = await db.insert('plants', {
+          'name': 'Test Plant',
+          'seed_date': DateTime.now().toIso8601String(),
+          'phase': 'VEG',
+        });
 
-      final now = DateTime.now();
+        final now = DateTime.now();
 
-      // Act: Insert WATER logs on different days
-      final day26Log = await repo.save(PlantLog(
-        plantId: plantId,
-        dayNumber: 26,
-        logDate: now,
-        actionType: ActionType.water,
-      ));
+        // Act: Insert WATER logs on different days
+        final day26Log = await repo.save(
+          PlantLog(
+            plantId: plantId,
+            dayNumber: 26,
+            logDate: now,
+            actionType: ActionType.water,
+          ),
+        );
 
-      final day27Log = await repo.save(PlantLog(
-        plantId: plantId,
-        dayNumber: 27,
-        logDate: now.add(const Duration(days: 1)),
-        actionType: ActionType.water,
-      ));
+        final day27Log = await repo.save(
+          PlantLog(
+            plantId: plantId,
+            dayNumber: 27,
+            logDate: now.add(const Duration(days: 1)),
+            actionType: ActionType.water,
+          ),
+        );
 
-      // Assert: Both logs should be saved successfully
-      expect(day26Log.id, isNotNull);
-      expect(day27Log.id, isNotNull);
+        // Assert: Both logs should be saved successfully
+        expect(day26Log.id, isNotNull);
+        expect(day27Log.id, isNotNull);
 
-      // Verify both logs exist
-      final logs = await repo.findByPlant(plantId);
-      expect(logs.length, 2, reason: 'Should have 2 WATER logs on different days');
+        // Verify both logs exist
+        final logs = await repo.findByPlant(plantId);
+        expect(
+          logs.length,
+          2,
+          reason: 'Should have 2 WATER logs on different days',
+        );
 
-      DatabaseHelper.setTestDatabase(null);
-    });
+        DatabaseHelper.setTestDatabase(null);
+      },
+    );
 
     test('Database integrity check passes after migration', () async {
       // Arrange: Run migration
@@ -305,8 +350,11 @@ void main() {
 
       // Assert
       expect(result, isNotEmpty);
-      expect(result.first['integrity_check'], 'ok',
-          reason: 'Database integrity should be ok');
+      expect(
+        result.first['integrity_check'],
+        'ok',
+        reason: 'Database integrity should be ok',
+      );
     });
 
     test('Migration preserves existing logs with different days', () async {
@@ -382,18 +430,24 @@ void main() {
       ];
 
       for (final actionType in actionTypes) {
-        await repo.save(PlantLog(
-          plantId: plantId,
-          dayNumber: 26,
-          logDate: now,
-          actionType: actionType,
-        ));
+        await repo.save(
+          PlantLog(
+            plantId: plantId,
+            dayNumber: 26,
+            logDate: now,
+            actionType: actionType,
+          ),
+        );
       }
 
       // Assert: All logs should be saved
       final logs = await repo.findByPlant(plantId);
-      expect(logs.length, actionTypes.length,
-          reason: 'Should have ${actionTypes.length} different action types on same day');
+      expect(
+        logs.length,
+        actionTypes.length,
+        reason:
+            'Should have ${actionTypes.length} different action types on same day',
+      );
 
       DatabaseHelper.setTestDatabase(null);
     });

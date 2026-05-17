@@ -80,11 +80,16 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
         curingNotes: result['notes'] as String?,
         updatedAt: DateTime.now(),
       );
+      final orderError = updated.validatePhaseOrder();
+      if (orderError != null) {
+        if (mounted) AppMessages.showError(context, orderError);
+        return;
+      }
       await _harvestRepo.updateHarvest(updated);
       _loadHarvest();
 
       if (mounted) {
-        AppMessages.showSuccess(context, 'Curing gestartet! 📦');
+        AppMessages.showSuccess(context, 'Curing gestartet!');
       }
     } catch (e) {
       if (mounted) {
@@ -101,151 +106,140 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
     return await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Row(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.inventory_2, color: DT.info),
+                const SizedBox(width: 12),
+                Text(_t['start_curing_btn']),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.inventory_2, color: DT.info),
-                  const SizedBox(width: 12),
-                  Text(_t['start_curing_btn']),
+                  // Start Date Picker
+                  InkWell(
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: selectedStartDate,
+                        firstDate:
+                            _harvest!.dryingEndDate ?? _harvest!.harvestDate,
+                        lastDate: DateTime.now().add(const Duration(days: 7)),
+                      );
+                      if (date != null) {
+                        setDialogState(() {
+                          selectedStartDate = date;
+                        });
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Curing-Start',
+                        prefixIcon: const Icon(
+                          Icons.calendar_today,
+                          color: DT.info,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        DateFormat('dd.MM.yyyy').format(selectedStartDate),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Method
+                  TextFormField(
+                    controller: _curingMethodController,
+                    decoration: InputDecoration(
+                      labelText: 'Curing-Methode',
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      hintText: 'z.B. Glass Jars, Grove Bags',
+                      prefixIcon: const Icon(Icons.dashboard, color: DT.info),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Method Suggestion Chips
+                  Wrap(
+                    spacing: 8,
+                    children:
+                        ['Glass Jars', 'Grove Bags', 'CVault', 'Vacuum Sealed']
+                            .map(
+                              (method) => ActionChip(
+                                label: Text(
+                                  method,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                onPressed: () {
+                                  _curingMethodController.text = method;
+                                  setDialogState(() {});
+                                },
+                                backgroundColor:
+                                    _curingMethodController.text == method
+                                    ? DT.info.withValues(alpha: 0.2)
+                                    : null,
+                              ),
+                            )
+                            .toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Notes
+                  TextFormField(
+                    controller: _curingNotesController,
+                    decoration: InputDecoration(
+                      labelText: 'Notizen (optional)',
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      hintText: 'Burping Schedule, Besonderheiten...',
+                      prefixIcon: const Icon(Icons.note, color: DT.info),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    maxLines: 3,
+                  ),
                 ],
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Start Date Picker
-                    InkWell(
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: selectedStartDate,
-                          firstDate:
-                              _harvest!.dryingEndDate ?? _harvest!.harvestDate,
-                          lastDate: DateTime.now().add(const Duration(days: 7)),
-                        );
-                        if (date != null) {
-                          setDialogState(() {
-                            selectedStartDate = date;
-                          });
-                        }
-                      },
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: 'Curing-Start',
-                          prefixIcon: const Icon(
-                            Icons.calendar_today,
-                            color: DT.info,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          DateFormat('dd.MM.yyyy').format(selectedStartDate),
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Method
-                    TextFormField(
-                      controller: _curingMethodController,
-                      decoration: InputDecoration(
-                        labelText: 'Curing-Methode',
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        hintText: 'z.B. Glass Jars, Grove Bags',
-                        prefixIcon: const Icon(
-                          Icons.dashboard,
-                          color: DT.info,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Method Suggestion Chips
-                    Wrap(
-                      spacing: 8,
-                      children:
-                          [
-                                'Glass Jars',
-                                'Grove Bags',
-                                'CVault',
-                                'Vacuum Sealed',
-                              ]
-                              .map(
-                                (method) => ActionChip(
-                                  label: Text(
-                                    method,
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  onPressed: () {
-                                    _curingMethodController.text = method;
-                                    setDialogState(() {});
-                                  },
-                                  backgroundColor:
-                                      _curingMethodController.text == method
-                                      ? DT.info.withValues(alpha: 0.2)
-                                      : null,
-                                ),
-                              )
-                              .toList(),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Notes
-                    TextFormField(
-                      controller: _curingNotesController,
-                      decoration: InputDecoration(
-                        labelText: 'Notizen (optional)',
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        hintText: 'Burping Schedule, Besonderheiten...',
-                        prefixIcon: const Icon(
-                          Icons.note,
-                          color: DT.info,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      maxLines: 3,
-                    ),
-                  ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(_t['cancel']),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context, {
+                    'startDate': selectedStartDate,
+                    'method': _curingMethodController.text.isNotEmpty
+                        ? _curingMethodController.text
+                        : null,
+                    'notes': _curingNotesController.text.isNotEmpty
+                        ? _curingNotesController.text
+                        : null,
+                  });
+                },
+                icon: const Icon(Icons.check),
+                label: Text(_t['start_btn']),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: DT.info,
+                  foregroundColor: DT.textPrimary,
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(_t['cancel']),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context, {
-                      'startDate': selectedStartDate,
-                      'method': _curingMethodController.text.isNotEmpty
-                          ? _curingMethodController.text
-                          : null,
-                      'notes': _curingNotesController.text.isNotEmpty
-                          ? _curingNotesController.text
-                          : null,
-                    });
-                  },
-                  icon: const Icon(Icons.check),
-                  label: Text(_t['start_btn']),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DT.info,
-                    foregroundColor: DT.textPrimary,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -265,11 +259,16 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
         curingEndDate: date,
         updatedAt: DateTime.now(),
       );
+      final orderError = updated.validatePhaseOrder();
+      if (orderError != null) {
+        if (mounted) AppMessages.showError(context, orderError);
+        return;
+      }
       await _harvestRepo.updateHarvest(updated);
       _loadHarvest();
 
       if (mounted) {
-        AppMessages.showSuccess(context, 'Curing abgeschlossen! 🎉');
+        AppMessages.showSuccess(context, 'Curing abgeschlossen!');
       }
     } catch (e) {
       if (mounted) {
@@ -398,7 +397,10 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 14, color: DT.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: DT.textSecondary,
+                    ),
                   ),
                 ],
               ),

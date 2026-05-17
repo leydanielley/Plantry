@@ -43,7 +43,9 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
   Future<void> _loadData() async {
     try {
       final settings = await _settingsRepo.getSettings();
-      final systems = await _rdwcRepo.getAllSystems(includeArchived: _showArchived);
+      final systems = await _rdwcRepo.getAllSystems(
+        includeArchived: _showArchived,
+      );
 
       if (mounted) {
         setState(() {
@@ -72,7 +74,10 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
       title: _t['rdwc_systems'],
       actions: [
         IconButton(
-          icon: Icon(_showArchived ? Icons.inventory_2 : Icons.inventory_2_outlined, color: DT.textPrimary),
+          icon: Icon(
+            _showArchived ? Icons.inventory_2 : Icons.inventory_2_outlined,
+            color: DT.textPrimary,
+          ),
           onPressed: () {
             setState(() => _showArchived = !_showArchived);
             _loadData();
@@ -84,11 +89,15 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
               itemCount: _systems.length,
-              itemBuilder: (context, index) => _buildSystemCard(_systems[index]),
+              itemBuilder: (context, index) =>
+                  _buildSystemCard(_systems[index]),
             ),
       fab: FloatingActionButton(
         onPressed: () async {
-          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => const RdwcSystemFormScreen()));
+          final res = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const RdwcSystemFormScreen()),
+          );
           if (res == true && mounted) _loadData();
         },
         backgroundColor: DT.accent,
@@ -103,11 +112,25 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.water_drop_outlined, size: 80, color: DT.textTertiary),
+          const Icon(
+            Icons.water_drop_outlined,
+            size: 80,
+            color: DT.textTertiary,
+          ),
           const SizedBox(height: 24),
-          Text(_t['rdwc_systems'], style: const TextStyle(fontSize: 20, color: DT.textPrimary, fontWeight: FontWeight.bold)),
+          Text(
+            _t['rdwc_systems'],
+            style: const TextStyle(
+              fontSize: 20,
+              color: DT.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(_t['no_systems_yet'], style: const TextStyle(fontSize: 16, color: DT.textSecondary)),
+          Text(
+            _t['no_systems_yet'],
+            style: const TextStyle(fontSize: 16, color: DT.textSecondary),
+          ),
         ],
       ),
     );
@@ -127,7 +150,12 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: PlantryCard(
         onTap: () async {
-          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => RdwcSystemDetailScreen(system: system)));
+          final res = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => RdwcSystemDetailScreen(system: system),
+            ),
+          );
           if (res == true && mounted) _loadData();
         },
         child: Column(
@@ -136,30 +164,67 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
             Row(
               children: [
                 Container(
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(10)),
-                  child: Image.asset('assets/icons/rdwc_icon.png', fit: BoxFit.contain),
+                  decoration: BoxDecoration(
+                    color: DT.elevated,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Image.asset(
+                    'assets/icons/rdwc_icon.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(system.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DT.textPrimary)),
-                      if (system.description != null) Text(system.description!, style: const TextStyle(fontSize: 12, color: DT.textSecondary), maxLines: 1),
+                      Text(
+                        system.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: DT.textPrimary,
+                        ),
+                      ),
+                      if (system.description != null)
+                        Text(
+                          system.description!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: DT.textSecondary,
+                          ),
+                          maxLines: 1,
+                        ),
                     ],
                   ),
                 ),
-                if (system.archived) const Icon(Icons.inventory_2, color: DT.textTertiary, size: 18),
+                if (system.archived)
+                  const Icon(
+                    Icons.inventory_2,
+                    color: DT.textTertiary,
+                    size: 18,
+                  ),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_t['water_level'], style: const TextStyle(fontSize: 12, color: DT.textSecondary)),
-                Text('${system.fillPercentage.toInt()}%', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: statusColor)),
+                Text(
+                  _t['water_level'],
+                  style: const TextStyle(fontSize: 12, color: DT.textSecondary),
+                ),
+                Text(
+                  '${system.fillPercentage.toInt()}%',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 6),
@@ -176,9 +241,27 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _stat(_t['room_detail_current'], UnitConverter.formatVolume(system.currentLevel, _settings.volumeUnit)),
-                _stat('Kapazität', UnitConverter.formatVolume(system.maxCapacity, _settings.volumeUnit)),
-                _stat(_t['rest'], UnitConverter.formatVolume(system.remainingCapacity, _settings.volumeUnit)),
+                _stat(
+                  _t['room_detail_current'],
+                  UnitConverter.formatVolume(
+                    system.currentLevel,
+                    _settings.volumeUnit,
+                  ),
+                ),
+                _stat(
+                  'Kapazität',
+                  UnitConverter.formatVolume(
+                    system.maxCapacity,
+                    _settings.volumeUnit,
+                  ),
+                ),
+                _stat(
+                  _t['rest'],
+                  UnitConverter.formatVolume(
+                    system.remainingCapacity,
+                    _settings.volumeUnit,
+                  ),
+                ),
               ],
             ),
           ],
@@ -191,8 +274,18 @@ class _RdwcSystemsScreenState extends State<RdwcSystemsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: DT.textTertiary)),
-        Text(val, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: DT.textPrimary)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10, color: DT.textTertiary),
+        ),
+        Text(
+          val,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: DT.textPrimary,
+          ),
+        ),
       ],
     );
   }

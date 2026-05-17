@@ -28,9 +28,7 @@ class ValidationResult {
 /// Validates database integrity and data consistency during migrations
 class MigrationValidator {
   /// Validate database integrity using SQLite PRAGMA checks
-  static Future<ValidationResult> validateDatabaseIntegrity(
-    Database db,
-  ) async {
+  static Future<ValidationResult> validateDatabaseIntegrity(Database db) async {
     final errors = <String>[];
     final warnings = <String>[];
 
@@ -62,11 +60,7 @@ class MigrationValidator {
         errors.add('Foreign key violations detected: ${fkCheck.length}');
         for (final violation in fkCheck.take(10)) {
           errors.add('  FK violation: $violation');
-          AppLogger.error(
-            'MigrationValidator',
-            '❌ FK violation',
-            violation,
-          );
+          AppLogger.error('MigrationValidator', '❌ FK violation', violation);
         }
       } else {
         AppLogger.info('MigrationValidator', '✅ Foreign key integrity: OK');
@@ -97,7 +91,9 @@ class MigrationValidator {
 
     for (final table in BackupConfig.exportTables) {
       try {
-        final result = await db.rawQuery('SELECT COUNT(*) as count FROM $table');
+        final result = await db.rawQuery(
+          'SELECT COUNT(*) as count FROM $table',
+        );
         counts[table] = Sqflite.firstIntValue(result) ?? 0;
       } catch (e) {
         AppLogger.warning(
@@ -161,10 +157,7 @@ class MigrationValidator {
 
     try {
       // Check 1: Photos without logs
-      AppLogger.info(
-        'MigrationValidator',
-        'Checking for orphaned photos...',
-      );
+      AppLogger.info('MigrationValidator', 'Checking for orphaned photos...');
       final orphanedPhotos = await db.rawQuery('''
         SELECT COUNT(*) as count
         FROM photos
@@ -204,16 +197,11 @@ class MigrationValidator {
       ''');
       final logCount = Sqflite.firstIntValue(orphanedLogs) ?? 0;
       if (logCount > 0) {
-        warnings.add(
-          'Found $logCount orphaned plant_logs (invalid plant_id)',
-        );
+        warnings.add('Found $logCount orphaned plant_logs (invalid plant_id)');
       }
 
       // Check 4: Harvests without plants
-      AppLogger.info(
-        'MigrationValidator',
-        'Checking for orphaned harvests...',
-      );
+      AppLogger.info('MigrationValidator', 'Checking for orphaned harvests...');
       final orphanedHarvests = await db.rawQuery('''
         SELECT COUNT(*) as count
         FROM harvests
@@ -240,9 +228,7 @@ class MigrationValidator {
       ''');
       final invalidRoomCount = Sqflite.firstIntValue(plantsInvalidRoom) ?? 0;
       if (invalidRoomCount > 0) {
-        warnings.add(
-          'Found $invalidRoomCount plants with invalid room_id',
-        );
+        warnings.add('Found $invalidRoomCount plants with invalid room_id');
       }
 
       final plantsInvalidGrow = await db.rawQuery('''
@@ -253,9 +239,7 @@ class MigrationValidator {
       ''');
       final invalidGrowCount = Sqflite.firstIntValue(plantsInvalidGrow) ?? 0;
       if (invalidGrowCount > 0) {
-        warnings.add(
-          'Found $invalidGrowCount plants with invalid grow_id',
-        );
+        warnings.add('Found $invalidGrowCount plants with invalid grow_id');
       }
 
       AppLogger.info(
@@ -332,9 +316,7 @@ class MigrationValidator {
       );
 
       if (missingPhotos > 0) {
-        warnings.add(
-          'Photo file check: $foundPhotos/$totalPhotos files found',
-        );
+        warnings.add('Photo file check: $foundPhotos/$totalPhotos files found');
       }
 
       return ValidationResult(
@@ -362,10 +344,7 @@ class MigrationValidator {
     final warnings = <String>[];
 
     try {
-      AppLogger.info(
-        'MigrationValidator',
-        'Validating plant phase history...',
-      );
+      AppLogger.info('MigrationValidator', 'Validating plant phase history...');
 
       // Check plants in BLOOM phase have bloom_date
       final plantsInBloom = await db.rawQuery('''
@@ -375,9 +354,7 @@ class MigrationValidator {
       ''');
       final bloomMissing = Sqflite.firstIntValue(plantsInBloom) ?? 0;
       if (bloomMissing > 0) {
-        warnings.add(
-          '$bloomMissing plants in BLOOM phase missing bloom_date',
-        );
+        warnings.add('$bloomMissing plants in BLOOM phase missing bloom_date');
       }
 
       // Check plants in HARVEST phase have harvest_date

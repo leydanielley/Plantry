@@ -24,12 +24,12 @@ class AddHardwareScreen extends StatefulWidget {
 class _AddHardwareScreenState extends State<AddHardwareScreen> {
   final _formKey = GlobalKey<FormState>();
   final IHardwareRepository _hardwareRepo = getIt<IHardwareRepository>();
-  
+
   final _brandController = TextEditingController();
   final _modelController = TextEditingController();
   final _wattageController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
-  
+
   HardwareType _selectedType = HardwareType.ledPanel;
   bool _isLoading = false;
 
@@ -58,20 +58,46 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
                   const SizedBox(height: 24),
 
                   _section('Basis Info'),
-                  PlantryFormField(controller: _brandController, label: 'Marke', hint: 'z.B. AC Infinity'),
+                  PlantryFormField(
+                    controller: _brandController,
+                    label: 'Marke',
+                    hint: 'z.B. AC Infinity',
+                  ),
                   const SizedBox(height: 16),
-                  PlantryFormField(controller: _modelController, label: 'Modell', hint: 'z.B. T6'),
+                  PlantryFormField(
+                    controller: _modelController,
+                    label: 'Modell',
+                    hint: 'z.B. T6',
+                  ),
                   const SizedBox(height: 24),
 
                   _section('Technische Daten'),
-                  Row(children: [
-                    Expanded(child: PlantryFormField(controller: _wattageController, label: 'Leistung (Watt)', keyboardType: TextInputType.number)),
-                    const SizedBox(width: 12),
-                    Expanded(child: PlantryFormField(controller: _quantityController, label: 'Anzahl', keyboardType: TextInputType.number)),
-                  ]),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _wattageController,
+                          label: 'Leistung (Watt)',
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: PlantryFormField(
+                          controller: _quantityController,
+                          label: 'Anzahl',
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 32),
 
-                  PlantryButton(label: 'Hinzufügen', onPressed: _save, fullWidth: true),
+                  PlantryButton(
+                    label: 'Hinzufügen',
+                    onPressed: _save,
+                    fullWidth: true,
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -79,16 +105,41 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
     );
   }
 
-  Widget _section(String t) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DT.textSecondary)));
+  Widget _section(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: DT.textSecondary,
+      ),
+    ),
+  );
 
   Widget _typeSelector() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: DT.elevated, borderRadius: BorderRadius.circular(DT.radiusInput)),
+      decoration: BoxDecoration(
+        color: DT.elevated,
+        borderRadius: BorderRadius.circular(DT.radiusInput),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<HardwareType>(
-          value: _selectedType, isExpanded: true, dropdownColor: DT.elevated,
-          items: HardwareType.values.map((t) => DropdownMenuItem(value: t, child: Text(t.displayName, style: const TextStyle(color: DT.textPrimary)))).toList(),
+          value: _selectedType,
+          isExpanded: true,
+          dropdownColor: DT.elevated,
+          items: HardwareType.values
+              .map(
+                (t) => DropdownMenuItem(
+                  value: t,
+                  child: Text(
+                    t.displayName,
+                    style: const TextStyle(color: DT.textPrimary),
+                  ),
+                ),
+              )
+              .toList(),
           onChanged: (v) => setState(() => _selectedType = v!),
         ),
       ),
@@ -101,7 +152,12 @@ class _AddHardwareScreenState extends State<AddHardwareScreen> {
     try {
       final h = Hardware(
         roomId: widget.roomId,
-        name: '${_brandController.text} ${_modelController.text}'.trim().isNotEmpty ? '${_brandController.text} ${_modelController.text}'.trim() : _selectedType.displayName,
+        name:
+            '${_brandController.text} ${_modelController.text}'
+                .trim()
+                .isNotEmpty
+            ? '${_brandController.text} ${_modelController.text}'.trim()
+            : _selectedType.displayName,
         type: _selectedType,
         brand: _brandController.text,
         model: _modelController.text,

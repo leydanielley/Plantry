@@ -210,6 +210,8 @@ class TestDataFactory {
         return 0.0;
       case PlantPhase.archived:
         return 0.0;
+      case PlantPhase.unknown:
+        return 0.0;
     }
   }
 

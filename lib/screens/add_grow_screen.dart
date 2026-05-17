@@ -83,7 +83,8 @@ class _AddGrowScreenState extends State<AddGrowScreen> {
                       controller: _nameController,
                       label: _t['add_grow_name_label'],
                       hint: _t['add_grow_name_hint'],
-                      validator: (v) => v!.isEmpty ? _t['error_field_required'] : null,
+                      validator: (v) =>
+                          v!.isEmpty ? _t['error_field_required'] : null,
                     ),
                     const SizedBox(height: 16),
                     PlantryFormField(
