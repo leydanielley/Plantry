@@ -2,6 +2,7 @@
 // GROWLOG - Notification Service (100% Offline)
 // =============================================
 
+import 'dart:async' show unawaited;
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -116,27 +117,24 @@ class NotificationService implements INotificationService {
           'Timezone override applied: $ianaTimezone',
         );
       } else {
-        // Revert to device timezone
-        FlutterTimezone.getLocalTimezone().then((deviceTz) {
-          try {
-            tz.setLocalLocation(tz.getLocation(deviceTz));
-            AppLogger.info(
-              'NotificationService',
-              'Timezone reverted to device timezone: $deviceTz',
-            );
-          } catch (e) {
-            AppLogger.warning(
-              'NotificationService',
-              'Could not revert to device timezone: $e',
-            );
-          }
-        });
+        // Revert to device timezone (fire-and-forget, applyTimezoneOverride is sync)
+        unawaited(_revertToDeviceTimezone());
       }
     } catch (e) {
       AppLogger.warning(
         'NotificationService',
         'Invalid timezone override "$ianaTimezone": $e',
       );
+    }
+  }
+
+  Future<void> _revertToDeviceTimezone() async {
+    try {
+      final deviceTz = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(deviceTz));
+      AppLogger.info('NotificationService', 'Timezone reverted to device timezone: $deviceTz');
+    } catch (e) {
+      AppLogger.warning('NotificationService', 'Could not revert to device timezone: $e');
     }
   }
 

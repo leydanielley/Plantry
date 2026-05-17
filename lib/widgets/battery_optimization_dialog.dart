@@ -4,6 +4,7 @@
 // =============================================
 
 import 'package:flutter/material.dart';
+import 'package:growlog_app/theme/design_tokens.dart';
 import 'package:growlog_app/utils/device_info_helper.dart';
 import 'package:growlog_app/utils/translations.dart';
 
@@ -20,7 +21,7 @@ class BatteryOptimizationDialog extends StatelessWidget {
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+          const Icon(Icons.warning_amber_rounded, color: DT.warning),
           const SizedBox(width: 8),
           Text(t.translate('battery_dialog_title')),
         ],

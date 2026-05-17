@@ -61,12 +61,12 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
-            backgroundColor: Colors.red,
+            backgroundColor: DT.error,
             duration: const Duration(seconds: 5),
             action: onRetry != null
                 ? SnackBarAction(
                     label: 'Retry',
-                    textColor: Colors.white,
+                    textColor: DT.textPrimary,
                     onPressed: () {
                       // Retry with mounted check!
                       if (mounted) {
@@ -102,7 +102,7 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.error, color: Colors.red),
+            const Icon(Icons.error, color: DT.error),
             const SizedBox(width: 8),
             Text(title),
           ],
@@ -123,7 +123,7 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
                 details,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: DT.textSecondary,
                   fontFamily: 'monospace',
                 ),
               ),
@@ -223,12 +223,12 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle, color: Colors.white),
+            const Icon(Icons.check_circle, color: DT.textPrimary),
             const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: DT.success,
         duration: const Duration(seconds: 2),
       ),
     );
@@ -242,12 +242,12 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error, color: Colors.white),
+            const Icon(Icons.error, color: DT.textPrimary),
             const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.red,
+        backgroundColor: DT.error,
         duration: const Duration(seconds: 4),
       ),
     );
@@ -261,12 +261,12 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.warning, color: Colors.white),
+            const Icon(Icons.warning, color: DT.textPrimary),
             const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: DT.warning,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -280,12 +280,12 @@ mixin ErrorHandlingMixin<T extends StatefulWidget> on State<T> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.info, color: Colors.white),
+            const Icon(Icons.info, color: DT.textPrimary),
             const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: DT.info,
         duration: const Duration(seconds: 3),
       ),
     );

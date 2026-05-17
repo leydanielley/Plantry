@@ -72,13 +72,12 @@ class _AddFertilizerScreenState extends State<AddFertilizerScreen> {
     }
   }
 
-  void _addCustom() {
-    Navigator.push(
+  Future<void> _addCustom() async {
+    final res = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const CustomFertilizerScreen()),
-    ).then((res) {
-      if (res == true && mounted) Navigator.pop(context, true);
-    });
+    );
+    if (res == true && mounted) Navigator.pop(context, true);
   }
 
   @override

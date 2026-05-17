@@ -64,9 +64,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
         if (widget.room.rdwcSystemId != null)
           _rdwcRepo.getSystemById(widget.room.rdwcSystemId!)
         else
-          _rdwcRepo
-              .getSystemsByRoom(widget.room.id!)
-              .then((list) => list.isNotEmpty ? list.first : null),
+          (() async {
+            final list = await _rdwcRepo.getSystemsByRoom(widget.room.id!);
+            return list.isNotEmpty ? list.first : null;
+          })(),
       ]);
       if (mounted) {
         setState(() {

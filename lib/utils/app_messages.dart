@@ -23,7 +23,7 @@ class AppMessages {
       SnackBar(
         content: Row(
           children: [
-            Icon(icon, color: Colors.white),
+            Icon(icon, color: DT.textPrimary),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
@@ -33,7 +33,7 @@ class AppMessages {
         action: onRetry != null
             ? SnackBarAction(
                 label: 'Retry',
-                textColor: Colors.white,
+                textColor: DT.textPrimary,
                 onPressed: onRetry,
               )
             : null,
@@ -146,7 +146,7 @@ class AppMessages {
     _showSnackBar(
       context,
       message: message,
-      backgroundColor: Colors.red[700] ?? const Color(0xFFD32F2F),
+      backgroundColor: DT.error,
       icon: Icons.error,
     );
   }
@@ -170,7 +170,7 @@ class AppMessages {
     _showSnackBar(
       context,
       message: 'Error loading $itemName',
-      backgroundColor: Colors.red[700] ?? const Color(0xFFD32F2F),
+      backgroundColor: DT.error,
       icon: Icons.error,
       onRetry: onRetry,
     );
@@ -185,7 +185,7 @@ class AppMessages {
     _showSnackBar(
       context,
       message: message,
-      backgroundColor: Colors.blue[700] ?? const Color(0xFF1976D2),
+      backgroundColor: DT.info,
       icon: Icons.info,
     );
   }
@@ -195,7 +195,7 @@ class AppMessages {
     _showSnackBar(
       context,
       message: message,
-      backgroundColor: Colors.orange[700] ?? const Color(0xFFF57C00),
+      backgroundColor: DT.warning,
       icon: Icons.warning,
     );
   }
