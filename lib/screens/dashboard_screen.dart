@@ -132,11 +132,11 @@ class _DashboardScreenState extends State<DashboardScreen>
       });
       final res = await Future.wait([
         safeCount(_plantRepo.count(), 'plants'),
-        safeCount(_growRepo.getAll().then((l) => l.length), 'grows'),
+        safeCount((() async => (await _growRepo.getAll()).length)(), 'grows'),
         safeCount(_roomRepo.count(), 'rooms'),
         safeCount(_fertilizerRepo.count(), 'fertilizers'),
         safeCount(_harvestRepo.getHarvestCount(), 'harvests'),
-        safeCount(_rdwcRepo.getAllSystems().then((l) => l.length), 'rdwc'),
+        safeCount((() async => (await _rdwcRepo.getAllSystems()).length)(), 'rdwc'),
       ], eagerError: false);
 
       final Map<PlantPhase, int> dist = {};

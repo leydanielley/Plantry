@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:growlog_app/database/database_helper.dart';
 import 'package:growlog_app/models/plant_log.dart';
 import 'package:growlog_app/utils/safe_parsers.dart';
+import 'package:growlog_app/repositories/interfaces/i_photo_repository.dart';
 import 'package:growlog_app/repositories/interfaces/i_plant_log_repository.dart';
 import 'package:growlog_app/repositories/photo_repository.dart';
 import 'package:growlog_app/repositories/repository_error_handler.dart';
@@ -15,7 +16,11 @@ class PlantLogRepository
     with RepositoryErrorHandler
     implements IPlantLogRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  final PhotoRepository _photoRepository = PhotoRepository();
+  final IPhotoRepository _photoRepository;
+
+  // VC-009 fix: constructor injection allows mocking in tests
+  PlantLogRepository({IPhotoRepository? photoRepository})
+      : _photoRepository = photoRepository ?? PhotoRepository();
 
   @override
   String get repositoryName => 'PlantLogRepository';

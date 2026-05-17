@@ -57,6 +57,8 @@ class BackupService implements IBackupService {
     Database? db,
     BackupProgressCallback? onProgress,
   }) async {
+    // VC-008 fix: declared outside try so catch can clean up a partial ZIP
+    String? zipPathForCleanup;
     try {
       AppLogger.info('BackupService', 'Starting export...');
 
@@ -253,6 +255,8 @@ class BackupService implements IBackupService {
         appDir.path,
         'plantry_backup_v${dbVersion}_$timestamp.zip',
       );
+      // VC-008 fix: track path so catch-block can delete a partial ZIP
+      zipPathForCleanup = zipPath;
 
       AppLogger.info('BackupService', 'Creating ZIP file...');
       onProgress?.call(photos.length, photos.length, 'ZIP wird erstellt...');
@@ -298,6 +302,13 @@ class BackupService implements IBackupService {
       );
       return zipPath;
     } catch (e, stackTrace) {
+      // VC-008 fix: clean up partial ZIP if it was created before the failure
+      if (zipPathForCleanup != null) {
+        try {
+          final partialFile = File(zipPathForCleanup);
+          if (await partialFile.exists()) await partialFile.delete();
+        } catch (_) {}
+      }
       AppLogger.error('BackupService', 'Export failed', e, stackTrace);
       rethrow;
     }
