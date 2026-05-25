@@ -11,6 +11,7 @@ import 'package:path/path.dart' as path;
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/app_version.dart';
 import 'package:growlog_app/config/backup_config.dart';
+import 'package:growlog_app/models/backup_result.dart';
 
 class DatabaseRecovery {
   /// Check if database is corrupted
@@ -177,8 +178,34 @@ class DatabaseRecovery {
     try {
       // Try to open the corrupted database and export what we can
       final corruptedDb = await openDatabase(dbPath, readOnly: true);
-      emergencyBackupPath = await exportToJSON(corruptedDb);
+      final jsonResult = await exportToJSON(corruptedDb);
       await corruptedDb.close();
+
+      // QA-002: pattern-match on structured result instead of nullable path.
+      // Only BackupSuccess sets emergencyBackupPath — Skipped/Failure fall
+      // through to the filesystem-backup attempt below.
+      switch (jsonResult) {
+        case BackupSuccess(:final path):
+          emergencyBackupPath = path;
+        case BackupSkipped(:final reason):
+          AppLogger.warning(
+            'DatabaseRecovery',
+            'Emergency JSON export skipped: $reason',
+          );
+        case BackupFailure(:final error):
+          AppLogger.error(
+            'DatabaseRecovery',
+            'Emergency JSON export reported failure',
+            error,
+          );
+      }
+
+      // If JSON export did not yield a path, fall through to filesystem backup.
+      if (emergencyBackupPath == null) {
+        throw StateError(
+          'Emergency JSON export produced no artifact (status=$jsonResult)',
+        );
+      }
     } catch (e) {
       AppLogger.error(
         'DatabaseRecovery',
@@ -318,8 +345,15 @@ class DatabaseRecovery {
   /// database to a JSON file before it gets deleted. This gives users a chance
   /// to manually recover data if the corruption only affects structure, not content.
   ///
-  /// Returns the path to the exported JSON file, or null if export failed.
-  static Future<String?> exportToJSON(Database db) async {
+  /// QA-002: returns a structured [BackupResult] so callers can pattern-match
+  /// on the outcome instead of branching on a nullable path or string-matching
+  /// log messages.
+  ///   - [BackupSuccess]: JSON file written; safe to proceed with deletion.
+  ///   - [BackupSkipped]: no tables exported (e.g. empty/unreadable DB) — the
+  ///     file was not written and recovery must NOT delete the DB.
+  ///   - [BackupFailure]: I/O or serialization failure — recovery must NOT
+  ///     delete the DB.
+  static Future<BackupResult> exportToJSON(Database db) async {
     try {
       AppLogger.warning(
         'DatabaseRecovery',
@@ -375,6 +409,18 @@ class DatabaseRecovery {
         }
       }
 
+      // QA-002: if every table failed we have an empty shell — refuse to
+      // report success. Callers rely on a real artifact to gate deletion.
+      if (successfulTables == 0) {
+        AppLogger.warning(
+          'DatabaseRecovery',
+          '⚠️ Emergency JSON export produced no readable tables — skipping artifact',
+        );
+        return const BackupSkipped(
+          'No tables could be read from the corrupted database',
+        );
+      }
+
       // Save JSON file
       final jsonFile = File(
         path.join(emergencyDir.path, 'emergency_backup_$timestamp.json'),
@@ -392,10 +438,15 @@ class DatabaseRecovery {
         'Emergency backup saved to: ${jsonFile.path}',
       );
 
-      return jsonFile.path;
-    } catch (e) {
-      AppLogger.error('DatabaseRecovery', 'Emergency JSON export failed', e);
-      return null;
+      return BackupSuccess(jsonFile.path);
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'DatabaseRecovery',
+        'Emergency JSON export failed',
+        e,
+        stackTrace,
+      );
+      return BackupFailure(e, stackTrace);
     }
   }
 }

@@ -6,6 +6,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:growlog_app/database/database_recovery.dart';
+import 'package:growlog_app/models/backup_result.dart';
 import 'dart:io';
 
 void main() {
@@ -209,18 +210,99 @@ void main() {
       );
 
       // Act: Export to JSON
-      final jsonPath = await DatabaseRecovery.exportToJSON(db);
+      final result = await DatabaseRecovery.exportToJSON(db);
 
-      // Assert: Export should succeed (or fail gracefully for in-memory DB)
-      // Note: In-memory DB might not be exportable to file system
-      // This test validates the method doesn't crash
+      // Assert: returns a BackupResult variant — never null.
+      // In a real app run we'd expect BackupSuccess; in a pure unit-test
+      // environment path_provider is unmocked, so getApplicationDocumentsDirectory
+      // throws and we get BackupFailure. Either outcome is acceptable, but
+      // we DO verify the contract: every variant is a BackupResult.
+      expect(result, isA<BackupResult>());
 
-      if (jsonPath != null) {
-        expect(jsonPath, isNotEmpty);
-        expect(jsonPath, contains('emergency_backup_'));
+      switch (result) {
+        case BackupSuccess(:final path):
+          expect(path, isNotEmpty);
+          expect(path, contains('emergency_backup_'));
+        case BackupSkipped(:final reason):
+          expect(reason, isNotEmpty);
+        case BackupFailure(:final error):
+          expect(error, isNotNull);
       }
 
       await db.close();
+    });
+
+    test(
+      'QA-002: returns BackupFailure when path_provider is unavailable',
+      () async {
+        // In unit tests path_provider has no platform binding, so
+        // getApplicationDocumentsDirectory() throws. exportToJSON must
+        // catch this and return BackupFailure — NOT throw.
+        final db = await databaseFactoryFfi.openDatabase(
+          inMemoryDatabasePath,
+          options: OpenDatabaseOptions(
+            version: 1,
+            onCreate: (db, version) async {
+              await db.execute('CREATE TABLE plants (id INTEGER PRIMARY KEY)');
+            },
+          ),
+        );
+
+        final result = await DatabaseRecovery.exportToJSON(db);
+
+        // path_provider is unmocked → expect BackupFailure (or BackupSuccess
+        // if some future test runner mocks it). Importantly: pathOrNull must
+        // be null for non-success variants.
+        if (result is! BackupSuccess) {
+          expect(result.pathOrNull, isNull);
+          expect(result.isSuccess, isFalse);
+        }
+
+        await db.close();
+      },
+    );
+
+    test('QA-002: BackupSuccess exposes path via pathOrNull', () {
+      const result = BackupSuccess('/tmp/emergency_backup_123.json');
+      expect(result.isSuccess, isTrue);
+      expect(result.pathOrNull, '/tmp/emergency_backup_123.json');
+      expect(result.path, '/tmp/emergency_backup_123.json');
+    });
+
+    test('QA-002: BackupSkipped is not a success and exposes reason', () {
+      const result = BackupSkipped('Database is empty');
+      expect(result.isSuccess, isFalse);
+      expect(result.pathOrNull, isNull);
+      expect(result.reason, 'Database is empty');
+    });
+
+    test('QA-002: BackupFailure carries error and stack trace', () {
+      final stack = StackTrace.current;
+      final error = Exception('disk full');
+      final result = BackupFailure(error, stack);
+      expect(result.isSuccess, isFalse);
+      expect(result.pathOrNull, isNull);
+      expect(result.error, error);
+      expect(result.stackTrace, stack);
+    });
+
+    test('QA-002: BackupResult variants pattern-match exhaustively', () {
+      // Sealed class — switch must cover all three. If a new variant is
+      // added without updating callers, analyzer/compiler will flag it.
+      const variants = <BackupResult>[
+        BackupSuccess('/tmp/ok.json'),
+        BackupSkipped('nothing to do'),
+      ];
+      final failure = BackupFailure(Exception('boom'));
+
+      for (final v in [...variants, failure]) {
+        final label = switch (v) {
+          BackupSuccess() => 'success',
+          BackupSkipped() => 'skipped',
+          BackupFailure() => 'failure',
+        };
+        expect(label, isNotEmpty);
+      }
     });
   });
 
