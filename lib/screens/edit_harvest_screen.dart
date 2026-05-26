@@ -10,7 +10,8 @@ import 'package:growlog_app/utils/translations.dart'; // ✅ AUDIT FIX: i18n
 import 'package:growlog_app/utils/safe_parsers.dart';
 import 'package:intl/intl.dart';
 import 'package:growlog_app/models/harvest.dart';
-import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
+import 'package:growlog_app/services/harvest_service.dart';
+import 'package:growlog_app/services/interfaces/i_harvest_service.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
@@ -28,7 +29,7 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
     with SingleTickerProviderStateMixin {
   late AppTranslations _t; // ✅ AUDIT FIX: i18n
   bool _translationsInitialized = false;
-  final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
+  final IHarvestService _harvestService = getIt<IHarvestService>();
   final _formKey = GlobalKey<FormState>();
   late TabController _tabController;
 
@@ -176,11 +177,20 @@ class _EditHarvestScreenState extends State<EditHarvestScreen>
         updatedAt: DateTime.now(),
       );
 
-      await _harvestRepo.updateHarvest(updatedHarvest);
+      await _harvestService.updateHarvestWithValidation(
+        widget.harvest,
+        updatedHarvest,
+      );
 
       if (mounted) {
         Navigator.of(context).pop(true);
         AppMessages.showSuccess(context, _t['edit_harvest_updated']); // ✅ i18n
+      }
+    } on HarvestTransitionException catch (e) {
+      AppLogger.warning('EditHarvestScreen', 'Illegal phase transition: $e');
+      if (mounted) {
+        setState(() => _isSaving = false);
+        _showErrorSnackBar(e.message);
       }
     } catch (e) {
       AppLogger.error('EditHarvestScreen', 'Error: $e');
