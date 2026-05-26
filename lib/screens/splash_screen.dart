@@ -8,6 +8,9 @@ import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:growlog_app/screens/dashboard_screen.dart';
 import 'package:growlog_app/database/database_helper.dart';
+import 'package:growlog_app/database/database_recovery.dart';
+import 'package:growlog_app/database/migrations/migration_manager.dart'
+    show RecoveryFailed;
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/app_state_recovery.dart';
 import 'package:growlog_app/utils/version_manager.dart';
@@ -37,7 +40,19 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _setupProgressListener();
+    _registerRecoveryDialogHook();
     _initializeApp();
+  }
+
+  /// Registers the [DatabaseHelper.onRecoveryRequired] callback.
+  ///
+  /// This is the UI-layer hook: when MigrationManager cannot recover the DB,
+  /// DatabaseHelper calls this to surface the user-visible recovery dialog.
+  void _registerRecoveryDialogHook() {
+    DatabaseHelper.onRecoveryRequired = (RecoveryFailed? result) async {
+      if (!mounted) return;
+      await _showMigrationRecoveryDialog(result);
+    };
   }
 
   /// Setup listener for backup progress.
@@ -215,7 +230,7 @@ class _SplashScreenState extends State<SplashScreen> {
         });
       }
 
-      final recoveryNeeded = await _checkAutoRecovery(db!);
+      final recoveryNeeded = await _checkAutoRecovery(db);
       if (recoveryNeeded) {
         // Recovery was performed, data should be restored
         if (kDebugMode) {
@@ -562,6 +577,221 @@ class _SplashScreenState extends State<SplashScreen> {
         stackTrace,
       );
       return false;
+    }
+  }
+
+  /// Shows the migration recovery dialog when MigrationManager cannot
+  /// automatically recover the database.
+  ///
+  /// Dialog is not dismissible. Provides:
+  ///   - "Daten exportieren (JSON)" — triggers emergency JSON export + Share
+  ///   - "Support kontaktieren" — opens mail intent with log
+  ///   - "Datenbank zurücksetzen" (destructive, red) — active only after
+  ///     confirmation checkbox
+  ///
+  /// Design-Note Sektion c: kein stilles Löschen, explizite User-Bestätigung.
+  Future<void> _showMigrationRecoveryDialog(RecoveryFailed? result) async {
+    if (!mounted) return;
+
+    bool confirmReset = false;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.error, color: DT.error, size: 28),
+                  SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      'Datenbank-Wiederherstellung erforderlich',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Die Datenbank konnte nicht automatisch repariert werden.',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Deine Daten sind noch vorhanden, aber die App kann '
+                      'nicht normal starten. Bitte wähle eine der folgenden '
+                      'Optionen:',
+                    ),
+                    if (result != null && result.reason.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.orange.shade200),
+                        ),
+                        child: Text(
+                          result.reason,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Datenbank zurücksetzen',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: DT.error,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      '⚠️ Alle Daten werden gelöscht. Diese Aktion kann '
+                      'nicht rückgängig gemacht werden.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Checkbox(
+                          value: confirmReset,
+                          activeColor: DT.error,
+                          onChanged: (val) {
+                            setDialogState(() {
+                              confirmReset = val ?? false;
+                            });
+                          },
+                        ),
+                        const Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 12),
+                            child: Text(
+                              'Ich verstehe, dass alle Daten gelöscht werden.',
+                              style: TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                // Export action
+                TextButton.icon(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    if (mounted) {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => ManualRecoveryScreen(
+                            errorMessage:
+                                result?.reason ??
+                                'Datenbank-Wiederherstellung erforderlich',
+                            allowSkip: false,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text('Daten exportieren / Manuelle Wiederherst.'),
+                ),
+                // Destructive reset — only active after confirmation
+                FilledButton.icon(
+                  onPressed: confirmReset
+                      ? () async {
+                          Navigator.of(context).pop();
+                          await _performDatabaseReset();
+                        }
+                      : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: DT.error,
+                  ),
+                  icon: const Icon(Icons.delete_forever),
+                  label: const Text('Datenbank zurücksetzen'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Performs the confirmed database reset.
+  ///
+  /// Creates a backup before deleting, then restarts the init flow.
+  Future<void> _performDatabaseReset() async {
+    if (mounted) {
+      setState(() {
+        _status = 'Datenbank wird zurückgesetzt...';
+        _hasError = false;
+      });
+    }
+
+    try {
+      // Close the DB handle before deletion.
+      await DatabaseHelper.instance.close();
+
+      // Use DatabaseRecovery to backup + delete (it refuses to delete without backup).
+      final dbPath = await _getDbPath();
+      if (dbPath != null) {
+        final deleted = await DatabaseRecovery.deleteCorruptedDatabase(dbPath);
+        if (!deleted) {
+          AppLogger.error(
+            'SplashScreen',
+            '❌ Database reset: deleteCorruptedDatabase returned false',
+          );
+          if (mounted) {
+            setState(() {
+              _hasError = true;
+              _status = 'Zurücksetzen fehlgeschlagen — Backup konnte nicht erstellt werden.';
+            });
+          }
+          return;
+        }
+      }
+
+      // Re-run initialization with fresh DB.
+      if (mounted) {
+        setState(() {
+          _hasError = false;
+          _status = 'Wird geladen...';
+          _initAttempts = 0;
+        });
+      }
+      _initializeApp();
+    } catch (e, stack) {
+      AppLogger.error('SplashScreen', 'Database reset failed', e, stack);
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _status = 'Fehler beim Zurücksetzen: $e';
+        });
+      }
+    }
+  }
+
+  /// Returns the path of the current database file, or null on error.
+  Future<String?> _getDbPath() async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+      return db.path;
+    } catch (e) {
+      AppLogger.warning('SplashScreen', 'Cannot get DB path for reset', e);
+      return null;
     }
   }
 

@@ -11,11 +11,33 @@ import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/database/migrations/migration_manager.dart';
 import 'package:growlog_app/database/database_recovery.dart';
 
+/// Callback invoked when the database enters an unrecoverable state.
+///
+/// The UI layer (SplashScreen) registers this callback to show the
+/// recovery dialog. Called on the isolate that called [DatabaseHelper.database].
+///
+/// [result] is the [RecoveryFailed] result from [MigrationManagerRecovery.attemptRecovery].
+///          May be null when the unrecoverable state was detected without a
+///          recovery attempt (e.g. diagnosis directly returned unrecoverable).
+typedef RecoveryDialogCallback = Future<void> Function(RecoveryFailed? result);
+
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
   static final _lock =
       Lock(); // Mutex prevents race condition on concurrent initialization
+
+  /// Single source of truth for the current database schema version.
+  /// Must be kept in sync with the highest version in all_migrations.dart.
+  /// Both openDatabase(version:) and MigrationManager recovery read from here.
+  static const int kCurrentDbVersion = 44;
+
+  /// Registered by the UI layer (SplashScreen) before the first [database]
+  /// access. Called when MigrationManager recovery fails completely and the DB
+  /// enters read-only / unrecoverable state.
+  ///
+  /// If null, the error is logged but the app continues (useful in tests).
+  static RecoveryDialogCallback? onRecoveryRequired;
 
   DatabaseHelper._init();
 
@@ -65,14 +87,20 @@ class DatabaseHelper {
     AppLogger.info('DatabaseHelper', 'Opening database at: $path');
 
     try {
-      return await openDatabase(
+      final db = await openDatabase(
         path,
-        version: 43, // v43: Recipes: Add phase column to rdwc_recipes
+        version: kCurrentDbVersion,
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
         onDowngrade: _onDowngradeError,
         onConfigure: _onConfigure,
       );
+
+      // Post-open: diagnose stuck-state and attempt recovery if needed.
+      // This runs AFTER sqflite's onUpgrade callback, so user_version is set.
+      await _runStartupDiagnosis(db);
+
+      return db;
     } catch (e) {
       AppLogger.error(
         'DatabaseHelper',
@@ -93,7 +121,7 @@ class DatabaseHelper {
         // Try opening again
         return await openDatabase(
           path,
-          version: 44,
+          version: kCurrentDbVersion,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -140,7 +168,7 @@ class DatabaseHelper {
         );
         return await openDatabase(
           path,
-          version: 44,
+          version: kCurrentDbVersion,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
           onDowngrade: _onDowngradeError,
@@ -158,6 +186,88 @@ class DatabaseHelper {
         );
         rethrow;
       }
+    }
+  }
+
+  /// Runs stuck-DB diagnosis after openDatabase() completes.
+  ///
+  /// Called from [_initDB] after the normal open succeeded.
+  /// On stuckInProgress or schemaDrift: attempts recovery.
+  /// On unrecoverable: calls [onRecoveryRequired] callback (UI shows dialog).
+  Future<void> _runStartupDiagnosis(Database db) async {
+    try {
+      final manager = MigrationManager();
+      final diagnosis = await manager.diagnoseStartupState(
+        db,
+        kCurrentDbVersion,
+      );
+
+      AppLogger.info(
+        'DatabaseHelper',
+        'Startup diagnosis: ${diagnosis.state} '
+        '(actual=${diagnosis.actualVersion} expected=${diagnosis.expectedVersion})',
+      );
+
+      switch (diagnosis.state) {
+        case DbStartupState.healthy:
+        case DbStartupState.migrationNeeded:
+          // Normal paths — sqflite's onUpgrade handles migrationNeeded.
+          return;
+
+        case DbStartupState.stuckInProgress:
+        case DbStartupState.schemaDrift:
+          final result = await manager.attemptRecovery(db, diagnosis);
+          if (result is RecoveryFailed) {
+            AppLogger.error(
+              'DatabaseHelper',
+              '❌ Recovery failed: ${result.reason}',
+            );
+            await _triggerRecoveryDialog(result);
+          } else if (result is RecoverySuccess) {
+            AppLogger.info(
+              'DatabaseHelper',
+              '✅ Recovery succeeded, DB now at v${result.recoveredToVersion}',
+            );
+          }
+
+        case DbStartupState.unrecoverable:
+          AppLogger.error(
+            'DatabaseHelper',
+            '❌ DB in unrecoverable state: ${diagnosis.details}',
+          );
+          await _triggerRecoveryDialog(null);
+      }
+    } catch (e, stack) {
+      // Diagnosis must never crash the startup path — log and continue.
+      AppLogger.error(
+        'DatabaseHelper',
+        '⚠️ Startup diagnosis error (non-fatal)',
+        e,
+        stack,
+      );
+    }
+  }
+
+  /// Invokes the registered [onRecoveryRequired] callback.
+  /// If no callback is registered, only logs.
+  Future<void> _triggerRecoveryDialog(RecoveryFailed? result) async {
+    final callback = onRecoveryRequired;
+    if (callback == null) {
+      AppLogger.warning(
+        'DatabaseHelper',
+        '⚠️ onRecoveryRequired not registered — dialog skipped',
+      );
+      return;
+    }
+    try {
+      await callback(result);
+    } catch (e, stack) {
+      AppLogger.error(
+        'DatabaseHelper',
+        '⚠️ onRecoveryRequired callback threw',
+        e,
+        stack,
+      );
     }
   }
 
