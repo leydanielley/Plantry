@@ -47,6 +47,23 @@ class HarvestTransitionException implements Exception {
       'HarvestTransitionException: $message (from: ${from.name}, to: ${to.name})';
 }
 
+/// Wird geworfen, wenn die chronologische Reihenfolge der Phasendaten
+/// verletzt ist (z.B. `dryingEndDate` vor `dryingStartDate`,
+/// `curingStartDate` vor `dryingEndDate`).
+///
+/// Getrennt von [HarvestTransitionException], weil das eine
+/// Feld-Validierung (Datumsfolge) und nicht eine State-Machine-Verletzung
+/// (Phasen-Rücksprung) ist. Beide werden in den Screens mit demselben
+/// Error-Snackbar-Muster behandelt.
+class HarvestOrderException implements Exception {
+  final String message;
+
+  HarvestOrderException(this.message);
+
+  @override
+  String toString() => 'HarvestOrderException: $message';
+}
+
 class HarvestService implements IHarvestService {
   final IHarvestRepository _harvestRepo;
 
@@ -104,14 +121,31 @@ class HarvestService implements IHarvestService {
     return allowed.contains(to);
   }
 
-  /// Aktualisiert einen Harvest-Eintrag und prüft dabei die Phasen-
-  /// Übergangsregeln. Wirft [HarvestTransitionException] bei illegalem
-  /// Übergang. Same-state-Updates (Gewicht/Notizen editieren) sind erlaubt.
+  /// Aktualisiert einen Harvest-Eintrag und prüft dabei zwei Regelsets:
+  ///
+  /// 1. **Chronologische Feld-Reihenfolge** ([Harvest.validatePhaseOrder] auf
+  ///    `next`) — wirft [HarvestOrderException].
+  /// 2. **Phasen-Übergang** (State-Machine via [phaseOf] + [validateTransition])
+  ///    — wirft [HarvestTransitionException] bei illegalem Rückwärtssprung.
+  ///
+  /// Reihenfolge: die chronologische Prüfung läuft zuerst, weil sie eine
+  /// rein lokale Eigenschaft von `next` ist und die Fehlermeldung
+  /// präziser auf das falsch gesetzte Datumsfeld zeigt. Eine kaputte
+  /// Datumsfolge würde den Phasen-Check zwar oft ebenfalls auslösen,
+  /// aber mit einer weniger sprechenden Meldung.
+  ///
+  /// Same-state-Updates (Gewicht/Notizen editieren) sind erlaubt, solange
+  /// die Datumsfelder konsistent bleiben.
   @override
   Future<int> updateHarvestWithValidation(
     Harvest current,
     Harvest next,
   ) async {
+    final orderError = next.validatePhaseOrder();
+    if (orderError != null) {
+      throw HarvestOrderException(orderError);
+    }
+
     final from = phaseOf(current);
     final to = phaseOf(next);
 

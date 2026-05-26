@@ -356,5 +356,55 @@ void main() {
       );
       expect(repo.updateCount, 0);
     });
+
+    test(
+      'throws HarvestOrderException when dryingEndDate is before '
+      'dryingStartDate (chronological order violated)',
+      () async {
+        final base = DateTime(2026, 1, 1);
+        final current = Harvest(
+          plantId: 1,
+          harvestDate: base,
+          dryingStartDate: base.add(const Duration(days: 5)),
+        );
+        // dryingEndDate VOR dryingStartDate — Reihenfolge verletzt.
+        final next = current.copyWith(
+          dryingEndDate: base.add(const Duration(days: 2)),
+          dryWeight: 100.0,
+        );
+
+        expect(
+          () => service.updateHarvestWithValidation(current, next),
+          throwsA(isA<HarvestOrderException>()),
+        );
+        expect(repo.updateCount, 0, reason: 'repository must not be hit');
+      },
+    );
+
+    test(
+      'order check runs before transition check: chronologically broken '
+      'curing dates throw HarvestOrderException (not transition)',
+      () async {
+        final base = DateTime(2026, 1, 1);
+        final current = Harvest(
+          plantId: 1,
+          harvestDate: base,
+          dryingStartDate: base.add(const Duration(days: 1)),
+          dryingEndDate: base.add(const Duration(days: 10)),
+          dryWeight: 100.0,
+        );
+        // curingEndDate VOR curingStartDate.
+        final next = current.copyWith(
+          curingStartDate: base.add(const Duration(days: 20)),
+          curingEndDate: base.add(const Duration(days: 15)),
+        );
+
+        expect(
+          () => service.updateHarvestWithValidation(current, next),
+          throwsA(isA<HarvestOrderException>()),
+        );
+        expect(repo.updateCount, 0);
+      },
+    );
   });
 }
