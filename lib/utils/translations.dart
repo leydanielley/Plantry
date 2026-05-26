@@ -1231,6 +1231,15 @@ class AppTranslations {
       'harvest_detail_notes_label': 'Notizen',
       'harvest_detail_overall_notes': 'Gesamt',
       'harvest_detail_no_quality_data': 'Keine Qualitätsdaten',
+      'harvest_detail_status_complete': 'Fertig',
+      'harvest_detail_action_edit_drying': 'Trocknung bearbeiten',
+      'harvest_detail_action_edit_curing': 'Curing bearbeiten',
+      'quality_status_captured': 'Daten erfasst',
+      'quality_status_open': 'Offen',
+      'quality_status_captured_subtitle': 'Quality-Daten wurden erfasst',
+      'quality_status_open_subtitle': 'Noch keine Daten erfasst',
+      'quality_terpene_profile': 'Terpen-Profil',
+      'quality_overall_notes_label': 'Gesamt-Notizen',
 
       // ✅ AUDIT FIX: Settings screen translations (Expert Mode Dialog)
       'settings_expert_mode_title': 'Expert-Modus',
@@ -2783,6 +2792,15 @@ class AppTranslations {
       'harvest_detail_notes_label': 'Notes',
       'harvest_detail_overall_notes': 'Overall',
       'harvest_detail_no_quality_data': 'No quality data',
+      'harvest_detail_status_complete': 'Done',
+      'harvest_detail_action_edit_drying': 'Edit Drying',
+      'harvest_detail_action_edit_curing': 'Edit Curing',
+      'quality_status_captured': 'Data captured',
+      'quality_status_open': 'Open',
+      'quality_status_captured_subtitle': 'Quality data captured',
+      'quality_status_open_subtitle': 'No data captured yet',
+      'quality_terpene_profile': 'Terpene Profile',
+      'quality_overall_notes_label': 'Overall Notes',
 
       // ✅ AUDIT FIX: Settings screen translations (Expert Mode Dialog)
       'settings_expert_mode_title': 'Expert Mode',

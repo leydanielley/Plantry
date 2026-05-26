@@ -91,19 +91,19 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
       );
     }
     if (_harvest == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: DT.canvas,
         body: Center(
           child: Text(
-            'Ernte nicht gefunden',
-            style: TextStyle(color: DT.textPrimary),
+            _t['harvest_not_found'],
+            style: const TextStyle(color: DT.textPrimary),
           ),
         ),
       );
     }
 
     return PlantryScaffold(
-      title: 'Ernte Details',
+      title: _t['harvest_detail_details_title'],
       actions: [
         IconButton(
           icon: const Icon(Icons.edit, color: DT.textPrimary),
@@ -197,7 +197,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _harvestWithPlant?['plant_name'] ?? 'Pflanze',
+                  _harvestWithPlant?['plant_name'] ?? _t['plant'],
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -205,7 +205,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
                   ),
                 ),
                 Text(
-                  _harvestWithPlant?['plant_strain'] ?? 'Unbekannter Strain',
+                  _harvestWithPlant?['plant_strain'] ?? _t['unknown_strain'],
                   style: const TextStyle(fontSize: 14, color: DT.textSecondary),
                 ),
               ],
@@ -218,8 +218,10 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
 
   Widget _buildStatusCard() {
     final status = _harvest!.isComplete
-        ? 'Fertig'
-        : (_harvest!.curingStartDate != null ? 'In Curing' : 'In Trocknung');
+        ? _t['harvest_detail_status_complete']
+        : (_harvest!.curingStartDate != null
+              ? _t['in_curing']
+              : _t['in_drying']);
     final color = _harvest!.isComplete
         ? DT.success
         : (_harvest!.curingStartDate != null ? DT.info : DT.warning);
@@ -251,7 +253,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
     return Column(
       children: [
         PlantryButton(
-          label: 'Trocknung bearbeiten',
+          label: _t['harvest_detail_action_edit_drying'],
           icon: Icons.dry_cleaning,
           onPressed: () async {
             await Navigator.push(
@@ -269,7 +271,7 @@ class _HarvestDetailScreenState extends State<HarvestDetailScreen> {
         const SizedBox(height: 8),
         if (_harvest!.dryingEndDate != null)
           PlantryButton(
-            label: 'Curing bearbeiten',
+            label: _t['harvest_detail_action_edit_curing'],
             icon: Icons.inventory_2,
             onPressed: () async {
               await Navigator.push(
