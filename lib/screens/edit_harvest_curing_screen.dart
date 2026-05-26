@@ -7,7 +7,8 @@ import 'package:growlog_app/utils/app_messages.dart';
 import 'package:growlog_app/utils/translations.dart';
 import 'package:intl/intl.dart';
 import 'package:growlog_app/models/harvest.dart';
-import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
+import 'package:growlog_app/services/harvest_service.dart';
+import 'package:growlog_app/services/interfaces/i_harvest_service.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
@@ -23,7 +24,7 @@ class EditHarvestCuringScreen extends StatefulWidget {
 }
 
 class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
-  final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
+  final IHarvestService _harvestService = getIt<IHarvestService>();
   late AppTranslations _t;
   final _formKey = GlobalKey<FormState>();
 
@@ -85,11 +86,19 @@ class _EditHarvestCuringScreenState extends State<EditHarvestCuringScreen> {
         updatedAt: DateTime.now(),
       );
 
-      await _harvestRepo.updateHarvest(updated);
+      await _harvestService.updateHarvestWithValidation(
+        widget.harvest,
+        updated,
+      );
 
       if (mounted) {
         Navigator.pop(context, true);
         AppMessages.showSuccess(context, _t['curing_updated_msg']);
+      }
+    } on HarvestTransitionException catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        AppMessages.showError(context, e.message);
       }
     } catch (e) {
       if (mounted) {

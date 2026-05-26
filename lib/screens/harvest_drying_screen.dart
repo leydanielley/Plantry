@@ -9,6 +9,8 @@ import 'package:growlog_app/models/harvest.dart';
 import 'package:growlog_app/repositories/interfaces/i_harvest_repository.dart';
 import 'package:growlog_app/screens/edit_harvest_drying_screen.dart';
 import 'package:growlog_app/screens/harvest_curing_screen.dart';
+import 'package:growlog_app/services/harvest_service.dart';
+import 'package:growlog_app/services/interfaces/i_harvest_service.dart';
 import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/widgets/plantry_scaffold.dart';
 import 'package:growlog_app/theme/design_tokens.dart';
@@ -25,6 +27,7 @@ class HarvestDryingScreen extends StatefulWidget {
 
 class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
+  final IHarvestService _harvestService = getIt<IHarvestService>();
   Harvest? _harvest;
   bool _isLoading = true;
   late AppTranslations _t;
@@ -89,11 +92,15 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
         if (mounted) AppMessages.showError(context, orderError);
         return;
       }
-      await _harvestRepo.updateHarvest(updated);
+      await _harvestService.updateHarvestWithValidation(_harvest!, updated);
       _loadHarvest();
 
       if (mounted) {
         AppMessages.showSuccess(context, _t['drying_started_msg']);
+      }
+    } on HarvestTransitionException catch (e) {
+      if (mounted) {
+        AppMessages.showError(context, e.message);
       }
     } catch (e) {
       if (mounted) {
@@ -248,11 +255,15 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
         if (mounted) AppMessages.showError(context, orderError);
         return;
       }
-      await _harvestRepo.updateHarvest(updated);
+      await _harvestService.updateHarvestWithValidation(_harvest!, updated);
       _loadHarvest();
 
       if (mounted) {
         AppMessages.showSuccess(context, _t['drying_ended_msg']);
+      }
+    } on HarvestTransitionException catch (e) {
+      if (mounted) {
+        AppMessages.showError(context, e.message);
       }
     } catch (e) {
       if (mounted) {
