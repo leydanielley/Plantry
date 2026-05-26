@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:archive/archive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:growlog_app/utils/app_logger.dart';
 import 'package:growlog_app/utils/version_manager.dart';
@@ -14,6 +15,75 @@ import 'package:growlog_app/di/service_locator.dart';
 import 'package:growlog_app/database/migrations/migration.dart';
 import 'package:growlog_app/database/migrations/scripts/all_migrations.dart';
 import 'package:growlog_app/database/schema_registry.dart';
+
+// =============================================
+// STUCK-DB RECOVERY TYPES (P2 / Issue #12)
+// =============================================
+
+/// Describes the state of the database at app startup.
+enum DbStartupState {
+  /// DB is on expected schema, no intervention needed.
+  healthy,
+
+  /// Migration must run normally (oldVersion < newVersion, no prior stuck).
+  migrationNeeded,
+
+  /// in_progress or timeout flag found — re-run needed.
+  stuckInProgress,
+
+  /// Schema drift: user_version matches but tables/columns are missing.
+  schemaDrift,
+
+  /// Recovery completely failed — read-only + dialog required.
+  unrecoverable,
+}
+
+/// Result of the startup diagnosis.
+class DbStartupDiagnosis {
+  final DbStartupState state;
+
+  /// PRAGMA user_version from SQLite.
+  final int actualVersion;
+
+  /// kCurrentDbVersion from DatabaseHelper.
+  final int expectedVersion;
+
+  /// Log detail for support, may be null for healthy state.
+  final String? details;
+
+  const DbStartupDiagnosis({
+    required this.state,
+    required this.actualVersion,
+    required this.expectedVersion,
+    this.details,
+  });
+
+  @override
+  String toString() =>
+      'DbStartupDiagnosis(state: $state, actual: $actualVersion, '
+      'expected: $expectedVersion, details: $details)';
+}
+
+/// Sealed-class result of a recovery attempt.
+sealed class RecoveryResult {
+  const RecoveryResult();
+}
+
+class RecoverySuccess extends RecoveryResult {
+  final int recoveredToVersion;
+  const RecoverySuccess({required this.recoveredToVersion});
+}
+
+class RecoveryFailed extends RecoveryResult {
+  final String reason;
+  final bool dataExportAvailable;
+  final String? exportPath;
+  const RecoveryFailed({
+    required this.reason,
+    required this.dataExportAvailable,
+    this.exportPath,
+  });
+}
 
 /// Manages database migrations for seamless app updates
 ///
@@ -561,4 +631,455 @@ class MigrationException implements Exception {
 
     return buffer.toString();
   }
+}
+
+// =============================================
+// MIGRATION MANAGER — RECOVERY EXTENSION (P2)
+// =============================================
+
+/// Stuck-DB detection and recovery logic.
+///
+/// All methods operate on an already-opened [Database] instance.
+/// Call [diagnoseStartupState] after openDatabase(), before returning
+/// the DB to the caller.
+extension MigrationManagerRecovery on MigrationManager {
+  // SharedPreferences key for retry counter (persists across app kills).
+  static const String _keyRetryCount = 'migration_retry_count';
+  static const int _maxRetries = 2;
+
+  // ----------------------------------------------------------------
+  // 1. DIAGNOSIS
+  // ----------------------------------------------------------------
+
+  /// Analyses the DB state at app startup.
+  ///
+  /// Priority order (from Design-Note Sektion a):
+  ///   1. SharedPreferences migration_status (in_progress | timeout)
+  ///   2. migration_start_time elapsed > threshold (belt-and-suspenders)
+  ///   3. PRAGMA user_version vs. expectedVersion
+  ///   4. SchemaRegistry.validateSchema() (drift without version diff)
+  ///
+  /// [db]              Already-opened database instance.
+  /// [expectedVersion] kCurrentDbVersion from DatabaseHelper.
+  Future<DbStartupDiagnosis> diagnoseStartupState(
+    Database db,
+    int expectedVersion,
+  ) async {
+    AppLogger.info(
+      'MigrationManagerRecovery',
+      '🔍 Diagnosing DB startup state (expected v$expectedVersion)...',
+    );
+
+    // --- Marker 1 + 2: SharedPreferences status flag ---
+    String? migrationStatus;
+    try {
+      // Use VersionManager helpers to avoid re-implementing SharedPreferences
+      // access. isMigrationInProgress() already handles the elapsed-time check
+      // and flips status to 'timeout' when appropriate.
+      final inProgress = await VersionManager.isMigrationInProgress();
+      final hasFailure = await VersionManager.hasRecentMigrationFailure();
+
+      if (inProgress) {
+        // Still within the timeout window → treat as stuck anyway because
+        // we are in _initDB, not inside a running migrate() call.
+        migrationStatus = 'in_progress';
+      } else if (hasFailure) {
+        // Covers 'timeout' and 'failed' states.
+        migrationStatus = 'failed_or_timeout';
+      }
+    } catch (e) {
+      AppLogger.warning(
+        'MigrationManagerRecovery',
+        'Could not read SharedPreferences migration status',
+        e,
+      );
+    }
+
+    // --- Marker 3: PRAGMA user_version ---
+    int actualVersion = 0;
+    try {
+      final result = await db.rawQuery('PRAGMA user_version');
+      actualVersion = (result.firstOrNull?['user_version'] as int?) ?? 0;
+    } catch (e) {
+      AppLogger.error(
+        'MigrationManagerRecovery',
+        'Cannot read PRAGMA user_version',
+        e,
+      );
+      return DbStartupDiagnosis(
+        state: DbStartupState.unrecoverable,
+        actualVersion: 0,
+        expectedVersion: expectedVersion,
+        details: 'PRAGMA user_version unreadable: $e',
+      );
+    }
+
+    AppLogger.info(
+      'MigrationManagerRecovery',
+      'DB state: actual=v$actualVersion expected=v$expectedVersion '
+      'prefs_status=$migrationStatus',
+    );
+
+    // Stuck-in-progress detection: flag set + version not yet at target.
+    if ((migrationStatus == 'in_progress' ||
+            migrationStatus == 'failed_or_timeout') &&
+        actualVersion < expectedVersion) {
+      return DbStartupDiagnosis(
+        state: DbStartupState.stuckInProgress,
+        actualVersion: actualVersion,
+        expectedVersion: expectedVersion,
+        details: 'SharedPreferences migration_status=$migrationStatus, '
+            'DB still at v$actualVersion',
+      );
+    }
+
+    // Normal migration needed (fresh install upgrade path).
+    if (actualVersion < expectedVersion && migrationStatus == null) {
+      return DbStartupDiagnosis(
+        state: DbStartupState.migrationNeeded,
+        actualVersion: actualVersion,
+        expectedVersion: expectedVersion,
+      );
+    }
+
+    // --- Marker 4: Schema drift (version matches, but schema is off) ---
+    if (actualVersion == expectedVersion) {
+      bool schemaDefinitionExists = false;
+      try {
+        schemaDefinitionExists =
+            SchemaRegistry.getSchema(expectedVersion) != null;
+      } catch (e) {
+        AppLogger.warning(
+          'MigrationManagerRecovery',
+          'SchemaRegistry.getSchema($expectedVersion) threw during diagnosis',
+          e,
+        );
+        // Cannot validate schema — treat as healthy to avoid false positives.
+        schemaDefinitionExists = false;
+      }
+
+      if (schemaDefinitionExists) {
+        try {
+          final schemaValid = await SchemaRegistry.validateSchema(
+            db,
+            expectedVersion,
+            strict: false,
+          );
+
+          if (!schemaValid) {
+            AppLogger.warning(
+              'MigrationManagerRecovery',
+              '⚠️ Schema drift detected at v$actualVersion — validation failed',
+            );
+            return DbStartupDiagnosis(
+              state: DbStartupState.schemaDrift,
+              actualVersion: actualVersion,
+              expectedVersion: expectedVersion,
+              details: 'user_version=$actualVersion but schema validation failed',
+            );
+          }
+        } catch (e) {
+          AppLogger.warning(
+            'MigrationManagerRecovery',
+            'Schema validation threw during diagnosis',
+            e,
+          );
+          // Treat as drift — non-fatal, recovery can attempt repair.
+          return DbStartupDiagnosis(
+            state: DbStartupState.schemaDrift,
+            actualVersion: actualVersion,
+            expectedVersion: expectedVersion,
+            details: 'Schema validation error: $e',
+          );
+        }
+      }
+
+      // Version matches, schema valid (or no schema def for this version) → healthy.
+      AppLogger.info(
+        'MigrationManagerRecovery',
+        '✅ DB startup state: healthy (v$actualVersion)',
+      );
+      return DbStartupDiagnosis(
+        state: DbStartupState.healthy,
+        actualVersion: actualVersion,
+        expectedVersion: expectedVersion,
+      );
+    }
+
+    // actualVersion > expectedVersion: downgrade scenario, handled by onDowngrade.
+    AppLogger.warning(
+      'MigrationManagerRecovery',
+      'actualVersion ($actualVersion) > expectedVersion ($expectedVersion) — downgrade scenario',
+    );
+    return DbStartupDiagnosis(
+      state: DbStartupState.healthy,
+      actualVersion: actualVersion,
+      expectedVersion: expectedVersion,
+      details: 'Downgrade scenario — handled by onDowngrade',
+    );
+  }
+
+  // ----------------------------------------------------------------
+  // 2. RECOVERY
+  // ----------------------------------------------------------------
+
+  /// Attempts recovery for a stuck-state diagnosis.
+  ///
+  /// Strategy (from Design-Note Sektion b):
+  ///   Option A: Re-run migration (primary, up to [maxRetries] attempts).
+  ///   Option B: repairSchemaDrift() for schemaDrift without version diff.
+  ///   If all options exhausted → [RecoveryFailed] with dataExportAvailable flag.
+  ///
+  /// [db]        Opened database instance.
+  /// [diagnosis] Result of [diagnoseStartupState].
+  /// [maxRetries] Maximum re-run attempts across app starts (default: 2).
+  Future<RecoveryResult> attemptRecovery(
+    Database db,
+    DbStartupDiagnosis diagnosis, {
+    int maxRetries = _maxRetries,
+  }) async {
+    AppLogger.warning(
+      'MigrationManagerRecovery',
+      '🔧 Attempting recovery for state: ${diagnosis.state}',
+    );
+
+    // --- Schema drift (Option B only) ---
+    if (diagnosis.state == DbStartupState.schemaDrift) {
+      AppLogger.info(
+        'MigrationManagerRecovery',
+        'Schema drift: attempting ADD COLUMN repair...',
+      );
+      final repaired = await repairSchemaDrift(db, diagnosis.expectedVersion);
+      if (repaired) {
+        // Clear any stale retry counter on success.
+        await _clearRetryCount();
+        await VersionManager.markMigrationCompleted(
+          dbVersion: diagnosis.expectedVersion,
+        );
+        AppLogger.info(
+          'MigrationManagerRecovery',
+          '✅ Schema drift repaired via ADD COLUMN',
+        );
+        return RecoverySuccess(recoveredToVersion: diagnosis.expectedVersion);
+      }
+      AppLogger.error(
+        'MigrationManagerRecovery',
+        '❌ Schema drift repair failed — marking unrecoverable',
+      );
+      return const RecoveryFailed(
+        reason: 'Schema drift repair failed (ADD COLUMN unsuccessful)',
+        dataExportAvailable: false,
+      );
+    }
+
+    // --- stuckInProgress: Option A — re-run migration ---
+    if (diagnosis.state == DbStartupState.stuckInProgress) {
+      final retryCount = await _readRetryCount();
+      AppLogger.info(
+        'MigrationManagerRecovery',
+        'Retry count: $retryCount / $maxRetries',
+      );
+
+      if (retryCount >= maxRetries) {
+        AppLogger.error(
+          'MigrationManagerRecovery',
+          '❌ Max retries ($maxRetries) exhausted — unrecoverable',
+        );
+        return RecoveryFailed(
+          reason:
+              'Migration re-run failed $maxRetries times. '
+              'A bug in the migration script is likely.',
+          dataExportAvailable: false,
+        );
+      }
+
+      // Increment retry counter BEFORE the attempt so a kill during migrate()
+      // counts as a failed attempt on next startup.
+      await _incrementRetryCount();
+
+      try {
+        AppLogger.info(
+          'MigrationManagerRecovery',
+          '🔄 Re-running migration v${diagnosis.actualVersion} → v${diagnosis.expectedVersion} '
+          '(attempt ${retryCount + 1}/$maxRetries)',
+        );
+
+        await migrate(
+          db,
+          diagnosis.actualVersion,
+          diagnosis.expectedVersion,
+        );
+
+        // Success — clear retry counter.
+        await _clearRetryCount();
+        AppLogger.info(
+          'MigrationManagerRecovery',
+          '✅ Migration re-run succeeded',
+        );
+        return RecoverySuccess(
+          recoveredToVersion: diagnosis.expectedVersion,
+        );
+      } catch (e, stack) {
+        AppLogger.error(
+          'MigrationManagerRecovery',
+          '❌ Migration re-run attempt ${retryCount + 1} failed',
+          e,
+          stack,
+        );
+        // Retry counter was already incremented. Next app start will check again.
+        return RecoveryFailed(
+          reason: 'Migration re-run attempt ${retryCount + 1} failed: $e',
+          dataExportAvailable: false,
+        );
+      }
+    }
+
+    // Fallthrough: unexpected state — treat as unrecoverable.
+    return RecoveryFailed(
+      reason: 'Unexpected diagnosis state: ${diagnosis.state}',
+      dataExportAvailable: false,
+    );
+  }
+
+  // ----------------------------------------------------------------
+  // 3. SCHEMA DRIFT REPAIR
+  // ----------------------------------------------------------------
+
+  /// Repairs schema drift by adding missing columns via ALTER TABLE.
+  ///
+  /// Only handles ADD COLUMN scenarios (DROP/RENAME not supported in SQLite).
+  /// Returns true if all missing columns were added successfully.
+  Future<bool> repairSchemaDrift(Database db, int targetVersion) async {
+    SchemaDefinition? schemaDef;
+    try {
+      schemaDef = SchemaRegistry.getSchema(targetVersion);
+    } catch (e) {
+      AppLogger.warning(
+        'MigrationManagerRecovery',
+        'SchemaRegistry.getSchema($targetVersion) threw — cannot repair drift',
+        e,
+      );
+      return false;
+    }
+
+    if (schemaDef == null) {
+      AppLogger.warning(
+        'MigrationManagerRecovery',
+        'No schema definition for v$targetVersion — cannot repair drift',
+      );
+      return false;
+    }
+
+    bool allRepaired = true;
+
+    for (final entry in schemaDef.requiredTables.entries) {
+      final tableName = entry.key;
+      final requiredColumns = entry.value;
+
+      // Read current columns.
+      List<Map<String, Object?>> existingColsResult;
+      try {
+        existingColsResult = await db.rawQuery(
+          'PRAGMA table_info($tableName)',
+        );
+      } catch (e) {
+        AppLogger.error(
+          'MigrationManagerRecovery',
+          'Cannot read table_info for $tableName',
+          e,
+        );
+        allRepaired = false;
+        continue;
+      }
+
+      final existingColumns = existingColsResult
+          .map((r) => r['name'] as String)
+          .toSet();
+
+      final missingColumns = requiredColumns.difference(existingColumns);
+
+      for (final col in missingColumns) {
+        try {
+          AppLogger.info(
+            'MigrationManagerRecovery',
+            'Adding missing column: $tableName.$col',
+          );
+          // SQLite does not support NOT NULL without DEFAULT in ADD COLUMN.
+          // Use TEXT type with NULL allowed — the migration script should
+          // have done the correct type; this is a repair-only fallback.
+          await db.execute(
+            'ALTER TABLE $tableName ADD COLUMN $col TEXT',
+          );
+          AppLogger.info(
+            'MigrationManagerRecovery',
+            '✅ Added $tableName.$col',
+          );
+        } catch (e) {
+          AppLogger.error(
+            'MigrationManagerRecovery',
+            '❌ Failed to add $tableName.$col',
+            e,
+          );
+          allRepaired = false;
+        }
+      }
+    }
+
+    return allRepaired;
+  }
+
+  // ----------------------------------------------------------------
+  // 4. RETRY COUNTER HELPERS
+  // ----------------------------------------------------------------
+
+  Future<int> _readRetryCount() async {
+    try {
+      final prefs = await _getPrefs();
+      return prefs.getInt(_keyRetryCount) ?? 0;
+    } catch (e) {
+      AppLogger.warning(
+        'MigrationManagerRecovery',
+        'Cannot read retry count',
+        e,
+      );
+      return 0;
+    }
+  }
+
+  Future<void> _incrementRetryCount() async {
+    try {
+      final prefs = await _getPrefs();
+      final current = prefs.getInt(_keyRetryCount) ?? 0;
+      await prefs.setInt(_keyRetryCount, current + 1);
+      AppLogger.info(
+        'MigrationManagerRecovery',
+        'Retry count incremented to ${current + 1}',
+      );
+    } catch (e) {
+      AppLogger.warning(
+        'MigrationManagerRecovery',
+        'Cannot increment retry count',
+        e,
+      );
+    }
+  }
+
+  Future<void> _clearRetryCount() async {
+    try {
+      final prefs = await _getPrefs();
+      await prefs.remove(_keyRetryCount);
+      AppLogger.info(
+        'MigrationManagerRecovery',
+        'Retry count cleared',
+      );
+    } catch (e) {
+      AppLogger.warning(
+        'MigrationManagerRecovery',
+        'Cannot clear retry count',
+        e,
+      );
+    }
+  }
+
+  Future<SharedPreferences> _getPrefs() => SharedPreferences.getInstance();
 }
