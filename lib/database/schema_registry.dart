@@ -735,7 +735,10 @@ class SchemaRegistry {
     version: 43,
     requiredTables: {
       ...schemaV42.requiredTables,
-      'rdwc_recipes': {...schemaV42.requiredTables['rdwc_recipes']!, 'phase'},
+      'rdwc_recipes': {
+        ...schemaV42.requiredTables['rdwc_recipes'] ?? {},
+        'phase',
+      },
     },
     requiredIndexes: schemaV42.requiredIndexes,
   );
