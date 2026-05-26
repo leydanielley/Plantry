@@ -77,24 +77,31 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
     if (result == null) return; // User hat abgebrochen
 
     try {
-      final updated = _harvest!.copyWith(
+      // Re-fetch current state to avoid lost-update race: ein anderer Tab/
+      // Route kann den Harvest zwischen Load und Save verändert haben.
+      final current = await _harvestRepo.getHarvestById(widget.harvestId);
+      if (current == null) {
+        if (mounted) AppMessages.showError(context, 'Ernte nicht gefunden');
+        return;
+      }
+
+      final updated = current.copyWith(
         curingStartDate: result['startDate'] as DateTime,
         curingMethod: result['method'] as String?,
         curingNotes: result['notes'] as String?,
         updatedAt: DateTime.now(),
       );
-      final orderError = updated.validatePhaseOrder();
-      if (orderError != null) {
-        if (mounted) AppMessages.showError(context, orderError);
-        return;
-      }
-      await _harvestService.updateHarvestWithValidation(_harvest!, updated);
+      await _harvestService.updateHarvestWithValidation(current, updated);
       _loadHarvest();
 
       if (mounted) {
         AppMessages.showSuccess(context, 'Curing gestartet!');
       }
     } on HarvestTransitionException catch (e) {
+      if (mounted) {
+        AppMessages.showError(context, e.message);
+      }
+    } on HarvestOrderException catch (e) {
       if (mounted) {
         AppMessages.showError(context, e.message);
       }
@@ -262,22 +269,28 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
     if (date == null) return;
 
     try {
-      final updated = _harvest!.copyWith(
+      // Re-fetch current state — siehe _startCuring.
+      final current = await _harvestRepo.getHarvestById(widget.harvestId);
+      if (current == null) {
+        if (mounted) AppMessages.showError(context, 'Ernte nicht gefunden');
+        return;
+      }
+
+      final updated = current.copyWith(
         curingEndDate: date,
         updatedAt: DateTime.now(),
       );
-      final orderError = updated.validatePhaseOrder();
-      if (orderError != null) {
-        if (mounted) AppMessages.showError(context, orderError);
-        return;
-      }
-      await _harvestService.updateHarvestWithValidation(_harvest!, updated);
+      await _harvestService.updateHarvestWithValidation(current, updated);
       _loadHarvest();
 
       if (mounted) {
         AppMessages.showSuccess(context, 'Curing abgeschlossen!');
       }
     } on HarvestTransitionException catch (e) {
+      if (mounted) {
+        AppMessages.showError(context, e.message);
+      }
+    } on HarvestOrderException catch (e) {
       if (mounted) {
         AppMessages.showError(context, e.message);
       }

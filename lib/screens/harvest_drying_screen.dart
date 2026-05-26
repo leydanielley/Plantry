@@ -83,22 +83,31 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
     if (date == null) return;
 
     try {
-      final updated = _harvest!.copyWith(
+      // Re-fetch current state to avoid lost-update race: ein anderer Tab/
+      // Route kann den Harvest zwischen Load und Save verändert haben.
+      // Die State-Machine-Validierung muss gegen den aktuellen DB-Stand
+      // laufen, nicht gegen `_harvest!` (Snapshot beim Screen-Load).
+      final current = await _harvestRepo.getHarvestById(widget.harvestId);
+      if (current == null) {
+        if (mounted) AppMessages.showError(context, _t['harvest_not_found']);
+        return;
+      }
+
+      final updated = current.copyWith(
         dryingStartDate: date,
         updatedAt: DateTime.now(),
       );
-      final orderError = updated.validatePhaseOrder();
-      if (orderError != null) {
-        if (mounted) AppMessages.showError(context, orderError);
-        return;
-      }
-      await _harvestService.updateHarvestWithValidation(_harvest!, updated);
+      await _harvestService.updateHarvestWithValidation(current, updated);
       _loadHarvest();
 
       if (mounted) {
         AppMessages.showSuccess(context, _t['drying_started_msg']);
       }
     } on HarvestTransitionException catch (e) {
+      if (mounted) {
+        AppMessages.showError(context, e.message);
+      }
+    } on HarvestOrderException catch (e) {
       if (mounted) {
         AppMessages.showError(context, e.message);
       }
@@ -245,23 +254,29 @@ class _HarvestDryingScreenState extends State<HarvestDryingScreen> {
 
       if (result == null) return;
 
-      final updated = _harvest!.copyWith(
+      // Re-fetch current state — siehe _startDrying.
+      final current = await _harvestRepo.getHarvestById(widget.harvestId);
+      if (current == null) {
+        if (mounted) AppMessages.showError(context, _t['harvest_not_found']);
+        return;
+      }
+
+      final updated = current.copyWith(
         dryingEndDate: result['date'] as DateTime,
         dryWeight: result['weight'] as double,
         updatedAt: DateTime.now(),
       );
-      final orderError = updated.validatePhaseOrder();
-      if (orderError != null) {
-        if (mounted) AppMessages.showError(context, orderError);
-        return;
-      }
-      await _harvestService.updateHarvestWithValidation(_harvest!, updated);
+      await _harvestService.updateHarvestWithValidation(current, updated);
       _loadHarvest();
 
       if (mounted) {
         AppMessages.showSuccess(context, _t['drying_ended_msg']);
       }
     } on HarvestTransitionException catch (e) {
+      if (mounted) {
+        AppMessages.showError(context, e.message);
+      }
+    } on HarvestOrderException catch (e) {
       if (mounted) {
         AppMessages.showError(context, e.message);
       }
