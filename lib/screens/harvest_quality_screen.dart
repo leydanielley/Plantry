@@ -23,9 +23,7 @@ class HarvestQualityScreen extends StatefulWidget {
 
 class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
   final IHarvestRepository _harvestRepo = getIt<IHarvestRepository>();
-  final AppTranslations _t = AppTranslations(
-    'de',
-  ); // Initialize with default language
+  late AppTranslations _t;
   Harvest? _harvest;
   bool _isLoading = true;
 
@@ -33,6 +31,12 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
   void initState() {
     super.initState();
     _loadHarvest();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _t = AppTranslations(Localizations.localeOf(context).languageCode);
   }
 
   Future<void> _loadHarvest() async {
@@ -138,10 +142,12 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
   Widget _buildStatusCard(bool isComplete) {
     final Color color = isComplete ? DT.success : DT.info;
     final IconData icon = isComplete ? Icons.check_circle : Icons.pending;
-    final String status = isComplete ? 'Daten erfasst' : 'Offen';
+    final String status = isComplete
+        ? _t['quality_status_captured']
+        : _t['quality_status_open'];
     final String subtitle = isComplete
-        ? 'Quality-Daten wurden erfasst'
-        : 'Noch keine Daten erfasst';
+        ? _t['quality_status_captured_subtitle']
+        : _t['quality_status_open_subtitle'];
 
     return Card(
       color: color.withValues(alpha: 0.1),
@@ -190,13 +196,16 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.science, color: DT.secondary),
-                SizedBox(width: 8),
+                const Icon(Icons.science, color: DT.secondary),
+                const SizedBox(width: 8),
                 Text(
-                  'Cannabinoid-Profil',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  _t['harvest_section_cannabinoids'],
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -213,9 +222,12 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
             ],
 
             if (_harvest!.terpeneProfile != null) ...[
-              const Text(
-                'Terpen-Profil',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              Text(
+                _t['quality_terpene_profile'],
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 8),
               Container(
@@ -276,13 +288,16 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.star, color: DT.warning),
-                SizedBox(width: 8),
+                const Icon(Icons.star, color: DT.warning),
+                const SizedBox(width: 8),
                 Text(
-                  'Bewertung & Notizen',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  _t['rating_section_title'],
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -315,7 +330,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
 
             if (_harvest!.tasteNotes != null) ...[
               _buildNoteSection(
-                'Geschmack',
+                _t['label_taste'],
                 _harvest!.tasteNotes!,
                 Icons.restaurant,
                 DT.warning,
@@ -325,7 +340,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
 
             if (_harvest!.effectNotes != null) ...[
               _buildNoteSection(
-                'Wirkung',
+                _t['label_effect'],
                 _harvest!.effectNotes!,
                 Icons.psychology,
                 DT.info,
@@ -335,7 +350,7 @@ class _HarvestQualityScreenState extends State<HarvestQualityScreen> {
 
             if (_harvest!.overallNotes != null) ...[
               _buildNoteSection(
-                'Gesamt-Notizen',
+                _t['quality_overall_notes_label'],
                 _harvest!.overallNotes!,
                 Icons.note,
                 DT.secondary,
