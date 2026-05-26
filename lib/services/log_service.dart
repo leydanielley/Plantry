@@ -5,6 +5,7 @@
 
 import 'dart:io';
 import 'package:sqflite/sqflite.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:growlog_app/database/database_helper.dart';
 import 'package:growlog_app/models/plant.dart';
 import 'package:growlog_app/models/plant_log.dart';
@@ -27,6 +28,13 @@ import 'package:growlog_app/services/interfaces/i_log_service.dart';
 class LogService implements ILogService {
   final DatabaseHelper _dbHelper;
   final IPlantRepository _plantRepo;
+
+  /// ✅ FR-B-014: Lock serialises the photo-validation + DB-write critical
+  /// section so the TOCTOU window between `_validatePhotos` and the actual
+  /// insert cannot be widened by a concurrent writer. The check itself is
+  /// still best-effort against an external file mutation (see `_validatePhotos`
+  /// doc), but at least no second `saveSingleLog`/`saveBulkLog` can race.
+  final Lock _photoLock = Lock();
 
   LogService(this._dbHelper, this._plantRepo);
 
@@ -287,18 +295,23 @@ class LogService implements ILogService {
       phaseDayNumber: phaseDayNumber,
     );
 
-    // Input-Validierung
+    // Input-Validierung (alles, was den Filesystem-Zustand NICHT prüft, kann
+    // ausserhalb des Locks laufen).
     _validateLog(correctedLog, plant);
     _validateFertilizers(fertilizers);
-    if (photoPaths.isNotEmpty) {
-      await _validatePhotos(photoPaths);
-    }
 
     final db = await _dbHelper.database;
 
-    // ALLES in einer Transaction = ACID garantiert
+    // ✅ FR-B-014: Photo-Validierung + DB-Write laufen unter einem gemeinsamen
+    // Lock, damit zwei parallele Saves nicht ihre TOCTOU-Fenster verschränken.
     try {
-      return await db.transaction((txn) async {
+      return await _photoLock.synchronized(() async {
+        if (photoPaths.isNotEmpty) {
+          await _validatePhotos(photoPaths);
+        }
+
+        // ALLES in einer Transaction = ACID garantiert
+        return await db.transaction((txn) async {
         PlantLog savedLog = correctedLog;
 
         // 1. Log speichern
@@ -389,6 +402,7 @@ class LogService implements ILogService {
 
         return savedLog;
       });
+      });
     } catch (e) {
       // Bessere Fehlerbehandlung
       throw Exception('Fehler beim Speichern des Logs: $e');
@@ -421,17 +435,22 @@ class LogService implements ILogService {
       throw ArgumentError('Keine Plant IDs angegeben');
     }
 
-    // Validierung
+    // Validierung (filesystem-unabhängig kann ausserhalb des Locks bleiben)
     _validateFertilizers(fertilizers);
-    if (photoPaths.isNotEmpty) {
-      await _validatePhotos(photoPaths);
-    }
 
     final db = await _dbHelper.database;
     final createdLogIds = <int>[];
 
     try {
-      await db.transaction((txn) async {
+      // ✅ FR-B-014: Photo-Validierung + DB-Write laufen unter dem gleichen
+      // Lock wie saveSingleLog – ein einziges Bulk- und ein einziges Single-Save
+      // können nicht gleichzeitig in das TOCTOU-Fenster laufen.
+      await _photoLock.synchronized(() async {
+        if (photoPaths.isNotEmpty) {
+          await _validatePhotos(photoPaths);
+        }
+
+        await db.transaction((txn) async {
         final logBatch = txn.batch();
 
         // ✅ FIX: Lade alle Pflanzen um seedDate und name zu bekommen
@@ -659,6 +678,7 @@ class LogService implements ILogService {
 
           await plantBatch.commit(noResult: true);
         }
+      });
       });
 
       return createdLogIds;
