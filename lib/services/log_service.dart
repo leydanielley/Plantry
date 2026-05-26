@@ -4,6 +4,8 @@
 // =============================================
 
 import 'dart:io';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:growlog_app/database/database_helper.dart';
@@ -36,7 +38,184 @@ class LogService implements ILogService {
   /// doc), but at least no second `saveSingleLog`/`saveBulkLog` can race.
   final Lock _photoLock = Lock();
 
-  LogService(this._dbHelper, this._plantRepo);
+  /// ✅ FR-B-005 / QA-004: Override for the application documents directory
+  /// used for photo staging + final placement. Tests inject a temp dir here
+  /// because `path_provider` has no platform binding in unit tests.
+  final Future<Directory> Function()? _docsDirOverride;
+
+  LogService(
+    this._dbHelper,
+    this._plantRepo, {
+    Future<Directory> Function()? docsDirOverride,
+  }) : _docsDirOverride = docsDirOverride;
+
+  /// Subdirectory under documents/ where finalised photos live.
+  static const String photosSubdir = 'photos';
+
+  /// Subdirectory under documents/photos/ where in-flight photos stage.
+  /// Files older than [_staleStagingMaxAge] can be cleaned via
+  /// [cleanStalePhotoStaging] on startup.
+  static const String stagingSubdir = '.staging';
+
+  /// Files left behind in `.staging` older than this are considered abandoned
+  /// (crash mid-save) and can be reaped by [cleanStalePhotoStaging].
+  static const Duration _staleStagingMaxAge = Duration(hours: 1);
+
+  Future<Directory> _appDocsDir() async {
+    final override = _docsDirOverride;
+    if (override != null) return override();
+    return getApplicationDocumentsDirectory();
+  }
+
+  /// ✅ FR-B-005 / QA-004: Cleanup hook for staging files that survived a
+  /// crash mid-save. Intended to be called once on app startup. Best-effort —
+  /// failures are logged but never thrown.
+  Future<void> cleanStalePhotoStaging() async {
+    try {
+      final docs = await _appDocsDir();
+      final staging = Directory(
+        p.join(docs.path, photosSubdir, stagingSubdir),
+      );
+      if (!await staging.exists()) return;
+
+      final cutoff = DateTime.now().subtract(_staleStagingMaxAge);
+      await for (final entity in staging.list()) {
+        try {
+          final stat = await entity.stat();
+          if (stat.modified.isBefore(cutoff)) {
+            if (entity is Directory) {
+              await entity.delete(recursive: true);
+            } else {
+              await entity.delete();
+            }
+            AppLogger.info(
+              'LogService',
+              'Reaped stale photo staging entry: ${entity.path}',
+            );
+          }
+        } catch (e) {
+          AppLogger.warning(
+            'LogService',
+            'Could not reap staging entry ${entity.path}: $e',
+          );
+        }
+      }
+    } catch (e) {
+      AppLogger.warning('LogService', 'cleanStalePhotoStaging failed: $e');
+    }
+  }
+
+  /// Represents one staged photo: a temp copy that still needs to be moved
+  /// into [finalPath] after the DB transaction commits successfully.
+  static final List<_StagedPhoto> _emptyStaged = const <_StagedPhoto>[];
+
+  /// Copies each source path into a fresh staging subdir and returns the
+  /// staged + final path pairs. The DB row is later inserted with [finalPath];
+  /// after a successful commit the staged file is renamed to [finalPath]
+  /// (a single filesystem-level move — atomic on the same volume).
+  ///
+  /// Caller MUST invoke [_cleanupStaged] in any error path before re-throwing,
+  /// otherwise staged files leak.
+  Future<List<_StagedPhoto>> _stagePhotos(List<String> sourcePaths) async {
+    if (sourcePaths.isEmpty) return _emptyStaged;
+
+    final docs = await _appDocsDir();
+    final photosDir = Directory(p.join(docs.path, photosSubdir));
+    if (!await photosDir.exists()) {
+      await photosDir.create(recursive: true);
+    }
+    final stagingRoot = Directory(p.join(photosDir.path, stagingSubdir));
+    if (!await stagingRoot.exists()) {
+      await stagingRoot.create(recursive: true);
+    }
+
+    // Unique per-call staging subdir so concurrent saves don't collide.
+    final runId =
+        '${DateTime.now().millisecondsSinceEpoch}_${identityHashCode(sourcePaths)}';
+    final stagingRun = Directory(p.join(stagingRoot.path, runId));
+    await stagingRun.create(recursive: true);
+
+    final staged = <_StagedPhoto>[];
+    try {
+      for (final source in sourcePaths) {
+        final sourceFile = File(source);
+        // _validatePhotos has already run under the same lock, but defend
+        // against the source disappearing between validation and staging.
+        if (!await sourceFile.exists()) {
+          throw ArgumentError('Foto-Quelldatei nicht mehr vorhanden: $source');
+        }
+        final basename = p.basename(source);
+        final stagedPath = p.join(stagingRun.path, basename);
+        // Final filename = timestamp + basename, lives in <docs>/photos/.
+        // Generated up-front so the DB row inserted in the transaction matches
+        // the rename target after commit.
+        final finalName =
+            '${DateTime.now().microsecondsSinceEpoch}_$basename';
+        final finalPath = p.join(photosDir.path, finalName);
+
+        await sourceFile.copy(stagedPath);
+        staged.add(
+          _StagedPhoto(stagedPath: stagedPath, finalPath: finalPath),
+        );
+      }
+    } catch (_) {
+      // Partial-failure cleanup: remove what we managed to copy before rethrow.
+      await _cleanupStaged(staged);
+      try {
+        if (await stagingRun.exists()) {
+          await stagingRun.delete(recursive: true);
+        }
+      } catch (_) {/* best-effort */}
+      rethrow;
+    }
+    return staged;
+  }
+
+  /// Move every staged file to its [finalPath]. Returns the list of finalised
+  /// paths actually committed (may be shorter than [staged] only if a rename
+  /// failed; in that case the partial set is rolled back by the caller).
+  Future<void> _commitStaged(List<_StagedPhoto> staged) async {
+    for (final entry in staged) {
+      final stagedFile = File(entry.stagedPath);
+      try {
+        await stagedFile.rename(entry.finalPath);
+      } on FileSystemException {
+        // Different volume / rename not supported — fall back to copy+delete.
+        await stagedFile.copy(entry.finalPath);
+        try {
+          await stagedFile.delete();
+        } catch (_) {/* best-effort */}
+      }
+    }
+    // Remove the now-empty per-run staging directory.
+    if (staged.isNotEmpty) {
+      try {
+        await Directory(p.dirname(staged.first.stagedPath))
+            .delete(recursive: true);
+      } catch (_) {/* best-effort */}
+    }
+  }
+
+  /// Delete every staged file. Used on DB failure to prevent orphan files.
+  Future<void> _cleanupStaged(List<_StagedPhoto> staged) async {
+    for (final entry in staged) {
+      try {
+        final f = File(entry.stagedPath);
+        if (await f.exists()) await f.delete();
+      } catch (e) {
+        AppLogger.warning(
+          'LogService',
+          'Could not delete staged photo ${entry.stagedPath}: $e',
+        );
+      }
+    }
+    if (staged.isNotEmpty) {
+      try {
+        final runDir = Directory(p.dirname(staged.first.stagedPath));
+        if (await runDir.exists()) await runDir.delete(recursive: true);
+      } catch (_) {/* best-effort */}
+    }
+  }
 
   /// Validiert Log-Daten vor dem Speichern
   void _validateLog(PlantLog log, Plant plant) {
@@ -304,14 +483,22 @@ class LogService implements ILogService {
 
     // ✅ FR-B-014: Photo-Validierung + DB-Write laufen unter einem gemeinsamen
     // Lock, damit zwei parallele Saves nicht ihre TOCTOU-Fenster verschränken.
+    // ✅ FR-B-005 / QA-004: Photos werden zuerst in ein .staging-Verzeichnis
+    // kopiert. Erst NACH erfolgreichem DB-Commit wird das stagedFile in das
+    // finale Verzeichnis umbenannt; bei DB-Fehlern werden alle Staged-Dateien
+    // wieder weggeräumt – kein Orphan im Dateisystem, kein verwaister DB-Row.
     try {
       return await _photoLock.synchronized(() async {
         if (photoPaths.isNotEmpty) {
           await _validatePhotos(photoPaths);
         }
 
-        // ALLES in einer Transaction = ACID garantiert
-        return await db.transaction((txn) async {
+        final List<_StagedPhoto> staged = await _stagePhotos(photoPaths);
+
+        PlantLog result;
+        try {
+          // ALLES in einer Transaction = ACID garantiert
+          result = await db.transaction((txn) async {
         PlantLog savedLog = correctedLog;
 
         // 1. Log speichern
@@ -354,11 +541,12 @@ class LogService implements ILogService {
           await batch.commit(noResult: true);
         }
 
-        // 3. Photos speichern (Batch)
-        if (photoPaths.isNotEmpty) {
+        // 3. Photos speichern (Batch) – nutzt den FINALEN Pfad (wird nach
+        // erfolgreicher Transaktion durch rename(staged → final) erreicht).
+        if (staged.isNotEmpty) {
           final batch = txn.batch();
-          for (final photoPath in photoPaths) {
-            final photo = Photo(logId: logId, filePath: photoPath);
+          for (final s in staged) {
+            final photo = Photo(logId: logId, filePath: s.finalPath);
             batch.insert('photos', photo.toMap());
           }
           await batch.commit(noResult: true);
@@ -402,9 +590,23 @@ class LogService implements ILogService {
 
         return savedLog;
       });
+        } catch (_) {
+          // DB-Insert ist gescheitert – staged Photos wieder weg, sonst
+          // entstehen Orphan-Dateien ohne dazugehörigen DB-Row.
+          await _cleanupStaged(staged);
+          rethrow;
+        }
+
+        // Erst NACH erfolgreichem DB-Commit: staging → final. Rename ist
+        // (auf gleicher Partition) atomar – kein halber Zustand möglich.
+        await _commitStaged(staged);
+        return result;
       });
     } catch (e) {
-      // Bessere Fehlerbehandlung
+      // Bessere Fehlerbehandlung. ArgumentErrors aus der Validierung dürfen
+      // nicht in eine generische Exception verpackt werden, damit Aufrufer
+      // sie weiterhin erkennen können.
+      if (e is ArgumentError) rethrow;
       throw Exception('Fehler beim Speichern des Logs: $e');
     }
   }
@@ -445,11 +647,17 @@ class LogService implements ILogService {
       // ✅ FR-B-014: Photo-Validierung + DB-Write laufen unter dem gleichen
       // Lock wie saveSingleLog – ein einziges Bulk- und ein einziges Single-Save
       // können nicht gleichzeitig in das TOCTOU-Fenster laufen.
+      // ✅ FR-B-005 / QA-004: Staging-then-commit. Erst kopieren wir in
+      // .staging/, fügen DB-Rows mit dem FINALEN Pfad ein und benennen erst
+      // nach Commit um. Schlägt die Transaktion fehl, sind alle Kopien weg.
       await _photoLock.synchronized(() async {
         if (photoPaths.isNotEmpty) {
           await _validatePhotos(photoPaths);
         }
 
+        final List<_StagedPhoto> staged = await _stagePhotos(photoPaths);
+
+        try {
         await db.transaction((txn) async {
         final logBatch = txn.batch();
 
@@ -647,13 +855,16 @@ class LogService implements ILogService {
           await fertBatch.commit(noResult: true);
         }
 
-        // 3. Photos für alle Logs (Batch)
-        if (photoPaths.isNotEmpty && createdLogIds.isNotEmpty) {
+        // 3. Photos für alle Logs (Batch) – die finalen Pfade kommen aus dem
+        // Staging-Step weiter oben. Jeder Bulk-Plant teilt sich die gleichen
+        // physischen Dateien (gleiche file_path-Werte für mehrere log_ids ist
+        // gewolltes Bulk-Verhalten und existiert in dieser Codebase bereits).
+        if (staged.isNotEmpty && createdLogIds.isNotEmpty) {
           final photoBatch = txn.batch();
 
           for (final logId in createdLogIds) {
-            for (final photoPath in photoPaths) {
-              final photo = Photo(logId: logId, filePath: photoPath);
+            for (final s in staged) {
+              final photo = Photo(logId: logId, filePath: s.finalPath);
               photoBatch.insert('photos', photo.toMap());
             }
           }
@@ -679,6 +890,15 @@ class LogService implements ILogService {
           await plantBatch.commit(noResult: true);
         }
       });
+        } catch (_) {
+          // DB-Fehler → staged Photos sofort weg, damit kein Orphan zurück-
+          // bleibt. Anschliessend Original-Fehler weiterreichen.
+          await _cleanupStaged(staged);
+          rethrow;
+        }
+
+        // Transaktion ist sauber durch – jetzt die Dateien sichtbar machen.
+        await _commitStaged(staged);
       });
 
       return createdLogIds;
@@ -919,4 +1139,14 @@ class LogService implements ILogService {
       throw Exception('Fehler beim Löschen der Logs: $e');
     }
   }
+}
+
+/// Internal value type used by the staging-then-commit photo flow.
+/// Each entry maps a copy living under `<documents>/photos/.staging/<run>/`
+/// to its eventual location under `<documents>/photos/` once the DB row
+/// has committed successfully.
+class _StagedPhoto {
+  final String stagedPath;
+  final String finalPath;
+  const _StagedPhoto({required this.stagedPath, required this.finalPath});
 }
