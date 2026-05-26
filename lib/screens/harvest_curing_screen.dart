@@ -81,7 +81,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
       // Route kann den Harvest zwischen Load und Save verändert haben.
       final current = await _harvestRepo.getHarvestById(widget.harvestId);
       if (current == null) {
-        if (mounted) AppMessages.showError(context, 'Ernte nicht gefunden');
+        if (mounted) AppMessages.showError(context, _t['harvest_not_found']);
         return;
       }
 
@@ -95,7 +95,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
       _loadHarvest();
 
       if (mounted) {
-        AppMessages.showSuccess(context, 'Curing gestartet!');
+        AppMessages.showSuccess(context, _t['curing_started_msg']);
       }
     } on HarvestTransitionException catch (e) {
       if (mounted) {
@@ -152,7 +152,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                     },
                     child: InputDecorator(
                       decoration: InputDecoration(
-                        labelText: 'Curing-Start',
+                        labelText: _t['curing_start_label'],
                         prefixIcon: const Icon(
                           Icons.calendar_today,
                           color: DT.info,
@@ -173,9 +173,9 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                   TextFormField(
                     controller: _curingMethodController,
                     decoration: InputDecoration(
-                      labelText: 'Curing-Methode',
+                      labelText: _t['curing_method_label'],
                       floatingLabelBehavior: FloatingLabelBehavior.always,
-                      hintText: 'z.B. Glass Jars, Grove Bags',
+                      hintText: _t['hint_curing_method'],
                       prefixIcon: const Icon(Icons.dashboard, color: DT.info),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -213,9 +213,9 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
                   TextFormField(
                     controller: _curingNotesController,
                     decoration: InputDecoration(
-                      labelText: 'Notizen (optional)',
+                      labelText: _t['curing_notes_optional_label'],
                       floatingLabelBehavior: FloatingLabelBehavior.always,
-                      hintText: 'Burping Schedule, Besonderheiten...',
+                      hintText: _t['hint_curing_notes'],
                       prefixIcon: const Icon(Icons.note, color: DT.info),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -272,7 +272,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
       // Re-fetch current state — siehe _startCuring.
       final current = await _harvestRepo.getHarvestById(widget.harvestId);
       if (current == null) {
-        if (mounted) AppMessages.showError(context, 'Ernte nicht gefunden');
+        if (mounted) AppMessages.showError(context, _t['harvest_not_found']);
         return;
       }
 
@@ -284,7 +284,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
       _loadHarvest();
 
       if (mounted) {
-        AppMessages.showSuccess(context, 'Curing abgeschlossen!');
+        AppMessages.showSuccess(context, _t['curing_ended_msg']);
       }
     } on HarvestTransitionException catch (e) {
       if (mounted) {
@@ -306,7 +306,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Curing'),
+          title: Text(_t['curing_title']),
           backgroundColor: DT.info,
           foregroundColor: DT.textPrimary,
         ),
@@ -317,11 +317,11 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
     if (_harvest == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Curing'),
+          title: Text(_t['curing_title']),
           backgroundColor: DT.info,
           foregroundColor: DT.textPrimary,
         ),
-        body: const Center(child: Text('Ernte nicht gefunden')),
+        body: Center(child: Text(_t['harvest_not_found'])),
       );
     }
 
@@ -330,7 +330,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
     final isActive = hasStarted && !hasEnded;
 
     return PlantryScaffold(
-      title: 'Curing',
+      title: _t['curing_title'],
       actions: [
         if (hasStarted)
           IconButton(
@@ -381,13 +381,13 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
     if (hasEnded) {
       color = DT.success;
       icon = Icons.check_circle;
-      status = 'Abgeschlossen';
-      subtitle = 'Curing erfolgreich beendet';
+      status = _t['curing_completed'];
+      subtitle = _t['curing_finished'];
     } else if (isActive) {
       color = DT.info;
       icon = Icons.inventory_2;
-      status = 'In Curing';
-      subtitle = 'Laufender Fermentations-Prozess';
+      status = _t['in_curing'];
+      subtitle = _t['curing_active'];
     } else {
       color = DT.info;
       icon = Icons.schedule;
@@ -442,13 +442,16 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.inventory_2, color: DT.info),
-                SizedBox(width: 8),
+                const Icon(Icons.inventory_2, color: DT.info),
+                const SizedBox(width: 8),
                 Text(
-                  'Curing-Daten',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  _t['curing_data'],
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -456,7 +459,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
 
             if (_harvest!.curingStartDate != null)
               _buildInfoRow(
-                'Start',
+                _t['harvest_start'],
                 DateFormat('dd.MM.yyyy').format(_harvest!.curingStartDate!),
                 Icons.play_arrow,
                 DT.info,
@@ -465,7 +468,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
             if (_harvest!.curingEndDate != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
-                'Ende',
+                _t['harvest_end'],
                 DateFormat('dd.MM.yyyy').format(_harvest!.curingEndDate!),
                 Icons.stop,
                 DT.success,
@@ -475,8 +478,8 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
             if (_harvest!.calculatedCuringDays != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
-                'Dauer',
-                '${_harvest!.calculatedCuringDays} Tage',
+                _t['curing_duration_label'],
+                '${_harvest!.calculatedCuringDays} ${_t['days']}',
                 Icons.timer,
                 DT.secondary,
                 highlight: true,
@@ -486,7 +489,7 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
             if (_harvest!.curingMethod != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
-                'Methode',
+                _t['label_method'],
                 _harvest!.curingMethod!,
                 Icons.dashboard,
                 DT.info,
@@ -495,9 +498,12 @@ class _HarvestCuringScreenState extends State<HarvestCuringScreen> {
 
             if (_harvest!.curingNotes != null) ...[
               const SizedBox(height: 16),
-              const Text(
-                'Notizen',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              Text(
+                _t['notes'],
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 8),
               Container(
