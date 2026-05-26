@@ -1375,6 +1375,9 @@ class AppTranslations {
       'curing_updated_msg': 'Curing aktualisiert! ✅',
       'curing_start_label': 'Curing-Start',
       'curing_method_label': 'Curing-Methode',
+      'curing_completed': 'Abgeschlossen',
+      'curing_duration_label': 'Dauer',
+      'curing_notes_optional_label': 'Notizen (optional)',
       // Edit Harvest Curing Screen
       'edit_curing_title': 'Curing bearbeiten',
       'harvest_section_curing': 'Curing-Daten',
@@ -2923,6 +2926,9 @@ class AppTranslations {
       'curing_updated_msg': 'Curing updated! ✅',
       'curing_start_label': 'Curing Start',
       'curing_method_label': 'Curing Method',
+      'curing_completed': 'Completed',
+      'curing_duration_label': 'Duration',
+      'curing_notes_optional_label': 'Notes (optional)',
       // Edit Harvest Curing Screen
       'edit_curing_title': 'Edit Curing',
       'harvest_section_curing': 'Curing Data',
