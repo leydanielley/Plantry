@@ -31,6 +31,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:growlog_app/database/database_helper.dart';
 import 'package:growlog_app/database/migrations/migration_manager.dart';
 import 'package:growlog_app/database/schema_registry.dart';
 
@@ -751,13 +752,4 @@ void main() {
       await db.close();
     });
   });
-}
-
-// ---------------------------------------------------------------------------
-// Helper for DatabaseHelper reference in Scenario B
-// (needed to set/clear onRecoveryRequired in test context)
-// ---------------------------------------------------------------------------
-// ignore: avoid_classes_with_only_static_members
-class DatabaseHelper {
-  static Future<void> Function(dynamic)? onRecoveryRequired;
 }
